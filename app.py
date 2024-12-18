@@ -3,6 +3,7 @@ from tkinter import ttk
 from models import espessura, material, canal, deducao
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from aba2 import criar_aba2
 
 def main():
     
@@ -13,33 +14,58 @@ def main():
 
     root = tk.Tk()
     root.title("Tabela de dobra")
-    root.geometry("400x400")
+    root.geometry("600x400")
 
-    # Adicionando um Label
-    label = tk.Label(root, text="Bem-vindo à Tabela de Dobra")
-    label.pack(pady=10)
+   # Criando o Notebook (abas)
+    notebook = ttk.Notebook(root)
+    notebook.pack(pady=10, expand=True)
 
-    frame = tk.Frame(root)
-    frame.grid(row=0, column=0, padx=10, pady=10)
+    # Criando os frames para as abas
+    aba1 = ttk.Frame(notebook, width=400, height=400)
+    aba1.pack(fill='both', expand=True)
+
+    # Adicionando as abas ao Notebook
+    notebook.add(aba1, text='Aba 1')
+    criar_aba2(notebook)
+
+    # Conteúdo da Aba 1
+    label1 = tk.Label(aba1, text="Bem-vindo à Tabela de Dobra")
+    label1.pack(pady=10)
+
+    frame = tk.Frame(aba1)
+    frame.pack(padx=10, pady=10)
 
     # Lista de espessuras
     espessuras_valores = [str(e.valor) for e in session.query(espessura).all()]
-    espessura_combobox = ttk.Combobox(root, values=espessuras_valores)
-    espessura_combobox.pack(pady=10)
+
+    espessura_label = tk.Label(frame, text="Espessura: ")
+    espessura_label.grid(row=0, column=0)
+    
+    espessura_combobox = ttk.Combobox(frame, values=espessuras_valores)
+    espessura_combobox.grid(row=1, column=0, padx=10)
 
     #lista de materiais
+
     materiais_nomes = [m.nome for m in session.query(material).all()]
-    material_combobox = ttk.Combobox(root, values=materiais_nomes)
-    material_combobox.pack(pady=10)
+
+    material_label = tk.Label(frame, text="Material:")
+    material_label.grid(row=0, column=1)
+
+    material_combobox = ttk.Combobox(frame, values=materiais_nomes)
+    material_combobox.grid(row=1, column=1,padx=10)
 
     #lista de canais
     canais_valores = [str(c.valor) for c in session.query(canal).all()]
-    canal_combobox = ttk.Combobox(root, values=canais_valores)
-    canal_combobox.pack(pady=10)
+
+    canal_label = tk.Label(frame, text="Canal:")
+    canal_label.grid(row=0, column=2)
+
+    canal_combobox = ttk.Combobox(frame, values=canais_valores)
+    canal_combobox.grid(row=1, column=2,padx=10)
 
     # Label para exibir a dedução
-    deducao_label = tk.Label(root, text="Dedução: ")
-    deducao_label.pack(pady=10)
+    deducao_label = tk.Label(frame, text="Dedução: ")
+    deducao_label.grid(row=3, column=1,padx=10)
 
     def atualizar_deducao():
         espessura_valor = float(espessura_combobox.get())
