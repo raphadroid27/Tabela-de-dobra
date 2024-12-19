@@ -9,5 +9,3 @@ def criar_aba2(notebook):
     # Conteúdo da Aba 2
     label2 = tk.Label(aba2, text="Outra aba")
     label2.pack(pady=10)
-
-    return aba2
