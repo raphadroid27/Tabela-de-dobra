@@ -4,6 +4,7 @@ from models import espessura, material, canal, deducao
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
+
 def configuracao_do_banco_de_dados():
     engine = create_engine('sqlite:///tabela_de_dobra.db')
     Session = sessionmaker(bind=engine)
@@ -70,94 +71,6 @@ def criar_aba1(notebook):
     deducao_entry = tk.Entry(frame)
     deducao_entry.grid(row=4, column=2,padx=10)
     
-    def atualizar_deducao():
-        espessura_valor = float(espessura_combobox.get())
-        material_nome = material_combobox.get()
-        canal_valor = float(canal_combobox.get())
-
-        deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
-            espessura.valor == espessura_valor,
-            material.nome == material_nome,
-            canal.valor == canal_valor
-        ).first()
-
-        if deducao_obj:
-           
-            deducao_entry.config(state='normal')
-            deducao_entry.delete(0, tk.END)
-            deducao_entry.insert(0, f"{deducao_obj.valor}")
-            
-        else:
-            
-            deducao_entry.config(state='normal')
-            deducao_entry.delete(0, tk.END)
-            deducao_entry.insert(0, "Não encontrada")
-            
-    def atualizar_medida(entry, valor):
-        entry.config(state='normal')
-        entry.delete(0, tk.END)
-        entry.insert(0, valor)
-        entry.config(state='readonly')
-
-    def calcular():
-
-        deducao_valor = float(deducao_entry.get())
-
-        # Calculo da medida da linha de dobra 1
-        medidadobra1 = float(dobra1.get()) - (deducao_valor / 2)
-        atualizar_medida(medidadobra1_entry, medidadobra1)
-
-        # Calculo da medida da linha de dobra 2
-        if dobra3.get() == "":
-            medidadobra2 = float(dobra2.get()) - (deducao_valor / 2)
-        else:
-            medidadobra2 = float(dobra2.get()) - deducao_valor
-        atualizar_medida(medidadobra2_entry, medidadobra2)
-
-        # Calculo da medida da linha de dobra 3
-        if dobra4.get() == "":
-            medidadobra3 = float(dobra3.get()) - (deducao_valor / 2)
-        else:
-            medidadobra3 = float(dobra3.get()) - deducao_valor
-        atualizar_medida(medidadobra3_entry, medidadobra3)
-
-        # Calculo da medida da linha de dobra 4
-        if dobra5.get() != "":
-            medidadobra4 = float(dobra4.get()) - (deducao_valor / 2)
-        else:
-            medidadobra4 = float(dobra4.get()) - deducao_valor
-        atualizar_medida(medidadobra4_entry, medidadobra4)
-
-        # Calculo da medida da linha de dobra 5
-        medidadobra5 = float(dobra5.get()) - (deducao_valor / 2)
-        atualizar_medida(medidadobra5_entry, medidadobra5)
-
-    def limpar_dobras():
-        limpar_dobras = [dobra1, dobra2, dobra3, dobra4, dobra5]
-        limpar_medidas = [medidadobra1_entry, medidadobra2_entry, medidadobra3_entry, medidadobra4_entry, medidadobra5_entry]
-
-        for limpar_dobras in limpar_dobras:
-            limpar_dobras.delete(0, tk.END)
-
-        for limpar_medidas in limpar_medidas:
-            limpar_medidas.config(state='normal')
-            limpar_medidas.delete(0, tk.END)
-            limpar_medidas.config(state='readonly')
-
-    def limpar_tudo():
-        espessura_combobox.set('')
-        material_combobox.set('')
-        canal_combobox.set('')
-        raio_interno_valor.delete(0, tk.END)
-        fator_k_entry.delete(0, tk.END)
-        deducao_entry.delete(0, tk.END)
-        limpar_dobras()
-        
-    # Eventos para atualizar a dedução
-    espessura_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
-    material_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
-    canal_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
-
     # Novo frame para entradas de valores de dobra
     frame_dobras = tk.Frame(aba1)
     frame_dobras.pack(padx=10, pady=10)
@@ -199,18 +112,134 @@ def criar_aba1(notebook):
     medidadobra5_entry = tk.Entry(frame_dobras, state='readonly')
     medidadobra5_entry.grid(row=4, column=2, padx=5, pady=5)  
 
+     #Medida da linha de dobra
 
+    metadedobra1_entry = tk.Entry(frame_dobras, state='readonly')
+    metadedobra1_entry.grid(row=0, column=3, padx=5, pady=5)
+    metadedobra2_entry = tk.Entry(frame_dobras, state='readonly')
+    metadedobra2_entry.grid(row=1, column=3, padx=5, pady=5)
+    metadedobra3_entry = tk.Entry(frame_dobras, state='readonly')
+    metadedobra3_entry.grid(row=2, column=3, padx=5, pady=5)
+    metadedobra4_entry = tk.Entry(frame_dobras, state='readonly')
+    metadedobra4_entry.grid(row=3, column=3, padx=5, pady=5)
+    metadedobra5_entry = tk.Entry(frame_dobras, state='readonly')
+    metadedobra5_entry.grid(row=4, column=3, padx=5, pady=5) 
 
+    #Funções
 
-    # Botões limpar dobras e tudo
+    def atualizar_deducao():
+        espessura_valor = float(espessura_combobox.get())
+        material_nome = material_combobox.get()
+        canal_valor = float(canal_combobox.get())
+
+        deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
+            espessura.valor == espessura_valor,
+            material.nome == material_nome,
+            canal.valor == canal_valor
+        ).first()
+
+        if deducao_obj:
+           
+            deducao_entry.config(state='normal')
+            deducao_entry.delete(0, tk.END)
+            deducao_entry.insert(0, f"{deducao_obj.valor}")
+            
+        else:
+            
+            deducao_entry.config(state='normal')
+            deducao_entry.delete(0, tk.END)
+            deducao_entry.insert(0, "Não encontrada")
+            
+    def atualizar_medida(entry, valor):
+        entry.config(state='normal')
+        entry.delete(0, tk.END)
+        entry.insert(0, valor)
+        entry.config(state='readonly')
+
+    def calcular():
+
+        deducao_valor = float(deducao_entry.get())
+
+        # Calculo da medida da linha de dobra 1
+        medidadobra1 = float(dobra1.get()) - (deducao_valor / 2)
+        atualizar_medida(medidadobra1_entry, medidadobra1)
+        print(medidadobra1)
+
+        # Calculo da medida da linha de dobra 2
+        if dobra3.get() == "":
+            medidadobra2 = float(dobra2.get()) - (deducao_valor / 2)
+        else:
+            medidadobra2 = float(dobra2.get()) - deducao_valor
+        atualizar_medida(medidadobra2_entry, medidadobra2)
+
+        # Calculo da medida da linha de dobra 3
+        if dobra4.get() == "":
+            medidadobra3 = float(dobra3.get()) - (deducao_valor / 2)
+        else:
+            medidadobra3 = float(dobra3.get()) - deducao_valor
+        atualizar_medida(medidadobra3_entry, medidadobra3)
+
+        # Calculo da medida da linha de dobra 4
+        if dobra5.get() != "":
+            medidadobra4 = float(dobra4.get()) - (deducao_valor / 2)
+        else:
+            medidadobra4 = float(dobra4.get()) - deducao_valor
+        atualizar_medida(medidadobra4_entry, medidadobra4)
+
+        # Calculo da medida da linha de dobra 5
+        medidadobra5 = float(dobra5.get()) - (deducao_valor / 2)
+        atualizar_medida(medidadobra5_entry, medidadobra5)
+
+    def metade_dobra():
+        medida_dobra = [medidadobra1_entry, medidadobra2_entry, medidadobra3_entry, medidadobra4_entry, medidadobra5_entry]
+        metade_dobra = [metadedobra1_entry, metadedobra2_entry, metadedobra3_entry, metadedobra4_entry, metadedobra5_entry]
+
+        for dobra, metadedobra_entry in zip(medida_dobra, metade_dobra):
+            valor = dobra.get()
+            if valor:  # Verifica se a string não está vazia
+                metade = float(valor) / 2
+                atualizar_medida(metadedobra_entry, metade)
+
+    def limpar_dobras():
+        limpar_dobras = [dobra1, dobra2, dobra3, dobra4, dobra5]
+        limpar_medidas = [medidadobra1_entry, medidadobra2_entry, medidadobra3_entry, medidadobra4_entry, medidadobra5_entry]
+        limpar_metades = [metadedobra1_entry, metadedobra2_entry, metadedobra3_entry, metadedobra4_entry, metadedobra5_entry]
+
+        for limpar_dobras in limpar_dobras:
+            limpar_dobras.delete(0, tk.END)
+
+        for limpar_medidas in limpar_medidas:
+            limpar_medidas.config(state='normal')
+            limpar_medidas.delete(0, tk.END)
+            limpar_medidas.config(state='readonly')
+
+        for limpar_metades in limpar_metades:
+            limpar_medidas.config(state='normal')
+            limpar_metades.delete(0, tk.END)
+            limpar_metades.config(state='readonly')
+
+    def limpar_tudo():
+        espessura_combobox.set('')
+        material_combobox.set('')
+        canal_combobox.set('')
+        raio_interno_valor.delete(0, tk.END)
+        fator_k_entry.delete(0, tk.END)
+        deducao_entry.delete(0, tk.END)
+        limpar_dobras()
+
+    # Botão para limpar valores de dobras
     limpar_dobras_button = tk.Button(aba1, text="Limpar Dobras", command=limpar_dobras)
     limpar_dobras_button.pack(pady=10)
-
+    # Botão para limpar todos os valores
     limpar_tudo_button = tk.Button(aba1, text="Limpar Tudo", command=limpar_tudo)
     limpar_tudo_button.pack(pady=10)
 
-    dobra1.bind("<FocusOut>", lambda event: calcular())
-    dobra2.bind("<FocusOut>", lambda event: calcular())
-    dobra3.bind("<FocusOut>", lambda event: calcular())
-    dobra4.bind("<FocusOut>", lambda event: calcular())
-    dobra5.bind("<FocusOut>", lambda event: calcular())
+    # Eventos para atualizar a dedução
+    espessura_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
+    material_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
+    canal_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
+
+   # Eventos para calcular a medida da linha de dobra e a metade da dobra
+    for dobra in [dobra1, dobra2, dobra3, dobra4, dobra5]:
+        dobra.bind("<KeyRelease>", lambda event: calcular())
+        dobra.bind("<FocusOut>", lambda event: metade_dobra())
