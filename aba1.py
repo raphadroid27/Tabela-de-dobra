@@ -52,20 +52,23 @@ def criar_aba1(notebook):
     #Raio interno
     raio_interno_label = tk.Label(frame, text="Raio Interno: ")
     raio_interno_label.grid(row=3, column=0,padx=10)
+
+    raio_interno_valor = tk.Entry(frame)
+    raio_interno_valor.grid(row=4, column=0,padx=10)
     
     #Fator K
     fator_k_label = tk.Label(frame, text="Fator K: ")
     fator_k_label.grid(row=3, column=1,padx=10)
 
-    fator_k_valor = tk.Entry(frame)
-    fator_k_valor.grid(row=4, column=1,padx=10)
+    fator_k_entry = tk.Entry(frame)
+    fator_k_entry.grid(row=4, column=1,padx=10)
 
     #Dedução
     deducao_label = tk.Label(frame, text="Dedução: ")
     deducao_label.grid(row=3, column=2,padx=10)
 
-    deducao_valor = tk.Entry(frame)
-    deducao_valor.grid(row=4, column=2,padx=10)
+    deducao_entry = tk.Entry(frame)
+    deducao_entry.grid(row=4, column=2,padx=10)
     
     def atualizar_deducao():
         espessura_valor = float(espessura_combobox.get())
@@ -79,35 +82,135 @@ def criar_aba1(notebook):
         ).first()
 
         if deducao_obj:
-            deducao_valor.config(state='normal')
-            deducao_valor.delete(0, tk.END)
-            deducao_valor.insert(0, f"{deducao_obj.valor}")
+           
+            deducao_entry.config(state='normal')
+            deducao_entry.delete(0, tk.END)
+            deducao_entry.insert(0, f"{deducao_obj.valor}")
             
         else:
-            deducao_valor.config(state='normal')
-            deducao_valor.delete(0, tk.END)
-            deducao_valor.insert(0, "Não encontrada")
             
+            deducao_entry.config(state='normal')
+            deducao_entry.delete(0, tk.END)
+            deducao_entry.insert(0, "Não encontrada")
+            
+    def atualizar_medida(entry, valor):
+        entry.config(state='normal')
+        entry.delete(0, tk.END)
+        entry.insert(0, valor)
+        entry.config(state='readonly')
 
-    # Botão para atualizar a dedução
-    button = tk.Button(aba1, text="Atualizar Dedução", command=atualizar_deducao)
-    button.pack(pady=10)
+    def calcular():
+
+        deducao_valor = float(deducao_entry.get())
+
+        # Calculo da medida da linha de dobra 1
+        medidadobra1 = float(dobra1.get()) - (deducao_valor / 2)
+        atualizar_medida(medidadobra1_entry, medidadobra1)
+
+        # Calculo da medida da linha de dobra 2
+        if dobra3.get() == "":
+            medidadobra2 = float(dobra2.get()) - (deducao_valor / 2)
+        else:
+            medidadobra2 = float(dobra2.get()) - deducao_valor
+        atualizar_medida(medidadobra2_entry, medidadobra2)
+
+        # Calculo da medida da linha de dobra 3
+        if dobra4.get() == "":
+            medidadobra3 = float(dobra3.get()) - (deducao_valor / 2)
+        else:
+            medidadobra3 = float(dobra3.get()) - deducao_valor
+        atualizar_medida(medidadobra3_entry, medidadobra3)
+
+        # Calculo da medida da linha de dobra 4
+        if dobra5.get() != "":
+            medidadobra4 = float(dobra4.get()) - (deducao_valor / 2)
+        else:
+            medidadobra4 = float(dobra4.get()) - deducao_valor
+        atualizar_medida(medidadobra4_entry, medidadobra4)
+
+        # Calculo da medida da linha de dobra 5
+        medidadobra5 = float(dobra5.get()) - (deducao_valor / 2)
+        atualizar_medida(medidadobra5_entry, medidadobra5)
+
+    def limpar_dobras():
+        limpar_dobras = [dobra1, dobra2, dobra3, dobra4, dobra5]
+        limpar_medidas = [medidadobra1_entry, medidadobra2_entry, medidadobra3_entry, medidadobra4_entry, medidadobra5_entry]
+
+        for limpar_dobras in limpar_dobras:
+            limpar_dobras.delete(0, tk.END)
+
+        for limpar_medidas in limpar_medidas:
+            limpar_medidas.config(state='normal')
+            limpar_medidas.delete(0, tk.END)
+            limpar_medidas.config(state='readonly')
+
+    def limpar_tudo():
+        espessura_combobox.set('')
+        material_combobox.set('')
+        canal_combobox.set('')
+        raio_interno_valor.delete(0, tk.END)
+        fator_k_entry.delete(0, tk.END)
+        deducao_entry.delete(0, tk.END)
+        limpar_dobras()
+        
+    # Eventos para atualizar a dedução
+    espessura_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
+    material_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
+    canal_combobox.bind("<<ComboboxSelected>>", lambda event: atualizar_deducao())
 
     # Novo frame para entradas de valores de dobra
     frame_dobras = tk.Frame(aba1)
     frame_dobras.pack(padx=10, pady=10)
 
+    # Labels para as entradas de valores de dobra
+    dobra1_label = tk.Label(frame_dobras, text="Dobra 1:")
+    dobra1_label.grid(row=0, column=0, padx=5, pady=5)
+    dobra2_label = tk.Label(frame_dobras, text="Dobra 2:")
+    dobra2_label.grid(row=1, column=0, padx=5, pady=5)
+    dobra3_label = tk.Label(frame_dobras, text="Dobra 3:")
+    dobra3_label.grid(row=2, column=0, padx=5, pady=5)
+    dobra4_label = tk.Label(frame_dobras, text="Dobra 4:")
+    dobra4_label.grid(row=3, column=0, padx=5, pady=5)
+    dobra5_label = tk.Label(frame_dobras, text="Dobra 5:")
+    dobra5_label.grid(row=4, column=0, padx=5, pady=5)
+
     # Entradas para inserir valores de dobra
     dobra1 = tk.Entry(frame_dobras)
-    dobra1.grid(row=0, column=0, padx=5, pady=5)
+    dobra1.grid(row=0, column=1, padx=5, pady=5)
     dobra2 = tk.Entry(frame_dobras)
-    dobra2.grid(row=1, column=0, padx=5, pady=5)
+    dobra2.grid(row=1, column=1, padx=5, pady=5)
     dobra3 = tk.Entry(frame_dobras)
-    dobra3.grid(row=2, column=0, padx=5, pady=5)
+    dobra3.grid(row=2, column=1, padx=5, pady=5)
     dobra4 = tk.Entry(frame_dobras)
-    dobra4.grid(row=3, column=0, padx=5, pady=5)
+    dobra4.grid(row=3, column=1, padx=5, pady=5)
     dobra5 = tk.Entry(frame_dobras)
-    dobra5.grid(row=4, column=0, padx=5, pady=5)
+    dobra5.grid(row=4, column=1, padx=5, pady=5)
 
-if __name__ == "__main__":
-    criar_aba1()
+    #Medida da linha de dobra
+
+    medidadobra1_entry = tk.Entry(frame_dobras, state='readonly')
+    medidadobra1_entry.grid(row=0, column=2, padx=5, pady=5)
+    medidadobra2_entry = tk.Entry(frame_dobras, state='readonly')
+    medidadobra2_entry.grid(row=1, column=2, padx=5, pady=5)
+    medidadobra3_entry = tk.Entry(frame_dobras, state='readonly')
+    medidadobra3_entry.grid(row=2, column=2, padx=5, pady=5)
+    medidadobra4_entry = tk.Entry(frame_dobras, state='readonly')
+    medidadobra4_entry.grid(row=3, column=2, padx=5, pady=5)
+    medidadobra5_entry = tk.Entry(frame_dobras, state='readonly')
+    medidadobra5_entry.grid(row=4, column=2, padx=5, pady=5)  
+
+
+
+
+    # Botões limpar dobras e tudo
+    limpar_dobras_button = tk.Button(aba1, text="Limpar Dobras", command=limpar_dobras)
+    limpar_dobras_button.pack(pady=10)
+
+    limpar_tudo_button = tk.Button(aba1, text="Limpar Tudo", command=limpar_tudo)
+    limpar_tudo_button.pack(pady=10)
+
+    dobra1.bind("<FocusOut>", lambda event: calcular())
+    dobra2.bind("<FocusOut>", lambda event: calcular())
+    dobra3.bind("<FocusOut>", lambda event: calcular())
+    dobra4.bind("<FocusOut>", lambda event: calcular())
+    dobra5.bind("<FocusOut>", lambda event: calcular())
