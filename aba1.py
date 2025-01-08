@@ -162,6 +162,8 @@ def criar_aba1(notebook):
 
         # Calculo da medida da linha de dobra 1
         if dobra1.get() == "":
+            atualizar_medida(medidadobra1_entry, "")
+            atualizar_medida(metadedobra1_entry, "")
             return
         else:
             medidadobra1 = float(dobra1.get()) - (deducao_valor / 2)
@@ -170,6 +172,8 @@ def criar_aba1(notebook):
 
         # Calculo da medida da linha de dobra 2
         if dobra2.get() == "":
+            atualizar_medida(medidadobra2_entry, "")
+            atualizar_medida(metadedobra2_entry, "")
             return
         else:
             if dobra3.get() == "":
@@ -180,6 +184,8 @@ def criar_aba1(notebook):
 
         # Calculo da medida da linha de dobra 3
         if dobra3.get() == "":
+            atualizar_medida(medidadobra3_entry, "")
+            atualizar_medida(metadedobra3_entry, "")    
             return
         else:
             if dobra4.get() == "":
@@ -190,6 +196,8 @@ def criar_aba1(notebook):
 
         # Calculo da medida da linha de dobra 4
         if dobra4.get() == "":
+            atualizar_medida(medidadobra4_entry, "")
+            atualizar_medida(metadedobra4_entry, "")
             return
         else:
             if dobra5.get() == "":
@@ -200,6 +208,8 @@ def criar_aba1(notebook):
 
         # Calculo da medida da linha de dobra 5
         if dobra5.get() == "":
+            atualizar_medida(medidadobra5_entry, "")
+            atualizar_medida(metadedobra5_entry, "")
             return
         else:
             medidadobra5 = float(dobra5.get()) - (deducao_valor / 2)
@@ -228,18 +238,19 @@ def criar_aba1(notebook):
 
     def calcular_fatork():
 
-        deducao_valor = float(deducao_entry.get())
-        espessura_valor = float(espessura_combobox.get())
-        raio_interno = float(raio_interno_valor.get())
+        if raio_interno_valor.get() == "":
+            atualizar_medida(fator_k_entry, "")
+            return
+        else:
+            deducao_valor = float(deducao_entry.get())
+            espessura_valor = float(espessura_combobox.get())
+            raio_interno = float(raio_interno_valor.get())
 
-        fator_k = (4 * (espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * espessura_valor)
+            fator_k = (4 * (espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * espessura_valor)
 
-        fator_k_entry.config(state='normal')
-        fator_k_entry.delete(0, tk.END)
-        fator_k_entry.insert(0, f"{fator_k:.2f}")
-        fator_k_entry.config(state='readonly')
+            atualizar_medida(fator_k_entry, f"{fator_k:.2f}")
 
-        print(fator_k)
+            print(fator_k)
 
     def limpar_dobras():
         limpar_dobras = [dobra1, dobra2, dobra3, dobra4, dobra5]
@@ -292,13 +303,13 @@ def criar_aba1(notebook):
     espessura_combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
     material_combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
 
-    deducao_entry.bind("<FocusOut>", lambda event: todas_funcoes())
+    deducao_entry.bind("<KeyRelease>", lambda event: todas_funcoes())
 
-    dobra1.bind("<FocusOut>", lambda event: todas_funcoes())
-    dobra2.bind("<FocusOut>", lambda event: todas_funcoes())
-    dobra3.bind("<FocusOut>", lambda event: todas_funcoes())
-    dobra4.bind("<FocusOut>", lambda event: todas_funcoes())
-    dobra5.bind("<FocusOut>", lambda event: todas_funcoes())
+    dobra1.bind("<KeyRelease>", lambda event: todas_funcoes())
+    dobra2.bind("<KeyRelease>", lambda event: todas_funcoes())
+    dobra3.bind("<KeyRelease>", lambda event: todas_funcoes())
+    dobra4.bind("<KeyRelease>", lambda event: todas_funcoes())
+    dobra5.bind("<KeyRelease>", lambda event: todas_funcoes())
 
-    raio_interno_valor.bind("<FocusOut>", calcular_fatork)
+    raio_interno_valor.bind("<KeyRelease>", lambda event: todas_funcoes())
    
