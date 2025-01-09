@@ -6,7 +6,8 @@ Base = declarative_base()
 
 class espessura(Base):
     __tablename__ = 'espessura'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String)
     valor = Column(Float)
 
 class material(Base):
@@ -17,7 +18,8 @@ class material(Base):
 
 class canal(Base):
         __tablename__ = 'canal'
-        id = Column(Integer, primary_key=True)
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        nome = Column(String)
         valor = Column(Float)
 
 class deducao(Base):
