@@ -11,38 +11,6 @@ session = Session()
 
 def main():
 
-    def adicionar_material():
-        nome = material_nome_entry.get()
-        densidade = float(material_densidade_entry.get())
-        novo_material = material(nome=nome, densidade=densidade)
-        session.add(novo_material)
-        session.commit()
-        material_nome_entry.delete(0, tk.END)
-        material_densidade_entry.delete(0, tk.END)
-
-    def adicionar_espessura():
-        nome = espessura_nome_entry.get()
-        valor = float(espessura_valor_entry.get())
-        material_nome = espessura_material_combobox.get()
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
-        nova_espessura = espessura(nome=nome, valor=valor, material_id=material_obj.id)
-        session.add(nova_espessura)
-        session.commit()
-        espessura_nome_entry.delete(0, tk.END)
-        espessura_valor_entry.delete(0, tk.END)
-        espessura_material_combobox.set('')
-
-    def adicionar_canal():
-        nome = canal_nome_entry.get()
-        valor = float(canal_valor_entry.get())
-        espessura_nome = canal_espessura_combobox.get()
-        espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
-        novo_canal = canal(nome=nome, valor=valor, espessura_id=espessura_obj.id)
-        session.add(novo_canal)
-        session.commit()
-        canal_nome_entry.delete(0, tk.END)
-        canal_valor_entry.delete(0, tk.END)
-        canal_espessura_combobox.set('')
 
     def adicionar_deducao():
         espessura_nome = deducao_espessura_combobox.get()
@@ -60,6 +28,46 @@ def main():
         deducao_material_combobox.set('')
         deducao_valor_entry.delete(0, tk.END)
 
+    def adicionar_dados():
+    # Adicionar novos valores ao banco de dados apenas se os campos estiverem preenchidos
+        if material_nome_entry.get() and material_densidade_entry.get():
+            nome_material = material_nome_entry.get()
+            densidade_material = float(material_densidade_entry.get())
+            novo_material = material(nome=nome_material, densidade=densidade_material)
+            session.add(novo_material)
+            material_nome_entry.delete(0, tk.END)
+            material_densidade_entry.delete(0, tk.END)
+
+        if espessura_nome_entry.get() and espessura_valor_entry.get():
+            nome_espessura = espessura_nome_entry.get()
+            valor_espessura = float(espessura_valor_entry.get())
+            nova_espessura = espessura(nome=nome_espessura, valor=valor_espessura)
+            session.add(nova_espessura)
+            espessura_nome_entry.delete(0, tk.END)
+            espessura_valor_entry.delete(0, tk.END)
+
+        if canal_nome_entry.get() and canal_valor_entry.get():
+            nome_canal = canal_nome_entry.get()
+            valor_canal = float(canal_valor_entry.get())
+            novo_canal = canal(nome=nome_canal, valor=valor_canal)
+            session.add(novo_canal)
+            canal_nome_entry.delete(0, tk.END)
+            canal_valor_entry.delete(0, tk.END)
+
+        session.commit()
+        atualizar_dados()
+
+    def atualizar_dados():
+        # Atualizar valores dos comboboxes
+        materiais = [m.nome for m in session.query(material).all()]
+        espessuras = [e.nome for e in session.query(espessura).all()]
+        canais = [c.nome for c in session.query(canal).all()]
+
+        deducao_material_combobox['values'] = materiais
+        deducao_espessura_combobox['values'] = espessuras
+        deducao_canal_combobox['values'] = canais
+    
+
     root = tk.Tk()
     root.title("Tabela de dobra")
     root.geometry("600x600")
@@ -68,64 +76,65 @@ def main():
     label1 = tk.Label(root, text="Adicionar Nova Dedução de Dobra", font=("Helvetica", 16))
     label1.pack(pady=10)
 
-    # Formulário para adicionar material
-    material_frame = tk.Frame(root)
-    material_frame.pack(pady=10)
-    tk.Label(material_frame, text="Nome do Material:").grid(row=0, column=0)
-    material_nome_entry = tk.Entry(material_frame)
-    material_nome_entry.grid(row=0, column=1)
-    tk.Label(material_frame, text="Densidade:").grid(row=1, column=0)
-    material_densidade_entry = tk.Entry(material_frame)
-    material_densidade_entry.grid(row=1, column=1)
-    tk.Button(material_frame, text="Adicionar Material", command=adicionar_material).grid(row=2, columnspan=2, pady=5)
+    # Frame principal para organizar as colunas
+    main_frame = tk.Frame(root)
+    main_frame.pack(pady=10)
 
-    # Formulário para adicionar espessura
-    espessura_frame = tk.Frame(root)
-    espessura_frame.pack(pady=10)
-    tk.Label(espessura_frame, text="Nome da Espessura:").grid(row=0, column=0)
-    espessura_nome_entry = tk.Entry(espessura_frame)
-    espessura_nome_entry.grid(row=0, column=1)
-    tk.Label(espessura_frame, text="Valor:").grid(row=1, column=0)
-    espessura_valor_entry = tk.Entry(espessura_frame)
-    espessura_valor_entry.grid(row=1, column=1)
-    tk.Label(espessura_frame, text="Material:").grid(row=2, column=0)
-    materiais_nomes = [m.nome for m in session.query(material).all()]
-    espessura_material_combobox = ttk.Combobox(espessura_frame, values=materiais_nomes)
-    espessura_material_combobox.grid(row=2, column=1)
-    tk.Button(espessura_frame, text="Adicionar Espessura", command=adicionar_espessura).grid(row=3, columnspan=2, pady=5)
+    # Coluna "Nova Dedução"
+    nova_deducao_frame = tk.Frame(main_frame)
+    nova_deducao_frame.grid(row=0, column=0, padx=10)
 
-    # Formulário para adicionar canal
-    canal_frame = tk.Frame(root)
-    canal_frame.pack(pady=10)
-    tk.Label(canal_frame, text="Nome do Canal:").grid(row=0, column=0)
-    canal_nome_entry = tk.Entry(canal_frame)
-    canal_nome_entry.grid(row=0, column=1)
-    tk.Label(canal_frame, text="Valor:").grid(row=1, column=0)
-    canal_valor_entry = tk.Entry(canal_frame)
-    canal_valor_entry.grid(row=1, column=1)
-    tk.Label(canal_frame, text="Espessura:").grid(row=2, column=0)
-    espessuras_nomes = [e.nome for e in session.query(espessura).all()]
-    canal_espessura_combobox = ttk.Combobox(canal_frame, values=espessuras_nomes)
-    canal_espessura_combobox.grid(row=2, column=1)
-    tk.Button(canal_frame, text="Adicionar Canal", command=adicionar_canal).grid(row=3, columnspan=2, pady=5)
+    tk.Label(nova_deducao_frame, text="Nova Dedução").grid(row=0, column=0, columnspan=2)
 
-    # Formulário para adicionar dedução
-    deducao_frame = tk.Frame(root)
-    deducao_frame.pack(pady=10)
-    tk.Label(deducao_frame, text="Espessura:").grid(row=0, column=0)
-    deducao_espessura_combobox = ttk.Combobox(deducao_frame, values=espessuras_nomes)
-    deducao_espessura_combobox.grid(row=0, column=1)
-    tk.Label(deducao_frame, text="Canal:").grid(row=1, column=0)
-    canais_nomes = [c.nome for c in session.query(canal).all()]
-    deducao_canal_combobox = ttk.Combobox(deducao_frame, values=canais_nomes)
-    deducao_canal_combobox.grid(row=1, column=1)
-    tk.Label(deducao_frame, text="Material:").grid(row=2, column=0)
-    deducao_material_combobox = ttk.Combobox(deducao_frame, values=materiais_nomes)
-    deducao_material_combobox.grid(row=2, column=1)
-    tk.Label(deducao_frame, text="Valor:").grid(row=3, column=0)
-    deducao_valor_entry = tk.Entry(deducao_frame)
-    deducao_valor_entry.grid(row=3, column=1)
-    tk.Button(deducao_frame, text="Adicionar Dedução", command=adicionar_deducao).grid(row=4, columnspan=2, pady=5)
+    tk.Label(nova_deducao_frame, text="Material:").grid(row=1, column=0)
+    deducao_material_combobox = ttk.Combobox(nova_deducao_frame, values=[m.nome for m in session.query(material).all()])
+    deducao_material_combobox.grid(row=1, column=1)
+
+    tk.Label(nova_deducao_frame, text="Espessura:").grid(row=2, column=0)
+    deducao_espessura_combobox = ttk.Combobox(nova_deducao_frame, values=[m.nome for m in session.query(espessura).all()])
+    deducao_espessura_combobox.grid(row=2, column=1)
+
+    tk.Label(nova_deducao_frame, text="Canal:").grid(row=3, column=0)
+    deducao_canal_combobox = ttk.Combobox(nova_deducao_frame, values=[])
+    deducao_canal_combobox.grid(row=3, column=1)
+
+    tk.Label(nova_deducao_frame, text="Dedução:").grid(row=4, column=0)
+    deducao_valor_entry = tk.Entry(nova_deducao_frame)
+    deducao_valor_entry.grid(row=4, column=1)
+
+    tk.Button(nova_deducao_frame, text="Adicionar Dedução", command=adicionar_deducao).grid(row=5, columnspan=2, pady=5)
+
+    # Coluna "Novos Valores"
+    novos_valores_frame = tk.Frame(main_frame)
+    novos_valores_frame.grid(row=0, column=1, padx=10)
+
+    tk.Label(novos_valores_frame, text="Novos Valores").grid(row=0, column=0, columnspan=2)
+
+    tk.Label(novos_valores_frame, text="Material:").grid(row=1, column=0)
+    material_nome_entry = tk.Entry(novos_valores_frame)
+    material_nome_entry.grid(row=1, column=1)
+
+    tk.Label(novos_valores_frame, text="Densidade:").grid(row=2, column=0)
+    material_densidade_entry = tk.Entry(novos_valores_frame)
+    material_densidade_entry.grid(row=2, column=1)
+
+    tk.Label(novos_valores_frame, text="Nome da Espessura:").grid(row=4, column=0)
+    espessura_nome_entry = tk.Entry(novos_valores_frame)
+    espessura_nome_entry.grid(row=4, column=1)
+
+    tk.Label(novos_valores_frame, text="Valor:").grid(row=5, column=0)
+    espessura_valor_entry = tk.Entry(novos_valores_frame)
+    espessura_valor_entry.grid(row=5, column=1)
+
+    tk.Label(novos_valores_frame, text="Nome do Canal:").grid(row=7, column=0)
+    canal_nome_entry = tk.Entry(novos_valores_frame)
+    canal_nome_entry.grid(row=7, column=1)
+
+    tk.Label(novos_valores_frame, text="Valor:").grid(row=8, column=0)
+    canal_valor_entry = tk.Entry(novos_valores_frame)
+    canal_valor_entry.grid(row=8, column=1)
+
+    tk.Button(novos_valores_frame, text="Adicionar Dados", command=adicionar_dados).grid(row=10, columnspan=2, pady=5)
 
     root.mainloop()
 

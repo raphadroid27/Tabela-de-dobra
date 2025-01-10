@@ -17,38 +17,46 @@ def criar_aba1(notebook):
     aba1.pack(fill='both', expand=True)
     notebook.add(aba1, text='Aba 1')
 
-# Conteúdo da Aba 1
-
     frame = tk.Frame(aba1)
     frame.pack(padx=10, pady=10)
-
-    #lista de materiais
-
-    materiais_nomes = [m.nome for m in session.query(material).all()]
 
     material_label = tk.Label(frame, text="Material:")
     material_label.grid(row=0, column=0)
 
-    material_combobox = ttk.Combobox(frame, values=materiais_nomes)
-    material_combobox.grid(row=1, column=0,padx=10)
-
-    # Lista de espessuras
-    espessuras_valores = [str(e.valor) for e in session.query(espessura).all()]
+    material_combobox = ttk.Combobox(frame, values=[m.nome for m in session.query(material).all()])
+    material_combobox.grid(row=1, column=0, padx=10)
 
     espessura_label = tk.Label(frame, text="Espessura: ")
     espessura_label.grid(row=0, column=1)
     
-    espessura_combobox = ttk.Combobox(frame, values=espessuras_valores)
+    espessura_combobox = ttk.Combobox(frame)
     espessura_combobox.grid(row=1, column=1, padx=10)
-
-    #lista de canais
-    canais_valores = [str(c.valor) for c in session.query(canal).all()]
 
     canal_label = tk.Label(frame, text="Canal:")
     canal_label.grid(row=0, column=2)
 
-    canal_combobox = ttk.Combobox(frame, values=canais_valores)
-    canal_combobox.grid(row=1, column=2,padx=10)
+    canal_combobox = ttk.Combobox(frame)
+    canal_combobox.grid(row=1, column=2, padx=10)
+
+    def atualizar_espessuras(event):
+        material_nome = material_combobox.get()
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
+        if material_obj:
+            espessuras_nomes = [str(e.nome) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()]
+            espessura_combobox['values'] = espessuras_nomes
+
+    def atualizar_canais(event):
+
+        print("Atualizando canais")
+
+        espessura_nome = espessura_combobox.get()
+        espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
+        if espessura_obj:
+            canais_valores = [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).all()]
+            canal_combobox['values'] = canais_valores        
+
+    #material_combobox.bind("<<ComboboxSelected>>", atualizar_espessuras)
+    #espessura_combobox.bind("<<ComboboxSelected>>", atualizar_canais)
 
     #Raio interno
     raio_interno_label = tk.Label(frame, text="Raio Interno: ")
@@ -127,28 +135,37 @@ def criar_aba1(notebook):
 
     #Funções
 
+    def atualizar_medida(entry, valor):
+            entry.config(state='normal')
+            entry.delete(0, tk.END)
+            entry.insert(0, valor)
+            entry.config(state='readonly')
+
     def atualizar_deducao():
-        espessura_valor = float(espessura_combobox.get())
+        espessura_nome = espessura_combobox.get()
         material_nome = material_combobox.get()
-        canal_valor = float(canal_combobox.get())
+        canal_nome = canal_combobox.get()
 
-        deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
-            espessura.valor == espessura_valor,
-            material.nome == material_nome,
-            canal.valor == canal_valor
-        ).first()
+        espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
+        canal_obj = session.query(canal).filter_by(valor=canal_nome).first()
 
-        if deducao_obj:
-           
-            deducao_entry.config(state='normal')
-            deducao_entry.delete(0, tk.END)
-            deducao_entry.insert(0, f"{deducao_obj.valor}")
-            
-        else:
-            
-            deducao_entry.config(state='normal')
-            deducao_entry.delete(0, tk.END)
-            deducao_entry.insert(0, "Não encontrada")
+        if espessura_obj and material_obj and canal_obj:
+            deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
+                deducao.espessura_id == espessura_obj.id,
+                deducao.material_id == material_obj.id,
+                deducao.canal_id == canal_obj.id
+            ).first()
+
+            if deducao_obj:
+                deducao_entry.config(state='normal')
+                deducao_entry.delete(0, tk.END)
+                deducao_entry.insert(0, f"{deducao_obj.valor}")
+            else:
+                deducao_entry.config(state='normal')
+                deducao_entry.delete(0, tk.END)
+                deducao_entry.insert(0, "Não encontrada")
+
             
     def atualizar_medida(entry, valor):
         entry.config(state='normal')
@@ -158,62 +175,65 @@ def criar_aba1(notebook):
 
     def calcular_dobra():
 
-        deducao_valor = float(deducao_entry.get())
-
-        # Calculo da medida da linha de dobra 1
-        if dobra1.get() == "":
-            atualizar_medida(medidadobra1_entry, "")
-            atualizar_medida(metadedobra1_entry, "")
+        if deducao_entry.get() == "":
             return
         else:
-            medidadobra1 = float(dobra1.get()) - (deducao_valor / 2)
-            atualizar_medida(medidadobra1_entry, medidadobra1)
-            print(medidadobra1)
+            deducao_valor = float(deducao_entry.get())
 
-        # Calculo da medida da linha de dobra 2
-        if dobra2.get() == "":
-            atualizar_medida(medidadobra2_entry, "")
-            atualizar_medida(metadedobra2_entry, "")
-            return
-        else:
+            # Calculo da medida da linha de dobra 1
+            if dobra1.get() == "":
+                atualizar_medida(medidadobra1_entry, "")
+                atualizar_medida(metadedobra1_entry, "")
+                return
+            else:
+                medidadobra1 = float(dobra1.get()) - (deducao_valor / 2)
+                atualizar_medida(medidadobra1_entry, medidadobra1)
+                print(medidadobra1)
+
+            # Calculo da medida da linha de dobra 2
+            if dobra2.get() == "":
+                atualizar_medida(medidadobra2_entry, "")
+                atualizar_medida(metadedobra2_entry, "")
+                return
+            else:
+                if dobra3.get() == "":
+                    medidadobra2 = float(dobra2.get()) - (deducao_valor / 2)
+                else:
+                    medidadobra2 = float(dobra2.get()) - deducao_valor
+                atualizar_medida(medidadobra2_entry, medidadobra2)
+
+            # Calculo da medida da linha de dobra 3
             if dobra3.get() == "":
-                medidadobra2 = float(dobra2.get()) - (deducao_valor / 2)
+                atualizar_medida(medidadobra3_entry, "")
+                atualizar_medida(metadedobra3_entry, "")    
+                return
             else:
-                medidadobra2 = float(dobra2.get()) - deducao_valor
-            atualizar_medida(medidadobra2_entry, medidadobra2)
+                if dobra4.get() == "":
+                    medidadobra3 = float(dobra3.get()) - (deducao_valor / 2)
+                else:
+                    medidadobra3 = float(dobra3.get()) - deducao_valor
+                atualizar_medida(medidadobra3_entry, medidadobra3)
 
-        # Calculo da medida da linha de dobra 3
-        if dobra3.get() == "":
-            atualizar_medida(medidadobra3_entry, "")
-            atualizar_medida(metadedobra3_entry, "")    
-            return
-        else:
+            # Calculo da medida da linha de dobra 4
             if dobra4.get() == "":
-                medidadobra3 = float(dobra3.get()) - (deducao_valor / 2)
+                atualizar_medida(medidadobra4_entry, "")
+                atualizar_medida(metadedobra4_entry, "")
+                return
             else:
-                medidadobra3 = float(dobra3.get()) - deducao_valor
-            atualizar_medida(medidadobra3_entry, medidadobra3)
+                if dobra5.get() == "":
+                    medidadobra4 = float(dobra4.get()) - (deducao_valor / 2)
+                else:
+                    medidadobra4 = float(dobra4.get()) - deducao_valor
+                atualizar_medida(medidadobra4_entry, medidadobra4)
 
-        # Calculo da medida da linha de dobra 4
-        if dobra4.get() == "":
-            atualizar_medida(medidadobra4_entry, "")
-            atualizar_medida(metadedobra4_entry, "")
-            return
-        else:
+            # Calculo da medida da linha de dobra 5
             if dobra5.get() == "":
-                medidadobra4 = float(dobra4.get()) - (deducao_valor / 2)
+                atualizar_medida(medidadobra5_entry, "")
+                atualizar_medida(metadedobra5_entry, "")
+                return
             else:
-                medidadobra4 = float(dobra4.get()) - deducao_valor
-            atualizar_medida(medidadobra4_entry, medidadobra4)
-
-        # Calculo da medida da linha de dobra 5
-        if dobra5.get() == "":
-            atualizar_medida(medidadobra5_entry, "")
-            atualizar_medida(metadedobra5_entry, "")
-            return
-        else:
-            medidadobra5 = float(dobra5.get()) - (deducao_valor / 2)
-            atualizar_medida(medidadobra5_entry, medidadobra5)
+                medidadobra5 = float(dobra5.get()) - (deducao_valor / 2)
+                atualizar_medida(medidadobra5_entry, medidadobra5)
 
     def metade_dobra():
         entradas = [
@@ -231,10 +251,10 @@ def criar_aba1(notebook):
                 metadedobra = medidadobra / 2
                 atualizar_medida(metadedobra_entry, metadedobra)
             except ValueError:
-                print(f"Erro ao converter valor de {medidadobra_entry} para float")
+                return
+                
             finally:
                 medidadobra_entry.config(state='readonly')
-
 
     def calcular_fatork():
 
@@ -243,10 +263,14 @@ def criar_aba1(notebook):
             return
         else:
             deducao_valor = float(deducao_entry.get())
-            espessura_valor = float(espessura_combobox.get())
-            raio_interno = float(raio_interno_valor.get())
+            espessura_nome = espessura_combobox.get()
+            espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
+            espessura_valor = espessura_obj.valor
+            raio_interno = float(raio_interno_valor.get().replace(',', '.'))
 
-            fator_k = (4 * (espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * espessura_valor)
+    
+
+            fator_k = (4 * (espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * espessura_valor)    
 
             atualizar_medida(fator_k_entry, f"{fator_k:.2f}")
 
@@ -280,7 +304,11 @@ def criar_aba1(notebook):
         limpar_dobras()
 
     def todas_funcoes():
-   
+
+        print("Chamando atualizar_canais()")
+        atualizar_espessuras(None)
+        print("Chamando atualizar_deducao()")
+        atualizar_canais(None)
         print("Chamando atualizar_deducao()")
         atualizar_deducao()
         print("Chamando calcular_dobra()")

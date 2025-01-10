@@ -9,11 +9,6 @@ class espessura(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     nome = Column(String)
     valor = Column(Float)
-    material_id = Column(Integer, ForeignKey('material.id'))
-    canal_id = Column(Integer, ForeignKey('canal.id'))
-
-    material = relationship("material")
-    canal = relationship("canal")
 
 class material(Base):
     __tablename__ = 'material'
@@ -33,11 +28,18 @@ class deducao(Base):
         canal_id = Column(Integer, ForeignKey('canal.id'))
         espessura_id = Column(Integer, ForeignKey('espessura.id'))
         material_id = Column(Integer, ForeignKey('material.id'))
+        obs_id = Column(Integer, ForeignKey('observacao.id'))
         valor = Column(Float)
 
         canal = relationship("canal")
         espessura = relationship("espessura")
         material = relationship("material")
+        observacao = relationship("observacao")
+
+class observacao(Base):
+        __tablename__ = 'observacao'
+        id = Column(Integer, primary_key=True)
+        valor = Column(String)        
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Base.metadata.create_all(engine)
