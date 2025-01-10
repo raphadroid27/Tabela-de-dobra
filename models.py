@@ -9,6 +9,11 @@ class espessura(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     nome = Column(String)
     valor = Column(Float)
+    material_id = Column(Integer, ForeignKey('material.id'))
+    canal_id = Column(Integer, ForeignKey('canal.id'))
+
+    material = relationship("material")
+    canal = relationship("canal")
 
 class material(Base):
     __tablename__ = 'material'
@@ -21,7 +26,7 @@ class canal(Base):
         id = Column(Integer, primary_key=True, autoincrement=True)
         nome = Column(String)
         valor = Column(Float)
-
+        
 class deducao(Base):
         __tablename__ = 'deducao'
         id = Column(Integer, primary_key=True)

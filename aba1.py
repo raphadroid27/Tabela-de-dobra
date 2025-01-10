@@ -22,32 +22,32 @@ def criar_aba1(notebook):
     frame = tk.Frame(aba1)
     frame.pack(padx=10, pady=10)
 
-    # Lista de espessuras
-    espessura_id = [str(e.nome) for e in session.query(espessura).all()]
-
-    espessura_label = tk.Label(frame, text="Espessura: ")
-    espessura_label.grid(row=0, column=0)
-    
-    espessura_combobox = ttk.Combobox(frame, values=espessura_id)
-    espessura_combobox.grid(row=1, column=0, padx=10)
-
     #lista de materiais
 
     materiais_nomes = [m.nome for m in session.query(material).all()]
 
     material_label = tk.Label(frame, text="Material:")
-    material_label.grid(row=0, column=1)
+    material_label.grid(row=0, column=0)
 
     material_combobox = ttk.Combobox(frame, values=materiais_nomes)
-    material_combobox.grid(row=1, column=1,padx=10)
+    material_combobox.grid(row=1, column=0,padx=10)
+
+    # Lista de espessuras
+    espessuras_valores = [str(e.valor) for e in session.query(espessura).all()]
+
+    espessura_label = tk.Label(frame, text="Espessura: ")
+    espessura_label.grid(row=0, column=1)
+    
+    espessura_combobox = ttk.Combobox(frame, values=espessuras_valores)
+    espessura_combobox.grid(row=1, column=1, padx=10)
 
     #lista de canais
-    canal_id = [str(c.nome) for c in session.query(canal).all()]
+    canais_valores = [str(c.valor) for c in session.query(canal).all()]
 
     canal_label = tk.Label(frame, text="Canal:")
     canal_label.grid(row=0, column=2)
 
-    canal_combobox = ttk.Combobox(frame, values=canal_id)
+    canal_combobox = ttk.Combobox(frame, values=canais_valores)
     canal_combobox.grid(row=1, column=2,padx=10)
 
     #Raio interno
@@ -128,22 +128,9 @@ def criar_aba1(notebook):
     #Funções
 
     def atualizar_deducao():
-
-        espessura_id = int(espessura_combobox.get())
+        espessura_valor = float(espessura_combobox.get())
         material_nome = material_combobox.get()
-        canal_id = int(canal_combobox.get())
-
-        espessura_obj = session.query(espessura).filter(espessura.id == espessura_id).first()
-        if espessura_obj:
-            espessura_valor = espessura_obj.valor
-        else:
-            espessura_valor = None
-
-        canal_obj = session.query(canal).filter(canal.id == canal_id).first()
-        if canal_obj:
-            canal_valor = canal_obj.valor
-        else:
-            canal_valor = None
+        canal_valor = float(canal_combobox.get())
 
         deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
             espessura.valor == espessura_valor,
