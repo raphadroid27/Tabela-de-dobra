@@ -1,20 +1,22 @@
 import tkinter as tk
+from tkinter import ttk
 
-root = tk.Tk()
-root.title("Exemplo de Layout")
+def main():
+    root = tk.Tk()
+    root.title("Exemplo de Estilo com Tkinter")
+    root.geometry("400x300")
 
-# Criando um Frame
-frame = tk.Frame(root)
-frame.grid(row=0, column=0, padx=10, pady=10)
+    style = ttk.Style()
+    style.configure("TButton", font=("Helvetica", 12), padding=10)
+    style.configure("TLabel", font=("Helvetica", 14), background="lightblue")
 
-# Adicionando widgets ao Frame
-label = tk.Label(frame, text="Nome:")
-label.grid(row=0, column=0, sticky="e")
+    label = ttk.Label(root, text="Olá, Tkinter!", style="TLabel")
+    label.pack(pady=20)
 
-entry = tk.Entry(frame)
-entry.grid(row=0, column=1)
+    button = ttk.Button(root, text="Clique Aqui", style="TButton")
+    button.pack(pady=20)
 
-button = tk.Button(frame, text="Enviar")
-button.grid(row=1, columnspan=2)
+    root.mainloop()
 
-root.mainloop()
+if __name__ == "__main__":
+    main()

@@ -3,14 +3,14 @@ from tkinter import ttk
 from models import espessura, material, canal, deducao
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+import app
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def main():
-
+def main(root_app):
 
     def adicionar_deducao():
         espessura_nome = deducao_espessura_combobox.get()
@@ -67,11 +67,23 @@ def main():
         deducao_espessura_combobox['values'] = espessuras
         deducao_canal_combobox['values'] = canais
     
+    def on_closing():
+            root_app.destroy()  # Fechar a janela principal
+            app.main()  # Reabrir a aplicação principal
+            root.destroy()
+
+            root.protocol("WM_DELETE_WINDOW", on_closing)    
 
     root = tk.Tk()
     root.title("Tabela de dobra")
-    root.geometry("600x600")
+    root.geometry("500x260")
     root.resizable(False, False)
+
+    # Centralizar a janela add_form em relação à janela principal
+    root_app.update_idletasks()
+    x = root_app.winfo_x() + (root_app.winfo_width()) + (20)
+    y = root_app.winfo_y() + (root_app.winfo_height() // 2) - (260 // 2)
+    root.geometry(f"+{x}+{y}")
 
     label1 = tk.Label(root, text="Adicionar Nova Dedução de Dobra", font=("Helvetica", 16))
     label1.pack(pady=10)
@@ -95,7 +107,7 @@ def main():
     deducao_espessura_combobox.grid(row=2, column=1)
 
     tk.Label(nova_deducao_frame, text="Canal:").grid(row=3, column=0)
-    deducao_canal_combobox = ttk.Combobox(nova_deducao_frame, values=[])
+    deducao_canal_combobox = ttk.Combobox(nova_deducao_frame, values=[c.nome for c in session.query(canal).all()])
     deducao_canal_combobox.grid(row=3, column=1)
 
     tk.Label(nova_deducao_frame, text="Dedução:").grid(row=4, column=0)
@@ -139,4 +151,5 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    main(None)
+    

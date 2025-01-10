@@ -38,26 +38,6 @@ def criar_aba1(notebook):
     canal_combobox = ttk.Combobox(frame)
     canal_combobox.grid(row=1, column=2, padx=10)
 
-    def atualizar_espessuras(event):
-        material_nome = material_combobox.get()
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
-        if material_obj:
-            espessuras_nomes = [str(e.nome) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()]
-            espessura_combobox['values'] = espessuras_nomes
-
-    def atualizar_canais(event):
-
-        print("Atualizando canais")
-
-        espessura_nome = espessura_combobox.get()
-        espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
-        if espessura_obj:
-            canais_valores = [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).all()]
-            canal_combobox['values'] = canais_valores        
-
-    #material_combobox.bind("<<ComboboxSelected>>", atualizar_espessuras)
-    #espessura_combobox.bind("<<ComboboxSelected>>", atualizar_canais)
-
     #Raio interno
     raio_interno_label = tk.Label(frame, text="Raio Interno: ")
     raio_interno_label.grid(row=3, column=0,padx=10)
@@ -134,6 +114,23 @@ def criar_aba1(notebook):
     metadedobra5_entry.grid(row=4, column=3, padx=5, pady=5) 
 
     #Funções
+
+    def atualizar_espessura():
+        material_nome = material_combobox.get()
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
+        if material_obj:
+            espessuras_nomes = [str(e.nome) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()]
+            espessura_combobox['values'] = espessuras_nomes
+
+    def atualizar_canal():
+
+        print("Atualizando canais")
+
+        espessura_nome = espessura_combobox.get()
+        espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
+        if espessura_obj:
+            canais_valores = [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).all()]
+            canal_combobox['values'] = canais_valores
 
     def atualizar_medida(entry, valor):
             entry.config(state='normal')
@@ -268,8 +265,6 @@ def criar_aba1(notebook):
             espessura_valor = espessura_obj.valor
             raio_interno = float(raio_interno_valor.get().replace(',', '.'))
 
-    
-
             fator_k = (4 * (espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * espessura_valor)    
 
             atualizar_medida(fator_k_entry, f"{fator_k:.2f}")
@@ -306,9 +301,9 @@ def criar_aba1(notebook):
     def todas_funcoes():
 
         print("Chamando atualizar_canais()")
-        atualizar_espessuras(None)
+        atualizar_espessura()
         print("Chamando atualizar_deducao()")
-        atualizar_canais(None)
+        atualizar_canal()
         print("Chamando atualizar_deducao()")
         atualizar_deducao()
         print("Chamando calcular_dobra()")
@@ -324,8 +319,6 @@ def criar_aba1(notebook):
     # Botão para limpar todos os valores
     limpar_tudo_button = tk.Button(aba1, text="Limpar Tudo", command=limpar_tudo)
     limpar_tudo_button.pack(pady=10)
-
-
     
     canal_combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
     espessura_combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
