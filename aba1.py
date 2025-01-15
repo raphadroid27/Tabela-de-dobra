@@ -2,20 +2,17 @@ import tkinter as tk
 from tkinter import ttk
 from models import espessura, material, canal, deducao
 from head import *
-import head as h
+import globals as g
 
 def criar_aba1(notebook):
 
-    global material_combobox, espessura_combobox, canal_combobox, deducao_entry, raio_interno_valor, fator_k_entry
-
     # Funções
-
     def calcular_dobra():
-        if deducao_entry.get() == "":
+        if g.deducao_valor is None:
             print('Dedução não informada')
             return
         else:
-            deducao_valor = float(deducao_entry.get())
+            deducao_valor = g.deducao_valor
             print(deducao_valor)
 
             # Calculo da medida da linha de dobra 1
@@ -112,18 +109,19 @@ def criar_aba1(notebook):
             limpar_metades.config(state='readonly')
 
     def limpar_tudo():
-        espessura_combobox.set('')
-        material_combobox.set('')
-        canal_combobox.set('')
-        raio_interno_valor.delete(0, tk.END)
-        fator_k_entry.delete(0, tk.END)
-        deducao_entry.delete(0, tk.END)
-        limpar_dobras()
+
+        # Limpar widgets de head.py
+        g.material_combobox.set('')
+        g.espessura_combobox.set('')
+        g.canal_combobox.set('')
+        g.raio_interno_valor.delete(0, tk.END)
+        g.fator_k_entry.delete(0, tk.END)
+        g.deducao_entry.delete(0, tk.END)
 
     def calcular():
         calcular_dobra()
         metade_dobra()
-        print(deducao_entry.get())
+        print(g.deducao_valor)
 
     # Layout
     aba1 = ttk.Frame(notebook, width=400, height=400)
@@ -189,19 +187,10 @@ def criar_aba1(notebook):
     limpar_tudo_button = tk.Button(aba1, text="Limpar Tudo", command=limpar_tudo)
     limpar_tudo_button.pack(pady=10)
 
-    # Inicializar comboboxes
-    material_combobox = ttk.Combobox(frame_dobras)
-    espessura_combobox = ttk.Combobox(frame_dobras)
-    canal_combobox = ttk.Combobox(frame_dobras)
-    deducao_entry = tk.Entry(frame_dobras)
-    raio_interno_valor = tk.Entry(frame_dobras)
-    fator_k_entry = tk.Entry(frame_dobras, state='readonly')
-
-    deducao_entry.bind("<KeyRelease>", lambda event: calcular())
+    g.deducao_entry.bind("<KeyRelease>", lambda event: calcular())
 
     dobra1.bind("<KeyRelease>", lambda event: calcular())
     dobra2.bind("<KeyRelease>", lambda event: calcular())
     dobra3.bind("<KeyRelease>", lambda event: calcular())
     dobra4.bind("<KeyRelease>", lambda event: calcular())
     dobra5.bind("<KeyRelease>", lambda event: calcular())
-    
