@@ -59,8 +59,8 @@ def main():
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
     help_menu.add_command(label="Sobre")
 
-    label1 = tk.Label(root, text="Bem-vindo à Tabela de Dobra", font=("Helvetica", 16))
-    label1.pack(pady=10)
+    #label1 = tk.Label(root, text="Bem-vindo à Tabela de Dobra", font=("Helvetica", 16))
+    #label1.pack(pady=10)
 
     cabecalho(root)
 

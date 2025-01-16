@@ -5,6 +5,7 @@ from tkinter import ttk
 deducao_valor = None
 fator_k = None
 espessura_valor = None
+deducao_espec = None
 
 # Inicializar comboboxes e entradas como globais
 material_combobox = None
@@ -29,3 +30,4 @@ metadedobra2_entry = None
 metadedobra3_entry = None
 metadedobra4_entry = None
 metadedobra5_entry = None
+deducao_espec_entry = None

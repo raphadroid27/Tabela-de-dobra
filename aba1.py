@@ -12,15 +12,38 @@ def criar_aba1(notebook):
     aba1.pack(fill='both', expand=True)
     notebook.add(aba1, text='Aba 1')
 
+    # Frame para dedução específica, aba mínimo externa e Altura mín. ext. Z 90°	
+
+
+    frame_superior = tk.Frame(aba1)
+    frame_superior.pack(padx=10, pady=10)
+
+    deducao_espec_label = tk.Label(frame_superior, text="Dedução Específica:")
+    deducao_espec_label.grid(row=0, column=0, padx=5, pady=5)
+
+    g.deducao_espec_entry = tk.Entry(frame_superior)
+    g.deducao_espec_entry.grid(row=1, column=0, padx=5, pady=5)
+
+    aba_min_externa_label = tk.Label(frame_superior, text="Aba Mínima Externa:")
+    aba_min_externa_label.grid(row=0, column=1, padx=5, pady=5)
+
+    g.aba_min_externa_entry = tk.Entry(frame_superior, state='readonly')
+    g.aba_min_externa_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    altura_min_externa_label = tk.Label(frame_superior, text="Altura Mínima Externa Z 90°:")
+    altura_min_externa_label.grid(row=0, column=2, padx=5, pady=5)
+
+    g.altura_min_externa_entry = tk.Entry(frame_superior, state='readonly')
+    g.altura_min_externa_entry.grid(row=1, column=2, padx=5, pady=5)
+
     # Novo frame para entradas de valores de dobra
     frame_dobras = tk.Frame(aba1)
     frame_dobras.pack(padx=10, pady=10)
 
     # Labels para as entradas de valores de dobra
-    dobra1_label = tk.Label(frame_dobras, text="Dobra 1:")
-    dobra1_label.grid(row=0, column=0, padx=5, pady=5)
-    dobra2_label = tk.Label(frame_dobras, text="Dobra 2:")
-    dobra2_label.grid(row=1, column=0, padx=5, pady=5)
+    tk.Label(frame_dobras, text="Dobra 1:").grid(row=0, column=0, padx=5, pady=5)
+    aba2_label = tk.Label(frame_dobras, text="Dobra 2:")
+    aba2_label.grid(row=1, column=0, padx=5, pady=5)
     dobra3_label = tk.Label(frame_dobras, text="Dobra 3:")
     dobra3_label.grid(row=2, column=0, padx=5, pady=5)
     dobra4_label = tk.Label(frame_dobras, text="Dobra 4:")
@@ -73,6 +96,7 @@ def criar_aba1(notebook):
 
     g.deducao_entry.bind("<KeyRelease>", lambda event: todas_funcoes())
 
+    g.deducao_espec_entry.bind("<KeyRelease>", lambda event: todas_funcoes())
     g.dobra1.bind("<KeyRelease>", lambda event: todas_funcoes())
     g.dobra2.bind("<KeyRelease>", lambda event: todas_funcoes())
     g.dobra3.bind("<KeyRelease>", lambda event: todas_funcoes())

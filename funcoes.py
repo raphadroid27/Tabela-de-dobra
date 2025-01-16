@@ -24,24 +24,24 @@ def atualizar_espessura():
         material_nome = g.material_combobox.get()
         material_obj = session.query(material).filter_by(nome=material_nome).first()
         if material_obj:
-            espessuras_nomes = [str(e.nome) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()]
-            g.espessura_combobox['values'] = espessuras_nomes
+            espessuras_valores = [str(e.valor) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()]
+            g.espessura_combobox['values'] = espessuras_valores
 
 def atualizar_canal():
-        espessura_nome = g.espessura_combobox.get()
-        espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
+        espessura_valor = g.espessura_combobox.get()
+        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
         if espessura_obj:
             canais_valores = [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).all()]
             g.canal_combobox['values'] = canais_valores
 
 def atualizar_deducao():
-        espessura_nome = g.espessura_combobox.get()
-        material_nome = g.material_combobox.get()
-        canal_nome = g.canal_combobox.get()
+        espessura_valor = g.espessura_combobox.get()
+        material_valor = g.material_combobox.get()
+        canal_valor = g.canal_combobox.get()
 
-        espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
-        canal_obj = session.query(canal).filter_by(valor=canal_nome).first()
+        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+        material_obj = session.query(material).filter_by(nome=material_valor).first()
+        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
 
         if espessura_obj and material_obj and canal_obj:
             deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
@@ -62,8 +62,8 @@ def calcular_fatork():
             return
         else:
             deducao_valor = float(g.deducao_entry.get())
-            espessura_nome = g.espessura_combobox.get()
-            espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
+            espessura_valor = g.espessura_combobox.get()
+            espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
             g.espessura_valor = espessura_obj.valor
             raio_interno = float(g.raio_interno_valor.get().replace(',', '.'))
 
@@ -76,7 +76,7 @@ def calcular_fatork():
 
 def calcular_offset():
      
-    if g.fator_k_entry.get() is None:
+    if g.fator_k_entry.get() == "":
           print('Fator K não informado')
           return
           
@@ -84,12 +84,14 @@ def calcular_offset():
          
          offset = float(g.fator_k_entry.get()) * g.espessura_valor
          atualizar_medida(g.offset_entry, f"{offset:.2f}")
-
-
+        
 def calcular_dobra():
-        g.deducao_entry.config(state='normal')
-        deducao_valor = float(g.deducao_entry.get())
-        g.deducao_entry.config(state='readonly')
+        if g.deducao_espec_entry.get() == "":
+            g.deducao_entry.config(state='normal')
+            deducao_valor = float(g.deducao_entry.get())
+            g.deducao_entry.config(state='readonly')
+        else:
+            deducao_valor = float(g.deducao_espec_entry.get())    
 
         if deducao_valor is None:
             print('Dedução não informada')
