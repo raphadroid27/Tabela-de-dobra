@@ -86,73 +86,75 @@ def calcular_offset():
          atualizar_medida(g.offset_entry, f"{offset:.2f}")
         
 def calcular_dobra():
-        if g.deducao_espec_entry.get() == "":
-            g.deducao_entry.config(state='normal')
+    if g.deducao_espec_entry.get() == "":
+        g.deducao_entry.config(state='normal')
+        try:
             deducao_valor = float(g.deducao_entry.get())
+        except ValueError:
+            print("Valor de dedução inválido")
             g.deducao_entry.config(state='readonly')
-        else:
-            deducao_valor = float(g.deducao_espec_entry.get())    
-
-        if deducao_valor is None:
-            print('Dedução não informada')
             return
+        g.deducao_entry.config(state='readonly')
+    else:
+        try:
+            deducao_valor = float(g.deducao_espec_entry.get())
+        except ValueError:
+            print("Valor de dedução específico inválido")
+            return
+
+    # Calculo da medida da linha de dobra 1
+    if g.dobra1.get() == "":
+        atualizar_medida(g.medidadobra1_entry, "")
+        atualizar_medida(g.metadedobra1_entry, "")
+        return
+    else:
+        medidadobra1 = float(g.dobra1.get()) - (deducao_valor / 2)
+        atualizar_medida(g.medidadobra1_entry, medidadobra1)
+
+    # Calculo da medida da linha de dobra 2
+    if g.dobra2.get() == "":
+        atualizar_medida(g.medidadobra2_entry, "")
+        atualizar_medida(g.metadedobra2_entry, "")
+        return
+    else:
+        if g.dobra3.get() == "":
+            medidadobra2 = float(g.dobra2.get()) - (deducao_valor / 2)
         else:
-            #deducao_valor = g.deducao_valor
-            print("valor da dedução ",deducao_valor)
+            medidadobra2 = float(g.dobra2.get()) - deducao_valor
+        atualizar_medida(g.medidadobra2_entry, medidadobra2)
 
-            # Calculo da medida da linha de dobra 1
-            if g.dobra1.get() == "":
-                atualizar_medida(g.medidadobra1_entry, "")
-                atualizar_medida(g.metadedobra1_entry, "")
-                return
-            else:
-                medidadobra1 = float(g.dobra1.get()) - (deducao_valor / 2)
-                atualizar_medida(g.medidadobra1_entry, medidadobra1)
+    # Calculo da medida da linha de dobra 3
+    if g.dobra3.get() == "":
+        atualizar_medida(g.medidadobra3_entry, "")
+        atualizar_medida(g.metadedobra3_entry, "")
+        return
+    else:
+        if g.dobra4.get() == "":
+            medidadobra3 = float(g.dobra3.get()) - (deducao_valor / 2)
+        else:
+            medidadobra3 = float(g.dobra3.get()) - deducao_valor
+        atualizar_medida(g.medidadobra3_entry, medidadobra3)
 
-            # Calculo da medida da linha de dobra 2
-            if g.dobra2.get() == "":
-                atualizar_medida(g.medidadobra2_entry, "")
-                atualizar_medida(g.metadedobra2_entry, "")
-                return
-            else:
-                if g.dobra3.get() == "":
-                    medidadobra2 = float(g.dobra2.get()) - (deducao_valor / 2)
-                else:
-                    medidadobra2 = float(g.dobra2.get()) - deducao_valor
-                atualizar_medida(g.medidadobra2_entry, medidadobra2)
+    # Calculo da medida da linha de dobra 4
+    if g.dobra4.get() == "":
+        atualizar_medida(g.medidadobra4_entry, "")
+        atualizar_medida(g.metadedobra4_entry, "")
+        return
+    else:
+        if g.dobra5.get() == "":
+            medidadobra4 = float(g.dobra4.get()) - (deducao_valor / 2)
+        else:
+            medidadobra4 = float(g.dobra4.get()) - deducao_valor
+        atualizar_medida(g.medidadobra4_entry, medidadobra4)
 
-            # Calculo da medida da linha de dobra 3
-            if g.dobra3.get() == "":
-                atualizar_medida(g.medidadobra3_entry, "")
-                atualizar_medida(g.metadedobra3_entry, "")
-                return
-            else:
-                if g.dobra4.get() == "":
-                    medidadobra3 = float(g.dobra3.get()) - (deducao_valor / 2)
-                else:
-                    medidadobra3 = float(g.dobra3.get()) - deducao_valor
-                atualizar_medida(g.medidadobra3_entry, medidadobra3)
-
-            # Calculo da medida da linha de dobra 4
-            if g.dobra4.get() == "":
-                atualizar_medida(g.medidadobra4_entry, "")
-                atualizar_medida(g.metadedobra4_entry, "")
-                return
-            else:
-                if g.dobra5.get() == "":
-                    medidadobra4 = float(g.dobra4.get()) - (deducao_valor / 2)
-                else:
-                    medidadobra4 = float(g.dobra4.get()) - deducao_valor
-                atualizar_medida(g.medidadobra4_entry, medidadobra4)
-
-            # Calculo da medida da linha de dobra 5
-            if g.dobra5.get() == "":
-                atualizar_medida(g.medidadobra5_entry, "")
-                atualizar_medida(g.metadedobra5_entry, "")
-                return
-            else:
-                medidadobra5 = float(g.dobra5.get()) - (deducao_valor / 2)
-                atualizar_medida(g.medidadobra5_entry, medidadobra5)
+    # Calculo da medida da linha de dobra 5
+    if g.dobra5.get() == "":
+        atualizar_medida(g.medidadobra5_entry, "")
+        atualizar_medida(g.metadedobra5_entry, "")
+        return
+    else:
+        medidadobra5 = float(g.dobra5.get()) - (deducao_valor / 2)
+        atualizar_medida(g.medidadobra5_entry, medidadobra5)
 
 def calcular_metade_dobra():
         entradas = [

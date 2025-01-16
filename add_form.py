@@ -64,6 +64,7 @@ def main(root_app):
         deducao_canal_combobox['values'] = canais
     
     def on_closing():
+            root_app.destroy()
             root.destroy()
             app.main()
 
