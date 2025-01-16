@@ -21,7 +21,6 @@ def atualizar_medida(entry, valor):
 
 def atualizar_espessura():
         
-        
         material_nome = g.material_combobox.get()
         material_obj = session.query(material).filter_by(nome=material_nome).first()
         if material_obj:
@@ -52,15 +51,9 @@ def atualizar_deducao():
             ).first()
 
             if deducao_obj:
-                g.deducao_entry.config(state='normal')
-                g.deducao_entry.delete(0, tk.END)
-                g.deducao_entry.insert(0, f"{deducao_obj.valor}")
-                g.deducao_valor = deducao_obj.valor  # Atualiza a variável global
+                atualizar_medida(g.deducao_entry, deducao_obj.valor)
             else:
-                g.deducao_entry.config(state='normal')
-                g.deducao_entry.delete(0, tk.END)
-                g.deducao_entry.insert(0, "Não encontrada")
-                g.deducao_valor = None  # Atualiza a variável global
+                atualizar_medida(g.deducao_entry, "Não encontrada")
 
 def calcular_fatork():
         if g.raio_interno_valor.get() == "":
@@ -71,22 +64,39 @@ def calcular_fatork():
             deducao_valor = float(g.deducao_entry.get())
             espessura_nome = g.espessura_combobox.get()
             espessura_obj = session.query(espessura).filter_by(nome=espessura_nome).first()
-            espessura_valor = espessura_obj.valor
+            g.espessura_valor = espessura_obj.valor
             raio_interno = float(g.raio_interno_valor.get().replace(',', '.'))
 
-            fator_k = (4 * (espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * espessura_valor)
+            g.fator_k = (4 * (g.espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * g.espessura_valor)
 
-            atualizar_medida(g.fator_k_entry, f"{fator_k:.2f}")
+            atualizar_medida(g.fator_k_entry, f"{g.fator_k:.2f}")
 
-            print('Calculando fator K')  
+            print("Espessura: ",g.espessura_valor)
+            print("fator K: ",g.fator_k)
+
+def calcular_offset():
+     
+    if g.fator_k_entry.get() is None:
+          print('Fator K não informado')
+          return
+          
+    else:
+         
+         offset = float(g.fator_k_entry.get()) * g.espessura_valor
+         atualizar_medida(g.offset_entry, f"{offset:.2f}")
+
 
 def calcular_dobra():
-        if g.deducao_valor is None:
+        g.deducao_entry.config(state='normal')
+        deducao_valor = float(g.deducao_entry.get())
+        g.deducao_entry.config(state='readonly')
+
+        if deducao_valor is None:
             print('Dedução não informada')
             return
         else:
-            deducao_valor = g.deducao_valor
-            print(deducao_valor)
+            #deducao_valor = g.deducao_valor
+            print("valor da dedução ",deducao_valor)
 
             # Calculo da medida da linha de dobra 1
             if g.dobra1.get() == "":
@@ -142,7 +152,7 @@ def calcular_dobra():
                 medidadobra5 = float(g.dobra5.get()) - (deducao_valor / 2)
                 atualizar_medida(g.medidadobra5_entry, medidadobra5)
 
-def metade_dobra():
+def calcular_metade_dobra():
         entradas = [
             (g.medidadobra1_entry, g.metadedobra1_entry),
             (g.medidadobra2_entry, g.metadedobra2_entry),
@@ -188,14 +198,16 @@ def limpar_tudo():
         g.espessura_combobox.set('')
         g.canal_combobox.set('')
         g.raio_interno_valor.delete(0, tk.END)
-        g.fator_k_entry.delete(0, tk.END)
-        g.deducao_entry.delete(0, tk.END)
+        atualizar_medida(g.fator_k_entry, "")
+        atualizar_medida(g.deducao_entry, "")
+        atualizar_medida(g.offset_entry, "")
 
 def todas_funcoes():
         atualizar_espessura()
         atualizar_canal()
         atualizar_deducao()
         calcular_fatork()
+        calcular_offset()
         calcular_dobra()
-        metade_dobra()
+        calcular_metade_dobra()
         print(g.deducao_valor)

@@ -3,6 +3,8 @@ from tkinter import ttk
 
 #variáveis globais
 deducao_valor = None
+fator_k = None
+espessura_valor = None
 
 # Inicializar comboboxes e entradas como globais
 material_combobox = None
@@ -11,6 +13,7 @@ canal_combobox = None
 deducao_entry = None
 raio_interno_valor = None
 fator_k_entry = None
+offset_entry = None
 dobra1 = None
 dobra2 = None
 dobra3 = None
