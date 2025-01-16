@@ -42,7 +42,7 @@ def criar_aba1(notebook):
 
     # Labels para as entradas de valores de dobra
     tk.Label(frame_dobras, text="Dobra 1:").grid(row=0, column=0, padx=5, pady=5)
-    aba2_label = tk.Label(frame_dobras, text="Dobra 2:")
+    aba2_label = tk.Label(frame_dobras, text="Dobra 2:",relief="sunken")
     aba2_label.grid(row=1, column=0, padx=5, pady=5)
     dobra3_label = tk.Label(frame_dobras, text="Dobra 3:")
     dobra3_label.grid(row=2, column=0, padx=5, pady=5)

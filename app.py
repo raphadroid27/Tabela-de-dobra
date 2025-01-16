@@ -5,8 +5,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
 import os
-from aba2 import criar_aba2
 from aba1 import criar_aba1
+from aba2 import criar_aba2
+from aba3 import criar_aba3
 from head import cabecalho
 import add_form
 
@@ -70,6 +71,7 @@ def main():
 
     criar_aba1(notebook)
     criar_aba2(notebook)
+    criar_aba3(notebook)
     
     root.mainloop()
 
