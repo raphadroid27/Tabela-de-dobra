@@ -23,20 +23,17 @@ def cabecalho(root):
     input_frame.grid_columnconfigure(1, weight=1, minsize=frame_width/3)
     input_frame.grid_columnconfigure(2, weight=1, minsize=frame_width/3)
 
-    material_label = tk.Label(input_frame, text="Material:")
-    material_label.grid(row=0, column=0, sticky='ew')
+    tk.Label(input_frame, text="Material:").grid(row=0, column=0, sticky='ew')
 
     g.material_combobox = ttk.Combobox(input_frame, values=[m.nome for m in session.query(material).all()])
     g.material_combobox.grid(row=1, column=0, padx=10, sticky='ew')
 
-    espessura_label = tk.Label(input_frame, text="Espessura: ")
-    espessura_label.grid(row=0, column=1, sticky='ew')
+    tk.Label(input_frame, text="Espessura: ").grid(row=0, column=1, sticky='ew')
 
     g.espessura_combobox = ttk.Combobox(input_frame)
     g.espessura_combobox.grid(row=1, column=1, padx=10, sticky='ew')
 
-    canal_label = tk.Label(input_frame, text="Canal:")
-    canal_label.grid(row=0, column=2, sticky='ew')
+    tk.Label(input_frame, text="Canal:").grid(row=0, column=2, sticky='ew')
 
     g.canal_combobox = ttk.Combobox(input_frame)
     g.canal_combobox.grid(row=1, column=2, padx=10, sticky='ew')
@@ -55,8 +52,8 @@ def cabecalho(root):
     raio_interno_label = tk.Label(results_frame, text="Raio Interno: ")
     raio_interno_label.grid(row=0, column=0, padx=10, sticky='ew')
 
-    g.raio_interno_valor = tk.Entry(results_frame)
-    g.raio_interno_valor.grid(row=1, column=0, padx=10, sticky='ew')
+    g.raio_interno_entry = tk.Entry(results_frame)
+    g.raio_interno_entry.grid(row=1, column=0, padx=10, sticky='ew')
 
     # Fator K
     fator_k_label = tk.Label(results_frame, text="Fator K: ")

@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from math import pi
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from models import espessura, material, canal, deducao
@@ -36,11 +36,11 @@ def atualizar_canal():
 
 def atualizar_deducao():
         espessura_valor = g.espessura_combobox.get()
-        material_valor = g.material_combobox.get()
+        material_nome = g.material_combobox.get()
         canal_valor = g.canal_combobox.get()
 
         espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-        material_obj = session.query(material).filter_by(nome=material_valor).first()
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
         canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
 
         if espessura_obj and material_obj and canal_obj:
@@ -56,7 +56,7 @@ def atualizar_deducao():
                 atualizar_medida(g.deducao_entry, "Não encontrada")
 
 def calcular_fatork():
-        if g.raio_interno_valor.get() == "":
+        if g.raio_interno_entry.get() == "":
             atualizar_medida(g.fator_k_entry, "")
             print('Raio interno vazio')
             return
@@ -65,7 +65,7 @@ def calcular_fatork():
             espessura_valor = g.espessura_combobox.get()
             espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
             g.espessura_valor = espessura_obj.valor
-            raio_interno = float(g.raio_interno_valor.get().replace(',', '.'))
+            raio_interno = float(g.raio_interno_entry.get().replace(',', '.'))
 
             g.fator_k = (4 * (g.espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * g.espessura_valor)
 
@@ -78,13 +78,12 @@ def calcular_offset():
      
     if g.fator_k_entry.get() == "":
           print('Fator K não informado')
-          return
-          
+          return         
     else:
          
          offset = float(g.fator_k_entry.get()) * g.espessura_valor
          atualizar_medida(g.offset_entry, f"{offset:.2f}")
-        
+         
 def calcular_dobra():
     if g.deducao_espec_entry.get() == "":
         g.deducao_entry.config(state='normal')
@@ -176,6 +175,30 @@ def calcular_metade_dobra():
             finally:
                 medidadobra_entry.config(state='readonly')
 
+def calcular_dobra_ang():
+    distancia = float(g.dist1_entry.get())
+    angulo = float(g.angulo1_entry.get())
+    raio = float(g.raio_interno_entry.get())
+    offset = float(g.offset_entry.get())
+
+    dobra = distancia + (angulo*(raio + offset)*pi/360)
+
+    atualizar_medida(g.linha_dobra1_entry, f"{dobra:.1f}")
+
+    print(f'Essa é a dobra: {dobra:.1f}')
+
+
+def razao_raio_esp():
+    if g.raio_interno_entry is None or g.espessura_valor is None:
+        return
+    else:
+        try:
+            razao_raio_esp_valor = float(g.raio_interno_entry.get()) / g.espessura_valor
+            if g.razao_raio_esp_label is not None:
+                g.razao_raio_esp_label.config(text=f"{razao_raio_esp_valor:.1f}")
+            
+        except ValueError:
+            return
 
 def limpar_dobras():
         limpar_dobras = [g.dobra1, g.dobra2, g.dobra3, g.dobra4, g.dobra5]
@@ -201,7 +224,7 @@ def limpar_tudo():
         g.material_combobox.set('')
         g.espessura_combobox.set('')
         g.canal_combobox.set('')
-        g.raio_interno_valor.delete(0, tk.END)
+        g.raio_interno_entry.delete(0, tk.END)
         atualizar_medida(g.fator_k_entry, "")
         atualizar_medida(g.deducao_entry, "")
         atualizar_medida(g.offset_entry, "")
@@ -214,4 +237,6 @@ def todas_funcoes():
         calcular_offset()
         calcular_dobra()
         calcular_metade_dobra()
-        print(g.deducao_valor)
+        calcular_dobra_ang()
+        razao_raio_esp()
+        
