@@ -30,7 +30,7 @@ def main():
     config = carregar_configuracao()
     root = tk.Tk()
     root.title("Tabela de dobra")
-    root.geometry(config.get('geometry', '430x400'))
+    root.geometry(config.get('geometry'))  # Usando a configuração carregada ou um valor padrão
     root.resizable(False, False)
 
     def on_closing():
@@ -60,14 +60,11 @@ def main():
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
     help_menu.add_command(label="Sobre")
 
-    #label1 = tk.Label(root, text="Bem-vindo à Tabela de Dobra", font=("Helvetica", 16))
-    #label1.pack(pady=10)
-
     cabecalho(root)
 
     # Criando o Notebook (abas)
     notebook = ttk.Notebook(root)
-    notebook.place(x=15, y=100, width=400, height=400)
+    notebook.pack(fill='both', expand=True)
 
     criar_aba1(notebook)
     criar_aba2(notebook)

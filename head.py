@@ -10,7 +10,7 @@ def cabecalho(root):
     session = configuracao_do_banco_de_dados()
 
     cabecalho = ttk.Frame(root)
-    cabecalho.place(x=15, y=0, width=400, height=80)
+    cabecalho.pack(fill='x', expand=True)
 
     # Primeira linha frame
     input_frame = tk.Frame(cabecalho)
