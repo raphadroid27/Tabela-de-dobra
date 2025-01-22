@@ -3,7 +3,7 @@ from tkinter import ttk
 import globals as g
 
 def criar_aba2(notebook):
-    aba2 = ttk.Frame(notebook, width=400, height=400)
+    aba2 = ttk.Frame(notebook)
     aba2.pack(fill='both', expand=True)
     notebook.add(aba2, text='Aba 2')
 

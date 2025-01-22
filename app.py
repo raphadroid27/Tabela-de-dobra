@@ -30,7 +30,7 @@ def main():
     config = carregar_configuracao()
     root = tk.Tk()
     root.title("Tabela de dobra")
-    root.geometry(config.get('geometry', '600x500'))
+    root.geometry(config.get('geometry', '430x400'))
     root.resizable(False, False)
 
     def on_closing():
@@ -67,7 +67,7 @@ def main():
 
     # Criando o Notebook (abas)
     notebook = ttk.Notebook(root)
-    notebook.pack(pady=10, expand=True)
+    notebook.place(x=15, y=100, width=400, height=400)
 
     criar_aba1(notebook)
     criar_aba2(notebook)

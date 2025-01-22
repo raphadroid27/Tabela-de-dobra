@@ -8,7 +8,7 @@ from funcoes import *
 def criar_aba1(notebook):
     
     # Layout
-    aba1 = ttk.Frame(notebook, width=400, height=400)
+    aba1 = ttk.Frame(notebook)
     aba1.pack(fill='both', expand=True)
     notebook.add(aba1, text='Aba 1')
 
@@ -16,6 +16,10 @@ def criar_aba1(notebook):
 
     frame_superior = tk.Frame(aba1)
     frame_superior.pack(padx=10, pady=10)
+
+    frame_superior.columnconfigure(0, weight=1)
+    frame_superior.columnconfigure(1, weight=1)
+    frame_superior.columnconfigure(2, weight=1)
 
     tk.Label(frame_superior, text="Dedução Específica:").grid(row=0, column=0, padx=5, pady=5)
 
@@ -36,6 +40,11 @@ def criar_aba1(notebook):
     # Novo frame para entradas de valores de dobra
     frame_aba1 = tk.Frame(aba1)
     frame_aba1.pack(padx=10, pady=10)
+
+    frame_aba1.columnconfigure(0, weight=0)
+    frame_aba1.columnconfigure(1, weight=1)
+    frame_aba1.columnconfigure(2, weight=1)
+    frame_aba1.columnconfigure(3, weight=1)
 
     # Labels para as entradas de valores de dobra
     tk.Label(frame_aba1, text="Dobra 1:").grid(row=0, column=0, padx=5, pady=5)

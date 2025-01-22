@@ -3,7 +3,7 @@ from tkinter import ttk
 import globals as g
 
 def criar_aba3(notebook):
-    aba3 = ttk.Frame(notebook, width=400, height=400)
+    aba3 = ttk.Frame(notebook)
     aba3.pack(fill='both', expand=True)
 
     notebook.add(aba3, text='relação raio e fator K')
