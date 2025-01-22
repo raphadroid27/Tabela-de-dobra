@@ -64,7 +64,7 @@ def main():
 
     # Criando o Notebook (abas)
     notebook = ttk.Notebook(root)
-    notebook.pack(fill='both', expand=True)
+    notebook.pack(fill='both', expand=True, padx=15)
 
     criar_aba1(notebook)
     criar_aba2(notebook)

@@ -1,4 +1,5 @@
 import tkinter as tk
+import pyperclip
 from math import pi
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -51,7 +52,7 @@ def atualizar_deducao():
             ).first()
 
             if deducao_obj:
-                atualizar_medida(g.deducao_entry, deducao_obj.valor)
+                g.deducao_entry.config(text=deducao_obj.valor)
             else:
                 atualizar_medida(g.deducao_entry, "Não encontrada")
 
@@ -199,6 +200,11 @@ def razao_raio_esp():
             
         except ValueError:
             return
+
+
+def copiar_deducao():
+    pyperclip.copy(g.deducao_entry)
+    print('Valor de dedução copiado')
 
 def limpar_dobras():
         limpar_dobras = [g.dobra1, g.dobra2, g.dobra3, g.dobra4, g.dobra5]
