@@ -67,8 +67,6 @@ def atualizar_obs():
         else:
             g.obs_label.config(text='Não encotrada')      
             
-
-
 def calcular_fatork():
     raio_interno = g.raio_interno_entry.get().replace(',', '.')
     espessura_valor = g.espessura_combobox.get()
@@ -277,6 +275,7 @@ def todas_funcoes():
         atualizar_espessura()
         atualizar_canal()
         atualizar_deducao()
+        atualizar_obs()
         calcular_fatork()
         calcular_offset()
         calcular_dobra()
