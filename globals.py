@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 #variáveis globais
-deducao_valor = None
+
 fator_k = None
 espessura_valor = None
 deducao_espec = None
@@ -15,6 +15,7 @@ deducao_entry = None
 raio_interno_entry = None
 fator_k_entry = None
 offset_entry = None
+obs_label = None
 
 # aba1.py widgets
 aba1_entry = None
@@ -33,6 +34,7 @@ metadedobra3_entry = None
 metadedobra4_entry = None
 metadedobra5_entry = None
 deducao_espec_entry = None
+medida_blank_label = None
 
 #aba2.py widgets
 

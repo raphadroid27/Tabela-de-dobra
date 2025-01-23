@@ -55,7 +55,7 @@ def criar_aba1(notebook):
 
     # Entradas para inserir valores de dobra
     g.aba1_entry = tk.Entry(frame_aba1)
-    g.aba1_entry.grid(row=1, column=1, sticky='we')
+    g.aba1_entry.grid(row=1, column=1, sticky='we',padx=5)
     g.aba2_entry = tk.Entry(frame_aba1)
     g.aba2_entry.grid(row=2, column=1, sticky='we')
     g.aba3_entry = tk.Entry(frame_aba1)
@@ -67,7 +67,7 @@ def criar_aba1(notebook):
 
     # Medida da linha de dobra
     g.medidadobra1_entry = tk.Label(frame_aba1,relief="sunken")
-    g.medidadobra1_entry.grid(row=1, column=2, sticky='we')
+    g.medidadobra1_entry.grid(row=1, column=2, sticky='we',padx=5)
     g.medidadobra2_entry = tk.Label(frame_aba1, relief="sunken")
     g.medidadobra2_entry.grid(row=2, column=2, sticky='we')
     g.medidadobra3_entry = tk.Label(frame_aba1, relief="sunken")
@@ -79,7 +79,7 @@ def criar_aba1(notebook):
 
     # Medida da linha de dobra
     g.metadedobra1_entry = tk.Label(frame_aba1,relief="sunken")
-    g.metadedobra1_entry.grid(row=1, column=3, sticky='we')
+    g.metadedobra1_entry.grid(row=1, column=3, sticky='we',padx=5)
     g.metadedobra2_entry = tk.Label(frame_aba1,relief="sunken")
     g.metadedobra2_entry.grid(row=2, column=3, sticky='we')
     g.metadedobra3_entry = tk.Label(frame_aba1,relief="sunken")
@@ -88,6 +88,9 @@ def criar_aba1(notebook):
     g.metadedobra4_entry.grid(row=4, column=3, sticky='we')
     g.metadedobra5_entry = tk.Label(frame_aba1,relief="sunken")
     g.metadedobra5_entry.grid(row=5, column=3, sticky='we')
+    
+    g.medida_blank_label = tk.Label(frame_aba1, relief="sunken")
+    g.medida_blank_label.grid(row=6, column=2, sticky='we')
 
     # Botão para limpar valores de dobras
     limpar_dobras_button = tk.Button(aba1, text="Limpar Dobras", command=limpar_dobras)
@@ -109,3 +112,9 @@ def criar_aba1(notebook):
     g.espessura_combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
     g.material_combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
     g.raio_interno_entry.bind("<KeyRelease>", lambda event: todas_funcoes())
+
+    #funções de copiar
+
+    g.deducao_entry.bind("<Button-1>", lambda event: copiar_deducao())
+    g.fator_k_entry.bind("<Button-1>", lambda event: copiar_fatork())
+    g.offset_entry.bind("<Button-1>", lambda event: copiar_offset())

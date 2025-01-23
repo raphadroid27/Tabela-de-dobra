@@ -3,7 +3,7 @@ import pyperclip
 from math import pi
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from models import espessura, material, canal, deducao
+from models import espessura, material, canal, deducao, observacao
 from head import *
 import globals as g
 
@@ -56,18 +56,31 @@ def atualizar_deducao():
             else:
                 g.deducao_entry.config(text='Não encotrada')
 
+def atualizar_obs():
+    deducao_valor = g.deducao_entry['text']
+    deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()
+    if deducao_obj:
+        obs_obj = session.query(deducao).join(observacao).filter('observacao.id' == deducao_obj.obs_id).first()
+        
+        if obs_obj:
+            g.obs_label.config(text=obs_obj.valor)
+        else:
+            g.obs_label.config(text='Não encotrada')      
+            
+
+
 def calcular_fatork():
     raio_interno = g.raio_interno_entry.get().replace(',', '.')
     espessura_valor = g.espessura_combobox.get()
-    deducao = g.deducao_entry['text']
+    deducao_valor = g.deducao_entry['text']
 
-    if not raio_interno or not espessura_valor or not deducao or deducao == 'Não encotrada':
+    if not raio_interno or not espessura_valor or not deducao_valor or deducao_valor == 'Não encotrada':
         return
     else:
         espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
         g.espessura_valor = espessura_obj.valor
 
-        fator_k = (4 * (g.espessura_valor - (float(deducao) / 2) + float(raio_interno)) - (pi * float(raio_interno))) / (pi * g.espessura_valor)
+        fator_k = (4 * (g.espessura_valor - (float(deducao_valor) / 2) + float(raio_interno)) - (pi * float(raio_interno))) / (pi * g.espessura_valor)
 
         g.fator_k_entry.config(text=f"{fator_k:.2f}")
 
@@ -87,11 +100,11 @@ def calcular_dobra():
 
     deducao_valor = g.deducao_entry['text']
     deducao_espec = g.deducao_espec_entry.get()
-    dobra1 = g.aba1_entry.get()
-    dobra2 = g.aba2_entry.get()
-    dobra3 = g.aba3_entry.get()
-    dobra4 = g.aba4_entry.get()
-    dobra5 = g.aba5_entry.get()
+    dobra1 = g.aba1_entry.get().replace(',', '.')
+    dobra2 = g.aba2_entry.get().replace(',', '.')
+    dobra3 = g.aba3_entry.get().replace(',', '.')
+    dobra4 = g.aba4_entry.get().replace(',', '.')
+    dobra5 = g.aba5_entry.get().replace(',', '.')
 
     if deducao_valor == "" or deducao_valor == 'Não encotrada':  
         return
@@ -150,6 +163,20 @@ def calcular_dobra():
                 medidadobra5 = float(dobra5) - (deducao_valor / 2)
                 g.medidadobra5_entry.config(text=medidadobra5)
 
+def calcular_blank():
+    medidadobra1 = g.medidadobra1_entry['text']
+    medidadobra2 = g.medidadobra2_entry['text']
+    medidadobra3 = g.medidadobra3_entry['text']
+    medidadobra4 = g.medidadobra4_entry['text']
+    medidadobra5 = g.medidadobra5_entry['text']
+
+    if medidadobra1 == "" or medidadobra2 == "" or medidadobra3 == "" or medidadobra4 == "" or medidadobra5 == "":
+        return
+    else:
+        blank = float(medidadobra1) + float(medidadobra2) + float(medidadobra3) + float(medidadobra4) + float(medidadobra5)
+        g.medida_blank_label.config(text=f"{blank:.1f}")
+
+
 def calcular_metade_dobra():
         entradas = [
             (g.medidadobra1_entry, g.metadedobra1_entry),
@@ -195,8 +222,28 @@ def razao_raio_esp():
 
 
 def copiar_deducao():
+    atualizar_deducao()
+    calcular_fatork()
+    calcular_offset()
     pyperclip.copy(g.deducao_entry['text'])
-    print(f'Valor de dedução copiado{g.deducao_entry["text"]}')
+    print(f'Valor de dedução copiado {g.deducao_entry["text"]}')
+    g.deducao_entry.config(text=f'{g.deducao_entry["text"]} Copiado!')
+
+def copiar_fatork():
+    atualizar_deducao()
+    calcular_fatork()
+    calcular_offset()
+    pyperclip.copy(g.fator_k_entry['text'])
+    print(f'Valor de fator k copiado {g.fator_k_entry["text"]}')
+    g.fator_k_entry.config(text=f'{g.fator_k_entry["text"]} Copiado!')
+
+def copiar_offset():
+    atualizar_deducao()
+    calcular_fatork()
+    calcular_offset()
+    pyperclip.copy(g.offset_entry['text'])
+    print(f'Valor de offset copiado {g.offset_entry["text"]}')
+    g.offset_entry.config(text=f'{g.offset_entry["text"]} Copiado!')
 
 def limpar_dobras():
         limpar_dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
@@ -233,7 +280,8 @@ def todas_funcoes():
         calcular_fatork()
         calcular_offset()
         calcular_dobra()
+        calcular_blank()
         calcular_metade_dobra()
-        calcular_dobra_ang()
+        #calcular_dobra_ang()
         razao_raio_esp()
         

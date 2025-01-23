@@ -10,7 +10,7 @@ def cabecalho(root):
     session = configuracao_do_banco_de_dados()
 
     cabecalho = ttk.Frame(root)
-    cabecalho.pack(padx=10,pady=10,fill='both', expand=True)
+    cabecalho.pack(padx=10,pady=0,fill='both', expand=True)
 
     # Primeira linha frame
     input_frame = tk.Frame(cabecalho)
@@ -48,25 +48,26 @@ def cabecalho(root):
     # Raio interno
     tk.Label(results_frame, text="Raio Interno:").grid(row=0, column=0, padx=2, sticky='w')
 
-    g.raio_interno_entry = tk.Entry(results_frame)
+    g.raio_interno_entry = tk.Entry(results_frame, width=10)
     g.raio_interno_entry.grid(row=1, column=0, padx=5, sticky='we')
 
     # Fator K
     tk.Label(results_frame, text="Fator K: ").grid(row=0, column=1, padx=2, sticky='w')
 
-    g.fator_k_entry = tk.Label(results_frame, relief="sunken")
+    g.fator_k_entry = tk.Label(results_frame, relief="sunken", width=10)
     g.fator_k_entry.grid(row=1, column=1, padx=5, sticky='we')
 
     # Dedução
     tk.Label(results_frame, text="Dedução: ").grid(row=0, column=2, padx=2, sticky='w')
 
-    g.deducao_entry = tk.Label(results_frame, relief="sunken")
+    g.deducao_entry = tk.Label(results_frame, relief="sunken", width=10)
     g.deducao_entry.grid(row=1, column=2, padx=5, sticky='we')
 
     # Offset
     tk.Label(results_frame, text="Offset: ").grid(row=0, column=3, padx=2, sticky='w')
 
-    g.offset_entry = tk.Label(results_frame, relief="sunken")
+    g.offset_entry = tk.Label(results_frame, relief="sunken",width=10)
     g.offset_entry.grid(row=1, column=3, padx=5, sticky='we')
 
-    g.deducao_entry.bind("<Button-1>", lambda event: copiar_deducao())
+    g.obs_label = tk.Label(cabecalho, text="Observações: ", relief="sunken", anchor='w') 
+    g.obs_label.pack(side='bottom', fill='both', expand=True, padx=5, pady=10)  
