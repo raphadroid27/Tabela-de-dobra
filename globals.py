@@ -17,11 +17,11 @@ fator_k_entry = None
 offset_entry = None
 
 # aba1.py widgets
-dobra1 = None
-dobra2 = None
-dobra3 = None
-dobra4 = None
-dobra5 = None
+aba1_entry = None
+aba2_entry = None
+aba3_entry = None
+aba4_entry = None
+aba5_entry = None
 medidadobra1_entry = None
 medidadobra2_entry = None
 medidadobra3_entry = None

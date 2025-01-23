@@ -54,107 +54,101 @@ def atualizar_deducao():
             if deducao_obj:
                 g.deducao_entry.config(text=deducao_obj.valor)
             else:
-                atualizar_medida(g.deducao_entry, "Não encontrada")
+                g.deducao_entry.config(text='Não encotrada')
 
 def calcular_fatork():
-        if g.raio_interno_entry.get() == "":
-            atualizar_medida(g.fator_k_entry, "")
-            print('Raio interno vazio')
-            return
-        else:
-            deducao_valor = float(g.deducao_entry.get())
-            espessura_valor = g.espessura_combobox.get()
-            espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-            g.espessura_valor = espessura_obj.valor
-            raio_interno = float(g.raio_interno_entry.get().replace(',', '.'))
+    raio_interno = g.raio_interno_entry.get().replace(',', '.')
+    espessura_valor = g.espessura_combobox.get()
+    deducao = g.deducao_entry['text']
 
-            g.fator_k = (4 * (g.espessura_valor - (deducao_valor / 2) + raio_interno) - (3.14159 * raio_interno)) / (3.14159 * g.espessura_valor)
+    if not raio_interno or not espessura_valor or not deducao or deducao == 'Não encotrada':
+        return
+    else:
+        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+        g.espessura_valor = espessura_obj.valor
 
-            atualizar_medida(g.fator_k_entry, f"{g.fator_k:.2f}")
+        fator_k = (4 * (g.espessura_valor - (float(deducao) / 2) + float(raio_interno)) - (pi * float(raio_interno))) / (pi * g.espessura_valor)
 
-            print("Espessura: ",g.espessura_valor)
-            print("fator K: ",g.fator_k)
+        g.fator_k_entry.config(text=f"{fator_k:.2f}")
 
 def calcular_offset():
+
+    fator_k = g.fator_k_entry['text']
+    espessura = g.espessura_combobox.get()
      
-    if g.fator_k_entry.get() == "":
+    if not fator_k or not espessura:
           print('Fator K não informado')
           return         
     else:
-         
-         offset = float(g.fator_k_entry.get()) * g.espessura_valor
-         atualizar_medida(g.offset_entry, f"{offset:.2f}")
+         offset = float(fator_k) * float(espessura)
+         g.offset_entry.config (text=f"{offset:.2f}")
          
 def calcular_dobra():
-    if g.deducao_espec_entry.get() == "":
-        g.deducao_entry.config(state='normal')
-        try:
-            deducao_valor = float(g.deducao_entry.get())
-        except ValueError:
-            print("Valor de dedução inválido")
-            g.deducao_entry.config(state='readonly')
-            return
-        g.deducao_entry.config(state='readonly')
-    else:
-        try:
-            deducao_valor = float(g.deducao_espec_entry.get())
-        except ValueError:
-            print("Valor de dedução específico inválido")
-            return
 
-    # Calculo da medida da linha de dobra 1
-    if g.dobra1.get() == "":
-        atualizar_medida(g.medidadobra1_entry, "")
-        atualizar_medida(g.metadedobra1_entry, "")
+    deducao_valor = g.deducao_entry['text']
+    deducao_espec = g.deducao_espec_entry.get()
+    dobra1 = g.aba1_entry.get()
+    dobra2 = g.aba2_entry.get()
+    dobra3 = g.aba3_entry.get()
+    dobra4 = g.aba4_entry.get()
+    dobra5 = g.aba5_entry.get()
+
+    if deducao_valor == "" or deducao_valor == 'Não encotrada':  
         return
     else:
-        medidadobra1 = float(g.dobra1.get()) - (deducao_valor / 2)
-        atualizar_medida(g.medidadobra1_entry, medidadobra1)
-
-    # Calculo da medida da linha de dobra 2
-    if g.dobra2.get() == "":
-        atualizar_medida(g.medidadobra2_entry, "")
-        atualizar_medida(g.metadedobra2_entry, "")
-        return
-    else:
-        if g.dobra3.get() == "":
-            medidadobra2 = float(g.dobra2.get()) - (deducao_valor / 2)
+        if deducao_espec == "":
+            deducao_valor = float(g.deducao_entry['text'])
         else:
-            medidadobra2 = float(g.dobra2.get()) - deducao_valor
-        atualizar_medida(g.medidadobra2_entry, medidadobra2)
-
-    # Calculo da medida da linha de dobra 3
-    if g.dobra3.get() == "":
-        atualizar_medida(g.medidadobra3_entry, "")
-        atualizar_medida(g.metadedobra3_entry, "")
-        return
-    else:
-        if g.dobra4.get() == "":
-            medidadobra3 = float(g.dobra3.get()) - (deducao_valor / 2)
+            deducao_valor = float(deducao_espec)
+        
+        if dobra1 == "":
+                g.medidadobra1_entry.config(text="")
+                return
         else:
-            medidadobra3 = float(g.dobra3.get()) - deducao_valor
-        atualizar_medida(g.medidadobra3_entry, medidadobra3)
+                
+                medidadobra1 = float(dobra1) - (deducao_valor / 2)
+                g.medidadobra1_entry.config(text=medidadobra1)
 
-    # Calculo da medida da linha de dobra 4
-    if g.dobra4.get() == "":
-        atualizar_medida(g.medidadobra4_entry, "")
-        atualizar_medida(g.metadedobra4_entry, "")
-        return
-    else:
-        if g.dobra5.get() == "":
-            medidadobra4 = float(g.dobra4.get()) - (deducao_valor / 2)
+            # Calculo da medida da linha de dobra 2
+        if dobra2 == "":
+                g.medidadobra2_entry.config(text="")
+                return
         else:
-            medidadobra4 = float(g.dobra4.get()) - deducao_valor
-        atualizar_medida(g.medidadobra4_entry, medidadobra4)
+                if dobra3 == "":
+                    medidadobra2 = float(dobra2) - (deducao_valor / 2)
+                else:
+                    medidadobra2 = float(dobra2) - deducao_valor
+                g.medidadobra2_entry.config(text=medidadobra2)
 
-    # Calculo da medida da linha de dobra 5
-    if g.dobra5.get() == "":
-        atualizar_medida(g.medidadobra5_entry, "")
-        atualizar_medida(g.metadedobra5_entry, "")
-        return
-    else:
-        medidadobra5 = float(g.dobra5.get()) - (deducao_valor / 2)
-        atualizar_medida(g.medidadobra5_entry, medidadobra5)
+            # Calculo da medida da linha de dobra 3
+        if dobra3 == "":
+                g.medidadobra3_entry.config(text="")
+                return
+        else:
+                if dobra4 == "":
+                    medidadobra3 = float(dobra3) - (deducao_valor / 2)
+                else:
+                    medidadobra3 = float(dobra3) - deducao_valor
+                g.medidadobra3_entry.config(text=medidadobra3)
+
+            # Calculo da medida da linha de dobra 4
+        if dobra4 == "":
+                g.medidadobra4_entry.config(text="")
+                return
+        else:
+                if dobra5 == "":
+                    medidadobra4 = float(dobra4) - (deducao_valor / 2)
+                else:
+                    medidadobra4 = float(dobra4) - deducao_valor
+                g.medidadobra4_entry.config(text=medidadobra4)
+
+            # Calculo da medida da linha de dobra 5
+        if dobra5 == "":
+                g.medidadobra5_entry.config(text="")
+                return
+        else:
+                medidadobra5 = float(dobra5) - (deducao_valor / 2)
+                g.medidadobra5_entry.config(text=medidadobra5)
 
 def calcular_metade_dobra():
         entradas = [
@@ -166,16 +160,14 @@ def calcular_metade_dobra():
         ]
 
         for medidadobra_entry, metadedobra_entry in entradas:
-            medidadobra_entry.config(state='normal')
             try:
-                medidadobra = float(medidadobra_entry.get())
+                medidadobra = float(medidadobra_entry['text'])
                 metadedobra = medidadobra / 2
-                atualizar_medida(metadedobra_entry, metadedobra)
+                metadedobra_entry.config(text=f'{metadedobra:.2f}')
             except ValueError:
+                metadedobra_entry.config(text="")
                 return
-            finally:
-                medidadobra_entry.config(state='readonly')
-
+                    
 def calcular_dobra_ang():
     distancia = float(g.dist1_entry.get())
     angulo = float(g.angulo1_entry.get())
@@ -203,11 +195,11 @@ def razao_raio_esp():
 
 
 def copiar_deducao():
-    pyperclip.copy(g.deducao_entry)
-    print('Valor de dedução copiado')
+    pyperclip.copy(g.deducao_entry['text'])
+    print(f'Valor de dedução copiado{g.deducao_entry["text"]}')
 
 def limpar_dobras():
-        limpar_dobras = [g.dobra1, g.dobra2, g.dobra3, g.dobra4, g.dobra5]
+        limpar_dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
         limpar_medidas = [g.medidadobra1_entry, g.medidadobra2_entry, g.medidadobra3_entry, g.medidadobra4_entry, g.medidadobra5_entry]
         limpar_metades = [g.metadedobra1_entry, g.metadedobra2_entry, g.metadedobra3_entry, g.metadedobra4_entry, g.metadedobra5_entry]
 
@@ -215,25 +207,24 @@ def limpar_dobras():
             limpar_dobras.delete(0, tk.END)
 
         for limpar_medidas in limpar_medidas:
-            limpar_medidas.config(state='normal')
-            limpar_medidas.delete(0, tk.END)
-            limpar_medidas.config(state='readonly')
+            limpar_medidas.config(text="")
 
         for limpar_metades in limpar_metades:
-            limpar_metades.config(state='normal')
-            limpar_metades.delete(0, tk.END)
-            limpar_metades.config(state='readonly')
+            limpar_metades.config(text="")
+
+        g.deducao_espec_entry.delete(0, tk.END)
 
 def limpar_tudo():
 
-        # Limpar widgets de head.py
+        limpar_dobras()
+        
         g.material_combobox.set('')
         g.espessura_combobox.set('')
         g.canal_combobox.set('')
         g.raio_interno_entry.delete(0, tk.END)
-        atualizar_medida(g.fator_k_entry, "")
-        atualizar_medida(g.deducao_entry, "")
-        atualizar_medida(g.offset_entry, "")
+        g.fator_k_entry.config(text="")
+        g.deducao_entry.config(text="")
+        g.offset_entry.config(text="")
 
 def todas_funcoes():
         atualizar_espessura()
