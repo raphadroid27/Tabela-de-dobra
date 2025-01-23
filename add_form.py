@@ -13,6 +13,7 @@ session = Session()
 def main(root_app):
 
     def adicionar_deducao_e_observacao():
+        aviso_label.config(text="", fg="red")  # Limpar aviso anterior
         espessura_valor = deducao_espessura_combobox.get()
         canal_valor = deducao_canal_combobox.get()
         material_nome = deducao_material_combobox.get()
@@ -48,6 +49,9 @@ def main(root_app):
             )
             session.add(nova_deducao)
             session.commit()
+            aviso_label.config(text="Nova dedução adicionada com sucesso!", fg="green")
+        else:
+            aviso_label.config(text="Dedução já existe no banco de dados.", fg="red")
 
         deducao_espessura_combobox.set('')
         deducao_canal_combobox.set('')
@@ -56,7 +60,7 @@ def main(root_app):
         deducao_obs_entry.delete(0, tk.END)
 
     def adicionar_dados():
-        aviso_label.config(text="")  # Limpar aviso anterior
+        aviso_label.config(text="", fg="red")  # Limpar aviso anterior
         # Adicionar novos valores ao banco de dados apenas se os campos estiverem preenchidos
         if material_nome_entry.get() or material_densidade_entry.get():
             nome_material = material_nome_entry.get()
@@ -67,9 +71,9 @@ def main(root_app):
                 session.add(novo_material)
                 material_nome_entry.delete(0, tk.END)
                 material_densidade_entry.delete(0, tk.END)
-                aviso_label.config(text="Novo material adicionado com sucesso!")
+                aviso_label.config(text="Novo material adicionado com sucesso!", fg="green")
             else:
-                aviso_label.config(text="Material já existe no banco de dados.")
+                aviso_label.config(text="Material já existe no banco de dados.", fg="red")
 
         if espessura_valor_entry.get():
             valor_espessura = float(espessura_valor_entry.get().replace(',', '.'))
@@ -78,9 +82,9 @@ def main(root_app):
                 nova_espessura = espessura(valor=valor_espessura)
                 session.add(nova_espessura)
                 espessura_valor_entry.delete(0, tk.END)
-                aviso_label.config(text="Nova espessura adicionada com sucesso!")
+                aviso_label.config(text="Nova espessura adicionada com sucesso!", fg="green")
             else:
-                aviso_label.config(text="Espessura já existe no banco de dados.")
+                aviso_label.config(text="Espessura já existe no banco de dados.", fg="red")
 
         if canal_valor_entry.get():
             valor_canal = float(canal_valor_entry.get())
@@ -89,9 +93,9 @@ def main(root_app):
                 novo_canal = canal(valor=valor_canal)
                 session.add(novo_canal)
                 canal_valor_entry.delete(0, tk.END)
-                aviso_label.config(text="Novo canal adicionado com sucesso!")
+                aviso_label.config(text="Novo canal adicionado com sucesso!", fg="green")
             else:
-                aviso_label.config(text="Canal já existe no banco de dados.")
+                aviso_label.config(text="Canal já existe no banco de dados.", fg="red")
 
         session.commit()
         atualizar_dados()
@@ -169,7 +173,7 @@ def main(root_app):
 
     tk.Button(main_frame, text="Adicionar Dados", command=adicionar_dados).grid(row=4, column=4, pady=5)
    
-    aviso_label = tk.Label(root, text="", font=("Helvetica", 10), fg="red")
+    aviso_label = tk.Label(root, text="", font=("Helvetica", 10))
     aviso_label.pack(pady=5)
 
     root.protocol("WM_DELETE_WINDOW", on_closing)

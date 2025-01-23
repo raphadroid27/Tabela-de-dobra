@@ -52,7 +52,7 @@ def atualizar_deducao():
             ).first()
 
             if deducao_obj:
-                g.deducao_entry.config(text=deducao_obj.valor)
+                g.deducao_entry.config(text=deducao_obj.valor, fg="black")
             else:
                 g.deducao_entry.config(text='Não encotrada')
 
@@ -82,7 +82,7 @@ def calcular_fatork():
 
         fator_k = (4 * (g.espessura_valor - (float(deducao_valor) / 2) + float(raio_interno)) - (pi * float(raio_interno))) / (pi * g.espessura_valor)
 
-        g.fator_k_entry.config(text=f"{fator_k:.2f}")
+        g.fator_k_entry.config(text=f"{fator_k:.2f}",fg="black")
 
 def calcular_offset():
 
@@ -94,7 +94,7 @@ def calcular_offset():
           return         
     else:
          offset = float(fator_k) * float(espessura)
-         g.offset_entry.config (text=f"{offset:.2f}")
+         g.offset_entry.config (text=f"{offset:.2f}",fg="black")
          
 def calcular_dobra():
 
@@ -227,7 +227,7 @@ def copiar_deducao():
     calcular_offset()
     pyperclip.copy(g.deducao_entry['text'])
     print(f'Valor de dedução copiado {g.deducao_entry["text"]}')
-    g.deducao_entry.config(text=f'{g.deducao_entry["text"]} Copiado!')
+    g.deducao_entry.config(text=f'{g.deducao_entry["text"]} Copiado!',fg="green")
 
 def copiar_fatork():
     atualizar_deducao()
@@ -235,7 +235,7 @@ def copiar_fatork():
     calcular_offset()
     pyperclip.copy(g.fator_k_entry['text'])
     print(f'Valor de fator k copiado {g.fator_k_entry["text"]}')
-    g.fator_k_entry.config(text=f'{g.fator_k_entry["text"]} Copiado!')
+    g.fator_k_entry.config(text=f'{g.fator_k_entry["text"]} Copiado!',fg="green")
 
 def copiar_offset():
     atualizar_deducao()
@@ -243,7 +243,7 @@ def copiar_offset():
     calcular_offset()
     pyperclip.copy(g.offset_entry['text'])
     print(f'Valor de offset copiado {g.offset_entry["text"]}')
-    g.offset_entry.config(text=f'{g.offset_entry["text"]} Copiado!')
+    g.offset_entry.config(text=f'{g.offset_entry["text"]} Copiado!',fg="green")
 
 def limpar_dobras():
         limpar_dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
