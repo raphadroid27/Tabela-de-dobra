@@ -119,7 +119,7 @@ def calcular_dobra():
         else:
                 
                 medidadobra1 = float(dobra1) - (deducao_valor / 2)
-                g.medidadobra1_entry.config(text=medidadobra1,fg="black")
+                g.medidadobra1_entry.config(text=f'{medidadobra1:.2f}',fg="black")
 
             # Calculo da medida da linha de dobra 2
         if dobra2 == "":
@@ -178,7 +178,7 @@ def calcular_blank():
         return
     else:
         blank = sum(medidas_validas)
-        g.medida_blank_label.config(text=f"{blank:.2f}")
+        g.medida_blank_label.config(text=f"{blank:.2f}",fg="black")
 
 
 def calcular_metade_dobra():
@@ -194,7 +194,7 @@ def calcular_metade_dobra():
             try:
                 medidadobra = float(medidadobra_entry['text'])
                 metadedobra = medidadobra / 2
-                metadedobra_entry.config(text=f'{metadedobra:.2f}')
+                metadedobra_entry.config(text=f'{metadedobra:.2f}',fg="black")
             except ValueError:
                 metadedobra_entry.config(text="")
                 return
@@ -259,10 +259,12 @@ def copiar_offset():
         g.offset_entry.config(text=f'{g.offset_entry["text"]} Copiado!',fg="green")
 
 def copiar_medidadobra(numero):
+    
     entry = getattr(g, f'medidadobra{numero}_entry')
     if entry['text'] == '':
         return
     else:
+        calcular_dobra()
         pyperclip.copy(entry['text'])
         print(f'Valor de medida de dobra {numero} copiado {entry["text"]}')
         entry.config(text=f'{entry["text"]} Copiado!', fg="green")
@@ -272,6 +274,8 @@ def copiar_metadedobra(numero):
     if entry['text'] == '':
         return
     else:
+        calcular_dobra()
+        calcular_metade_dobra()
         pyperclip.copy(entry['text'])
         print(f'Valor de metade de dobra {numero} copiado {entry["text"]}')
         entry.config(text=f'{entry["text"]} Copiado!', fg="green")        
@@ -280,10 +284,10 @@ def copiar_blank():
     if g.medida_blank_label['text'] == '':
         return
     else:
+        calcular_blank()
         pyperclip.copy(g.medida_blank_label['text'])
         print(f'Valor de medida blank copiado {g.medida_blank_label["text"]}')
         g.medida_blank_label.config(text=f'{g.medida_blank_label["text"]} Copiado!', fg="green")
-
 
 def limpar_dobras():
         limpar_dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
@@ -300,6 +304,7 @@ def limpar_dobras():
             limpar_metades.config(text="")
 
         g.deducao_espec_entry.delete(0, tk.END)
+        g.medida_blank_label.config(text="")
 
 def limpar_tudo():
 

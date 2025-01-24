@@ -13,7 +13,7 @@ def criar_aba1(notebook):
     # Frame para dedução específica, aba mínimo externa e Altura mín. ext. Z 90°	
 
     frame_superior = tk.Frame(aba1)
-    frame_superior.pack(fill='both', expand=True)
+    frame_superior.pack(fill='both', expand=True,anchor='n')
 
     frame_superior.columnconfigure(0, weight=1)
     frame_superior.columnconfigure(1, weight=1)
@@ -91,12 +91,11 @@ def criar_aba1(notebook):
     g.metadedobra5_entry = tk.Label(frame_aba1,relief="sunken", width=10)
     g.metadedobra5_entry.grid(row=5, column=3, sticky='we',padx=2)
 
-    tk.Label(frame_aba1, text="Medida do Blank:").grid(row=6, column=1,sticky='e',padx=2)
+    tk.Label(frame_aba1, text="Medida do Blank:").grid(row=6, column=1, padx=2, sticky='e')
     
     g.medida_blank_label = tk.Label(frame_aba1, relief="sunken", width=10)
     g.medida_blank_label.grid(row=6, column=2, sticky='we',padx=2)
 
     # Botão para limpar valores de dobras
-    limpar_dobras_button = tk.Button(frame_aba1, text="Limpar Dobras", command=limpar_dobras, bg='red')
-    limpar_dobras_button.grid(row=6, column=3,sticky='we',padx=2)
-    
+    limpar_dobras_button = tk.Button(frame_aba1, text="Limpar Dobras", command=limpar_dobras, bg='yellow')
+    limpar_dobras_button.grid(row=6, column=3, sticky='we',padx=2)

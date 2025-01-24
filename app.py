@@ -65,7 +65,7 @@ def main():
     cabecalho(root)
 
     # Criando o Notebook (abas)
-    notebook = ttk.Notebook(root)
+    notebook = ttk.Notebook(root, height=200)
     notebook.pack(fill='both', expand=True, padx=15)
 
     criar_aba1(notebook)
@@ -73,7 +73,7 @@ def main():
     criar_aba3(notebook)
 
     # Botão para limpar todos os valores
-    limpar_tudo_button = tk.Button(root, text="Limpar Tudo", command=limpar_tudo)
+    limpar_tudo_button = tk.Button(root, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red')
     limpar_tudo_button.pack(pady=5)
 
     # Funções de atualização
