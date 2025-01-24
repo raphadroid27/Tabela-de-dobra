@@ -10,6 +10,8 @@ from aba2 import criar_aba2
 from aba3 import criar_aba3
 from head import cabecalho
 import add_form
+import globals as g
+from funcoes import *
 
 CONFIG_FILE = 'config.json'
 
@@ -69,7 +71,34 @@ def main():
     criar_aba1(notebook)
     criar_aba2(notebook)
     criar_aba3(notebook)
-    
+
+    # Botão para limpar todos os valores
+    limpar_tudo_button = tk.Button(root, text="Limpar Tudo", command=limpar_tudo)
+    limpar_tudo_button.pack(pady=5)
+
+    # Funções de atualização
+    entries = [
+        g.deducao_entry, g.deducao_espec_entry, g.aba1_entry, g.aba2_entry, 
+        g.aba3_entry, g.aba4_entry, g.aba5_entry, g.raio_interno_entry
+    ]
+    comboboxes = [g.canal_combobox, g.espessura_combobox, g.material_combobox]
+
+    for entry in entries:
+        entry.bind("<KeyRelease>", lambda event: todas_funcoes())
+
+    for combobox in comboboxes:
+        combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
+
+    # Funções de copiar
+    g.deducao_entry.bind("<Button-1>", lambda event: copiar_deducao())
+    g.fator_k_entry.bind("<Button-1>", lambda event: copiar_fatork())
+    g.offset_entry.bind("<Button-1>", lambda event: copiar_offset())
+    g.medida_blank_label.bind("<Button-1>", lambda event: copiar_blank())
+
+    for i in range(1, 6):
+        getattr(g, f'medidadobra{i}_entry').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
+        getattr(g, f'metadedobra{i}_entry').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
+
     root.mainloop()
 
 if __name__ == "__main__":

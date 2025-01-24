@@ -4,7 +4,6 @@ from math import pi
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from models import espessura, material, canal, deducao, observacao
-from head import *
 import globals as g
 
 def configuracao_do_banco_de_dados():
@@ -35,44 +34,47 @@ def atualizar_canal():
             canais_valores = [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).all()]
             g.canal_combobox['values'] = canais_valores
 
-def atualizar_deducao():
-        espessura_valor = g.espessura_combobox.get()
-        material_nome = g.material_combobox.get()
-        canal_valor = g.canal_combobox.get()
+def atualizar_deducao_e_obs():
+    espessura_valor = g.espessura_combobox.get()
+    material_nome = g.material_combobox.get()
+    canal_valor = g.canal_combobox.get()
 
-        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
-        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+    espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+    material_obj = session.query(material).filter_by(nome=material_nome).first()
+    canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
 
-        if espessura_obj and material_obj and canal_obj:
-            deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
-                deducao.espessura_id == espessura_obj.id,
-                deducao.material_id == material_obj.id,
-                deducao.canal_id == canal_obj.id
-            ).first()
+    obs_obj = None
 
-            if deducao_obj:
-                g.deducao_entry.config(text=deducao_obj.valor, fg="black")
+    if espessura_obj and material_obj and canal_obj:
+        deducao_obj = session.query(deducao).join(espessura).join(material).join(canal).filter(
+            deducao.espessura_id == espessura_obj.id,
+            deducao.material_id == material_obj.id,
+            deducao.canal_id == canal_obj.id
+        ).first()
+
+        if deducao_obj:
+            g.deducao_entry.config(text=deducao_obj.valor, fg="black")
+            obs_obj = session.query(observacao).join(deducao).filter(deducao.obs_id == deducao_obj.id).first()
+            
+            if obs_obj:
+                g.obs_label.config(text=f'Observações: {obs_obj.valor}')
             else:
-                g.deducao_entry.config(text='Não encotrada')
-
-def atualizar_obs():
-    deducao_valor = g.deducao_entry['text']
-    deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()
-    if deducao_obj:
-        obs_obj = session.query(deducao).join(observacao).filter('observacao.id' == deducao_obj.obs_id).first()
+                g.obs_label.config(text='Observações não encontradas')
+        else:
+            g.deducao_entry.config(text='Não encontrada', fg="red")
+            g.obs_label.config(text='Observações não encontradas')
         
         if obs_obj:
-            g.obs_label.config(text=obs_obj.valor)
+            g.obs_label.config(text=f'Observações: {obs_obj.valor}')
         else:
-            g.obs_label.config(text='Não encotrada')      
+            g.obs_label.config(text='Observações não encontradas')      
             
 def calcular_fatork():
     raio_interno = g.raio_interno_entry.get().replace(',', '.')
     espessura_valor = g.espessura_combobox.get()
     deducao_valor = g.deducao_entry['text']
 
-    if not raio_interno or not espessura_valor or not deducao_valor or deducao_valor == 'Não encotrada':
+    if not raio_interno or not espessura_valor or not deducao_valor or deducao_valor == 'Não encontrada':
         return
     else:
         espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
@@ -95,7 +97,6 @@ def calcular_offset():
          g.offset_entry.config (text=f"{offset:.2f}",fg="black")
          
 def calcular_dobra():
-
     deducao_valor = g.deducao_entry['text']
     deducao_espec = g.deducao_espec_entry.get()
     dobra1 = g.aba1_entry.get().replace(',', '.')
@@ -118,7 +119,7 @@ def calcular_dobra():
         else:
                 
                 medidadobra1 = float(dobra1) - (deducao_valor / 2)
-                g.medidadobra1_entry.config(text=medidadobra1)
+                g.medidadobra1_entry.config(text=medidadobra1,fg="black")
 
             # Calculo da medida da linha de dobra 2
         if dobra2 == "":
@@ -129,7 +130,7 @@ def calcular_dobra():
                     medidadobra2 = float(dobra2) - (deducao_valor / 2)
                 else:
                     medidadobra2 = float(dobra2) - deducao_valor
-                g.medidadobra2_entry.config(text=medidadobra2)
+                g.medidadobra2_entry.config(text=medidadobra2,fg="black")
 
             # Calculo da medida da linha de dobra 3
         if dobra3 == "":
@@ -140,7 +141,7 @@ def calcular_dobra():
                     medidadobra3 = float(dobra3) - (deducao_valor / 2)
                 else:
                     medidadobra3 = float(dobra3) - deducao_valor
-                g.medidadobra3_entry.config(text=medidadobra3)
+                g.medidadobra3_entry.config(text=medidadobra3,fg="black")
 
             # Calculo da medida da linha de dobra 4
         if dobra4 == "":
@@ -151,7 +152,7 @@ def calcular_dobra():
                     medidadobra4 = float(dobra4) - (deducao_valor / 2)
                 else:
                     medidadobra4 = float(dobra4) - deducao_valor
-                g.medidadobra4_entry.config(text=medidadobra4)
+                g.medidadobra4_entry.config(text=medidadobra4,fg="black")
 
             # Calculo da medida da linha de dobra 5
         if dobra5 == "":
@@ -159,20 +160,25 @@ def calcular_dobra():
                 return
         else:
                 medidadobra5 = float(dobra5) - (deducao_valor / 2)
-                g.medidadobra5_entry.config(text=medidadobra5)
+                g.medidadobra5_entry.config(text=medidadobra5,fg="black")
 
 def calcular_blank():
-    medidadobra1 = g.medidadobra1_entry['text']
-    medidadobra2 = g.medidadobra2_entry['text']
-    medidadobra3 = g.medidadobra3_entry['text']
-    medidadobra4 = g.medidadobra4_entry['text']
-    medidadobra5 = g.medidadobra5_entry['text']
+    medidas = [
+        g.medidadobra1_entry['text'],
+        g.medidadobra2_entry['text'],
+        g.medidadobra3_entry['text'],
+        g.medidadobra4_entry['text'],
+        g.medidadobra5_entry['text']
+    ]
 
-    if medidadobra1 == "" or medidadobra2 == "" or medidadobra3 == "" or medidadobra4 == "" or medidadobra5 == "":
+    # Filtra apenas as medidas que não estão vazias e converte para float
+    medidas_validas = [float(medida) for medida in medidas if medida != ""]
+
+    if not medidas_validas:
         return
     else:
-        blank = float(medidadobra1) + float(medidadobra2) + float(medidadobra3) + float(medidadobra4) + float(medidadobra5)
-        g.medida_blank_label.config(text=f"{blank:.1f}")
+        blank = sum(medidas_validas)
+        g.medida_blank_label.config(text=f"{blank:.2f}")
 
 
 def calcular_metade_dobra():
@@ -220,28 +226,64 @@ def razao_raio_esp():
 
 
 def copiar_deducao():
-    atualizar_deducao()
-    calcular_fatork()
-    calcular_offset()
-    pyperclip.copy(g.deducao_entry['text'])
-    print(f'Valor de dedução copiado {g.deducao_entry["text"]}')
-    g.deducao_entry.config(text=f'{g.deducao_entry["text"]} Copiado!',fg="green")
+    if g.deducao_entry['text'] == 'Não encotrada' or g.deducao_entry['text'] == '':
+        return
+    else:
+        atualizar_deducao_e_obs()
+        calcular_fatork()
+        calcular_offset()
+        pyperclip.copy(g.deducao_entry['text'])
+        print(f'Valor de dedução copiado {g.deducao_entry["text"]}')
+        g.deducao_entry.config(text=f'{g.deducao_entry["text"]} Copiado!',fg="green")
 
 def copiar_fatork():
-    atualizar_deducao()
-    calcular_fatork()
-    calcular_offset()
-    pyperclip.copy(g.fator_k_entry['text'])
-    print(f'Valor de fator k copiado {g.fator_k_entry["text"]}')
-    g.fator_k_entry.config(text=f'{g.fator_k_entry["text"]} Copiado!',fg="green")
+    if g.fator_k_entry['text'] == '':
+        return
+    else:
+        atualizar_deducao_e_obs()
+        calcular_fatork()
+        calcular_offset()
+        pyperclip.copy(g.fator_k_entry['text'])
+        print(f'Valor de fator k copiado {g.fator_k_entry["text"]}')
+        g.fator_k_entry.config(text=f'{g.fator_k_entry["text"]} Copiado!',fg="green")
 
 def copiar_offset():
-    atualizar_deducao()
-    calcular_fatork()
-    calcular_offset()
-    pyperclip.copy(g.offset_entry['text'])
-    print(f'Valor de offset copiado {g.offset_entry["text"]}')
-    g.offset_entry.config(text=f'{g.offset_entry["text"]} Copiado!',fg="green")
+    if g.offset_entry['text'] == '':
+        return
+    else:
+        atualizar_deducao_e_obs()
+        calcular_fatork()
+        calcular_offset()
+        pyperclip.copy(g.offset_entry['text'])
+        print(f'Valor de offset copiado {g.offset_entry["text"]}')
+        g.offset_entry.config(text=f'{g.offset_entry["text"]} Copiado!',fg="green")
+
+def copiar_medidadobra(numero):
+    entry = getattr(g, f'medidadobra{numero}_entry')
+    if entry['text'] == '':
+        return
+    else:
+        pyperclip.copy(entry['text'])
+        print(f'Valor de medida de dobra {numero} copiado {entry["text"]}')
+        entry.config(text=f'{entry["text"]} Copiado!', fg="green")
+
+def copiar_metadedobra(numero):
+    entry = getattr(g, f'metadedobra{numero}_entry')
+    if entry['text'] == '':
+        return
+    else:
+        pyperclip.copy(entry['text'])
+        print(f'Valor de metade de dobra {numero} copiado {entry["text"]}')
+        entry.config(text=f'{entry["text"]} Copiado!', fg="green")        
+
+def copiar_blank():
+    if g.medida_blank_label['text'] == '':
+        return
+    else:
+        pyperclip.copy(g.medida_blank_label['text'])
+        print(f'Valor de medida blank copiado {g.medida_blank_label["text"]}')
+        g.medida_blank_label.config(text=f'{g.medida_blank_label["text"]} Copiado!', fg="green")
+
 
 def limpar_dobras():
         limpar_dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
@@ -274,8 +316,7 @@ def limpar_tudo():
 def todas_funcoes():
         atualizar_espessura()
         atualizar_canal()
-        atualizar_deducao()
-        atualizar_obs()
+        atualizar_deducao_e_obs()
         calcular_fatork()
         calcular_offset()
         calcular_dobra()

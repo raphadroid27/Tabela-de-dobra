@@ -10,7 +10,7 @@ def criar_aba2(notebook):
     # Conteúdo da Aba 2
     # Novo frame para entradas de valores de dobra
     frame_aba2 = tk.Frame(aba2)
-    frame_aba2.pack(padx=10, pady=10)
+    frame_aba2.pack(padx=10, pady=5)
 
     # Labels
 

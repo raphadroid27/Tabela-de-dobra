@@ -10,7 +10,7 @@ def criar_aba3(notebook):
     
     # Crie um Frame para agrupar os Labels na mesma linha
     frame = tk.Frame(aba3)
-    frame.pack(pady=10)
+    frame.pack(pady=5)
     
     tk.Label(frame, text='Raio interno / espessura: ').pack(side=tk.LEFT)
     g.razao_raio_esp_label = tk.Label(frame, text="",relief="sunken",width=20)

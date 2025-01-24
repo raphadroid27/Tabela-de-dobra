@@ -70,4 +70,4 @@ def cabecalho(root):
     g.offset_entry.grid(row=1, column=3, padx=5, sticky='we')
 
     g.obs_label = tk.Label(cabecalho, text="Observações: ", relief="sunken", anchor='w') 
-    g.obs_label.pack(side='bottom', fill='both', expand=True, padx=5, pady=10)  
+    g.obs_label.pack(side='bottom', fill='both', expand=True, padx=5, pady=5)  

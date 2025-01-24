@@ -127,11 +127,11 @@ def main(root_app):
     root.geometry(f"+{x}+{y}")
 
     label1 = tk.Label(root, text="Adicionar Nova Dedução de Dobra", font=("Helvetica", 16))
-    label1.pack(pady=10)
+    label1.pack(pady=5)
 
     # Frame principal para organizar as colunas
     main_frame = tk.Frame(root)
-    main_frame.pack(pady=10)
+    main_frame.pack(pady=5)
 
     tk.Label(main_frame, text="Material:").grid(row=0, column=0)
     deducao_material_combobox = ttk.Combobox(main_frame, values=[m.nome for m in session.query(material).all()])
