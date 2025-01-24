@@ -36,7 +36,7 @@ def criar_aba1(notebook):
 
     # Novo frame para entradas de valores de dobra
     frame_aba1 = tk.Frame(aba1)
-    frame_aba1.pack(fill='both', expand=True)
+    frame_aba1.pack(fill='both', expand=True, pady=5)
 
     frame_aba1.columnconfigure(0, weight=1)
     frame_aba1.columnconfigure(1, weight=2)
@@ -91,11 +91,12 @@ def criar_aba1(notebook):
     g.metadedobra5_entry = tk.Label(frame_aba1,relief="sunken", width=10)
     g.metadedobra5_entry.grid(row=5, column=3, sticky='we',padx=2)
 
-    tk.Label(frame_aba1, text="Medida do Blank:").grid(row=6, column=1, padx=2, sticky='e')
+    tk.Label(frame_aba1, text="Medida do Blank:").grid(row=6, column=1,sticky='e',padx=2)
     
     g.medida_blank_label = tk.Label(frame_aba1, relief="sunken", width=10)
     g.medida_blank_label.grid(row=6, column=2, sticky='we',padx=2)
 
     # Botão para limpar valores de dobras
     limpar_dobras_button = tk.Button(frame_aba1, text="Limpar Dobras", command=limpar_dobras, bg='yellow')
-    limpar_dobras_button.grid(row=6, column=3, sticky='we',padx=2)
+    limpar_dobras_button.grid(row=6, column=3,sticky='we',padx=2)
+    
