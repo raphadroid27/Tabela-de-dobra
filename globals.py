@@ -35,6 +35,7 @@ metadedobra4_entry = None
 metadedobra5_entry = None
 deducao_espec_entry = None
 medida_blank_label = None
+metade_blank_label = None
 
 #aba2.py widgets
 

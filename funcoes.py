@@ -105,62 +105,57 @@ def calcular_dobra():
     dobra4 = g.aba4_entry.get().replace(',', '.')
     dobra5 = g.aba5_entry.get().replace(',', '.')
 
-    if deducao_valor == "" or deducao_valor == 'Não encotrada':  
-        return
-    else:
+    if deducao_valor == "" or deducao_valor == 'Não encontrada':
         if deducao_espec == "":
-            deducao_valor = float(g.deducao_entry['text'])
+            return
         else:
             deducao_valor = float(deducao_espec)
-        
+    else:
+        deducao_valor = float(deducao_valor)
+        if deducao_espec != "":
+            deducao_valor = float(deducao_espec)
+
+    def calcular_medida(deducao_valor):
         if dobra1 == "":
-                g.medidadobra1_entry.config(text="")
-                return
+            g.medidadobra1_entry.config(text="")
         else:
-                
-                medidadobra1 = float(dobra1) - (deducao_valor / 2)
-                g.medidadobra1_entry.config(text=f'{medidadobra1:.2f}',fg="black")
+            medidadobra1 = float(dobra1) - (deducao_valor / 2)
+            g.medidadobra1_entry.config(text=f'{medidadobra1:.2f}', fg="black")
 
-            # Calculo da medida da linha de dobra 2
         if dobra2 == "":
-                g.medidadobra2_entry.config(text="")
-                return
+            g.medidadobra2_entry.config(text="")
         else:
-                if dobra3 == "":
-                    medidadobra2 = float(dobra2) - (deducao_valor / 2)
-                else:
-                    medidadobra2 = float(dobra2) - deducao_valor
-                g.medidadobra2_entry.config(text=medidadobra2,fg="black")
+            if dobra3 == "":
+                medidadobra2 = float(dobra2) - (deducao_valor / 2)
+            else:
+                medidadobra2 = float(dobra2) - deducao_valor
+            g.medidadobra2_entry.config(text=f'{medidadobra2:.2f}', fg="black")
 
-            # Calculo da medida da linha de dobra 3
         if dobra3 == "":
-                g.medidadobra3_entry.config(text="")
-                return
+            g.medidadobra3_entry.config(text="")
         else:
-                if dobra4 == "":
-                    medidadobra3 = float(dobra3) - (deducao_valor / 2)
-                else:
-                    medidadobra3 = float(dobra3) - deducao_valor
-                g.medidadobra3_entry.config(text=medidadobra3,fg="black")
+            if dobra4 == "":
+                medidadobra3 = float(dobra3) - (deducao_valor / 2)
+            else:
+                medidadobra3 = float(dobra3) - deducao_valor
+            g.medidadobra3_entry.config(text=f'{medidadobra3:.2f}', fg="black")
 
-            # Calculo da medida da linha de dobra 4
         if dobra4 == "":
-                g.medidadobra4_entry.config(text="")
-                return
+            g.medidadobra4_entry.config(text="")
         else:
-                if dobra5 == "":
-                    medidadobra4 = float(dobra4) - (deducao_valor / 2)
-                else:
-                    medidadobra4 = float(dobra4) - deducao_valor
-                g.medidadobra4_entry.config(text=medidadobra4,fg="black")
+            if dobra5 == "":
+                medidadobra4 = float(dobra4) - (deducao_valor / 2)
+            else:
+                medidadobra4 = float(dobra4) - deducao_valor
+            g.medidadobra4_entry.config(text=f'{medidadobra4:.2f}', fg="black")
 
-            # Calculo da medida da linha de dobra 5
         if dobra5 == "":
-                g.medidadobra5_entry.config(text="")
-                return
+            g.medidadobra5_entry.config(text="")
         else:
-                medidadobra5 = float(dobra5) - (deducao_valor / 2)
-                g.medidadobra5_entry.config(text=medidadobra5,fg="black")
+            medidadobra5 = float(dobra5) - (deducao_valor / 2)
+            g.medidadobra5_entry.config(text=f'{medidadobra5:.2f}', fg="black")
+
+    calcular_medida(deducao_valor)
 
 def calcular_blank():
     medidas = [
@@ -169,6 +164,14 @@ def calcular_blank():
         g.medidadobra3_entry['text'],
         g.medidadobra4_entry['text'],
         g.medidadobra5_entry['text']
+    ]
+
+    metades = [
+        g.metadedobra1_entry['text'],
+        g.metadedobra2_entry['text'],
+        g.metadedobra3_entry['text'],
+        g.metadedobra4_entry['text'],
+        g.metadedobra5_entry['text']
     ]
 
     # Filtra apenas as medidas que não estão vazias e converte para float
@@ -180,6 +183,13 @@ def calcular_blank():
         blank = sum(medidas_validas)
         g.medida_blank_label.config(text=f"{blank:.2f}",fg="black")
 
+    metades_validas = [float(metade) for metade in metades if metade != ""]
+
+    if not metades_validas:
+        return
+    else:
+        blank = sum(metades_validas)
+        g.metade_blank_label.config(text=f"{blank:.2f}",fg="black")
 
 def calcular_metade_dobra():
         entradas = [
@@ -305,6 +315,7 @@ def limpar_dobras():
 
         g.deducao_espec_entry.delete(0, tk.END)
         g.medida_blank_label.config(text="")
+        g.metade_blank_label.config(text="")
 
 def limpar_tudo():
 

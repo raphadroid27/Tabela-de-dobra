@@ -19,17 +19,17 @@ def criar_aba1(notebook):
     frame_superior.columnconfigure(1, weight=1)
     frame_superior.columnconfigure(2, weight=1)
 
-    tk.Label(frame_superior, text="Dedução Específica:").grid(row=0, column=0, padx=2)
+    tk.Label(frame_superior, text="Dedução Espec.:").grid(row=0, column=0, padx=2)
 
     g.deducao_espec_entry = tk.Entry(frame_superior, width=10)
     g.deducao_espec_entry.grid(row=1, column=0, padx=2, sticky='we')
 
-    tk.Label(frame_superior, text="Aba Mínima Externa:").grid(row=0, column=1, padx=2)
+    tk.Label(frame_superior, text="Aba Mín. Ext.:").grid(row=0, column=1, padx=2)
 
     g.aba_min_externa_entry = tk.Label(frame_superior, relief="sunken", width=10)
     g.aba_min_externa_entry.grid(row=1, column=1, padx=2, sticky='we')
 
-    tk.Label(frame_superior, text="Altura Mín. Ext. Z 90°:").grid(row=0, column=2, padx=2)
+    tk.Label(frame_superior, text="Alt. Mín. Ext. Z 90°:").grid(row=0, column=2, padx=2)
 
     g.altura_min_externa_entry = tk.Label(frame_superior, relief="sunken", width=10)
     g.altura_min_externa_entry.grid(row=1, column=2, padx=2, sticky='we')
@@ -43,9 +43,9 @@ def criar_aba1(notebook):
     frame_aba1.columnconfigure(2, weight=2)
     frame_aba1.columnconfigure(3, weight=2)
 
-    tk.Label(frame_aba1, text="Medida da aba:").grid(row=0, column=1)
-    tk.Label(frame_aba1, text="Medida da dobra:").grid(row=0, column=2)
-    tk.Label(frame_aba1, text="Metade da dobra:").grid(row=0, column=3)
+    tk.Label(frame_aba1, text="Medida Ext.:").grid(row=0, column=1)
+    tk.Label(frame_aba1, text="Medida Dobra:").grid(row=0, column=2)
+    tk.Label(frame_aba1, text="Metade Dobra:").grid(row=0, column=3)
 
 
     # Labels para as entradas de valores de dobra
@@ -91,12 +91,13 @@ def criar_aba1(notebook):
     g.metadedobra5_entry = tk.Label(frame_aba1,relief="sunken", width=10)
     g.metadedobra5_entry.grid(row=5, column=3, sticky='we',padx=2)
 
-    tk.Label(frame_aba1, text="Medida do Blank:").grid(row=6, column=1,sticky='e',padx=2)
+    tk.Label(frame_aba1, text="Medida do Blank:").grid(row=6, column=0,columnspan=2,sticky='e',padx=2)
     
     g.medida_blank_label = tk.Label(frame_aba1, relief="sunken", width=10)
     g.medida_blank_label.grid(row=6, column=2, sticky='we',padx=2)
 
-    # Botão para limpar valores de dobras
-    limpar_dobras_button = tk.Button(frame_aba1, text="Limpar Dobras", command=limpar_dobras, bg='yellow')
-    limpar_dobras_button.grid(row=6, column=3,sticky='we',padx=2)
+    g.metade_blank_label = tk.Label(frame_aba1, relief="sunken", width=10)
+    g.metade_blank_label.grid(row=6, column=3, sticky='we',padx=2)
+
+    
     

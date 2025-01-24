@@ -9,7 +9,7 @@ from aba1 import criar_aba1
 from aba2 import criar_aba2
 from aba3 import criar_aba3
 from head import cabecalho
-import add_form
+import nova_deducao
 import globals as g
 from funcoes import *
 
@@ -25,13 +25,13 @@ def salvar_configuracao(config):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(config, f)
 
-def abrir_add_form(root):
-    add_form.main(root)  # Passando a janela principal para o add_form
+def nova_deducao_form(root):
+    nova_deducao.main(root)  # Passando a janela principal para o add_form
 
 def main():
     config = carregar_configuracao()
     root = tk.Tk()
-    root.title("Tabela de dobra")
+    root.title("Cálculo de Dobra")
     root.geometry(config.get('geometry'))  # Usando a configuração carregada ou um valor padrão
     root.resizable(False, False)
 
@@ -49,7 +49,7 @@ def main():
     # Adicionando menus
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova dedução", command=lambda: abrir_add_form(root))  # Passando a janela principal
+    file_menu.add_command(label="Nova dedução", command=lambda: nova_deducao_form(root))  # Passando a janela principal
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 
@@ -72,9 +72,19 @@ def main():
     criar_aba2(notebook)
     criar_aba3(notebook)
 
+    frame_botoes = tk.Frame(root, width=200)
+    frame_botoes.pack( expand=True)
+
+    frame_botoes.columnconfigure(0, weight=1)
+    frame_botoes.columnconfigure(1, weight=1)
+
+    # Botão para limpar valores de dobras
+    limpar_dobras_button = tk.Button(frame_botoes, text="Limpar Dobras", command=limpar_dobras, width=15, bg='yellow')
+    limpar_dobras_button.grid(row=0, column=0,sticky='we',padx=2)
+
     # Botão para limpar todos os valores
-    limpar_tudo_button = tk.Button(root, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red')
-    limpar_tudo_button.pack(pady=5)
+    limpar_tudo_button = tk.Button(frame_botoes, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red')
+    limpar_tudo_button.grid(row=0, column=1,sticky='we',padx=2)
 
     # Funções de atualização
     entries = [
