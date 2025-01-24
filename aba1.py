@@ -10,30 +10,6 @@ def criar_aba1(notebook):
     aba1.pack(fill='both', expand=True)
     notebook.add(aba1, text='Aba 1')
 
-    # Frame para dedução específica, aba mínimo externa e Altura mín. ext. Z 90°	
-
-    frame_superior = tk.Frame(aba1)
-    frame_superior.pack(fill='both', expand=True,anchor='n')
-
-    frame_superior.columnconfigure(0, weight=1)
-    frame_superior.columnconfigure(1, weight=1)
-    frame_superior.columnconfigure(2, weight=1)
-
-    tk.Label(frame_superior, text="Dedução Espec.:").grid(row=0, column=0, padx=2)
-
-    g.deducao_espec_entry = tk.Entry(frame_superior, width=10)
-    g.deducao_espec_entry.grid(row=1, column=0, padx=2, sticky='we')
-
-    tk.Label(frame_superior, text="Aba Mín. Ext.:").grid(row=0, column=1, padx=2)
-
-    g.aba_min_externa_entry = tk.Label(frame_superior, relief="sunken", width=10)
-    g.aba_min_externa_entry.grid(row=1, column=1, padx=2, sticky='we')
-
-    tk.Label(frame_superior, text="Alt. Mín. Ext. Z 90°:").grid(row=0, column=2, padx=2)
-
-    g.altura_min_externa_entry = tk.Label(frame_superior, relief="sunken", width=10)
-    g.altura_min_externa_entry.grid(row=1, column=2, padx=2, sticky='we')
-
     # Novo frame para entradas de valores de dobra
     frame_aba1 = tk.Frame(aba1)
     frame_aba1.pack(fill='both', expand=True, pady=5)
@@ -68,28 +44,28 @@ def criar_aba1(notebook):
     g.aba5_entry.grid(row=5, column=1, sticky='we',padx=2)
 
     # Medida da linha de dobra
-    g.medidadobra1_entry = tk.Label(frame_aba1,relief="sunken", width=10)
-    g.medidadobra1_entry.grid(row=1, column=2, sticky='we',padx=2)
-    g.medidadobra2_entry = tk.Label(frame_aba1, relief="sunken", width=10)
-    g.medidadobra2_entry.grid(row=2, column=2, sticky='we',padx=2)
-    g.medidadobra3_entry = tk.Label(frame_aba1, relief="sunken", width=10)
-    g.medidadobra3_entry.grid(row=3, column=2, sticky='we',padx=2)
-    g.medidadobra4_entry = tk.Label(frame_aba1, relief="sunken", width=10)
-    g.medidadobra4_entry.grid(row=4, column=2, sticky='we',padx=2)
-    g.medidadobra5_entry = tk.Label(frame_aba1, relief="sunken", width=10)
-    g.medidadobra5_entry.grid(row=5, column=2, sticky='we',padx=2)
+    g.medidadobra1_label = tk.Label(frame_aba1,relief="sunken", width=10)
+    g.medidadobra1_label.grid(row=1, column=2, sticky='we',padx=2)
+    g.medidadobra2_label = tk.Label(frame_aba1, relief="sunken", width=10)
+    g.medidadobra2_label.grid(row=2, column=2, sticky='we',padx=2)
+    g.medidadobra3_label = tk.Label(frame_aba1, relief="sunken", width=10)
+    g.medidadobra3_label.grid(row=3, column=2, sticky='we',padx=2)
+    g.medidadobra4_label = tk.Label(frame_aba1, relief="sunken", width=10)
+    g.medidadobra4_label.grid(row=4, column=2, sticky='we',padx=2)
+    g.medidadobra5_label = tk.Label(frame_aba1, relief="sunken", width=10)
+    g.medidadobra5_label.grid(row=5, column=2, sticky='we',padx=2)
 
     # Medida da linha de dobra
-    g.metadedobra1_entry = tk.Label(frame_aba1,relief="sunken", width=10)
-    g.metadedobra1_entry.grid(row=1, column=3, sticky='we',padx=2)
-    g.metadedobra2_entry = tk.Label(frame_aba1,relief="sunken", width=10)
-    g.metadedobra2_entry.grid(row=2, column=3, sticky='we',padx=2)
-    g.metadedobra3_entry = tk.Label(frame_aba1,relief="sunken", width=10)
-    g.metadedobra3_entry.grid(row=3, column=3, sticky='we',padx=2)
-    g.metadedobra4_entry = tk.Label(frame_aba1,relief="sunken", width=10)
-    g.metadedobra4_entry.grid(row=4, column=3, sticky='we',padx=2)
-    g.metadedobra5_entry = tk.Label(frame_aba1,relief="sunken", width=10)
-    g.metadedobra5_entry.grid(row=5, column=3, sticky='we',padx=2)
+    g.metadedobra1_label = tk.Label(frame_aba1,relief="sunken", width=10)
+    g.metadedobra1_label.grid(row=1, column=3, sticky='we',padx=2)
+    g.metadedobra2_label = tk.Label(frame_aba1,relief="sunken", width=10)
+    g.metadedobra2_label.grid(row=2, column=3, sticky='we',padx=2)
+    g.metadedobra3_label = tk.Label(frame_aba1,relief="sunken", width=10)
+    g.metadedobra3_label.grid(row=3, column=3, sticky='we',padx=2)
+    g.metadedobra4_label = tk.Label(frame_aba1,relief="sunken", width=10)
+    g.metadedobra4_label.grid(row=4, column=3, sticky='we',padx=2)
+    g.metadedobra5_label = tk.Label(frame_aba1,relief="sunken", width=10)
+    g.metadedobra5_label.grid(row=5, column=3, sticky='we',padx=2)
 
     tk.Label(frame_aba1, text="Medida do Blank:").grid(row=6, column=0,columnspan=2,sticky='e',padx=2)
     

@@ -7,15 +7,17 @@ fator_k = None
 espessura_valor = None
 deducao_espec = None
 
-# head.py wigets
+# head.py widgets
 material_combobox = None
 espessura_combobox = None
 canal_combobox = None
-deducao_entry = None
+deducao_label = None
 raio_interno_entry = None
-fator_k_entry = None
-offset_entry = None
+fator_k_label = None
+offset_label = None
 obs_label = None
+ton_m_label = None
+comprimento_entry = None
 
 # aba1.py widgets
 aba1_entry = None
@@ -23,16 +25,16 @@ aba2_entry = None
 aba3_entry = None
 aba4_entry = None
 aba5_entry = None
-medidadobra1_entry = None
-medidadobra2_entry = None
-medidadobra3_entry = None
-medidadobra4_entry = None
-medidadobra5_entry = None
-metadedobra1_entry = None
-metadedobra2_entry = None
-metadedobra3_entry = None
-metadedobra4_entry = None
-metadedobra5_entry = None
+medidadobra1_label = None
+medidadobra2_label = None
+medidadobra3_label = None
+medidadobra4_label = None
+medidadobra5_label = None
+metadedobra1_label = None
+metadedobra2_label = None
+metadedobra3_label = None
+metadedobra4_label = None
+metadedobra5_label = None
 deducao_espec_entry = None
 medida_blank_label = None
 metade_blank_label = None
@@ -49,11 +51,11 @@ angulo2_entry = None
 angulo3_entry = None
 angulo4_entry = None
 angulo5_entry = None
-linha_dobra1_entry = None
-linha_dobra2_entry = None
-linha_dobra3_entry = None
-linha_dobra4_entry = None
-linha_dobra5_entry = None
+linha_dobra1_label = None
+linha_dobra2_label = None
+linha_dobra3_label = None
+linha_dobra4_label = None
+linha_dobra5_label = None
 
 
 #aba3.py widgets

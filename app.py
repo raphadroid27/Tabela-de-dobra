@@ -65,8 +65,8 @@ def main():
     cabecalho(root)
 
     # Criando o Notebook (abas)
-    notebook = ttk.Notebook(root, height=200)
-    notebook.pack(fill='both', expand=True, padx=15)
+    notebook = ttk.Notebook(root, height=140)
+    notebook.pack(fill='both', expand=True, padx=15, pady=5)
 
     criar_aba1(notebook)
     criar_aba2(notebook)
@@ -88,8 +88,8 @@ def main():
 
     # Funções de atualização
     entries = [
-        g.deducao_entry, g.deducao_espec_entry, g.aba1_entry, g.aba2_entry, 
-        g.aba3_entry, g.aba4_entry, g.aba5_entry, g.raio_interno_entry
+        g.deducao_label, g.deducao_espec_entry, g.aba1_entry, g.aba2_entry, 
+        g.aba3_entry, g.aba4_entry, g.aba5_entry, g.raio_interno_entry, g.comprimento_entry
     ]
     comboboxes = [g.canal_combobox, g.espessura_combobox, g.material_combobox]
 
@@ -100,14 +100,14 @@ def main():
         combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
 
     # Funções de copiar
-    g.deducao_entry.bind("<Button-1>", lambda event: copiar_deducao())
-    g.fator_k_entry.bind("<Button-1>", lambda event: copiar_fatork())
-    g.offset_entry.bind("<Button-1>", lambda event: copiar_offset())
+    g.deducao_label.bind("<Button-1>", lambda event: copiar_deducao())
+    g.fator_k_label.bind("<Button-1>", lambda event: copiar_fatork())
+    g.offset_label.bind("<Button-1>", lambda event: copiar_offset())
     g.medida_blank_label.bind("<Button-1>", lambda event: copiar_blank())
 
     for i in range(1, 6):
-        getattr(g, f'medidadobra{i}_entry').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
-        getattr(g, f'metadedobra{i}_entry').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
+        getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
+        getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
 
     root.mainloop()
 

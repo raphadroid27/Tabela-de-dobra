@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from models import espessura, material, canal, deducao,observacao
+from models import espessura, material, canal, deducao
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import app
@@ -23,20 +23,12 @@ def main(root_app):
         material_obj = session.query(material).filter_by(nome=material_nome).first()
         
         nova_observacao_valor = deducao_obs_entry.get()
-        nova_observacao = None
-        if nova_observacao_valor:
-            nova_observacao = session.query(observacao).filter_by(valor=nova_observacao_valor).first()
-            if not nova_observacao:
-                nova_observacao = observacao(valor=nova_observacao_valor)
-                session.add(nova_observacao)
-                session.commit()
 
-        # Verificar se a dedução já existe (sem verificar o obs_id)
+        # Verificar se a dedução já existe
         deducao_existente = session.query(deducao).filter_by(
             espessura_id=espessura_obj.id,
             canal_id=canal_obj.id,
-            material_id=material_obj.id,
-            valor=nova_deducao_valor
+            material_id=material_obj.id
         ).first()
 
         if not deducao_existente:
@@ -45,7 +37,7 @@ def main(root_app):
                 canal_id=canal_obj.id,
                 material_id=material_obj.id,
                 valor=nova_deducao_valor,
-                obs_id=nova_observacao.id if nova_observacao else None  # Associa a observação à dedução se existir
+                observacao=nova_observacao_valor
             )
             session.add(nova_deducao)
             session.commit()

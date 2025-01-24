@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, create_engine, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -16,29 +16,26 @@ class material(Base):
     densidade = Column(Float)
 
 class canal(Base):
-        __tablename__ = 'canal'
-        id = Column(Integer, primary_key=True, autoincrement=True)
-        valor = Column(Float)
-        metade_canal = Column(Float)
-        
+    __tablename__ = 'canal'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    valor = Column(Float)
+    metade_canal = Column(Float)
+
 class deducao(Base):
-        __tablename__ = 'deducao'
-        id = Column(Integer, primary_key=True)
-        canal_id = Column(Integer, ForeignKey('canal.id'))
-        espessura_id = Column(Integer, ForeignKey('espessura.id'))
-        material_id = Column(Integer, ForeignKey('material.id'))
-        obs_id = Column(Integer, ForeignKey('observacao.id'))
-        valor = Column(Float)
+    __tablename__ = 'deducao'
+    id = Column(Integer, primary_key=True)
+    canal_id = Column(Integer, ForeignKey('canal.id'))
+    espessura_id = Column(Integer, ForeignKey('espessura.id'))
+    material_id = Column(Integer, ForeignKey('material.id'))
+    valor = Column(Float)
+    observacao = Column(String)
+    forca = Column(Float)
 
-        canal = relationship("canal")
-        espessura = relationship("espessura")
-        material = relationship("material")
-        observacao = relationship("observacao")
+    canal = relationship("canal")
+    espessura = relationship("espessura")
+    material = relationship("material")
 
-class observacao(Base):
-        __tablename__ = 'observacao'
-        id = Column(Integer, primary_key=True)
-        valor = Column(String)        
+    __table_args__ = (UniqueConstraint('canal_id', 'espessura_id', 'material_id', name='_canal_espessura_material_uc'),)
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Base.metadata.create_all(engine)

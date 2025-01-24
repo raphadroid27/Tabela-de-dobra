@@ -10,7 +10,7 @@ def criar_aba3(notebook):
     
     # Crie um Frame para agrupar os Labels na mesma linha
     frame = tk.Frame(aba3)
-    frame.pack(pady=5)
+    frame.pack(fill='both', expand=True, pady=5)
     
     tk.Label(frame, text='Raio interno / espessura: ').pack(side=tk.LEFT)
     g.razao_raio_esp_label = tk.Label(frame, text="",relief="sunken",width=20)
@@ -20,6 +20,8 @@ def criar_aba3(notebook):
         tree = ttk.Treeview(aba3, columns=('Raio/Esp', 'Fator K'), show='headings')
         tree.heading('Raio/Esp', text='Raio/Esp')
         tree.heading('Fator K', text='Fator K')
+        tree.column('Raio/Esp', width=100)
+        tree.column('Fator K', width=100)
 
         for raio, fator_k in data.items():
             tree.insert('', 'end', values=(raio, fator_k))
