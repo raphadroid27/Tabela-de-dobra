@@ -7,19 +7,24 @@ Base = declarative_base()
 class espessura(Base):
     __tablename__ = 'espessura'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    valor = Column(Float)
+    valor = Column(String)
 
 class material(Base):
     __tablename__ = 'material'
     id = Column(Integer, primary_key=True)
     nome = Column(String)
     densidade = Column(Float)
+    escoamento = Column(Float)
+    elasticidade = Column(Float)
 
 class canal(Base):
     __tablename__ = 'canal'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    valor = Column(Float)
-    metade_canal = Column(Float)
+    valor = Column(String)
+    largura = Column(Float)
+    altura = Column(Float)
+    comprimento_total = Column(Float)
+    observacao = Column(String)
 
 class deducao(Base):
     __tablename__ = 'deducao'

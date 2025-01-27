@@ -10,6 +10,9 @@ from aba2 import criar_aba2
 from aba3 import criar_aba3
 from head import cabecalho
 import nova_deducao
+import novo_material
+import novo_canal
+import nova_espessura
 import globals as g
 from funcoes import *
 
@@ -27,6 +30,15 @@ def salvar_configuracao(config):
 
 def nova_deducao_form(root):
     nova_deducao.main(root)  # Passando a janela principal para o add_form
+
+def novo_material_form(root):
+    novo_material.main(root)  # Passando a janela principal para o add_form
+
+def novo_canal_form(root):
+    novo_canal.main(root)  # Passando a janela principal para o add_form
+
+def nova_espessura_form(root):
+    nova_espessura.main(root)  # Passando a janela principal para o add_form
 
 def main():
     config = carregar_configuracao()
@@ -50,6 +62,9 @@ def main():
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
     file_menu.add_command(label="Nova dedução", command=lambda: nova_deducao_form(root))  # Passando a janela principal
+    file_menu.add_command(label="Novo material", command=lambda: novo_material_form(root))  # Passando a janela principal
+    file_menu.add_command(label="Novo canal", command=lambda: novo_canal_form(root))  # Passando a janela principal
+    file_menu.add_command(label="Nova espessura", command=lambda: nova_espessura_form(root))  # Passando a janela principal
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 

@@ -1,77 +1,104 @@
-import tkinter as tk
-from tkinter import ttk
+import csv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import espessura, material, canal, deducao
 
-import globals as g
+# Configuração do banco de dados
+engine = create_engine('sqlite:///tabela_de_dobra.db')
+Session = sessionmaker(bind=engine)
+session = Session()
 
+def inserir_dados_inox():
+    material_nome = "INOX"
+    material_obj = session.query(material).filter_by(nome=material_nome).first()
+    if not material_obj:
+        material_obj = material(nome=material_nome)
+        session.add(material_obj)
+        session.commit()
 
-def main():
-    
-    root = tk.Tk()
-    root.title("Tabela de dobra")
-    root.geometry('480x400')
+    dados = [
+        {"esp": "0,5mm", "canal": "6", "deducao": "1,2", "forca": "4 ton/m", "obs": ""},
+        {"esp": "0,8mm", "canal": "6", "deducao": "1,7", "forca": "12 ton/m", "obs": ""},
+        {"esp": "1,0mm", "canal": "6", "deducao": "1,9", "forca": "19 ton/m", "obs": ""},
+        {"esp": "1,0mm", "canal": "10", "deducao": "2,0", "forca": "10 ton/m", "obs": "Falta teste"},
+        {"esp": "1,0mm", "canal": "R=28", "deducao": "", "forca": "Sem correspondência", "obs": "Raio peça = 34mm"},
+        {"esp": "1,2mm", "canal": "6", "deducao": "2,2", "forca": "30 ton/m", "obs": ""},
+        {"esp": "1,2mm", "canal": "10", "deducao": "2,4", "forca": "15 ton/m", "obs": "Falta teste"},
+        {"esp": "1,5mm", "canal": "10", "deducao": "3,0", "forca": "26 ton/m", "obs": "Falta teste"},
+        {"esp": "2,0mm", "canal": "10", "deducao": "3,3", "forca": "50 ton/m", "obs": "Falta teste"},
+        {"esp": "2,0mm", "canal": "16", "deducao": "4,0", "forca": "26 ton/m", "obs": "Falta teste"},
+        {"esp": "2,0mm", "canal": "50", "deducao": "7,0", "forca": "Sem correspondência", "obs": "Raio peça = 8mm"},
+        {"esp": "2,5mm", "canal": "10", "deducao": "4,3", "forca": "Sem correspondência", "obs": "MÁX=700mm"},
+        {"esp": "2,5mm", "canal": "16", "deducao": "4,7", "forca": "45 ton/m", "obs": ""},
+        {"esp": "3,0mm", "canal": "10", "deducao": "4,9", "forca": "Sem correspondência", "obs": "MÁX=200mm"},
+        {"esp": "3,0mm", "canal": "16", "deducao": "5,6", "forca": "71 ton/m", "obs": ""},
+        {"esp": "3,0mm", "canal": "22", "deducao": "5,5", "forca": "52 ton/m", "obs": ""},
+        {"esp": "3,0mm", "canal": "25", "deducao": "6,6", "forca": "38 ton/m", "obs": "Raio peça = 5mm"},
+        {"esp": "3,0mm", "canal": "V=25; R=3", "deducao": "6,6", "forca": "38 ton/m", "obs": "Raio peça = 5mm"},
+        {"esp": "3,0mm", "canal": "V=35; R=3", "deducao": "7,4", "forca": "27 ton/m", "obs": "Raio peça = 7mm"},
+        {"esp": "4,0mm", "canal": "16", "deducao": "6,9", "forca": "Sem correspondência", "obs": ""},
+        {"esp": "4,0mm", "canal": "25", "deducao": "7,5", "forca": "73 ton/m", "obs": ""},
+        {"esp": "4,0mm", "canal": "V=35; R=3", "deducao": "8,6", "forca": "53 ton/m", "obs": ""},
+        {"esp": "4,2mm", "canal": "22", "deducao": "7,8", "forca": "101 ton/m", "obs": ""},
+        {"esp": "4,2mm", "canal": "35", "deducao": "8,8", "forca": "53 ton/m", "obs": ""},
+        {"esp": "5,0mm", "canal": "16", "deducao": "8,0", "forca": "Sem correspondência", "obs": "Falta teste; máximo 200mm"},
+        {"esp": "5,0mm", "canal": "22", "deducao": "8,3", "forca": "Sem correspondência", "obs": ""},
+        {"esp": "5,0mm", "canal": "25", "deducao": "8,8", "forca": "126 ton/m", "obs": ""},
+        {"esp": "5,0mm", "canal": "35", "deducao": "9,0", "forca": "90 ton/m", "obs": "Canal ideal"},
+        {"esp": "5,0mm", "canal": "50", "deducao": "10,0", "forca": "48 ton/m", "obs": "Para INOX 316 usar fator 10,4"},
+        {"esp": "5,0mm", "canal": "V=35; R=3", "deducao": "9,7", "forca": "90 ton/m", "obs": ""},
+        {"esp": "6,0mm", "canal": "25", "deducao": "10,4", "forca": "Sem correspondência", "obs": ""},
+        {"esp": "6,0mm", "canal": "35", "deducao": "11,2", "forca": "142 ton/m", "obs": ""},
+        {"esp": "6,0mm", "canal": "50", "deducao": "12,7", "forca": "76 ton/m", "obs": ""},
+        {"esp": "8,0mm", "canal": "35", "deducao": "13,3", "forca": "Sem correspondência", "obs": ""},
+        {"esp": "8,0mm", "canal": "50", "deducao": "15,1", "forca": "147 ton/m", "obs": "Furo Ø8 mm, dist. tang. e L.D 13 mm, não repuxa"},
+        {"esp": "9,5mm", "canal": "35", "deducao": "14,3", "forca": "Sem correspondência", "obs": ""},
+        {"esp": "9,5mm", "canal": "50", "deducao": "16,9", "forca": "252 ton/m", "obs": "MÁX=1000mm"},
+        {"esp": "10,0mm", "canal": "50", "deducao": "16,5", "forca": "252 ton/m", "obs": "MÁX=1000mm"},
+        {"esp": "10,0mm", "canal": "80", "deducao": "21,1", "forca": "131 ton/m", "obs": ""},
+        {"esp": "12,7mm", "canal": "50", "deducao": "20,2", "forca": "Sem correspondência", "obs": ""},
+        {"esp": "12,7mm", "canal": "80", "deducao": "24,5", "forca": "207 ton/m", "obs": ""},
+        {"esp": "16,0mm", "canal": "80", "deducao": "28,3", "forca": "354 ton/m", "obs": "MÁX=800mm"}
+    ]
 
-    borda = 20
-    espaço = 10
-    app_width = 480
-    comprimento_1_linha = (app_width - 2 * (borda + espaço))/3
-    print(comprimento_1_linha)
-    altura = 20
+    for dado in dados:
+        espessura_valor = float(dado["esp"].replace("mm", "").replace(",", "."))
+        canal_valor = dado["canal"]
+        deducao_valor = float(dado["deducao"].replace(",", ".")) if dado["deducao"] else None
+        forca_valor = None
+        if "ton/m" in dado["forca"]:
+            forca_valor = float(dado["forca"].replace(" ton/m", ""))
 
-    y1 = borda
-    y2 = espaço + altura + espaço
-    y3 = espaço + (2 * altura) + espaço
-    y4 = espaço + (3 * altura) + espaço
+        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+        if not espessura_obj:
+            espessura_obj = espessura(valor=espessura_valor)
+            session.add(espessura_obj)
+            session.commit()
 
-    x1 = borda
-    x2 = borda + comprimento_1_linha + espaço
-    x3 = borda + 2 * (comprimento_1_linha + espaço)
+        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+        if not canal_obj:
+            canal_obj = canal(valor=canal_valor)
+            session.add(canal_obj)
+            session.commit()
 
+        deducao_obj = session.query(deducao).filter_by(
+            espessura_id=espessura_obj.id,
+            canal_id=canal_obj.id,
+            material_id=material_obj.id
+        ).first()
 
-    tk.Label(root, text="Material:").place(x=x1, y=y1)
+        if not deducao_obj:
+            nova_deducao = deducao(
+                espessura_id=espessura_obj.id,
+                canal_id=canal_obj.id,
+                material_id=material_obj.id,
+                valor=deducao_valor,
+                forca=forca_valor,
+                observacao=dado["obs"]
+            )
+            session.add(nova_deducao)
 
-    g.material_combobox = ttk.Combobox()
-    g.material_combobox.place(x=x1, y=y2, width=comprimento_1_linha, height=altura)
-
-    tk.Label(root, text="Espessura:").place(x=x2, y=y1)
-
-    g.espessura_combobox = ttk.Combobox()
-    g.espessura_combobox.place(x=x2, y=y2, width=comprimento_1_linha, height=altura)
-
-    tk.Label(root, text="Canal:").place(x=x3, y=y1)
-
-    g.canal_combobox = ttk.Combobox()
-    g.canal_combobox.place(x=x3, y=y2, width=comprimento_1_linha, height=altura)
-
-    segunda_linha=tk.Frame(root, bg='black')
-    segunda_linha.place(x=borda, y=y3+espaço, width=200, height=4*altura)
-
-    segunda_linha.columnconfigure(0, weight=1)
-    segunda_linha.columnconfigure(1, weight=1)
-    segunda_linha.columnconfigure(2, weight=1)
-    segunda_linha.columnconfigure(3, weight=1)
-
-    tk.Label(segunda_linha, text="Raio interno:").grid(row=0, column=0)
-    
-    g.raio_interno_entry = tk.Entry(segunda_linha)
-    g.raio_interno_entry.grid(row=1, column=0, )
-
-    tk.Label(segunda_linha, text="Raio externo:").grid(row=0, column=1)
-
-    raio_externo_entry = tk.Entry(segunda_linha)
-    raio_externo_entry.grid(row=1, column=1)
-
-    tk.Label(segunda_linha, text="Largura:").grid(row=0, column=2)
-
-    largura_entry = tk.Entry(segunda_linha)
-    largura_entry.grid(row=1, column=2)
-
-    tk.Label(segunda_linha, text="Comprimento:").grid(row=0, column=3)
-    
-    comprimento_entry = tk.Entry(segunda_linha)
-    comprimento_entry.grid(row=1, column=3)
-
-
-    root.mainloop() 
+    session.commit()
 
 if __name__ == "__main__":
-    main()
+    inserir_dados_inox()
