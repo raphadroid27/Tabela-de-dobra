@@ -15,6 +15,8 @@ import novo_canal
 import nova_espessura
 import globals as g
 from funcoes import *
+import edicao_deducao
+import edicao_material
 
 CONFIG_FILE = 'config.json'
 
@@ -29,16 +31,38 @@ def salvar_configuracao(config):
         json.dump(config, f)
 
 def nova_deducao_form(root):
-    nova_deducao.main(root)  # Passando a janela principal para o add_form
+    nova_deducao.main(root)
+    atualizar_dados()
 
 def novo_material_form(root):
-    novo_material.main(root)  # Passando a janela principal para o add_form
+    novo_material.main(root)
+    atualizar_dados()
 
 def novo_canal_form(root):
-    novo_canal.main(root)  # Passando a janela principal para o add_form
+    novo_canal.main(root)
+    atualizar_dados()
 
 def nova_espessura_form(root):
-    nova_espessura.main(root)  # Passando a janela principal para o add_form
+    nova_espessura.main(root)
+    atualizar_dados()
+
+def editar_deducao_form(root):
+    edicao_deducao.main(root)
+    atualizar_dados()
+
+def editar_material_form(root):
+    edicao_material.main(root)
+    atualizar_dados()
+
+def atualizar_dados():
+    # Atualizar valores dos comboboxes
+    materiais = [m.nome for m in session.query(material).all()]
+    espessuras = [e.valor for e in session.query(espessura).all()]
+    canais = [c.valor for c in session.query(canal).all()]
+
+    g.material_combobox['values'] = materiais
+    g.espessura_combobox['values'] = espessuras
+    g.canal_combobox['values'] = canais
 
 def main():
     config = carregar_configuracao()
@@ -70,6 +94,9 @@ def main():
 
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
+    edit_menu.add_command(label="Editar dedução", command=lambda: editar_deducao_form(root))  # Passando a janela principal
+    edit_menu.add_command(label="Editar material", command=lambda: editar_material_form(root))  # Passando a janela principal
+    edit_menu.add_separator()
     edit_menu.add_command(label="Desfazer")
     edit_menu.add_command(label="Refazer")
 

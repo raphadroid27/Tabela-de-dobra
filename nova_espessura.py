@@ -25,7 +25,7 @@ def main(root_app):
 
     root = tk.Tk()
     root.title("Adicionar Nova Espessura")
-    root.geometry("400x200")
+    root.geometry("300x150")
     root.resizable(False, False)
 
     main_frame = tk.Frame(root)

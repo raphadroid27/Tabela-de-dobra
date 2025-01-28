@@ -14,16 +14,21 @@ def main(root_app):
     def adicionar_material():
         aviso_label.config(text="", fg="red")  # Limpar aviso anterior
         nome_material = material_nome_entry.get()
-        densidade_material = float(material_densidade_entry.get())
-        escoamento_material = float(material_escoamento_entry.get())
-        elasticidade_material = float(material_elasticidade_entry.get())
+        densidade_material = material_densidade_entry.get()
+        escoamento_material = material_escoamento_entry.get()
+        elasticidade_material = material_elasticidade_entry.get()
+        
+        if not nome_material:
+            aviso_label.config(text="O campo Material é obrigatório.", fg="red")
+            return
+        
         material_existente = session.query(material).filter_by(nome=nome_material).first()
         if not material_existente:
             novo_material = material(
                 nome=nome_material, 
-                densidade=densidade_material, 
-                escoamento=escoamento_material, 
-                elasticidade=elasticidade_material
+                densidade=float(densidade_material) if densidade_material else None, 
+                escoamento=float(escoamento_material) if escoamento_material else None, 
+                elasticidade=float(elasticidade_material) if elasticidade_material else None
             )
             session.add(novo_material)
             session.commit()
@@ -37,8 +42,10 @@ def main(root_app):
 
     root = tk.Tk()
     root.title("Adicionar Novo Material")
-    root.geometry("400x300")
+    root.geometry("300x240")
     root.resizable(False, False)
+    root.update_idletasks()
+    root.geometry(f"{root.winfo_width()}x{root.winfo_height()}")
 
     main_frame = tk.Frame(root)
     main_frame.pack(pady=20, padx=20)

@@ -68,8 +68,10 @@ def main(root_app):
 
     root = tk.Tk()
     root.title("Tabela de dobra")
-    root.geometry("500x300")
+    root.geometry("300x260")
     root.resizable(False, False)
+    root.update_idletasks()
+    root.geometry(f"{root.winfo_width()}x{root.winfo_height()}")
 
     # Centralizar a janela add_form em relação à janela principal
     root_app.update_idletasks()

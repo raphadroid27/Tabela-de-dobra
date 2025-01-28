@@ -12,19 +12,24 @@ def main(root_app):
 
     def adicionar_canal():
         aviso_label.config(text="", fg="red")  # Limpar aviso anterior
-        valor_canal = float(canal_valor_entry.get())
-        largura_canal = float(canal_largura_entry.get())
-        altura_canal = float(canal_altura_entry.get())
-        comprimento_total_canal = float(canal_comprimento_total_entry.get())
+        valor_canal = canal_valor_entry.get()
+        largura_canal = canal_largura_entry.get()
+        altura_canal = canal_altura_entry.get()
+        comprimento_total_canal = canal_comprimento_total_entry.get()
         observacao_canal = canal_observacao_entry.get()
+        
+        if not valor_canal:
+            aviso_label.config(text="O campo Canal é obrigatório.", fg="red")
+            return
+        
         canal_existente = session.query(canal).filter_by(valor=valor_canal).first()
         if not canal_existente:
             novo_canal = canal(
                 valor=valor_canal,
-                largura=largura_canal,
-                altura=altura_canal,
-                comprimento_total=comprimento_total_canal,
-                observacao=observacao_canal
+                largura=float(largura_canal) if largura_canal else None,
+                altura=float(altura_canal) if altura_canal else None,
+                comprimento_total=float(comprimento_total_canal) if comprimento_total_canal else None,
+                observacao=observacao_canal if observacao_canal else None
             )
             session.add(novo_canal)
             session.commit()
@@ -39,7 +44,7 @@ def main(root_app):
 
     root = tk.Tk()
     root.title("Adicionar Novo Canal")
-    root.geometry("400x300")
+    root.geometry("300x260")
     root.resizable(False, False)
 
     main_frame = tk.Frame(root)
