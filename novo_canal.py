@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 from models import canal
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -11,7 +12,6 @@ session = Session()
 def main(root_app):
 
     def adicionar_canal():
-        aviso_label.config(text="", fg="red")  # Limpar aviso anterior
         valor_canal = canal_valor_entry.get()
         largura_canal = canal_largura_entry.get()
         altura_canal = canal_altura_entry.get()
@@ -19,7 +19,7 @@ def main(root_app):
         observacao_canal = canal_observacao_entry.get()
         
         if not valor_canal:
-            aviso_label.config(text="O campo Canal é obrigatório.", fg="red")
+            messagebox.showerror("Erro", "O campo Canal é obrigatório.")
             return
         
         canal_existente = session.query(canal).filter_by(valor=valor_canal).first()
@@ -38,9 +38,9 @@ def main(root_app):
             canal_altura_entry.delete(0, tk.END)
             canal_comprimento_total_entry.delete(0, tk.END)
             canal_observacao_entry.delete(0, tk.END)
-            aviso_label.config(text="Novo canal adicionado com sucesso!", fg="green")
+            messagebox.showinfo("Sucesso", "Novo canal adicionado com sucesso!")
         else:
-            aviso_label.config(text="Canal já existe no banco de dados.", fg="red")
+            messagebox.showerror("Erro", "Canal já existe no banco de dados.")
 
     root = tk.Tk()
     root.title("Adicionar Novo Canal")

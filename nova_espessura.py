@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 from models import espessura
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -11,7 +12,6 @@ session = Session()
 def main(root_app):
 
     def adicionar_espessura():
-        aviso_label.config(text="", fg="red")  # Limpar aviso anterior
         valor_espessura = float(espessura_valor_entry.get().replace(',', '.'))
         espessura_existente = session.query(espessura).filter_by(valor=valor_espessura).first()
         if not espessura_existente:
@@ -19,9 +19,9 @@ def main(root_app):
             session.add(nova_espessura)
             session.commit()
             espessura_valor_entry.delete(0, tk.END)
-            aviso_label.config(text="Nova espessura adicionada com sucesso!", fg="green")
+            messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
         else:
-            aviso_label.config(text="Espessura já existe no banco de dados.", fg="red")
+            messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
 
     root = tk.Tk()
     root.title("Adicionar Nova Espessura")

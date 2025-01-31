@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from models import material
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -12,14 +12,13 @@ session = Session()
 def main(root_app):
 
     def adicionar_material():
-        aviso_label.config(text="", fg="red")  # Limpar aviso anterior
         nome_material = material_nome_entry.get()
         densidade_material = material_densidade_entry.get()
         escoamento_material = material_escoamento_entry.get()
         elasticidade_material = material_elasticidade_entry.get()
         
         if not nome_material:
-            aviso_label.config(text="O campo Material é obrigatório.", fg="red")
+            messagebox.showerror("Erro", "O campo Material é obrigatório.")
             return
         
         material_existente = session.query(material).filter_by(nome=nome_material).first()
@@ -36,9 +35,9 @@ def main(root_app):
             material_densidade_entry.delete(0, tk.END)
             material_escoamento_entry.delete(0, tk.END)
             material_elasticidade_entry.delete(0, tk.END)
-            aviso_label.config(text="Novo material adicionado com sucesso!", fg="green")
+            messagebox.showinfo("Sucesso", "Novo material adicionado com sucesso!")
         else:
-            aviso_label.config(text="Material já existe no banco de dados.", fg="red")
+            messagebox.showerror("Erro", "Material já existe no banco de dados.")
 
     root = tk.Tk()
     root.title("Adicionar Novo Material")
@@ -67,9 +66,6 @@ def main(root_app):
     material_elasticidade_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
 
     tk.Button(main_frame, text="Adicionar Material", command=adicionar_material).grid(row=4, column=0, columnspan=2, pady=10)
-
-    aviso_label = tk.Label(root, text="", font=("Helvetica", 10))
-    aviso_label.pack(pady=5)
 
     root.mainloop()
 

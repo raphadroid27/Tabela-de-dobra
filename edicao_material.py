@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from models import material
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -27,7 +27,7 @@ def main(root_app):
         material_obj.escoamento = float(material_escoamento_entry.get().replace(',', '.'))
         material_obj.elasticidade = float(material_elasticidade_entry.get().replace(',', '.'))
         session.commit()
-        aviso_label.config(text="Material editado com sucesso!", fg="green")
+        messagebox.showinfo("Sucesso", "Material editado com sucesso!")
         tree.item(selected_item, values=(material_obj.id, material_obj.nome, material_obj.densidade, material_obj.escoamento, material_obj.elasticidade))
 
     def excluir_material():
@@ -38,7 +38,7 @@ def main(root_app):
         session.delete(material_obj)
         session.commit()
         tree.delete(selected_item)
-        aviso_label.config(text="Material excluído com sucesso!", fg="green")
+        messagebox.showinfo("Sucesso", "Material excluído com sucesso!")
 
     root = tk.Tk()
     root.title("Editar/Excluir Material")
