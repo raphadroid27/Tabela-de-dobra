@@ -76,8 +76,6 @@ def main():
         salvar_configuracao(config)
         root.destroy()
 
-    root.protocol("WM_DELETE_WINDOW", on_closing)
-
     # Criando o menu superior
     menu_bar = tk.Menu(root)
     root.config(menu=menu_bar)
@@ -151,6 +149,7 @@ def main():
         getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
         getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
 
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
 
 if __name__ == "__main__":

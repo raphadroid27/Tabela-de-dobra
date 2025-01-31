@@ -16,13 +16,17 @@ def main(root_app):
         espessura_valor = deducao_espessura_combobox.get()
         canal_valor = deducao_canal_combobox.get()
         material_nome = deducao_material_combobox.get()
-        nova_deducao_valor = float(deducao_valor_entry.get().replace(',', '.'))
         espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
         canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
         material_obj = session.query(material).filter_by(nome=material_nome).first()
-        
         nova_observacao_valor = deducao_obs_entry.get()
         nova_forca_valor = deducao_forca_entry.get()
+        
+        if deducao_valor_entry.get() or material_nome or espessura_valor or canal_valor == '':
+            messagebox.showerror("Erro", "Material, espessura, canal e valor da dedução são obrigatórios.")
+            return
+        else:
+            nova_deducao_valor = float(deducao_valor_entry.get().replace(',', '.'))
 
         # Verificar se a dedução já existe
         deducao_existente = session.query(deducao).filter_by(
@@ -30,8 +34,11 @@ def main(root_app):
             canal_id=canal_obj.id,
             material_id=material_obj.id
         ).first()
-
+        
         if not deducao_existente:
+            if nova_forca_valor == '':
+                nova_forca_valor = None
+
             nova_deducao = deducao(
                 espessura_id=espessura_obj.id,
                 canal_id=canal_obj.id,
@@ -53,8 +60,7 @@ def main(root_app):
         deducao_obs_entry.delete(0, tk.END)
         deducao_forca_entry.delete(0, tk.END)
     
-    def on_closing():
-        if root_app.winfo_exists():    
+    def on_closing():   
             root_app.destroy()
             root.destroy()
             app.main()
