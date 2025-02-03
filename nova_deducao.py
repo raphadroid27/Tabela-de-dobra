@@ -14,7 +14,7 @@ session = Session()
 def main(root_app):
 
     root = tk.Tk()
-    root.title("Tabela de dobra")
+    root.title("Adicionar Nova Dedução")
     root.resizable(False, False)
 
     # Posicionar a janela nova_deducao em relação à janela principal
@@ -22,6 +22,9 @@ def main(root_app):
     x = root_app.winfo_x() + root_app.winfo_width() + 10
     y = root_app.winfo_y()
     root.geometry(f"+{x}+{y}")
+
+    root.update_idletasks() 
+    print(f"{root.winfo_width()}x{root.winfo_height()}")
 
     # Frame principal para organizar as colunas
     main_frame = tk.Frame(root)

@@ -313,3 +313,44 @@ def adicionar_deducao_e_observacao():
         g.deducao_valor_entry.delete(0, tk.END)
         g.deducao_obs_entry.delete(0, tk.END)
         g.deducao_forca_entry.delete(0, tk.END)
+
+def adicionar_espessura():
+        valor_espessura = float(g.espessura_valor_entry.get().replace(',', '.'))
+        espessura_existente = session.query(espessura).filter_by(valor=valor_espessura).first()
+        if not espessura_existente:
+            nova_espessura = espessura(valor=valor_espessura)
+            session.add(nova_espessura)
+            session.commit()
+            g.espessura_valor_entry.delete(0, tk.END)
+            messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
+        else:
+            messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
+
+def carregar_deducoes():
+        deducoes = session.query(deducao).all()
+        for d in deducoes:
+            g.tree.insert("", "end", values=(d.material.nome,d.espessura.valor, d.canal.valor, d.valor, d.observacao,d.forca))
+            
+def editar_deducao():
+    selected_item = g.tree.selection()[0]
+    item = g.tree.item(selected_item)
+    deducao_id = item['values'][0]
+    deducao_obj = session.query(deducao).filter_by(id=deducao_id).first()    
+
+    deducao_obj.valor = float(g.deducao_valor_entry.get().replace(',', '.')) if g.deducao_valor_entry.get() else deducao_obj.valor
+    deducao_obj.observacao = g.deducao_obs_entry.get() if g.deducao_obs_entry.get() else deducao_obj.observacao
+    deducao_obj.forca = float(g.deducao_forca_entry.get().replace(',', '.')) if g.deducao_forca_entry.get() else deducao_obj.forca
+    session.commit()
+
+    messagebox.showinfo("Sucesso", "Dedução editada com sucesso!")
+    g.tree.item(selected_item, values=(deducao_obj.id, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.material.nome, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
+
+def excluir_deducao():
+        selected_item = g.tree.selection()[0]
+        item = g.tree.item(selected_item)
+        deducao_id = item['values'][0]
+        deducao_obj = session.query(deducao).filter_by(id=deducao_id).first()
+        session.delete(deducao_obj)
+        session.commit()
+        g.tree.delete(selected_item)
+        messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")    

@@ -8,7 +8,7 @@ import os
 from aba1 import criar_aba1
 from aba2 import criar_aba2
 from aba3 import criar_aba3
-from head import cabecalho
+from cabecalho import cabecalho
 import nova_deducao
 import novo_material
 import novo_canal
