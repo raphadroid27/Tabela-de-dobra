@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import pyperclip
 from math import pi
 from sqlalchemy.orm import sessionmaker
@@ -264,3 +265,51 @@ def todas_funcoes():
     calcular_blank()
     calcular_metade_dobra()
     razao_raio_esp()
+
+def adicionar_deducao_e_observacao():
+        espessura_valor = g.deducao_espessura_combobox.get()
+        canal_valor = g.deducao_canal_combobox.get()
+        material_nome = g.deducao_material_combobox.get()
+        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
+        nova_observacao_valor = g.deducao_obs_entry.get()
+        nova_forca_valor = g.deducao_forca_entry.get()
+        
+        if g.deducao_valor_entry.get() == "" or material_nome == "" or espessura_valor == "" or canal_valor == "":
+            messagebox.showerror("Erro", "Material, espessura, canal e valor da dedução são obrigatórios.")
+            return
+        else:
+            nova_deducao_valor = float(g.deducao_valor_entry.get().replace(',', '.'))
+
+        # Verificar se a dedução já existe
+        deducao_existente = session.query(deducao).filter_by(
+            espessura_id=espessura_obj.id,
+            canal_id=canal_obj.id,
+            material_id=material_obj.id
+        ).first()
+        
+        if not deducao_existente:
+            if nova_forca_valor == '':
+                nova_forca_valor = None
+
+            nova_deducao = deducao(
+                espessura_id=espessura_obj.id,
+                canal_id=canal_obj.id,
+                material_id=material_obj.id,
+                valor=nova_deducao_valor,
+                observacao=nova_observacao_valor,
+                forca=nova_forca_valor
+            )
+            session.add(nova_deducao)
+            session.commit()
+            messagebox.showinfo("Sucesso", "Nova dedução adicionada com sucesso!")
+        else:
+            messagebox.showerror("Erro", "Dedução já existe no banco de dados.")
+
+        g.deducao_espessura_combobox.set('')
+        g.deducao_canal_combobox.set('')
+        g.deducao_material_combobox.set('')
+        g.deducao_valor_entry.delete(0, tk.END)
+        g.deducao_obs_entry.delete(0, tk.END)
+        g.deducao_forca_entry.delete(0, tk.END)

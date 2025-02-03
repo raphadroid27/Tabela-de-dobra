@@ -25,20 +25,22 @@ def main(root_app):
 
     root = tk.Tk()
     root.title("Adicionar Nova Espessura")
-    root.geometry("300x150")
     root.resizable(False, False)
 
+    # Posicionar a janela nova_deducao em relação à janela principal
+    root.update_idletasks() 
+    x = root_app.winfo_x() + root_app.winfo_width() + 10
+    y = root_app.winfo_y()
+    root.geometry(f"+{x}+{y}")
+
     main_frame = tk.Frame(root)
-    main_frame.pack(pady=20, padx=20)
+    main_frame.pack(pady=10, padx=10)
 
     tk.Label(main_frame, text="Espessura:", anchor="w").grid(row=0, column=0, sticky="w")
     espessura_valor_entry = tk.Entry(main_frame)
     espessura_valor_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
     tk.Button(main_frame, text="Adicionar Espessura", command=adicionar_espessura).grid(row=1, column=0, columnspan=2, pady=10)
-
-    aviso_label = tk.Label(root, text="", font=("Helvetica", 10))
-    aviso_label.pack(pady=5)
 
     root.mainloop()
 

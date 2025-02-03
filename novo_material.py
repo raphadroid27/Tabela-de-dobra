@@ -41,13 +41,16 @@ def main(root_app):
 
     root = tk.Tk()
     root.title("Adicionar Novo Material")
-    root.geometry("300x240")
     root.resizable(False, False)
+  
+    # Posicionar a janela nova_deducao em relação à janela principal
     root.update_idletasks()
-    root.geometry(f"{root.winfo_width()}x{root.winfo_height()}")
+    x = root_app.winfo_x() + root_app.winfo_width() + 10
+    y = root_app.winfo_y()
+    root.geometry(f"+{x}+{y}")
 
     main_frame = tk.Frame(root)
-    main_frame.pack(pady=20, padx=20)
+    main_frame.pack(pady=10, padx=10)
 
     tk.Label(main_frame, text="Material:", anchor="w").grid(row=0, column=0, sticky="w")
     material_nome_entry = tk.Entry(main_frame)

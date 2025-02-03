@@ -84,3 +84,11 @@ raio_fator_k = {
     9.0: 0.50,
     10.0: 0.50
     }
+
+# nova_deudcao.py widgets
+deducao_material_combobox = None
+deducao_espessura_combobox = None
+deducao_canal_combobox = None
+deducao_valor_entry = None
+deducao_obs_entry = None
+deducao_forca_entry = None
