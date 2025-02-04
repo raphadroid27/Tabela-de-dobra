@@ -334,8 +334,8 @@ def carregar_deducoes():
 def editar_deducao():
     selected_item = g.tree.selection()[0]
     item = g.tree.item(selected_item)
-    deducao_id = item['values'][0]
-    deducao_obj = session.query(deducao).filter_by(id=deducao_id).first()    
+    deducao_valor = item['values'][3]
+    deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()    
 
     deducao_obj.valor = float(g.deducao_valor_entry.get().replace(',', '.')) if g.deducao_valor_entry.get() else deducao_obj.valor
     deducao_obj.observacao = g.deducao_obs_entry.get() if g.deducao_obs_entry.get() else deducao_obj.observacao
@@ -343,13 +343,16 @@ def editar_deducao():
     session.commit()
 
     messagebox.showinfo("Sucesso", "Dedução editada com sucesso!")
-    g.tree.item(selected_item, values=(deducao_obj.id, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.material.nome, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
+    g.tree.item(selected_item, values=(deducao_obj.material.nome, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
+    g.deducao_valor_entry.delete(0, tk.END)
+    g.deducao_obs_entry.delete(0, tk.END)
+    g.deducao_forca_entry.delete(0, tk.END)
 
 def excluir_deducao():
         selected_item = g.tree.selection()[0]
         item = g.tree.item(selected_item)
-        deducao_id = item['values'][0]
-        deducao_obj = session.query(deducao).filter_by(id=deducao_id).first()
+        deducao_valor = item['values'][3]
+        deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()
         session.delete(deducao_obj)
         session.commit()
         g.tree.delete(selected_item)
