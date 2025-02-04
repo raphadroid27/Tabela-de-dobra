@@ -98,3 +98,6 @@ espessura_valor_entry = None
 
 # edicao_deducao.py widgets
 tree = None
+busca_material_combobox = None
+busca_espessura_combobox = None
+busca_canal_combobox = None

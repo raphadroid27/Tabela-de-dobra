@@ -356,4 +356,35 @@ def excluir_deducao():
         session.delete(deducao_obj)
         session.commit()
         g.tree.delete(selected_item)
-        messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")    
+        messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")
+
+def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
+    query = session.query(deducao).join(material).join(espessura).join(canal)
+    
+    if material_nome:
+        query = query.filter(material.nome == material_nome)
+    if espessura_valor:
+        query = query.filter(espessura.valor == espessura_valor)
+    if canal_valor:
+        query = query.filter(canal.valor == canal_valor)
+    
+    return query.all()
+
+def buscar_deducoes():
+    material_nome = g.busca_material_combobox.get()
+    espessura_valor = g.busca_espessura_combobox.get()
+    canal_valor = g.busca_canal_combobox.get()
+    
+    deducoes = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
+    
+    for item in g.tree.get_children():
+        g.tree.delete(item)
+    
+    for d in deducoes:
+        g.tree.insert("", "end", values=(d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca))
+
+def limpar_busca():
+    g.busca_material_combobox.set('')
+    g.busca_espessura_combobox.set('')
+    g.busca_canal_combobox.set('')
+    buscar_deducoes()
