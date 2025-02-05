@@ -326,11 +326,67 @@ def adicionar_espessura():
         else:
             messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
 
+def adicionar_canal():
+        valor_canal = g.canal_valor_entry.get()
+        largura_canal = g.canal_largura_entry.get()
+        altura_canal = g.canal_altura_entry.get()
+        comprimento_total_canal = g.canal_comprimento_entry.get()
+        observacao_canal = g.canal_observacao_entry.get()
+        
+        if not valor_canal:
+            messagebox.showerror("Erro", "O campo Canal é obrigatório.")
+            return
+        
+        canal_existente = session.query(canal).filter_by(valor=valor_canal).first()
+        if not canal_existente:
+            novo_canal = canal(
+                valor=valor_canal,
+                largura=float(largura_canal) if largura_canal else 0,
+                altura=float(altura_canal) if altura_canal else 0,
+                comprimento_total=float(comprimento_total_canal) if comprimento_total_canal else 0,
+                observacao=observacao_canal if observacao_canal else ""
+            )
+            session.add(novo_canal)
+            session.commit()
+            g.canal_valor_entry.delete(0, tk.END)
+            g.canal_largura_entry.delete(0, tk.END)
+            g.canal_altura_entry.delete(0, tk.END)
+            g.canal_comprimento_entry.delete(0, tk.END)
+            g.canal_observacao_entry.delete(0, tk.END)
+            messagebox.showinfo("Sucesso", "Novo canal adicionado com sucesso!")
+        else:
+            messagebox.showerror("Erro", "Canal já existe no banco de dados.")
+
 def carregar_deducoes():
         deducoes = session.query(deducao).all()
         for d in deducoes:
             g.lista_deducao.insert("", "end", values=(d.material.nome,d.espessura.valor, d.canal.valor, d.valor, d.observacao,d.forca))
-            
+
+def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
+    query = session.query(deducao).join(material).join(espessura).join(canal)
+    
+    if material_nome:
+        query = query.filter(material.nome == material_nome)
+    if espessura_valor:
+        query = query.filter(espessura.valor == espessura_valor)
+    if canal_valor:
+        query = query.filter(canal.valor == canal_valor)
+    
+    return query.all()
+
+def buscar_deducoes():
+    material_nome = g.busca_material_combobox.get()
+    espessura_valor = g.busca_espessura_combobox.get()
+    canal_valor = g.busca_canal_combobox.get()
+    
+    deducoes = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
+    
+    for item in g.lista_deducao.get_children():
+        g.lista_deducao.delete(item)
+    
+    for d in deducoes:
+        g.lista_deducao.insert("", "end", values=(d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca))
+
 def editar_deducao():
     selected_item = g.lista_deducao.selection()[0]
     item = g.lista_deducao.item(selected_item)
@@ -358,31 +414,6 @@ def excluir_deducao():
         g.lista_deducao.delete(selected_item)
         messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")
 
-def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
-    query = session.query(deducao).join(material).join(espessura).join(canal)
-    
-    if material_nome:
-        query = query.filter(material.nome == material_nome)
-    if espessura_valor:
-        query = query.filter(espessura.valor == espessura_valor)
-    if canal_valor:
-        query = query.filter(canal.valor == canal_valor)
-    
-    return query.all()
-
-def buscar_deducoes():
-    material_nome = g.busca_material_combobox.get()
-    espessura_valor = g.busca_espessura_combobox.get()
-    canal_valor = g.busca_canal_combobox.get()
-    
-    deducoes = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
-    
-    for item in g.lista_deducao.get_children():
-        g.lista_deducao.delete(item)
-    
-    for d in deducoes:
-        g.lista_deducao.insert("", "end", values=(d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca))
-
 def limpar_busca_deducao():
     g.busca_material_combobox.set('')
     g.busca_espessura_combobox.set('')
@@ -409,11 +440,30 @@ def editar_material():
         g.lista_material.item(selected_item, values=(material_obj.nome, material_obj.densidade, material_obj.escoamento, material_obj.elasticidade))
 
 def excluir_material():
-        selected_item = g.lista_material.selection()[0]
-        item = g.lista_material.item(selected_item)
-        material_id = item['values'][0]
-        material_obj = session.query(material).filter_by(id=material_id).first()
+        item_selecionado = g.lista_material.selection()[0]
+        item = g.lista_material.item(item_selecionado)
+        material_nome = item['values'][0]
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
         session.delete(material_obj)
         session.commit()
-        g.lista_material.delete(selected_item)
+        g.lista_material.delete(item_selecionado)
         messagebox.showinfo("Sucesso", "Material excluído com sucesso!")
+
+def carregar_canais():
+    canais = session.query(canal).all()
+    for c in canais:
+        g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
+
+def editar_canal ():
+    item_selecionado = g.lista_canal.selection()[0]
+    item = g.lista_canal.item(item_selecionado)
+    canal_valor= item['values'][0]
+    canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+
+    canal_obj.largura = float(g.canal_largura_entry.get()) if g.canal_valor_entry.get() else canal_obj.largura
+    canal_obj.altura = float(g.canal_altura_entry.get()) if g.canal_altura_entry.get() else canal_obj.altura
+    canal_obj.comprimento_total = float(g.canal_comprimento_entry.get()) if g.canal_comprimento_entry.get() else canal_obj.comprimento_total
+    canal_obj.observacao = g.canal_observacao_entry.get() if g.canal_observacao_entry.get() else canal_obj.observacao
+    session.commit()
+
+    messagebox.showinfo("Sucesso", "Canal editado com suceso!")

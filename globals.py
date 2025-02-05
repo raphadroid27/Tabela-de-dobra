@@ -98,13 +98,22 @@ espessura_valor_entry = None
 
 # edicao_deducao.py widgets
 lista_deducao = None
-busca_material_combobox = None
-busca_espessura_combobox = None
-busca_canal_combobox = None
 
-# edicao_material.py widgets
+# novo_material.py widgets
 material_nome_entry = None
 material_densidade_entry = None
 material_escoamento_entry = None
 material_elasticidade_entry = None
+
+#edicao_material.py widgets
 lista_material = None
+
+# novo_canal.py widgets
+canal_valor_entry = None
+canal_largura_entry = None
+canal_altura_entry = None
+canal_comprimento_entry = None
+canal_observacao_entry = None
+
+#editar_canal.py widgets
+lista_canal = None

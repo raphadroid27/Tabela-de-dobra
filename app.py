@@ -15,8 +15,9 @@ import novo_canal
 import nova_espessura
 import globals as g
 from funcoes import *
-import edicao_deducao
-import edicao_material
+import editar_deducao
+import editar_material
+import editar_canal
 
 CONFIG_FILE = 'config.json'
 
@@ -47,12 +48,17 @@ def nova_espessura_form(root):
     atualizar_dados()
 
 def editar_deducao_form(root):
-    edicao_deducao.main(root)
+    editar_deducao.main(root)
     atualizar_dados()
 
 def editar_material_form(root):
-    edicao_material.main(root)
+    editar_material.main(root)
     atualizar_dados()
+
+def editar_canal_form(root):
+    editar_canal.main(root)
+    atualizar_dados()
+
 
 def atualizar_dados():
     # Atualizar valores dos comboboxes
@@ -85,20 +91,18 @@ def main():
     # Adicionando menus
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova dedução", command=lambda: nova_deducao_form(root))  # Passando a janela principal
-    file_menu.add_command(label="Novo material", command=lambda: novo_material_form(root))  # Passando a janela principal
-    file_menu.add_command(label="Novo canal", command=lambda: novo_canal_form(root))  # Passando a janela principal
-    file_menu.add_command(label="Nova espessura", command=lambda: nova_espessura_form(root))  # Passando a janela principal
+    file_menu.add_command(label="Nova Dedução", command=lambda: nova_deducao_form(root))
+    file_menu.add_command(label="Novo Material", command=lambda: novo_material_form(root))
+    file_menu.add_command(label="Nova Espessura", command=lambda: nova_espessura_form(root))
+    file_menu.add_command(label="Novo Canal", command=lambda: novo_canal_form(root))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar dedução", command=lambda: editar_deducao_form(root))  # Passando a janela principal
-    edit_menu.add_command(label="Editar material", command=lambda: editar_material_form(root))  # Passando a janela principal
-    edit_menu.add_separator()
-    edit_menu.add_command(label="Desfazer")
-    edit_menu.add_command(label="Refazer")
+    edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao_form(root))
+    edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(root))
+    edit_menu.add_command(label="Edicar Canal", command=lambda: editar_canal_form(root))
 
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
