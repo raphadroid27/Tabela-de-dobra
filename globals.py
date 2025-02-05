@@ -101,3 +101,9 @@ tree = None
 busca_material_combobox = None
 busca_espessura_combobox = None
 busca_canal_combobox = None
+
+# edicao_material.py widgets
+material_nome_entry = None
+material_densidade_entry = None
+material_escoamento_entry = None
+material_elasticidade_entry = None

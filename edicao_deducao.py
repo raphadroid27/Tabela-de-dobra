@@ -47,7 +47,7 @@ def main(root_app):
     g.busca_canal_combobox.grid(row=1, column=2, padx=5, sticky="ew")
 
     tk.Button(frame_busca, text="Buscar", command=buscar_deducoes).grid(row=1, column=3, padx=5, pady=5)
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca).grid(row=1, column=4, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_deducao).grid(row=1, column=4, padx=5, pady=5)
 
     columns = ("Material", "Espessura","Canal", "Dedução", "Observação", "Força")
     g.tree = ttk.Treeview(main_frame, columns=columns, show="headings")
@@ -63,7 +63,7 @@ def main(root_app):
 
     carregar_deducoes()
 
-    frame_edicoes = tk.LabelFrame(main_frame, text='Atualizar Dados', pady=5)
+    frame_edicoes = tk.LabelFrame(main_frame, text='Editar Dedução', pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
 
     frame_edicoes.columnconfigure(0, weight=2)

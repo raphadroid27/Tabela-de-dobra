@@ -383,8 +383,37 @@ def buscar_deducoes():
     for d in deducoes:
         g.tree.insert("", "end", values=(d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca))
 
-def limpar_busca():
+def limpar_busca_deducao():
     g.busca_material_combobox.set('')
     g.busca_espessura_combobox.set('')
     g.busca_canal_combobox.set('')
     buscar_deducoes()
+
+def carregar_materiais():
+        materiais = session.query(material).all()
+        for m in materiais:
+            g.tree.insert("", "end", values=(m.nome, m.densidade, m.escoamento, m.elasticidade))
+
+def editar_material():
+        selected_item = g.tree.selection()[0]
+        item = g.tree.item(selected_item)
+        material_nome = item['values'][0]
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
+
+        material_obj.nome = g.material_nome_entry.get() if g.material_nome_entry.get() else material_obj.nome
+        material_obj.densidade = float(g.material_densidade_entry.get().replace(',', '.')) if g.material_densidade_entry.get() else material_obj.densidade
+        material_obj.escoamento = float(g.material_escoamento_entry.get().replace(',', '.')) if g.material_escoamento_entry.get() else material_obj.escoamento
+        material_obj.elasticidade = float(g.material_elasticidade_entry.get().replace(',', '.')) if g.material_elasticidade_entry.get() else material_obj.elasticidade
+        session.commit()
+        messagebox.showinfo("Sucesso", "Material editado com sucesso!")
+        g.tree.item(selected_item, values=(material_obj.nome, material_obj.densidade, material_obj.escoamento, material_obj.elasticidade))
+
+def excluir_material():
+        selected_item = g.tree.selection()[0]
+        item = g.tree.item(selected_item)
+        material_id = item['values'][0]
+        material_obj = session.query(material).filter_by(id=material_id).first()
+        session.delete(material_obj)
+        session.commit()
+        g.tree.delete(selected_item)
+        messagebox.showinfo("Sucesso", "Material excluído com sucesso!")

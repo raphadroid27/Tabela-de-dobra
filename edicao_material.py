@@ -3,6 +3,8 @@ from tkinter import ttk, messagebox
 from models import material
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from funcoes import *
+import globals as g
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -11,72 +13,50 @@ session = Session()
 
 def main(root_app):
 
-    def carregar_materiais():
-        materiais = session.query(material).all()
-        for m in materiais:
-            tree.insert("", "end", values=(m.id, m.nome, m.densidade, m.escoamento, m.elasticidade))
-
-    def editar_material():
-        selected_item = tree.selection()[0]
-        item = tree.item(selected_item)
-        material_id = item['values'][0]
-        material_obj = session.query(material).filter_by(id=material_id).first()
-
-        material_obj.nome = material_nome_entry.get()
-        material_obj.densidade = float(material_densidade_entry.get().replace(',', '.'))
-        material_obj.escoamento = float(material_escoamento_entry.get().replace(',', '.'))
-        material_obj.elasticidade = float(material_elasticidade_entry.get().replace(',', '.'))
-        session.commit()
-        messagebox.showinfo("Sucesso", "Material editado com sucesso!")
-        tree.item(selected_item, values=(material_obj.id, material_obj.nome, material_obj.densidade, material_obj.escoamento, material_obj.elasticidade))
-
-    def excluir_material():
-        selected_item = tree.selection()[0]
-        item = tree.item(selected_item)
-        material_id = item['values'][0]
-        material_obj = session.query(material).filter_by(id=material_id).first()
-        session.delete(material_obj)
-        session.commit()
-        tree.delete(selected_item)
-        messagebox.showinfo("Sucesso", "Material excluído com sucesso!")
-
     root = tk.Tk()
     root.title("Editar/Excluir Material")
-    root.geometry("500x500")
     root.resizable(False, False)
 
     main_frame = tk.Frame(root)
-    main_frame.pack(pady=20, padx=20)
+    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
-    columns = ("ID", "Nome", "Densidade", "Escoamento", "Elasticidade")
-    tree = ttk.Treeview(main_frame, columns=columns, show="headings")
+    columns = ("Nome", "Densidade", "Escoamento", "Elasticidade")
+    g.tree = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        tree.heading(col, text=col)
-    tree.pack()
+        g.tree.heading(col, text=col)
+        g.tree.column(col, anchor="center", width=20)    
+    
+    g.tree.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
     carregar_materiais()
 
-    tk.Label(main_frame, text="Novo Nome:", anchor="w").pack()
-    material_nome_entry = tk.Entry(main_frame)
-    material_nome_entry.pack(padx=5, pady=5, fill="x")
+    tk.Button(main_frame, text="Excluir", command=excluir_material, bg="red").grid(row=1, column=0, padx=5, pady=5, sticky="e")
 
-    tk.Label(main_frame, text="Nova Densidade:", anchor="w").pack()
-    material_densidade_entry = tk.Entry(main_frame)
-    material_densidade_entry.pack(padx=5, pady=5, fill="x")
+    frame_edicoes = tk.LabelFrame(main_frame, text='Editar Material', pady=5)
+    frame_edicoes.grid(row=2, column=0, padx=5, pady=5, sticky="ew")
 
-    tk.Label(main_frame, text="Novo Escoamento:", anchor="w").pack()
-    material_escoamento_entry = tk.Entry(main_frame)
-    material_escoamento_entry.pack(padx=5, pady=5, fill="x")
+    frame_edicoes.columnconfigure(0, weight=1)
+    frame_edicoes.columnconfigure(1, weight=1)
+    frame_edicoes.columnconfigure(2, weight=1)
+    frame_edicoes.columnconfigure(3, weight=1)
 
-    tk.Label(main_frame, text="Nova Elasticidade:", anchor="w").pack()
-    material_elasticidade_entry = tk.Entry(main_frame)
-    material_elasticidade_entry.pack(padx=5, pady=5, fill="x")
+    tk.Label(frame_edicoes, text="Nome:", anchor="w").grid(row=0, column=0, padx=2, sticky='sw')
+    g.material_nome_entry = tk.Entry(frame_edicoes)
+    g.material_nome_entry.grid(row=1, column=0, padx=5, sticky="ew")
 
-    tk.Button(main_frame, text="Editar Material", command=editar_material).pack(pady=10)
-    tk.Button(main_frame, text="Excluir Material", command=excluir_material).pack(pady=10)
+    tk.Label(frame_edicoes, text="Densidade:", anchor="w").grid(row=0, column=1,padx=2, sticky='sw')
+    g.material_densidade_entry = tk.Entry(frame_edicoes)
+    g.material_densidade_entry.grid(row=1, column=1, padx=5, sticky="ew")
 
-    aviso_label = tk.Label(root, text="", font=("Helvetica", 10))
-    aviso_label.pack(pady=5)
+    tk.Label(frame_edicoes, text="Escoamento:", anchor="w").grid(row=2, padx=2, column=0, sticky='sw')
+    g.material_escoamento_entry = tk.Entry(frame_edicoes)
+    g.material_escoamento_entry.grid(row=3, column=0, padx=5, sticky="ew")
+
+    tk.Label(frame_edicoes, text="Elasticidade:", anchor="w").grid(row=2, column=1, padx=2, sticky='sw')
+    g.material_elasticidade_entry = tk.Entry(frame_edicoes)
+    g.material_elasticidade_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+
+    tk.Button(frame_edicoes, text="Atualizar", command=editar_material, bg="green").grid(row=1, column=4, padx=5, pady=5, sticky="ew", rowspan=3)
 
     root.mainloop()
 

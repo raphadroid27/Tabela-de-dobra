@@ -6,9 +6,12 @@ from sqlalchemy import create_engine
 import globals as g
 from funcoes import *
 
-def cabecalho(root):
-    session = configuracao_do_banco_de_dados()
+# Configuração do banco de dados
+engine = create_engine('sqlite:///tabela_de_dobra.db')
+Session = sessionmaker(bind=engine)
+session = Session()
 
+def cabecalho(root):
     cabecalho = ttk.Frame(root)
     cabecalho.pack(padx=10, fill='both', expand=True)
 
