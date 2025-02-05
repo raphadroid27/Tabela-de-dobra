@@ -14,7 +14,7 @@ session = Session()
 def main(root_app):
 
     root = tk.Tk()
-    root.title("Editar/Excluir Material")
+    root.title("Editar/Excluir Canal")
     root.resizable(False, False)
 
     main_frame = tk.Frame(root)

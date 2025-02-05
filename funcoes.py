@@ -329,11 +329,11 @@ def adicionar_espessura():
 def carregar_deducoes():
         deducoes = session.query(deducao).all()
         for d in deducoes:
-            g.tree.insert("", "end", values=(d.material.nome,d.espessura.valor, d.canal.valor, d.valor, d.observacao,d.forca))
+            g.lista_deducao.insert("", "end", values=(d.material.nome,d.espessura.valor, d.canal.valor, d.valor, d.observacao,d.forca))
             
 def editar_deducao():
-    selected_item = g.tree.selection()[0]
-    item = g.tree.item(selected_item)
+    selected_item = g.lista_deducao.selection()[0]
+    item = g.lista_deducao.item(selected_item)
     deducao_valor = item['values'][3]
     deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()    
 
@@ -343,19 +343,19 @@ def editar_deducao():
     session.commit()
 
     messagebox.showinfo("Sucesso", "Dedução editada com sucesso!")
-    g.tree.item(selected_item, values=(deducao_obj.material.nome, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
+    g.lista_deducao.item(selected_item, values=(deducao_obj.material.nome, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
     g.deducao_valor_entry.delete(0, tk.END)
     g.deducao_obs_entry.delete(0, tk.END)
     g.deducao_forca_entry.delete(0, tk.END)
 
 def excluir_deducao():
-        selected_item = g.tree.selection()[0]
-        item = g.tree.item(selected_item)
+        selected_item = g.lista_deducao.selection()[0]
+        item = g.lista_deducao.item(selected_item)
         deducao_valor = item['values'][3]
         deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()
         session.delete(deducao_obj)
         session.commit()
-        g.tree.delete(selected_item)
+        g.lista_deducao.delete(selected_item)
         messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")
 
 def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
@@ -377,11 +377,11 @@ def buscar_deducoes():
     
     deducoes = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
     
-    for item in g.tree.get_children():
-        g.tree.delete(item)
+    for item in g.lista_deducao.get_children():
+        g.lista_deducao.delete(item)
     
     for d in deducoes:
-        g.tree.insert("", "end", values=(d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca))
+        g.lista_deducao.insert("", "end", values=(d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca))
 
 def limpar_busca_deducao():
     g.busca_material_combobox.set('')
@@ -392,11 +392,11 @@ def limpar_busca_deducao():
 def carregar_materiais():
         materiais = session.query(material).all()
         for m in materiais:
-            g.tree.insert("", "end", values=(m.nome, m.densidade, m.escoamento, m.elasticidade))
+            g.lista_material.insert("", "end", values=(m.nome, m.densidade, m.escoamento, m.elasticidade))
 
 def editar_material():
-        selected_item = g.tree.selection()[0]
-        item = g.tree.item(selected_item)
+        selected_item = g.lista_material.selection()[0]
+        item = g.lista_material.item(selected_item)
         material_nome = item['values'][0]
         material_obj = session.query(material).filter_by(nome=material_nome).first()
 
@@ -406,14 +406,14 @@ def editar_material():
         material_obj.elasticidade = float(g.material_elasticidade_entry.get().replace(',', '.')) if g.material_elasticidade_entry.get() else material_obj.elasticidade
         session.commit()
         messagebox.showinfo("Sucesso", "Material editado com sucesso!")
-        g.tree.item(selected_item, values=(material_obj.nome, material_obj.densidade, material_obj.escoamento, material_obj.elasticidade))
+        g.lista_material.item(selected_item, values=(material_obj.nome, material_obj.densidade, material_obj.escoamento, material_obj.elasticidade))
 
 def excluir_material():
-        selected_item = g.tree.selection()[0]
-        item = g.tree.item(selected_item)
+        selected_item = g.lista_material.selection()[0]
+        item = g.lista_material.item(selected_item)
         material_id = item['values'][0]
         material_obj = session.query(material).filter_by(id=material_id).first()
         session.delete(material_obj)
         session.commit()
-        g.tree.delete(selected_item)
+        g.lista_material.delete(selected_item)
         messagebox.showinfo("Sucesso", "Material excluído com sucesso!")

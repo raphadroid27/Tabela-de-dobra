@@ -97,7 +97,7 @@ deducao_forca_entry = None
 espessura_valor_entry = None
 
 # edicao_deducao.py widgets
-tree = None
+lista_deducao = None
 busca_material_combobox = None
 busca_espessura_combobox = None
 busca_canal_combobox = None
@@ -107,3 +107,4 @@ material_nome_entry = None
 material_densidade_entry = None
 material_escoamento_entry = None
 material_elasticidade_entry = None
+lista_material = None

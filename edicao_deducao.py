@@ -50,14 +50,14 @@ def main(root_app):
     tk.Button(frame_busca, text="Limpar", command=limpar_busca_deducao).grid(row=1, column=4, padx=5, pady=5)
 
     columns = ("Material", "Espessura","Canal", "Dedução", "Observação", "Força")
-    g.tree = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.lista_deducao = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.tree.heading(col, text=col)
-        g.tree.column(col, anchor="center", width=60)
-        g.tree.column("Material", width=80)
-        g.tree.column("Observação", width=120, anchor="w")
+        g.lista_deducao.heading(col, text=col)
+        g.lista_deducao.column(col, anchor="center", width=60)
+        g.lista_deducao.column("Material", width=80)
+        g.lista_deducao.column("Observação", width=120, anchor="w")
 
-    g.tree.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    g.lista_deducao.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
     tk.Button(main_frame, text="Excluir", command=excluir_deducao, bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
 
