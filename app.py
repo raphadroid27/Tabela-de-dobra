@@ -31,45 +31,6 @@ def salvar_configuracao(config):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(config, f)
 
-def nova_deducao_form(root):
-    nova_deducao.main(root)
-    atualizar_dados()
-
-def novo_material_form(root):
-    novo_material.main(root)
-    atualizar_dados()
-
-def novo_canal_form(root):
-    novo_canal.main(root)
-    atualizar_dados()
-
-def nova_espessura_form(root):
-    nova_espessura.main(root)
-    atualizar_dados()
-
-def editar_deducao_form(root):
-    editar_deducao.main(root)
-    atualizar_dados()
-
-def editar_material_form(root):
-    editar_material.main(root)
-    atualizar_dados()
-
-def editar_canal_form(root):
-    editar_canal.main(root)
-    atualizar_dados()
-
-
-def atualizar_dados():
-    # Atualizar valores dos comboboxes
-    materiais = [m.nome for m in session.query(material).all()]
-    espessuras = [e.valor for e in session.query(espessura).all()]
-    canais = [c.valor for c in session.query(canal).all()]
-
-    g.material_combobox['values'] = materiais
-    g.espessura_combobox['values'] = espessuras
-    g.canal_combobox['values'] = canais
-
 def main():
     config = carregar_configuracao()
     root = tk.Tk()
@@ -91,18 +52,18 @@ def main():
     # Adicionando menus
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova Dedução", command=lambda: nova_deducao_form(root))
-    file_menu.add_command(label="Novo Material", command=lambda: novo_material_form(root))
-    file_menu.add_command(label="Nova Espessura", command=lambda: nova_espessura_form(root))
-    file_menu.add_command(label="Novo Canal", command=lambda: novo_canal_form(root))
+    file_menu.add_command(label="Nova Dedução", command=lambda: nova_deducao.main(root))
+    file_menu.add_command(label="Novo Material", command=lambda: novo_material.main(root))
+    file_menu.add_command(label="Nova Espessura", command=lambda: nova_espessura.main(root))
+    file_menu.add_command(label="Novo Canal", command=lambda: novo_canal.main(root))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao_form(root))
-    edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(root))
-    edit_menu.add_command(label="Edicar Canal", command=lambda: editar_canal_form(root))
+    edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao.main(root))
+    edit_menu.add_command(label="Editar Material", command=lambda: editar_material.main(root))
+    edit_menu.add_command(label="Edicar Canal", command=lambda: editar_canal.main(root))
 
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)

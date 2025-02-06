@@ -57,7 +57,6 @@ linha_dobra3_label = None
 linha_dobra4_label = None
 linha_dobra5_label = None
 
-
 #aba3.py widgets
 razao_raio_esp_label = None
 
@@ -85,7 +84,7 @@ raio_fator_k = {
     10.0: 0.50
     }
 
-# nova_dedudcao.py widgets
+# nova_deducao.py widgets
 deducao_material_combobox = None
 deducao_espessura_combobox = None
 deducao_canal_combobox = None
@@ -97,6 +96,9 @@ deducao_forca_entry = None
 espessura_valor_entry = None
 
 # edicao_deducao.py widgets
+busca_material_combobox = None
+busca_espessura_combobox = None
+busca_canal_combobox = None
 lista_deducao = None
 
 # novo_material.py widgets

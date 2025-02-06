@@ -303,16 +303,52 @@ def adicionar_deducao_e_observacao():
             )
             session.add(nova_deducao)
             session.commit()
+
+            g.deducao_espessura_combobox.set('')
+            g.deducao_canal_combobox.set('')
+            g.deducao_material_combobox.set('')
+            g.deducao_valor_entry.delete(0, tk.END)
+            g.deducao_obs_entry.delete(0, tk.END)
+            g.deducao_forca_entry.delete(0, tk.END)
+
             messagebox.showinfo("Sucesso", "Nova dedução adicionada com sucesso!")
         else:
             messagebox.showerror("Erro", "Dedução já existe no banco de dados.")
 
-        g.deducao_espessura_combobox.set('')
-        g.deducao_canal_combobox.set('')
-        g.deducao_material_combobox.set('')
-        g.deducao_valor_entry.delete(0, tk.END)
-        g.deducao_obs_entry.delete(0, tk.END)
-        g.deducao_forca_entry.delete(0, tk.END)
+        atualizar_espessura()
+        atualizar_canal()
+        atualizar_deducao_e_obs()
+
+
+def adicionar_material():
+        nome_material = g.material_nome_entry.get()
+        densidade_material = g.material_densidade_entry.get()
+        escoamento_material = g.material_escoamento_entry.get()
+        elasticidade_material = g.material_elasticidade_entry.get()
+        
+        if not nome_material:
+            messagebox.showerror("Erro", "O campo Material é obrigatório.")
+            return
+        
+        material_existente = session.query(material).filter_by(nome=nome_material).first()
+        if not material_existente:
+            novo_material = material(
+                nome=nome_material, 
+                densidade=float(densidade_material) if densidade_material else None, 
+                escoamento=float(escoamento_material) if escoamento_material else None, 
+                elasticidade=float(elasticidade_material) if elasticidade_material else None
+            )
+            session.add(novo_material)
+            session.commit()
+            g.material_nome_entry.delete(0, tk.END)
+            g.material_densidade_entry.delete(0, tk.END)
+            g.material_escoamento_entry.delete(0, tk.END)
+            g.material_elasticidade_entry.delete(0, tk.END)
+            messagebox.showinfo("Sucesso", "Novo material adicionado com sucesso!")
+        else:
+            messagebox.showerror("Erro", "Material já existe no banco de dados.")
+
+        g.material_combobox['values'] = [m.nome for m in session.query(material).all()]         
 
 def adicionar_espessura():
         valor_espessura = float(g.espessura_valor_entry.get().replace(',', '.'))
@@ -325,6 +361,8 @@ def adicionar_espessura():
             messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
         else:
             messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
+
+        atualizar_espessura()
 
 def adicionar_canal():
         valor_canal = g.canal_valor_entry.get()
@@ -341,10 +379,10 @@ def adicionar_canal():
         if not canal_existente:
             novo_canal = canal(
                 valor=valor_canal,
-                largura=float(largura_canal) if largura_canal else 0,
-                altura=float(altura_canal) if altura_canal else 0,
-                comprimento_total=float(comprimento_total_canal) if comprimento_total_canal else 0,
-                observacao=observacao_canal if observacao_canal else ""
+                largura=float(largura_canal) if largura_canal else None,
+                altura=float(altura_canal) if altura_canal else None,
+                comprimento_total=float(comprimento_total_canal) if comprimento_total_canal else None,
+                observacao=observacao_canal if observacao_canal else None
             )
             session.add(novo_canal)
             session.commit()
@@ -356,6 +394,8 @@ def adicionar_canal():
             messagebox.showinfo("Sucesso", "Novo canal adicionado com sucesso!")
         else:
             messagebox.showerror("Erro", "Canal já existe no banco de dados.")
+
+        carregar_canais()
 
 def carregar_deducoes():
         deducoes = session.query(deducao).all()
@@ -388,8 +428,8 @@ def buscar_deducoes():
         g.lista_deducao.insert("", "end", values=(d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca))
 
 def editar_deducao():
-    selected_item = g.lista_deducao.selection()[0]
-    item = g.lista_deducao.item(selected_item)
+    item_selecionado = g.lista_deducao.selection()[0]
+    item = g.lista_deducao.item(item_selecionado)
     deducao_valor = item['values'][3]
     deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()    
 
@@ -399,7 +439,7 @@ def editar_deducao():
     session.commit()
 
     messagebox.showinfo("Sucesso", "Dedução editada com sucesso!")
-    g.lista_deducao.item(selected_item, values=(deducao_obj.material.nome, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
+    g.lista_deducao.item(item_selecionado, values=(deducao_obj.material.nome, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
     g.deducao_valor_entry.delete(0, tk.END)
     g.deducao_obs_entry.delete(0, tk.END)
     g.deducao_forca_entry.delete(0, tk.END)
@@ -450,6 +490,8 @@ def excluir_material():
         messagebox.showinfo("Sucesso", "Material excluído com sucesso!")
 
 def carregar_canais():
+    for item in g.lista_canal.get_children():
+        g.lista_canal.delete(item)
     canais = session.query(canal).all()
     for c in canais:
         g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
@@ -460,6 +502,7 @@ def editar_canal ():
     canal_valor= item['values'][0]
     canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
 
+    canal_obj.valor = canal_obj.valor
     canal_obj.largura = float(g.canal_largura_entry.get()) if g.canal_valor_entry.get() else canal_obj.largura
     canal_obj.altura = float(g.canal_altura_entry.get()) if g.canal_altura_entry.get() else canal_obj.altura
     canal_obj.comprimento_total = float(g.canal_comprimento_entry.get()) if g.canal_comprimento_entry.get() else canal_obj.comprimento_total
