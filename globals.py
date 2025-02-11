@@ -9,6 +9,7 @@ deducao_espec = None
 deducao_valor = None
 raio_interno = None
 canal_valor = None
+largura_canal = None
 
 # head.py widgets
 material_combobox = None
