@@ -33,7 +33,7 @@ def main():
     root = tk.Tk()
     root.title("Cálculo de Dobra")
     root.geometry(config.get('geometry'))  # Usando a configuração carregada ou um valor padrão
-    #root.resizable(False, False)
+    root.resizable(False, False)
 
     root.update_idletasks() 
     print(f"{root.winfo_width()}x{root.winfo_height()}")
@@ -87,7 +87,7 @@ def main():
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
     edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao_form(root))
     edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(root))
-    edit_menu.add_command(label="Edicar Canal", command=lambda: editar_canal_form(root))
+    edit_menu.add_command(label="Editar Canal", command=lambda: editar_canal_form(root))
 
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
