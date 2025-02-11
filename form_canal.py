@@ -39,9 +39,14 @@ def main(root_app):
     frame_busca = tk.LabelFrame(main_frame, text='Filtrar Deduções', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
-    tk.Label(frame_busca, text="Valor canal").grid(row=0,column=0)
+    frame_busca.columnconfigure(0, weight=0)
+    frame_busca.columnconfigure(1, weight=1)
+    frame_busca.columnconfigure(2, weight=0)
+    
+
+    tk.Label(frame_busca, text="Valor canal:").grid(row=0,column=0)
     g.canal_valor_entry=tk.Entry(frame_busca)
-    g.canal_valor_entry.grid(row=0, column=1)
+    g.canal_valor_entry.grid(row=0, column=1, sticky="ew")
 
     tk.Button(frame_busca, text="Buscar", command=buscar_canais).grid(row=0, column=3, padx=5, pady=5)
 
