@@ -60,8 +60,6 @@ def atualizar_deducao_e_obs():
             deducao.canal_id == canal_obj.id
         ).first()
 
-        g.deducao_valor = deducao_obj.valor if deducao_obj else None
-
         if deducao_obj:
             g.deducao_label.config(text=deducao_obj.valor, fg="black")
             g.obs_label.config(text=f'Observações: {deducao_obj.observacao}' if deducao_obj.observacao else 'Observações não encontradas')
@@ -69,7 +67,8 @@ def atualizar_deducao_e_obs():
             g.deducao_label.config(text='N/A', fg="red")
             g.obs_label.config(text='Observações não encontradas')
     
-    print(canal_obj.largura)
+        g.deducao_valor = deducao_obj.valor if deducao_obj else None
+        g.largura_canal = canal_obj.largura if deducao_obj else None
 
 def atualizar_toneladas_m():
     comprimento = g.comprimento_entry.get()
@@ -106,7 +105,7 @@ def aba_minima_externa():
 
 def z_minimo_externo():
     if g.canal_valor and g.deducao_valor:
-        z_minimo_externo = g.espessura_valor + (g.deducao_valor / 2) + (g.canal_valor / 2)
+        z_minimo_externo = g.espessura_valor + (g.deducao_valor / 2) + (g.largura_canal / 2) + 2
         g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}')
 
 def calcular_dobra():
@@ -558,3 +557,15 @@ def adicionar_espessura():
             messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
 
         atualizar_espessura()
+
+def buscar_canais():
+   
+    canal_valor = g.canal_valor_entry.get()
+    
+    canais = session.query(canal).filter(canal.valor == canal_valor)
+    
+    for item in g.lista_canal.get_children():
+        g.lista_canal.delete(item)
+    
+    for c in canais:
+        g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
