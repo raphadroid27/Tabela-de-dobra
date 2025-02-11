@@ -49,6 +49,7 @@ def main(root_app):
     g.canal_valor_entry.grid(row=0, column=1, sticky="ew")
 
     tk.Button(frame_busca, text="Buscar", command=buscar_canais).grid(row=0, column=3, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_deducao).grid(row=1, column=4, padx=5, pady=5)
 
     columns = ("Canal", "Largura", "Altura", "Comprimento", "Observação")
     g.lista_canal = ttk.Treeview(main_frame, columns=columns, show="headings")
