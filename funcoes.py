@@ -74,11 +74,12 @@ def atualizar_toneladas_m():
     comprimento = g.comprimento_entry.get()
     deducao_obj = session.query(deducao).filter_by(valor=g.deducao_valor).first()
 
-    if deducao_obj and deducao_obj.forca is not None:
-        toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
-        g.ton_m_label.config(text=f'{toneladas_m:.0f}', fg="black")
-    else:
-        g.ton_m_label.config(text='N/A', fg="red")        
+    if g.material_combobox.get() != "" and g.espessura_combobox.get() != "" and g.canal_combobox.get() != "":
+        if deducao_obj and deducao_obj.forca is not None:
+            toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
+            g.ton_m_label.config(text=f'{toneladas_m:.0f}', fg="black")
+        else:
+            g.ton_m_label.config(text='N/A', fg="red")        
 
 def calcular_fatork():
     if g.deducao_espec:
@@ -104,9 +105,13 @@ def aba_minima_externa():
         g.aba_min_externa_label.config(text=f"{aba_minima_valor:.0f}")
 
 def z_minimo_externo():
-    if g.canal_valor and g.deducao_valor:
-        z_minimo_externo = g.espessura_valor + (g.deducao_valor / 2) + (g.largura_canal / 2) + 2
-        g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}')
+    if g.material_combobox.get() != "" and g.espessura_combobox.get() != "" and g.canal_combobox.get() != "":
+        if not g.largura_canal:
+            g.z_min_externa_label.config(text="N/A", fg="red")
+            return
+        if g.canal_valor and g.deducao_valor:
+            z_minimo_externo = g.espessura_valor + (g.deducao_valor / 2) + (g.largura_canal / 2) + 2
+            g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}', fg="black")
 
 def calcular_dobra():
 
