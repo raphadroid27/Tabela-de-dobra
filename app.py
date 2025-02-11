@@ -14,7 +14,7 @@ import globals as g
 from funcoes import *
 import form_deducao
 import form_material
-import canal_form
+import form_canal
 
 CONFIG_FILE = 'config.json'
 
@@ -56,11 +56,11 @@ def main():
 
     def editar_canal_form(root):
         g.editar_canal = True
-        canal_form.main(root)
+        form_canal.main(root)
 
     def add_canal_form(root):
         g.editar_canal = False
-        canal_form.main(root)
+        form_canal.main(root)
 
     def on_closing():
         config['geometry'] = root.geometry()
