@@ -6,7 +6,7 @@ def criar_aba3(notebook):
     aba3 = ttk.Frame(notebook)
     aba3.pack(fill='both', expand=True)
 
-    notebook.add(aba3, text='relação raio e fator K')
+    notebook.add(aba3, text='Relação raio e fator K')
     
     # Crie um Frame para agrupar os Labels na mesma linha
     frame = tk.Frame(aba3)

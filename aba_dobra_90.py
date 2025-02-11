@@ -7,7 +7,7 @@ def criar_aba1(notebook):
     # Layout
     aba1 = ttk.Frame(notebook)
     aba1.pack(fill='both', expand=True)
-    notebook.add(aba1, text='Aba 1')
+    notebook.add(aba1, text='Cálculo de dobra 90°')
 
     # Novo frame para entradas de valores de dobra
     frame_aba1 = tk.Frame(aba1)

@@ -19,13 +19,13 @@ def main(root_app):
 
     g.canal_form = tk.Toplevel()
     g.canal_form.resizable(False, False)
-    g.canal_form.geometry("340x340")
+    g.canal_form.geometry("340x420")
 
     # Posicionar a janela nova_deducao em relação à janela principal
-    #g.canal_form.update_idletasks() 
-    #x = root_app.winfo_x() + root_app.winfo_width() + 10
-    #y = root_app.winfo_y()
-    #g.canal_form.geometry(f"+{x}+{y}")
+    g.canal_form.update_idletasks() 
+    x = root_app.winfo_x() + root_app.winfo_width() + 10
+    y = root_app.winfo_y()
+    g.canal_form.geometry(f"+{x}+{y}")
 
     main_frame = tk.Frame(g.canal_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
