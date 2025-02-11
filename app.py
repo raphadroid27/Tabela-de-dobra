@@ -5,15 +5,15 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
 import os
-from aba1 import criar_aba1
+from aba_dobra_90 import criar_aba1
 from aba2 import criar_aba2
-from aba3 import criar_aba3
+from aba_raio_fatorK import criar_aba3
 from cabecalho import cabecalho
-import espessura_form
+import form_espessura
 import globals as g
 from funcoes import *
-import deducao_form
-import material_form
+import form_deducao
+import form_material
 import canal_form
 
 CONFIG_FILE = 'config.json'
@@ -40,19 +40,19 @@ def main():
 
     def editar_deducao_form(root):
         g.editar_deducao = True 
-        deducao_form.main(root)
+        form_deducao.main(root)
                
     def add_deducao_form(root):
         g.editar_deducao = False
-        deducao_form.main(root)
+        form_deducao.main(root)
         
     def editar_material_form(root):
         g.editar_material = True
-        material_form.main(root)
+        form_material.main(root)
 
     def add_material_form(root):
         g.editar_material = False
-        material_form.main(root)
+        form_material.main(root)
 
     def editar_canal_form(root):
         g.editar_canal = True
@@ -78,7 +78,7 @@ def main():
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
     file_menu.add_command(label="Nova Dedução", command=lambda: add_deducao_form(root))
     file_menu.add_command(label="Novo Material", command=lambda: add_material_form(root))
-    file_menu.add_command(label="Nova Espessura", command=lambda: espessura_form.main(root))
+    file_menu.add_command(label="Nova Espessura", command=lambda: form_espessura.main(root))
     file_menu.add_command(label="Novo Canal", command=lambda: add_canal_form(root))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
@@ -100,7 +100,7 @@ def main():
     notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
     criar_aba1(notebook)
-    criar_aba2(notebook)
+    #criar_aba2(notebook)
     criar_aba3(notebook)
 
     frame_botoes = tk.Frame(root, width=200)
