@@ -175,15 +175,13 @@ def calcular_dobra():
 
 def calcular_blank():
     medidas = [g.medidadobra1_label, g.medidadobra2_label, g.medidadobra3_label, g.medidadobra4_label, g.medidadobra5_label]
-    metades = [g.metadedobra1_label, g.metadedobra2_label, g.metadedobra3_label, g.metadedobra4_label, g.metadedobra5_label]
-
     medidas_validas = [float(medida['text']) for medida in medidas if medida['text']]
-    metades_validas = [float(metade['text']) for metade in metades if metade['text']]
 
     if medidas_validas:
-        g.medida_blank_label.config(text=f"{sum(medidas_validas):.2f}", fg="black")
-    if metades_validas:
-        g.metade_blank_label.config(text=f"{sum(metades_validas):.2f}", fg="black")
+        blank = sum(medidas_validas)
+        metade_blank = blank / 2
+        g.medida_blank_label.config(text=f"{blank:.2f}", fg="black")
+        g.metade_blank_label.config(text=f"{metade_blank:.2f}", fg="black")
 
 def calcular_metade_dobra():
     entradas = [
@@ -236,6 +234,9 @@ def copiar_metadedobra(numero):
 
 def copiar_blank():
     copiar_valor(g.medida_blank_label, lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank()))
+
+def copiar_metade_blank():
+    copiar_valor(g.metade_blank_label, lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank()))
 
 def limpar_dobras():
     dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
