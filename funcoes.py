@@ -551,10 +551,10 @@ def excluir_canal():
 
 # Manipulação de dados de espessuras (espessura_form.py)
 def adicionar_espessura():
-        valor_espessura = float(g.espessura_valor_entry.get().replace(',', '.'))
-        espessura_existente = session.query(espessura).filter_by(valor=valor_espessura).first()
+        espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
+        espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
         if not espessura_existente:
-            nova_espessura = espessura(valor=valor_espessura)
+            nova_espessura = espessura(valor=espessura_valor)
             session.add(nova_espessura)
             session.commit()
             g.espessura_valor_entry.delete(0, tk.END)
