@@ -41,17 +41,24 @@ def main():
     def on_top():
         if g.on_top_var.get() == 1:
             root.attributes("-topmost", True)
-            g.deducao_form.attributes("-topmost", True)
-            g.material_form.attributes("-topmost", True)
-            g.canal_form.attributes("-topmost", True)
-            g.espessura_form.attributes("-topmost", True)
-            
+            if g.deducao_form:
+                g.deducao_form.attributes("-topmost", True)
+            if g.material_form:
+                g.material_form.attributes("-topmost", True)
+            if g.canal_form:
+                g.canal_form.attributes("-topmost", True)
+            if g.espessura_form:
+                g.espessura_form.attributes("-topmost", True)
         else:
             root.attributes("-topmost", False)
-            g.deducao_form.attributes("-topmost", False)
-            g.material_form.attributes("-topmost", False)
-            g.canal_form.attributes("-topmost", False)
-            g.espessura_form.attributes("-topmost", False)
+            if g.deducao_form:
+                g.deducao_form.attributes("-topmost", False)
+            if g.material_form:
+                g.material_form.attributes("-topmost", False)
+            if g.canal_form:
+                g.canal_form.attributes("-topmost", False)
+            if g.espessura_form:
+                g.espessura_form.attributes("-topmost", False)
 
     def editar_deducao_form(root):
         g.editar_deducao = True 
