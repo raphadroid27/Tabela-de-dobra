@@ -10,6 +10,7 @@ deducao_valor = None
 raio_interno = None
 canal_valor = None
 largura_canal = None
+on_top_var = None
 
 # head.py widgets
 material_combobox = None
@@ -124,3 +125,4 @@ editar_canal = None
 deducao_form = None
 material_form = None
 canal_form = None
+espessura_form = None
