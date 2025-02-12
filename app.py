@@ -107,7 +107,7 @@ def main():
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
     g.on_top_var = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="On top", variable=g.on_top_var, command=on_top)
+    opcoes_menu.add_checkbutton(label="No topo", variable=g.on_top_var, command=on_top)
 
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
