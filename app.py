@@ -38,6 +38,12 @@ def main():
     root.update_idletasks() 
     print(f"{root.winfo_width()}x{root.winfo_height()}")
 
+    def on_top():
+        if on_top_var.get() == 1:
+            root.attributes("-topmost", True)
+        else:
+            root.attributes("-topmost", False)
+
     def editar_deducao_form(root):
         g.editar_deducao = True 
         form_deducao.main(root)
@@ -89,6 +95,11 @@ def main():
     edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(root))
     edit_menu.add_command(label="Editar Canal", command=lambda: editar_canal_form(root))
 
+    opcoes_menu = tk.Menu(menu_bar, tearoff=0)
+    menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
+    on_top_var = tk.IntVar()
+    opcoes_menu.add_checkbutton(label="On top", variable=on_top_var, command=on_top)
+
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
     help_menu.add_command(label="Sobre")
@@ -104,18 +115,18 @@ def main():
     criar_aba3(notebook)
 
     frame_botoes = tk.Frame(root, width=200)
-    frame_botoes.pack( expand=True)
+    frame_botoes.pack(expand=True)
 
     frame_botoes.columnconfigure(0, weight=1)
     frame_botoes.columnconfigure(1, weight=1)
 
     # Botão para limpar valores de dobras
     limpar_dobras_button = tk.Button(frame_botoes, text="Limpar Dobras", command=limpar_dobras, width=15, bg='yellow')
-    limpar_dobras_button.grid(row=0, column=0,sticky='we',padx=2)
+    limpar_dobras_button.grid(row=0, column=0, sticky='we', padx=2)
 
     # Botão para limpar todos os valores
     limpar_tudo_button = tk.Button(frame_botoes, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red')
-    limpar_tudo_button.grid(row=0, column=1,sticky='we',padx=2)
+    limpar_tudo_button.grid(row=0, column=1, sticky='we', padx=2)
 
     # Funções de atualização
     entries = [
