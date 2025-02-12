@@ -43,6 +43,7 @@ def main(root_app):
     main_frame.rowconfigure(0,weight=0)
     main_frame.rowconfigure(1,weight=1)
     main_frame.rowconfigure(2,weight=0)
+    main_frame.rowconfigure(3,weight=0)
 
     frame_busca = tk.LabelFrame(main_frame, text='Filtrar Deduções', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
@@ -56,8 +57,8 @@ def main(root_app):
     g.canal_valor_entry=tk.Entry(frame_busca)
     g.canal_valor_entry.grid(row=0, column=1, sticky="ew")
 
-    tk.Button(frame_busca, text="Buscar", command=buscar_canais).grid(row=0, column=3, padx=5, pady=5)
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_canais).grid(row=0, column=4, padx=5, pady=5)
+    tk.Button(frame_busca, text="Buscar", command=buscar_canal).grid(row=0, column=3, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_canal).grid(row=0, column=4, padx=5, pady=5)
 
     columns = ("Canal", "Largura", "Altura", "Comprimento", "Observação")
     g.lista_canal = ttk.Treeview(main_frame, columns=columns, show="headings")
@@ -67,7 +68,7 @@ def main(root_app):
     
     g.lista_canal.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
-    carregar_lista_canais()
+    carregar_lista_canal()
 
     frame_edicoes = tk.LabelFrame(main_frame, text='Editar Canal', pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")

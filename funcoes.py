@@ -287,7 +287,7 @@ def todas_funcoes():
     razao_raio_esp()
 
 # Manipulação de dados de Dedução (deducao_form.py)
-def carregar_lista_deducoes():
+def carregar_lista_deducao():
         
     for item in g.lista_deducao.get_children():
         g.lista_deducao.delete(item)
@@ -325,7 +325,7 @@ def limpar_busca_deducao():
     g.deducao_material_combobox.set('')
     g.deducao_espessura_combobox.set('')
     g.deducao_canal_combobox.set('')
-    carregar_lista_deducoes()
+    carregar_lista_deducao()
 
 def nova_deducao():
         espessura_valor = g.deducao_espessura_combobox.get()
@@ -379,7 +379,7 @@ def nova_deducao():
         atualizar_espessura()
         atualizar_canal()
         atualizar_deducao_e_obs()
-        carregar_lista_deducoes()
+        carregar_lista_deducao()
 
 def editar_deducao():
     item_selecionado = g.lista_deducao.selection()[0]
@@ -409,7 +409,7 @@ def excluir_deducao():
         messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")
 
 # Manipulação de dados de materiais (material_form.py)
-def carregar_lista_materiais():
+def carregar_lista_material():
         atualizar_material()
         for item in g.lista_material.get_children():
             g.lista_material.delete(item)
@@ -449,7 +449,7 @@ def novo_material():
             messagebox.showerror("Erro", "Material já existe no banco de dados.")
  
         
-        carregar_lista_materiais()        
+        carregar_lista_material()        
 
 def editar_material():
         selected_item = g.lista_material.selection()[0]
@@ -469,7 +469,7 @@ def editar_material():
         g.material_elasticidade_entry.delete(0, tk.END)
 
         messagebox.showinfo("Sucesso", "Material editado com sucesso!")
-        carregar_lista_materiais()
+        carregar_lista_material()
 
 def excluir_material():
         item_selecionado = g.lista_material.selection()[0]
@@ -481,7 +481,7 @@ def excluir_material():
         g.lista_material.delete(item_selecionado)
         messagebox.showinfo("Sucesso", "Material excluído com sucesso!")
         atualizar_material()
-        carregar_lista_materiais()
+        carregar_lista_material()
 
 def buscar_material(): 
     canal_valor = g.canal_valor_entry.get()
@@ -496,10 +496,10 @@ def buscar_material():
 
 def limpar_busca_material():
     g.canal_valor_entry.delete(0, tk.END)
-    carregar_lista_canais()
+    carregar_lista_canal()
 
 # Manipulação de dados de canais (Canal_form.py)
-def carregar_lista_canais():
+def carregar_lista_canal():
     for item in g.lista_canal.get_children():
         g.lista_canal.delete(item)
 
@@ -538,7 +538,7 @@ def adicionar_canal():
         else:
             messagebox.showerror("Erro", "Canal já existe no banco de dados.")
 
-        carregar_lista_canais()
+        carregar_lista_canal()
 
 def editar_canal ():
     item_selecionado = g.lista_canal.selection()[0]
@@ -552,7 +552,7 @@ def editar_canal ():
     canal_obj.observacao = g.canal_observacao_entry.get() if g.canal_observacao_entry.get() else canal_obj.observacao
     session.commit() 
     messagebox.showinfo("Sucesso", "Canal editado com suceso!")
-    carregar_lista_canais()
+    carregar_lista_canal()
 
 def excluir_canal():
     item_selecionado = g.lista_canal.selection()[0]
@@ -564,7 +564,7 @@ def excluir_canal():
     g.lista_canal.delete(item_selecionado)
     messagebox.showinfo("Sucesso", "Canal excluído com sucesso!")
 
-def buscar_canais(): 
+def buscar_canal(): 
     canal_valor = g.canal_valor_entry.get()
     
     canais = session.query(canal).filter(canal.valor == canal_valor)
@@ -575,9 +575,9 @@ def buscar_canais():
     for c in canais:
         g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
 
-def limpar_busca_canais():
+def limpar_busca_canal():
     g.canal_valor_entry.delete(0, tk.END)
-    carregar_lista_canais()
+    carregar_lista_canal()
 
 # Manipulação de dados de espessuras (espessura_form.py)
 def adicionar_espessura():
