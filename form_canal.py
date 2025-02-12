@@ -21,6 +21,14 @@ def main(root_app):
     g.canal_form.resizable(False, False)
     g.canal_form.geometry("340x420")
 
+    def on_top_canal():
+        if g.on_top_var.get() == 1:
+            g.canal_form.attributes("-topmost", True)
+        else:
+            g.canal_form.attributes("-topmost", False)
+    
+    on_top_canal()
+
     # Posicionar a janela nova_deducao em relação à janela principal
     g.canal_form.update_idletasks() 
     x = root_app.winfo_x() + root_app.winfo_width() + 10

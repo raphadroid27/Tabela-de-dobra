@@ -21,6 +21,14 @@ def main(root_app):
     g.deducao_form.geometry("500x420")
     g.deducao_form.resizable(False, False)
 
+    def on_top_deducao():
+        if g.on_top_var.get() == 1:
+            g.deducao_form.attributes("-topmost", True)
+        else:
+            g.deducao_form.attributes("-topmost", False)
+    
+    on_top_deducao()
+
     # Posicionar a janela nova_deducao em relação à janela principal
     g.deducao_form.update_idletasks() 
     x = root_app.winfo_x() + root_app.winfo_width() + 10

@@ -39,10 +39,19 @@ def main():
     print(f"{root.winfo_width()}x{root.winfo_height()}")
 
     def on_top():
-        if on_top_var.get() == 1:
+        if g.on_top_var.get() == 1:
             root.attributes("-topmost", True)
+            g.deducao_form.attributes("-topmost", True)
+            g.material_form.attributes("-topmost", True)
+            g.canal_form.attributes("-topmost", True)
+            g.espessura_form.attributes("-topmost", True)
+            
         else:
             root.attributes("-topmost", False)
+            g.deducao_form.attributes("-topmost", False)
+            g.material_form.attributes("-topmost", False)
+            g.canal_form.attributes("-topmost", False)
+            g.espessura_form.attributes("-topmost", False)
 
     def editar_deducao_form(root):
         g.editar_deducao = True 
@@ -97,8 +106,8 @@ def main():
 
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
-    on_top_var = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="On top", variable=on_top_var, command=on_top)
+    g.on_top_var = tk.IntVar()
+    opcoes_menu.add_checkbutton(label="On top", variable=g.on_top_var, command=on_top)
 
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
