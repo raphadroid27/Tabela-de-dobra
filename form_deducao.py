@@ -79,7 +79,7 @@ def main(root_app):
 
     g.lista_deducao.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
-    carregar_deducoes()
+    carregar_lista_deducoes()
 
     frame_edicoes = tk.LabelFrame(main_frame, text='Editar Dedução', pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
