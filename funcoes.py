@@ -287,7 +287,7 @@ def todas_funcoes():
     razao_raio_esp()
 
 # Manipulação de dados de Dedução (deducao_form.py)
-def carregar_deducoes():
+def carregar_lista_deducoes():
         
     for item in g.lista_deducao.get_children():
         g.lista_deducao.delete(item)
@@ -325,7 +325,7 @@ def limpar_busca_deducao():
     g.deducao_material_combobox.set('')
     g.deducao_espessura_combobox.set('')
     g.deducao_canal_combobox.set('')
-    carregar_deducoes()
+    carregar_lista_deducoes()
 
 def nova_deducao():
         espessura_valor = g.deducao_espessura_combobox.get()
@@ -379,7 +379,7 @@ def nova_deducao():
         atualizar_espessura()
         atualizar_canal()
         atualizar_deducao_e_obs()
-        carregar_deducoes()
+        carregar_lista_deducoes()
 
 def editar_deducao():
     item_selecionado = g.lista_deducao.selection()[0]
@@ -483,6 +483,21 @@ def excluir_material():
         atualizar_material()
         carregar_lista_materiais()
 
+def buscar_material(): 
+    canal_valor = g.canal_valor_entry.get()
+    
+    canais = session.query(canal).filter(canal.valor == canal_valor)
+    
+    for item in g.lista_canal.get_children():
+        g.lista_canal.delete(item)
+    
+    for c in canais:
+        g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
+
+def limpar_busca_material():
+    g.canal_valor_entry.delete(0, tk.END)
+    carregar_lista_canais()
+
 # Manipulação de dados de canais (Canal_form.py)
 def carregar_lista_canais():
     for item in g.lista_canal.get_children():
@@ -549,6 +564,21 @@ def excluir_canal():
     g.lista_canal.delete(item_selecionado)
     messagebox.showinfo("Sucesso", "Canal excluído com sucesso!")
 
+def buscar_canais(): 
+    canal_valor = g.canal_valor_entry.get()
+    
+    canais = session.query(canal).filter(canal.valor == canal_valor)
+    
+    for item in g.lista_canal.get_children():
+        g.lista_canal.delete(item)
+    
+    for c in canais:
+        g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
+
+def limpar_busca_canais():
+    g.canal_valor_entry.delete(0, tk.END)
+    carregar_lista_canais()
+
 # Manipulação de dados de espessuras (espessura_form.py)
 def adicionar_espessura():
         espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
@@ -564,14 +594,3 @@ def adicionar_espessura():
 
         atualizar_espessura()
 
-def buscar_canais():
-   
-    canal_valor = g.canal_valor_entry.get()
-    
-    canais = session.query(canal).filter(canal.valor == canal_valor)
-    
-    for item in g.lista_canal.get_children():
-        g.lista_canal.delete(item)
-    
-    for c in canais:
-        g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
