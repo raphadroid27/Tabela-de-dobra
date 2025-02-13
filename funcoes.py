@@ -588,6 +588,14 @@ def limpar_busca_canal():
     carregar_lista_canal()
 
 # Manipulação de dados de espessuras (espessura_form.py)
+def carregar_lista_espessura():
+    for item in g.lista_espessura.get_children():
+        g.lista_espessura.delete(item)
+
+    espessuras = session.query(espessura).all()
+    for e in espessuras:
+        g.lista_espessura.insert("","end", values=(e.valor))
+
 def nova_espessura():
         espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
         espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
@@ -603,3 +611,27 @@ def nova_espessura():
         atualizar_espessura()
         atualizar_combobox_deducao()
 
+def excluir_espessura():
+    item_selecionado = g.lista_espessura.selection()[0]
+    item = g.lista_espessura.item(item_selecionado)
+    espessura_valor = item['values'][0]
+    espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+    session.delete(espessura_obj)
+    session.commit()
+    g.lista_espessura.delete(item_selecionado)
+    messagebox.showinfo("Sucesso", "Espessura excluída com sucesso!")
+
+def buscar_espessura(): 
+    espessura_valor = g.espessura_valor_entry.get()
+    
+    espessuras = session.query(espessura).filter(espessura.valor == espessura_valor)
+    
+    for item in g.lista_espessura.get_children():
+        g.lista_espessura.delete(item)
+
+    for e in espessuras:
+        g.lista_espessura.insert("","end", values=(e.valor))
+
+def limpar_busca_espessura():
+    g.espessura_valor_entry.delete(0, tk.END)
+    carregar_lista_espessura()

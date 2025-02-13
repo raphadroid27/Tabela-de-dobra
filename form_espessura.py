@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from funcoes import *
@@ -28,18 +29,46 @@ def main(root_app):
     y = root_app.winfo_y()
     g.espessura_form.geometry(f"+{x}+{y}")
 
-    g.espessura_form.update_idletasks() 
-    print(f"{g.espessura_form.winfo_width()}x{g.espessura_form.winfo_height()}")
-
-
     main_frame = tk.Frame(g.espessura_form)
-    main_frame.pack(pady=10, padx=10)
+    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
-    tk.Label(main_frame, text="Espessura:", anchor="w").grid(row=0, column=0, sticky="w")
-    g.espessura_valor_entry = tk.Entry(main_frame)
-    g.espessura_valor_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+    main_frame.columnconfigure(0,weight=1)
 
-    tk.Button(main_frame, text="Adicionar Espessura", command=nova_espessura).grid(row=1, column=0, columnspan=2, pady=10)
+    main_frame.rowconfigure(0,weight=0)
+    main_frame.rowconfigure(1,weight=1)
+    main_frame.rowconfigure(2,weight=0)
+    main_frame.rowconfigure(3,weight=0)
+
+    frame_busca = tk.LabelFrame(main_frame, text='Filtrar Espessuras', pady=5)
+    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+
+    frame_busca.columnconfigure(0, weight=0)
+    frame_busca.columnconfigure(1, weight=1)
+    frame_busca.columnconfigure(2, weight=0)
+
+    tk.Label(frame_busca, text="Espessura:").grid(row=0,column=0)
+    g.espessura_valor_entry=tk.Entry(frame_busca)
+    g.espessura_valor_entry.grid(row=0, column=1, sticky="ew")
+
+    tk.Button(frame_busca, text="Buscar", command=buscar_espessura).grid(row=0, column=3, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_espessura).grid(row=0, column=4, padx=5, pady=5)
+
+    columns = ("Valor",)
+    g.lista_espessura = ttk.Treeview(main_frame, columns=columns, show="headings")
+    for col in columns:
+        g.lista_espessura.heading(col, text=col)
+        g.lista_espessura.column(col, anchor="center")    
+    
+    g.lista_espessura.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+
+    carregar_lista_espessura()
+
+    if g.editar_espessura == True:
+        g.espessura_form.title("Editar/Excluir Espessura")
+        tk.Button(main_frame, text="Excluir", command=excluir_espessura, bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+    else:
+        g.espessura_form.title("Adicionar Espessura")
+        tk.Button(main_frame, text="Adicionar", command=nova_espessura, bg="cyan").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
     g.espessura_form.mainloop()
 
