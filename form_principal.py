@@ -167,7 +167,7 @@ def main():
     for i in range(1, 6):
         getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
         getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
-
+    
     root.mainloop()
 
 if __name__ == "__main__":

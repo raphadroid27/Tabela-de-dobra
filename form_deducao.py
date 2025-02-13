@@ -55,15 +55,15 @@ def main(root_app):
     frame_busca.columnconfigure(4, weight=0)
 
     tk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
-    g.deducao_material_combobox = ttk.Combobox(frame_busca, values=[m.nome for m in session.query(material).all()])
+    g.deducao_material_combobox = ttk.Combobox(frame_busca)
     g.deducao_material_combobox.grid(row=1, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
-    g.deducao_espessura_combobox = ttk.Combobox(frame_busca, values=sorted([e.valor for e in session.query(espessura).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])))
+    g.deducao_espessura_combobox = ttk.Combobox(frame_busca)
     g.deducao_espessura_combobox.grid(row=1, column=1, padx=5, sticky="ew")
 
     tk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
-    g.deducao_canal_combobox = ttk.Combobox(frame_busca, values=sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])))
+    g.deducao_canal_combobox = ttk.Combobox(frame_busca)
     g.deducao_canal_combobox.grid(row=1, column=2, padx=5, sticky="ew")
 
     tk.Button(frame_busca, text="Buscar", command=buscar_deducoes).grid(row=1, column=3, padx=5, pady=5)
@@ -109,7 +109,9 @@ def main(root_app):
     else:
         g.deducao_form.title("Adicionar Dedução")
         tk.Button(frame_edicoes, text="Adicionar", command=nova_deducao, bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
-       
+
+    atualizar_combobox_deducao()
+          
     g.deducao_form.mainloop()
 
 if __name__ == "__main__":
