@@ -29,7 +29,7 @@ def main(root_app):
     
     on_top_material()
 
-     # Posicionar a janela nova_deducao em relação à janela principal
+    # Posicionar a janela nova_deducao em relação à janela principal
     g.material_form.update_idletasks() 
     x = root_app.winfo_x() + root_app.winfo_width() + 10
     y = root_app.winfo_y()
@@ -74,10 +74,6 @@ def main(root_app):
 
     frame_edicoes.columnconfigure(0, weight=1)
     frame_edicoes.columnconfigure(1, weight=1)
-
-    #tk.Label(frame_edicoes, text="Nome:", anchor="w").grid(row=0, column=0, padx=2, sticky='sw')
-    #g.material_nome_entry = tk.Entry(frame_edicoes)
-    #g.material_nome_entry.grid(row=1, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Densidade:", anchor="w").grid(row=0, column=0,padx=2, sticky='sw')
     g.material_densidade_entry = tk.Entry(frame_edicoes)

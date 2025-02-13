@@ -15,6 +15,7 @@ from funcoes import *
 import form_deducao
 import form_material
 import form_canal
+import form_sobre 
 
 CONFIG_FILE = 'config.json'
 
@@ -83,7 +84,7 @@ def main():
     def add_canal_form(root):
         g.editar_canal = False
         form_canal.main(root)
-
+        
     def on_closing():
         config['geometry'] = root.geometry()
         salvar_configuracao(config)
@@ -118,7 +119,7 @@ def main():
 
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
-    help_menu.add_command(label="Sobre")
+    help_menu.add_command(label="Sobre", command=lambda:form_sobre.main(root))
 
     cabecalho(root)
 
