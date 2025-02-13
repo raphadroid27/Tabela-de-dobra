@@ -99,7 +99,7 @@ def main(root_app):
         tk.Button(frame_edicoes, text="Atualizar", command=editar_canal, bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=3)
     else:
         g.canal_form.title("Adicionar Canal")
-        tk.Button(frame_edicoes, text="Adicionar", command=adicionar_canal, bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=3)
+        tk.Button(frame_edicoes, text="Adicionar", command=novo_canal, bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=3)
 
     g.canal_form.mainloop()
 

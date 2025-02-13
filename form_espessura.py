@@ -39,7 +39,7 @@ def main(root_app):
     g.espessura_valor_entry = tk.Entry(main_frame)
     g.espessura_valor_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-    tk.Button(main_frame, text="Adicionar Espessura", command=adicionar_espessura).grid(row=1, column=0, columnspan=2, pady=10)
+    tk.Button(main_frame, text="Adicionar Espessura", command=nova_espessura).grid(row=1, column=0, columnspan=2, pady=10)
 
     g.espessura_form.mainloop()
 
