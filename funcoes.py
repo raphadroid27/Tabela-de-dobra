@@ -300,8 +300,11 @@ def carregar_lista_deducao():
         
     deducoes = session.query(deducao).all()
     for d in deducoes:
-        g.lista_deducao.insert("", "end", values=(d.material.nome,d.espessura.valor, d.canal.valor, d.valor, d.observacao,d.forca))
-
+        material_nome = d.material.nome if d.material else "N/A"
+        espessura_valor = d.espessura.valor if d.espessura else "N/A"
+        canal_valor = d.canal.valor if d.canal else "N/A"
+        g.lista_deducao.insert("", "end", values=(material_nome, espessura_valor, canal_valor, d.valor, d.observacao, d.forca))
+        
 def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
     query = session.query(deducao).join(material).join(espessura).join(canal)
     
