@@ -93,6 +93,8 @@ raio_fator_k = {
 
 # nova_espessura.py widgets
 espessura_valor_entry = None
+lista_espessura = None
+editar_espessura = None
 
 # deducao_form.py widgets
 deducao_material_combobox = None
