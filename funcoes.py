@@ -286,9 +286,13 @@ def todas_funcoes():
     calcular_metade_dobra()
     razao_raio_esp()
 
+def atualizar_combobox_deducao():
+    g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] if g.deducao_material_combobox else None
+    g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(espessura).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])) if g.deducao_espessura_combobox else None
+    g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])) if g.deducao_canal_combobox else None
+
 # Manipulação de dados de Dedução (deducao_form.py)
-def carregar_lista_deducao():
-        
+def carregar_lista_deducao():       
     for item in g.lista_deducao.get_children():
         g.lista_deducao.delete(item)
         
@@ -410,46 +414,47 @@ def excluir_deducao():
 
 # Manipulação de dados de materiais (material_form.py)
 def carregar_lista_material():
-        atualizar_material()
-        for item in g.lista_material.get_children():
-            g.lista_material.delete(item)
+    for item in g.lista_material.get_children():
+        g.lista_material.delete(item)
 
-        materiais = session.query(material).all()
-        for m in materiais:
-            g.lista_material.insert("", "end", values=(m.nome, m.densidade, m.escoamento, m.elasticidade))
+    materiais = session.query(material).all()
+    for m in materiais:
+        g.lista_material.insert("", "end", values=(m.nome, m.densidade, m.escoamento, m.elasticidade))
 
 def novo_material():
-        nome_material = g.material_nome_entry.get()
-        densidade_material = g.material_densidade_entry.get()
-        escoamento_material = g.material_escoamento_entry.get()
-        elasticidade_material = g.material_elasticidade_entry.get()
-        
-        if not nome_material:
-            messagebox.showerror("Erro", "O campo Material é obrigatório.")
-            return
-        
-        material_existente = session.query(material).filter_by(nome=nome_material).first()
-        if not material_existente:
-            novo_material = material(
-                nome=nome_material, 
-                densidade=float(densidade_material) if densidade_material else None, 
-                escoamento=float(escoamento_material) if escoamento_material else None, 
-                elasticidade=float(elasticidade_material) if elasticidade_material else None
-            )
-            session.add(novo_material)
-            session.commit()
+    nome_material = g.material_nome_entry.get()
+    densidade_material = g.material_densidade_entry.get()
+    escoamento_material = g.material_escoamento_entry.get()
+    elasticidade_material = g.material_elasticidade_entry.get()
+    
+    if not nome_material:
+        messagebox.showerror("Erro", "O campo Material é obrigatório.")
+        return
+    
+    material_existente = session.query(material).filter_by(nome=nome_material).first()
+    if not material_existente:
+        novo_material = material(
+            nome=nome_material, 
+            densidade=float(densidade_material) if densidade_material else None, 
+            escoamento=float(escoamento_material) if escoamento_material else None, 
+            elasticidade=float(elasticidade_material) if elasticidade_material else None
+        )
+        session.add(novo_material)
+        session.commit()
 
-            g.material_nome_entry.delete(0, tk.END)
-            g.material_densidade_entry.delete(0, tk.END)
-            g.material_escoamento_entry.delete(0, tk.END)
-            g.material_elasticidade_entry.delete(0, tk.END)
+        g.material_nome_entry.delete(0, tk.END)
+        g.material_densidade_entry.delete(0, tk.END)
+        g.material_escoamento_entry.delete(0, tk.END)
+        g.material_elasticidade_entry.delete(0, tk.END)
 
-            messagebox.showinfo("Sucesso", "Novo material adicionado com sucesso!")
-        else:
-            messagebox.showerror("Erro", "Material já existe no banco de dados.")
- 
-        
-        carregar_lista_material()        
+        messagebox.showinfo("Sucesso", "Novo material adicionado com sucesso!")
+    else:
+        messagebox.showerror("Erro", "Material já existe no banco de dados.")
+
+    
+    carregar_lista_material()
+    atualizar_material()
+    atualizar_combobox_deducao()        
 
 def editar_material():
         selected_item = g.lista_material.selection()[0]
@@ -507,7 +512,7 @@ def carregar_lista_canal():
     for c in canais:
         g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
 
-def adicionar_canal():
+def novo_canal():
         valor_canal = g.canal_valor_entry.get()
         largura_canal = g.canal_largura_entry.get()
         altura_canal = g.canal_altura_entry.get()
@@ -539,6 +544,7 @@ def adicionar_canal():
             messagebox.showerror("Erro", "Canal já existe no banco de dados.")
 
         carregar_lista_canal()
+        atualizar_combobox_deducao()
 
 def editar_canal ():
     item_selecionado = g.lista_canal.selection()[0]
@@ -580,7 +586,7 @@ def limpar_busca_canal():
     carregar_lista_canal()
 
 # Manipulação de dados de espessuras (espessura_form.py)
-def adicionar_espessura():
+def nova_espessura():
         espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
         espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
         if not espessura_existente:
@@ -593,4 +599,5 @@ def adicionar_espessura():
             messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
 
         atualizar_espessura()
+        atualizar_combobox_deducao()
 
