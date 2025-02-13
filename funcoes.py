@@ -9,8 +9,8 @@ import globals as g
 import re
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
-Session = sessionmaker(bind=engine)
-session = Session()
+session = sessionmaker(bind=engine)
+session = session()
 
 # App principal (app.py)
 def carregar_variaveis_globais():
@@ -36,10 +36,12 @@ def atualizar_espessura():
 
 def atualizar_canal():
     espessura_valor = g.espessura_combobox.get()
+    material_nome = g.material_combobox.get()
     espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+    material_obj = session.query(material).filter_by(nome=material_nome).first()
     if espessura_obj:
         canais_valores = sorted(
-            [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).all()],
+            [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).filter(deducao.material_id==material_obj.id).all()],
             key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
         )
         g.canal_combobox['values'] = canais_valores
