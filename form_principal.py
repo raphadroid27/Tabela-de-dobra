@@ -84,7 +84,15 @@ def main():
     def add_canal_form(root):
         g.editar_canal = False
         form_canal.main(root)
-        
+
+    def editar_espessura_form(root):
+        g.editar_espessura = True
+        form_espessura.main(root)
+
+    def add_espessura_form(root):
+        g.editar_espessura = False
+        form_espessura.main(root)  
+
     def on_closing():
         config['geometry'] = root.geometry()
         salvar_configuracao(config)
@@ -101,7 +109,7 @@ def main():
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
     file_menu.add_command(label="Nova Dedução", command=lambda: add_deducao_form(root))
     file_menu.add_command(label="Novo Material", command=lambda: add_material_form(root))
-    file_menu.add_command(label="Nova Espessura", command=lambda: form_espessura.main(root))
+    file_menu.add_command(label="Nova Espessura", command=lambda: add_espessura_form(root))
     file_menu.add_command(label="Novo Canal", command=lambda: add_canal_form(root))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
@@ -110,6 +118,7 @@ def main():
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
     edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao_form(root))
     edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(root))
+    edit_menu.add_command(label="Editar Espessura", command=lambda: editar_espessura_form(root))
     edit_menu.add_command(label="Editar Canal", command=lambda: editar_canal_form(root))
 
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
