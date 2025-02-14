@@ -31,25 +31,13 @@ def salvar_configuracao(config):
 
 def main():
     config = carregar_configuracao()
-    root = tk.Tk()
-    root.title("Cálculo de Dobra")
-    root.geometry(config.get('geometry'))  # Usando a configuração carregada ou um valor padrão
-    root.resizable(False, False)
+    g.principal_form = tk.Tk()
+    g.principal_form.title("Cálculo de Dobra")
+    g.principal_form.geometry(config.get('geometry'))  # Usando a configuração carregada ou um valor padrão
+    g.principal_form.resizable(False, False)
 
-    root.update_idletasks() 
-    print(f"{root.winfo_width()}x{root.winfo_height()}")
-
-    def set_topmost(window, on_top):
-        if window and window.winfo_exists():
-            window.attributes("-topmost",on_top)
-
-    def on_top():
-        on_top_valor = g.on_top_var.get() == 1
-        root.attributes("-topmost", on_top_valor)
-        set_topmost(g.deducao_form, on_top_valor)
-        set_topmost(g.material_form, on_top_valor)
-        set_topmost(g.canal_form, on_top_valor)
-        set_topmost(g.espessura_form, on_top_valor)
+    g.principal_form.update_idletasks() 
+    print(f"{g.principal_form.winfo_width()}x{g.principal_form.winfo_height()}")
 
     def editar_deducao_form(root):
         g.editar_deducao = True 
@@ -84,32 +72,32 @@ def main():
         form_espessura.main(root)  
 
     def on_closing():
-        config['geometry'] = root.geometry()
+        config['geometry'] = g.principal_form.geometry()
         salvar_configuracao(config)
-        root.destroy()
+        g.principal_form.destroy()
 
-    root.protocol("WM_DELETE_WINDOW", on_closing)
+    g.principal_form.protocol("WM_DELETE_WINDOW", on_closing)
     
     # Criando o menu superior
-    menu_bar = tk.Menu(root)
-    root.config(menu=menu_bar)
+    menu_bar = tk.Menu(g.principal_form)
+    g.principal_form.config(menu=menu_bar)
 
     # Adicionando menus
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova Dedução", command=lambda: add_deducao_form(root))
-    file_menu.add_command(label="Novo Material", command=lambda: add_material_form(root))
-    file_menu.add_command(label="Nova Espessura", command=lambda: add_espessura_form(root))
-    file_menu.add_command(label="Novo Canal", command=lambda: add_canal_form(root))
+    file_menu.add_command(label="Nova Dedução", command=lambda: add_deducao_form(g.principal_form))
+    file_menu.add_command(label="Novo Material", command=lambda: add_material_form(g.principal_form))
+    file_menu.add_command(label="Nova Espessura", command=lambda: add_espessura_form(g.principal_form))
+    file_menu.add_command(label="Novo Canal", command=lambda: add_canal_form(g.principal_form))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao_form(root))
-    edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(root))
-    edit_menu.add_command(label="Editar Espessura", command=lambda: editar_espessura_form(root))
-    edit_menu.add_command(label="Editar Canal", command=lambda: editar_canal_form(root))
+    edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao_form(g.principal_form))
+    edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(g.principal_form))
+    edit_menu.add_command(label="Editar Espessura", command=lambda: editar_espessura_form(g.principal_form))
+    edit_menu.add_command(label="Editar Canal", command=lambda: editar_canal_form(g.principal_form))
 
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
@@ -118,19 +106,19 @@ def main():
 
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
-    help_menu.add_command(label="Sobre", command=lambda:form_sobre.main(root))
+    help_menu.add_command(label="Sobre", command=lambda:form_sobre.main(g.principal_form))
 
-    cabecalho(root)
+    cabecalho(g.principal_form)
 
     # Criando o Notebook (abas)
-    notebook = ttk.Notebook(root, height=140)
+    notebook = ttk.Notebook(g.principal_form, height=140)
     notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
     criar_aba1(notebook)
     #criar_aba2(notebook)
     criar_aba3(notebook)
 
-    frame_botoes = tk.Frame(root, width=200)
+    frame_botoes = tk.Frame(g.principal_form, width=200)
     frame_botoes.pack(expand=True)
 
     frame_botoes.columnconfigure(0, weight=1)
@@ -168,7 +156,7 @@ def main():
         getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
         getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
     
-    root.mainloop()
+    g.principal_form.mainloop()
 
 if __name__ == "__main__":
     main()
