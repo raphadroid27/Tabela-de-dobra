@@ -492,6 +492,7 @@ def excluir_material():
         messagebox.showinfo("Sucesso", "Material excluído com sucesso!")
         atualizar_material()
         carregar_lista_material()
+        atualizar_combobox_deducao()
 
 def buscar_material(): 
     canal_valor = g.canal_valor_entry.get()
@@ -574,6 +575,8 @@ def excluir_canal():
     session.commit()
     g.lista_canal.delete(item_selecionado)
     messagebox.showinfo("Sucesso", "Canal excluído com sucesso!")
+    
+    atualizar_combobox_deducao()
 
 def buscar_canal(): 
     canal_valor = g.canal_valor_entry.get()
@@ -623,6 +626,8 @@ def excluir_espessura():
     session.commit()
     g.lista_espessura.delete(item_selecionado)
     messagebox.showinfo("Sucesso", "Espessura excluída com sucesso!")
+
+    atualizar_combobox_deducao()
 
 def buscar_espessura(): 
     espessura_valor = g.espessura_valor_entry.get()
