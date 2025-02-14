@@ -49,9 +49,9 @@ def main(root_app):
     tk.Label(frame_busca, text="Material:").grid(row=0,column=0)
     g.material_nome_entry=tk.Entry(frame_busca)
     g.material_nome_entry.grid(row=0, column=1, sticky="ew")
+    g.material_nome_entry.bind("<KeyRelease>", lambda event: buscar_material())
 
-    tk.Button(frame_busca, text="Buscar", command=buscar_material).grid(row=0, column=3, padx=5, pady=5)
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_material).grid(row=0, column=4, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_material).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Nome", "Densidade", "Escoamento", "Elasticidade")
     g.lista_material = ttk.Treeview(main_frame, columns=columns, show="headings")

@@ -56,9 +56,9 @@ def main(root_app):
     tk.Label(frame_busca, text="Valor canal:").grid(row=0,column=0)
     g.canal_valor_entry=tk.Entry(frame_busca)
     g.canal_valor_entry.grid(row=0, column=1, sticky="ew")
+    g.canal_valor_entry.bind("<KeyRelease>", lambda event: buscar_canal())
 
-    tk.Button(frame_busca, text="Buscar", command=buscar_canal).grid(row=0, column=3, padx=5, pady=5)
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_canal).grid(row=0, column=4, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_canal).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Canal", "Largura", "Altura", "Comprimento", "Observação")
     g.lista_canal = ttk.Treeview(main_frame, columns=columns, show="headings")
