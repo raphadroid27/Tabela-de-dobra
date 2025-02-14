@@ -521,38 +521,42 @@ def carregar_lista_canal():
         g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
 
 def novo_canal():
-        valor_canal = g.canal_valor_entry.get()
-        largura_canal = g.canal_largura_entry.get()
-        altura_canal = g.canal_altura_entry.get()
-        comprimento_total_canal = g.canal_comprimento_entry.get()
-        observacao_canal = g.canal_observacao_entry.get()
-        
-        if not valor_canal:
-            messagebox.showerror("Erro", "O campo Canal é obrigatório.")
-            return
-        
-        canal_existente = session.query(canal).filter_by(valor=valor_canal).first()
-        if not canal_existente:
-            novo_canal = canal(
-                valor=valor_canal,
-                largura=float(largura_canal) if largura_canal else None,
-                altura=float(altura_canal) if altura_canal else None,
-                comprimento_total=float(comprimento_total_canal) if comprimento_total_canal else None,
-                observacao=observacao_canal if observacao_canal else None
-            )
-            session.add(novo_canal)
-            session.commit()
-            g.canal_valor_entry.delete(0, tk.END)
-            g.canal_largura_entry.delete(0, tk.END)
-            g.canal_altura_entry.delete(0, tk.END)
-            g.canal_comprimento_entry.delete(0, tk.END)
-            g.canal_observacao_entry.delete(0, tk.END)
-            messagebox.showinfo("Sucesso", "Novo canal adicionado com sucesso!")
-        else:
-            messagebox.showerror("Erro", "Canal já existe no banco de dados.")
+    valor_canal = g.canal_valor_entry.get()
+    largura_canal = g.canal_largura_entry.get()
+    altura_canal = g.canal_altura_entry.get()
+    comprimento_total_canal = g.canal_comprimento_entry.get()
+    observacao_canal = g.canal_observacao_entry.get()
 
-        carregar_lista_canal()
-        atualizar_combobox_deducao()
+    if valor_canal.isalpha():
+        messagebox.showwarning("Atenção!", "O canal deve conter números ou números e letras.")
+        return
+
+    if not valor_canal:
+        messagebox.showerror("Erro", "O campo Canal é obrigatório.")
+        return
+    
+    canal_existente = session.query(canal).filter_by(valor=valor_canal).first()
+    if not canal_existente:
+        novo_canal = canal(
+            valor=valor_canal,
+            largura=float(largura_canal) if largura_canal else None,
+            altura=float(altura_canal) if altura_canal else None,
+            comprimento_total=float(comprimento_total_canal) if comprimento_total_canal else None,
+            observacao=observacao_canal if observacao_canal else None
+        )
+        session.add(novo_canal)
+        session.commit()
+        g.canal_valor_entry.delete(0, tk.END)
+        g.canal_largura_entry.delete(0, tk.END)
+        g.canal_altura_entry.delete(0, tk.END)
+        g.canal_comprimento_entry.delete(0, tk.END)
+        g.canal_observacao_entry.delete(0, tk.END)
+        messagebox.showinfo("Sucesso", "Novo canal adicionado com sucesso!")
+    else:
+        messagebox.showerror("Erro", "Canal já existe no banco de dados.")
+
+    carregar_lista_canal()
+    atualizar_combobox_deducao()
 
 def editar_canal ():
     item_selecionado = g.lista_canal.selection()[0]
