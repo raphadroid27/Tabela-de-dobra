@@ -11,6 +11,10 @@ session = Session()
 
 def main(root_app):
 
+    if g.espessura_form is not None:
+        g.espessura_form.destroy()   
+        pass
+
     g.espessura_form = tk.Toplevel()
     g.espessura_form.title("Adicionar Nova Espessura")
     g.espessura_form.resizable(False, False)
