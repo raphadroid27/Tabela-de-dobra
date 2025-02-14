@@ -16,7 +16,7 @@ def main(root_app):
         pass
 
     g.espessura_form = tk.Toplevel()
-    g.espessura_form.title("Adicionar Nova Espessura")
+    g.espessura_form.geometry("340x280")
     g.espessura_form.resizable(False, False)
 
     on_top()
@@ -47,9 +47,9 @@ def main(root_app):
     tk.Label(frame_busca, text="Espessura:").grid(row=0,column=0)
     g.espessura_valor_entry=tk.Entry(frame_busca)
     g.espessura_valor_entry.grid(row=0, column=1, sticky="ew")
+    g.espessura_valor_entry.bind("<KeyRelease>", lambda event: buscar_espessura())
 
-    tk.Button(frame_busca, text="Buscar", command=buscar_espessura).grid(row=0, column=3, padx=5, pady=5)
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_espessura).grid(row=0, column=4, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_espessura).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Valor",)
     g.lista_espessura = ttk.Treeview(main_frame, columns=columns, show="headings")

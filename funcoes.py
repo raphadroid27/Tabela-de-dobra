@@ -497,19 +497,19 @@ def excluir_material():
         atualizar_combobox_deducao()
 
 def buscar_material(): 
-    canal_valor = g.canal_valor_entry.get()
+    material_nome =  g.material_nome_entry.get()
     
-    canais = session.query(canal).filter(canal.valor == canal_valor)
+    materiais = session.query(material).filter(material.nome.like(f"{material_nome}%"))
     
-    for item in g.lista_canal.get_children():
-        g.lista_canal.delete(item)
+    for item in g.lista_material.get_children():
+        g.lista_material.delete(item)
     
-    for c in canais:
-        g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
+    for m in materiais:
+        g.lista_material.insert("", "end", values=(m.nome, m.densidade, m.escoamento, m.elasticidade))
 
 def limpar_busca_material():
-    g.canal_valor_entry.delete(0, tk.END)
-    carregar_lista_canal()
+    g.material_nome_entry.delete(0, tk.END)
+    carregar_lista_material()
 
 # Manipulação de dados de canais (Canal_form.py)
 def carregar_lista_canal():
@@ -587,7 +587,7 @@ def excluir_canal():
 def buscar_canal(): 
     canal_valor = g.canal_valor_entry.get()
     
-    canais = session.query(canal).filter(canal.valor == canal_valor)
+    canais = session.query(canal).filter(canal.valor.like(f"{canal_valor}%"))
     
     for item in g.lista_canal.get_children():
         g.lista_canal.delete(item)
@@ -643,7 +643,7 @@ def excluir_espessura():
 def buscar_espessura(): 
     espessura_valor = g.espessura_valor_entry.get()
     
-    espessuras = session.query(espessura).filter(espessura.valor == espessura_valor)
+    espessuras = session.query(espessura).filter(espessura.valor.like(f"{espessura_valor}%"))
     
     for item in g.lista_espessura.get_children():
         g.lista_espessura.delete(item)
