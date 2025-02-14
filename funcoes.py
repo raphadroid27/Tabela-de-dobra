@@ -654,3 +654,15 @@ def buscar_espessura():
 def limpar_busca_espessura():
     g.espessura_valor_entry.delete(0, tk.END)
     carregar_lista_espessura()
+
+def set_topmost(window, on_top):
+        if window and window.winfo_exists():
+            window.attributes("-topmost",on_top)
+
+def on_top():
+    on_top_valor = g.on_top_var.get() == 1
+    set_topmost(g.principal_form, on_top_valor)
+    set_topmost(g.deducao_form, on_top_valor)
+    set_topmost(g.material_form, on_top_valor)
+    set_topmost(g.canal_form, on_top_valor)
+    set_topmost(g.espessura_form, on_top_valor)

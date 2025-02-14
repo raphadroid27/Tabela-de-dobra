@@ -15,13 +15,7 @@ def main(root_app):
     g.espessura_form.title("Adicionar Nova Espessura")
     g.espessura_form.resizable(False, False)
 
-    def on_top_espessura():
-        if g.on_top_var.get() == 1:
-            g.espessura_form.attributes("-topmost", True)
-        else:
-            g.espessura_form.attributes("-topmost", False)
-    
-    on_top_espessura()
+    on_top()
 
     # Posicionar a janela nova_deducao em relação à janela principal
     g.espessura_form.update_idletasks() 
