@@ -298,7 +298,7 @@ def carregar_lista_deducao():
     for item in g.lista_deducao.get_children():
         g.lista_deducao.delete(item)
         
-    deducoes = session.query(deducao).all()
+    deducoes = sorted(session.query(deducao).all(), key=lambda x: x.valor)
     for d in deducoes:
         material_nome = d.material.nome if d.material else "N/A"
         espessura_valor = d.espessura.valor if d.espessura else "N/A"
@@ -480,6 +480,8 @@ def editar_material():
 
         messagebox.showinfo("Sucesso", "Material editado com sucesso!")
         carregar_lista_material()
+        carregar_lista_deducao()
+        atualizar_material()
 
 def excluir_material():
         item_selecionado = g.lista_material.selection()[0]
@@ -514,7 +516,7 @@ def carregar_lista_canal():
     for item in g.lista_canal.get_children():
         g.lista_canal.delete(item)
 
-    canais = session.query(canal).all()
+    canais = sorted(session.query(canal).all(),key=lambda x: float(re.findall(r'\d+\.?\d*', x.valor)[0]))
     for c in canais:
         g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
 
@@ -598,7 +600,7 @@ def carregar_lista_espessura():
     for item in g.lista_espessura.get_children():
         g.lista_espessura.delete(item)
 
-    espessuras = session.query(espessura).all()
+    espessuras = sorted(session.query(espessura).all(), key=lambda x:float(re.findall(r'\d+\.?\d*', x.valor)[0]))
     for e in espessuras:
         g.lista_espessura.insert("","end", values=(e.valor))
 
