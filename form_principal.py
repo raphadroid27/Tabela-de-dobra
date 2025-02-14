@@ -39,27 +39,17 @@ def main():
     root.update_idletasks() 
     print(f"{root.winfo_width()}x{root.winfo_height()}")
 
+    def set_topmost(window, on_top):
+        if window and window.winfo_exists():
+            window.attributes("-topmost",on_top)
+
     def on_top():
-        if g.on_top_var.get() == 1:
-            root.attributes("-topmost", True)
-            if g.deducao_form:
-                g.deducao_form.attributes("-topmost", True)
-            if g.material_form:
-                g.material_form.attributes("-topmost", True)
-            if g.canal_form:
-                g.canal_form.attributes("-topmost", True)
-            if g.espessura_form:
-                g.espessura_form.attributes("-topmost", True)
-        else:
-            root.attributes("-topmost", False)
-            if g.deducao_form:
-                g.deducao_form.attributes("-topmost", False)
-            if g.material_form:
-                g.material_form.attributes("-topmost", False)
-            if g.canal_form:
-                g.canal_form.attributes("-topmost", False)
-            if g.espessura_form:
-                g.espessura_form.attributes("-topmost", False)
+        on_top_valor = g.on_top_var.get() == 1
+        root.attributes("-topmost", on_top_valor)
+        set_topmost(g.deducao_form, on_top_valor)
+        set_topmost(g.material_form, on_top_valor)
+        set_topmost(g.canal_form, on_top_valor)
+        set_topmost(g.espessura_form, on_top_valor)
 
     def editar_deducao_form(root):
         g.editar_deducao = True 
