@@ -46,22 +46,23 @@ def main(root_app):
     frame_busca.columnconfigure(1, weight=1)
     frame_busca.columnconfigure(2, weight=1)
     frame_busca.columnconfigure(3, weight=0)
-    frame_busca.columnconfigure(4, weight=0)
 
     tk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
     g.deducao_material_combobox = ttk.Combobox(frame_busca)
     g.deducao_material_combobox.grid(row=1, column=0, padx=5, sticky="ew")
+    g.deducao_material_combobox.bind("<<ComboboxSelected>>", lambda event: buscar_deducoes())
 
     tk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
     g.deducao_espessura_combobox = ttk.Combobox(frame_busca)
     g.deducao_espessura_combobox.grid(row=1, column=1, padx=5, sticky="ew")
+    g.deducao_espessura_combobox.bind("<<ComboboxSelected>>", lambda event: buscar_deducoes())
 
     tk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
     g.deducao_canal_combobox = ttk.Combobox(frame_busca)
     g.deducao_canal_combobox.grid(row=1, column=2, padx=5, sticky="ew")
+    g.deducao_canal_combobox.bind("<<ComboboxSelected>>", lambda event: buscar_deducoes())
 
-    tk.Button(frame_busca, text="Buscar", command=buscar_deducoes).grid(row=1, column=3, padx=5, pady=5)
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_deducao).grid(row=1, column=4, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command=limpar_busca_deducao).grid(row=1, column=3, padx=5, pady=5)
 
     columns = ("Material", "Espessura","Canal", "Dedução", "Observação", "Força")
     g.lista_deducao = ttk.Treeview(main_frame, columns=columns, show="headings")
