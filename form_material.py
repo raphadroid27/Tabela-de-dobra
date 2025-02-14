@@ -21,13 +21,7 @@ def main(root_app):
     g.material_form.resizable(False, False)
     g.material_form.geometry("340x420")
 
-    def on_top_material():
-        if g.on_top_var.get() == 1:
-            g.material_form.attributes("-topmost", True)
-        else:
-            g.material_form.attributes("-topmost", False)
-    
-    on_top_material()
+    on_top()
 
     # Posicionar a janela nova_deducao em relação à janela principal
     g.material_form.update_idletasks() 

@@ -124,6 +124,7 @@ lista_canal = None
 editar_canal = None
 
 # formularios
+principal_form = None
 deducao_form = None
 material_form = None
 canal_form = None
