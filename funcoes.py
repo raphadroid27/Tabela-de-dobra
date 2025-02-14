@@ -605,19 +605,24 @@ def carregar_lista_espessura():
         g.lista_espessura.insert("","end", values=(e.valor))
 
 def nova_espessura():
-        espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
-        espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
-        if not espessura_existente:
-            nova_espessura = espessura(valor=espessura_valor)
-            session.add(nova_espessura)
-            session.commit()
-            g.espessura_valor_entry.delete(0, tk.END)
-            messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
-        else:
-            messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
+    espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
+    espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
+    
+    if espessura_valor.isalpha():
+        messagebox.showwarning("Atenção!", "A espessura deve conter números ou números e letras.")
+        return
 
-        atualizar_espessura()
-        atualizar_combobox_deducao()
+    if not espessura_existente:
+        nova_espessura = espessura(valor=espessura_valor)
+        session.add(nova_espessura)
+        session.commit()
+        g.espessura_valor_entry.delete(0, tk.END)
+        messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
+    else:
+        messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
+
+    atualizar_espessura()
+    atualizar_combobox_deducao()
 
 def excluir_espessura():
     item_selecionado = g.lista_espessura.selection()[0]
