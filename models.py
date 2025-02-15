@@ -4,10 +4,17 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+class usuario(Base):
+    __tablename__ = 'usuario'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String)
+    senha = Column(String)
+    admin = Column(Integer)
+
 class espessura(Base):
     __tablename__ = 'espessura'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    valor = Column(String)
+    valor = Column(Float)
 
 class material(Base):
     __tablename__ = 'material'
