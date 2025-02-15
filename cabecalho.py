@@ -65,18 +65,21 @@ def cabecalho(root):
 
     g.fator_k_label = tk.Label(results_frame, relief="sunken", width=10)
     g.fator_k_label.grid(row=1, column=1, padx=2, sticky='we')
+    g.fator_k_label.bind("<Button-1>", lambda event: copiar_fatork())
 
     # Dedução
     tk.Label(results_frame, text="Dedução:").grid(row=0, column=2, sticky='sw')
 
     g.deducao_label = tk.Label(results_frame, relief="sunken", width=10)
     g.deducao_label.grid(row=1, column=2, padx=2, sticky='we')
+    g.deducao_label.bind("<Button-1>", lambda event: copiar_deducao())
 
     # Offset
     tk.Label(results_frame, text="Offset:").grid(row=0, column=3, sticky='sw')
 
     g.offset_label = tk.Label(results_frame, relief="sunken", width=10)
     g.offset_label.grid(row=1, column=3, padx=2, sticky='we')
+    g.offset_label.bind("<Button-1>", lambda event: copiar_offset())
 
     # Frame para dedução específica, aba mínimo externa e Altura mín. ext. Z 90°	
 

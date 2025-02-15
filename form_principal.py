@@ -145,13 +145,6 @@ def main():
     for combobox in comboboxes:
         combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
 
-    # Funções de copiar
-    g.deducao_label.bind("<Button-1>", lambda event: copiar_deducao())
-    g.fator_k_label.bind("<Button-1>", lambda event: copiar_fatork())
-    g.offset_label.bind("<Button-1>", lambda event: copiar_offset())
-    g.medida_blank_label.bind("<Button-1>", lambda event: copiar_blank())
-    g.metade_blank_label.bind("<Button-1>", lambda event: copiar_metade_blank())
-
     for i in range(1, 6):
         getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
         getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
