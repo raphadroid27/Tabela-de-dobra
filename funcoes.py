@@ -14,10 +14,10 @@ session = session()
 
 # App principal (app.py)
 def carregar_variaveis_globais():
-    g.espessura_valor = float(re.findall(r'\d+\.?\d*', g.espessura_combobox.get())[0]) if g.espessura_combobox.get() else None
+    g.espessura_valor = float(g.espessura_combobox.get()) if g.espessura_combobox.get() else None
     g.canal_valor = float(re.findall(r'\d+\.?\d*', g.canal_combobox.get())[0]) if g.canal_combobox.get() else None
     g.raio_interno = float(re.findall(r'\d+\.?\d*', g.raio_interno_entry.get().replace(',', '.'))[0]) if g.raio_interno_entry.get() else None
-    g.deducao_espec = float(g.deducao_espec_entry.get().replace(',', '.')) if g.deducao_espec_entry.get() else None
+    g.deducao_espec = float(g.deducao_espec_entry.get()) if g.deducao_espec_entry.get() else None
     
     print(f'{g.canal_valor} {g.espessura_valor} {g.deducao_valor}')
 
@@ -29,9 +29,7 @@ def atualizar_espessura():
     material_obj = session.query(material).filter_by(nome=material_nome).first()
     if material_obj:
         espessuras_valores = sorted(
-            [str(e.valor) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()],
-            key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
-        )
+            [str(e.valor) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()])
         g.espessura_combobox['values'] = espessuras_valores
 
 def atualizar_canal():
@@ -41,9 +39,8 @@ def atualizar_canal():
     material_obj = session.query(material).filter_by(nome=material_nome).first()
     if espessura_obj:
         canais_valores = sorted(
-            [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).filter(deducao.material_id==material_obj.id).all()],
-            key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
-        )
+            [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).filter(deducao.material_id==material_obj.id).all()])
+        
         g.canal_combobox['values'] = canais_valores
 
 def atualizar_deducao_e_obs():
@@ -289,9 +286,12 @@ def todas_funcoes():
     razao_raio_esp()
 
 def atualizar_combobox_deducao():
-    g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] if g.deducao_material_combobox else None
-    g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(espessura).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])) if g.deducao_espessura_combobox else None
-    g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])) if g.deducao_canal_combobox else None
+    if g.deducao_material_combobox:
+        g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] 
+    if g.deducao_espessura_combobox:
+        g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(espessura).all()])
+    if g.deducao_canal_combobox:
+        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
 
 # Manipulação de dados de Dedução (deducao_form.py)
 def carregar_lista_deducao():       
@@ -604,29 +604,30 @@ def carregar_lista_espessura():
     for item in g.lista_espessura.get_children():
         g.lista_espessura.delete(item)
 
-    espessuras = sorted(session.query(espessura).all(), key=lambda x:float(re.findall(r'\d+\.?\d*', x.valor)[0]))
+    espessuras = sorted(session.query(espessura).all(), key=lambda x: x.valor)
     for e in espessuras:
         g.lista_espessura.insert("","end", values=(e.valor))
 
 def nova_espessura():
-    espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
+    espessura_valor = float(g.espessura_valor_entry.get().replace(',', '.'))
     espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
     
-    if espessura_valor.isalpha():
-        messagebox.showwarning("Atenção!", "A espessura deve conter números ou números e letras.")
-        return
+    #if espessura_valor.isalpha():
+       # messagebox.showwarning("Atenção!", "A espessura deve conter números ou números e letras.")
+       # return
 
     if not espessura_existente:
         nova_espessura = espessura(valor=espessura_valor)
         session.add(nova_espessura)
         session.commit()
-        g.espessura_valor_entry.delete(0, tk.END)
+        #g.espessura_valor_entry.delete(0, tk.END)
         messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
     else:
         messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
 
     atualizar_espessura()
     atualizar_combobox_deducao()
+    buscar_espessura()
 
 def excluir_espessura():
     item_selecionado = g.lista_espessura.selection()[0]
@@ -637,8 +638,11 @@ def excluir_espessura():
     session.commit()
     g.lista_espessura.delete(item_selecionado)
     messagebox.showinfo("Sucesso", "Espessura excluída com sucesso!")
+    g.espessura_valor_entry.delete(0, tk.END)
 
+    atualizar_espessura()
     atualizar_combobox_deducao()
+    carregar_lista_espessura()
 
 def buscar_espessura(): 
     espessura_valor = g.espessura_valor_entry.get()
