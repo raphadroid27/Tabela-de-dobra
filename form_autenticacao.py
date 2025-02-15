@@ -14,6 +14,8 @@ def authenticate():
 
 # Configuração da janela principal
 g.aut_form = tk.Toplevel()
+g.aut_form.geometry("300x200")
+g.aut_form.resizable(False, False)
 g.aut_form.title("Formulário de Autenticação")
 
 # Rótulos e campos de entrada
