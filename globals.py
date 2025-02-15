@@ -130,3 +130,5 @@ material_form = None
 canal_form = None
 espessura_form = None
 sobre_form = None
+novo_usuario_form = None
+aut_form = None
