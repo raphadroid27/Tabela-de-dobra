@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, create_engine, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, create_engine, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -6,10 +6,10 @@ Base = declarative_base()
 
 class usuario(Base):
     __tablename__ = 'usuario'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    nome = Column(String)
-    senha = Column(String)
-    admin = Column(Integer)
+    id = Column(Integer, primary_key=True)
+    nome = Column(String, unique=True, nullable=False)
+    senha = Column(String, nullable=False)
+    admin = Column(Boolean, default=False)
 
 class espessura(Base):
     __tablename__ = 'espessura'
