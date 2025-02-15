@@ -609,18 +609,18 @@ def carregar_lista_espessura():
         g.lista_espessura.insert("","end", values=(e.valor))
 
 def nova_espessura():
-    espessura_valor = float(g.espessura_valor_entry.get().replace(',', '.'))
+    espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
     espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
     
-    #if espessura_valor.isalpha():
-       # messagebox.showwarning("Atenção!", "A espessura deve conter números ou números e letras.")
-       # return
+    if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
+       messagebox.showwarning("Atenção!", "A espessura deve conter apenas números ou números decimais.")
+       g.espessura_valor_entry.delete(0, tk.END)
+       return
 
     if not espessura_existente:
         nova_espessura = espessura(valor=espessura_valor)
         session.add(nova_espessura)
         session.commit()
-        #g.espessura_valor_entry.delete(0, tk.END)
         messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
     else:
         messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
@@ -645,7 +645,7 @@ def excluir_espessura():
     carregar_lista_espessura()
 
 def buscar_espessura(): 
-    espessura_valor = g.espessura_valor_entry.get()
+    espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
     
     espessuras = session.query(espessura).filter(espessura.valor.like(f"{espessura_valor}%"))
     
@@ -670,3 +670,5 @@ def on_top():
     set_topmost(g.material_form, on_top_valor)
     set_topmost(g.canal_form, on_top_valor)
     set_topmost(g.espessura_form, on_top_valor)
+
+# manipulacao de usuarios
