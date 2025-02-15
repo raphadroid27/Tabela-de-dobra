@@ -606,7 +606,7 @@ def carregar_lista_espessura():
 
     espessuras = sorted(session.query(espessura).all(), key=lambda x: x.valor)
     for e in espessuras:
-        g.lista_espessura.insert("","end", values=(e.valor))
+        g.lista_espessura.insert("","end", values=(f"{e.valor:.2f}"))
 
 def nova_espessura():
     espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
