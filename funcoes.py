@@ -4,9 +4,10 @@ import pyperclip
 from math import pi
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from models import espessura, material, canal, deducao
+from models import espessura, material, canal, deducao, usuario
 import globals as g
 import re
+import hashlib
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 session = sessionmaker(bind=engine)
@@ -573,6 +574,9 @@ def editar_canal ():
     carregar_lista_canal()
 
 def excluir_canal():
+    if not login_requerido():
+        return
+
     item_selecionado = g.lista_canal.selection()[0]
     item = g.lista_canal.item(item_selecionado)
     canal_valor = item['values'][0]
@@ -581,7 +585,6 @@ def excluir_canal():
     session.commit()
     g.lista_canal.delete(item_selecionado)
     messagebox.showinfo("Sucesso", "Canal excluído com sucesso!")
-    
     atualizar_combobox_deducao()
 
 def buscar_canal(): 
@@ -673,3 +676,60 @@ def on_top():
 
 # manipulacao de usuarios
 
+def novo_usuario():
+    novo_usuario_nome = g.novo_usuario_entry.get()
+    novo_usuario_senha = g.novo_senha_entry.get()
+    senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
+    if novo_usuario_nome == "" or novo_usuario_senha == "":
+        messagebox.showerror("Erro", "Preencha todos os campos.")
+        return
+    
+    usuario_obj = session.query(usuario).filter_by(nome=novo_usuario_nome).first()
+    if usuario_obj:
+        messagebox.showerror("Erro", "Usuário já existente.")
+        return
+    else:
+        novo_usuario = usuario(nome=novo_usuario_nome, senha=senha_hash, admin=g.admin_var.get())
+        session.add(novo_usuario)
+        session.commit()
+        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.")
+        g.novo_usuario_form.destroy()
+
+def login():
+    usuario_nome = g.usuario_entry.get()
+    usuario_senha = g.senha_entry.get()
+    
+    usuario_obj = session.query(usuario).filter_by(nome=usuario_nome).first()
+
+    if usuario_obj and usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest():
+        messagebox.showinfo("Login", "Login efetuado com sucesso.")
+        g.usuario_id = usuario_obj.id
+        g.aut_form.destroy()
+        g.principal_form.title(f"Cálculo de Dobra - {usuario_obj.nome}")
+    else:
+        messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+
+def login_requerido():
+    if g.usuario_id is None:
+        messagebox.showerror("Erro", "Login requerido.")
+        return False
+    return True
+
+def admin_requerido():
+    if g.usuario_id is None:
+        messagebox.showerror("Erro", "Login requerido.")
+        return False
+    usuario_obj = session.query(usuario).filter_by(id=g.usuario_id).first()
+    if not usuario_obj.admin:
+        messagebox.showerror("Erro", "Acesso negado.")
+        return False
+    return True
+
+def logout():
+    if g.usuario_id is None:
+        messagebox.showerror("Erro", "Nenhum usuário logado.")
+        return
+    g.usuario_id = None
+    g.principal_form.title("Cálculo de Dobra")
+    messagebox.showinfo("Logout", "Logout efetuado com sucesso.")
+    

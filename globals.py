@@ -123,6 +123,12 @@ canal_observacao_entry = None
 lista_canal = None
 editar_canal = None
 
+# form_novo_usuario.py widgets
+novo_usuario_entry = None
+novo_senha_entry = None
+admin_var = None
+usuario_id = None
+
 # formularios
 principal_form = None
 deducao_form = None
