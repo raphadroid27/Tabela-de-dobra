@@ -101,7 +101,6 @@ def main():
     usuario_menu.add_separator()
     usuario_menu.add_command(label="Sair", command=logout)
 
-
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
     help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(g.principal_form))
