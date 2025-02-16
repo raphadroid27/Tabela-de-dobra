@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from models import espessura, material, canal, deducao
+from models import espessura, material, canal, deducao, usuario
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
@@ -16,8 +16,22 @@ import form_deducao
 import form_material
 import form_canal
 import form_sobre 
+import form_novo_usuario
+import form_autenticacao
+
+# Configuração do banco de dados
+engine = create_engine('sqlite:///tabela_de_dobra.db')
+Session = sessionmaker(bind=engine)
+session = Session()
 
 CONFIG_FILE = 'config.json'
+
+def verificar_admin_existente(root):
+    admin_existente = session.query(usuario).filter(usuario.admin == 1).first()
+    if not admin_existente:
+        form_novo_usuario.main(root)
+
+verificar_admin_existente(g.principal_form)
 
 def carregar_configuracao():
     if os.path.exists(CONFIG_FILE):
@@ -29,55 +43,31 @@ def salvar_configuracao(config):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(config, f)
 
+def abrir_formulario(form, editar_attr, root):
+    setattr(g, editar_attr, True)
+    form.main(root)
+
+def adicionar_formulario(form, editar_attr, root):
+    setattr(g, editar_attr, False)
+    form.main(root)
+
 def main():
     config = carregar_configuracao()
     g.principal_form = tk.Tk()
     g.principal_form.title("Cálculo de Dobra")
-    g.principal_form.geometry(config.get('geometry'))  # Usando a configuração carregada ou um valor padrão
+    g.principal_form.geometry(config.get('geometry'))
     g.principal_form.resizable(False, False)
 
     g.principal_form.update_idletasks() 
     print(f"{g.principal_form.winfo_width()}x{g.principal_form.winfo_height()}")
-
-    def editar_deducao_form(root):
-        g.editar_deducao = True 
-        form_deducao.main(root)
-               
-    def add_deducao_form(root):
-        g.editar_deducao = False
-        form_deducao.main(root)
-        
-    def editar_material_form(root):
-        g.editar_material = True
-        form_material.main(root)
-
-    def add_material_form(root):
-        g.editar_material = False
-        form_material.main(root)
-
-    def editar_canal_form(root):
-        g.editar_canal = True
-        form_canal.main(root)
-
-    def add_canal_form(root):
-        g.editar_canal = False
-        form_canal.main(root)
-
-    def editar_espessura_form(root):
-        g.editar_espessura = True
-        form_espessura.main(root)
-
-    def add_espessura_form(root):
-        g.editar_espessura = False
-        form_espessura.main(root)  
 
     def on_closing():
         config['geometry'] = g.principal_form.geometry()
         salvar_configuracao(config)
         g.principal_form.destroy()
 
-    g.principal_form.protocol("WM_DELETE_WINDOW", on_closing)
-    
+    g.principal_form.protocol("WM_DELETE_WINDOW", on_closing)  
+
     # Criando o menu superior
     menu_bar = tk.Menu(g.principal_form)
     g.principal_form.config(menu=menu_bar)
@@ -85,28 +75,36 @@ def main():
     # Adicionando menus
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova Dedução", command=lambda: add_deducao_form(g.principal_form))
-    file_menu.add_command(label="Novo Material", command=lambda: add_material_form(g.principal_form))
-    file_menu.add_command(label="Nova Espessura", command=lambda: add_espessura_form(g.principal_form))
-    file_menu.add_command(label="Novo Canal", command=lambda: add_canal_form(g.principal_form))
+    file_menu.add_command(label="Nova Dedução", command=lambda: adicionar_formulario(form_deducao, 'editar_deducao', g.principal_form))
+    file_menu.add_command(label="Novo Material", command=lambda: adicionar_formulario(form_material, 'editar_material', g.principal_form))
+    file_menu.add_command(label="Nova Espessura", command=lambda: adicionar_formulario(form_espessura, 'editar_espessura', g.principal_form))
+    file_menu.add_command(label="Novo Canal", command=lambda: adicionar_formulario(form_canal, 'editar_canal', g.principal_form))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: editar_deducao_form(g.principal_form))
-    edit_menu.add_command(label="Editar Material", command=lambda: editar_material_form(g.principal_form))
-    edit_menu.add_command(label="Editar Espessura", command=lambda: editar_espessura_form(g.principal_form))
-    edit_menu.add_command(label="Editar Canal", command=lambda: editar_canal_form(g.principal_form))
+    edit_menu.add_command(label="Editar Dedução", command=lambda: abrir_formulario(form_deducao, 'editar_deducao', g.principal_form))
+    edit_menu.add_command(label="Editar Material", command=lambda: abrir_formulario(form_material, 'editar_material', g.principal_form))
+    edit_menu.add_command(label="Editar Espessura", command=lambda: abrir_formulario(form_espessura, 'editar_espessura', g.principal_form))
+    edit_menu.add_command(label="Editar Canal", command=lambda: abrir_formulario(form_canal, 'editar_canal', g.principal_form))
 
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
     g.on_top_var = tk.IntVar()
     opcoes_menu.add_checkbutton(label="No topo", variable=g.on_top_var, command=on_top)
 
+    usuario_menu = tk.Menu(menu_bar, tearoff=0)
+    menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
+    usuario_menu.add_command(label="Login", command=lambda: form_autenticacao.main(g.principal_form))
+    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_novo_usuario.main(g.principal_form))
+    usuario_menu.add_separator()
+    usuario_menu.add_command(label="Sair", command=logout)
+
+
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
-    help_menu.add_command(label="Sobre", command=lambda:form_sobre.main(g.principal_form))
+    help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(g.principal_form))
 
     cabecalho(g.principal_form)
 
@@ -115,7 +113,7 @@ def main():
     notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
     criar_aba1(notebook)
-    #criar_aba2(notebook)
+    # criar_aba2(notebook)
     criar_aba3(notebook)
 
     frame_botoes = tk.Frame(g.principal_form, width=200)
