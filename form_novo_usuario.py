@@ -5,6 +5,7 @@ from models import usuario  # Certifique-se de importar a classe correta
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+import hashlib
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -25,7 +26,8 @@ def main(root_app):
     novo_senha_entry = tk.Entry(g.novo_usuario_form, show="*")
     novo_senha_entry.pack(pady=5)
 
-    if session.query(usuario).filter(usuario.admin == False).first() or session.query(usuario).count() == 0:
+    admin_existente = session.query(usuario).filter(usuario.admin == True).first()
+    if not admin_existente:
         tk.Label(g.novo_usuario_form, text="Admin:").pack(pady=5)
         admin_var = tk.IntVar()
         admin_checkbox = tk.Checkbutton(g.novo_usuario_form, variable=admin_var)
@@ -34,18 +36,19 @@ def main(root_app):
         admin_var = tk.IntVar(value=0)
 
     def salvar_usuario():
-        nome_usuario = novo_usuario_entry.get()
-        senha_usuario = novo_senha_entry.get()
-        if nome_usuario == "" or senha_usuario == "":
+        novo_usuario_nome = novo_usuario_entry.get()
+        novo_usuario_senha = novo_senha_entry.get()
+        senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
+        if novo_usuario_nome == "" or novo_usuario_senha == "":
             messagebox.showerror("Erro", "Preencha todos os campos.")
             return
         
-        usuario_existente = session.query(usuario).filter_by(nome=nome_usuario).first()
-        if usuario_existente:
+        usuario_obj = session.query(usuario).filter_by(nome=novo_usuario_nome).first()
+        if usuario_obj:
             messagebox.showerror("Erro", "Usuário já existente.")
             return
         else:
-            novo_usuario = usuario(nome=nome_usuario, senha=senha_usuario, admin=admin_var.get())
+            novo_usuario = usuario(nome=novo_usuario_nome, senha=senha_hash, admin=admin_var.get())
             session.add(novo_usuario)
             session.commit()
             messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.")
