@@ -338,60 +338,64 @@ def limpar_busca_deducao():
     carregar_lista_deducao()
 
 def nova_deducao():
-        espessura_valor = g.deducao_espessura_combobox.get()
-        canal_valor = g.deducao_canal_combobox.get()
-        material_nome = g.deducao_material_combobox.get()
-        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
-        nova_observacao_valor = g.deducao_obs_entry.get()
-        nova_forca_valor = g.deducao_forca_entry.get()
-        
-        if g.deducao_valor_entry.get() == "" or material_nome == "" or espessura_valor == "" or canal_valor == "":
-            messagebox.showerror("Erro", "Material, espessura, canal e valor da dedução são obrigatórios.")
-            return
-        else:
-            nova_deducao_valor = float(g.deducao_valor_entry.get().replace(',', '.'))
+    if not login_requerido():
+        return
+    espessura_valor = g.deducao_espessura_combobox.get()
+    canal_valor = g.deducao_canal_combobox.get()
+    material_nome = g.deducao_material_combobox.get()
+    espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
+    canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+    material_obj = session.query(material).filter_by(nome=material_nome).first()
+    nova_observacao_valor = g.deducao_obs_entry.get()
+    nova_forca_valor = g.deducao_forca_entry.get()
+    
+    if g.deducao_valor_entry.get() == "" or material_nome == "" or espessura_valor == "" or canal_valor == "":
+        messagebox.showerror("Erro", "Material, espessura, canal e valor da dedução são obrigatórios.")
+        return
+    else:
+        nova_deducao_valor = float(g.deducao_valor_entry.get().replace(',', '.'))
 
-        # Verificar se a dedução já existe
-        deducao_existente = session.query(deducao).filter_by(
+    # Verificar se a dedução já existe
+    deducao_existente = session.query(deducao).filter_by(
+        espessura_id=espessura_obj.id,
+        canal_id=canal_obj.id,
+        material_id=material_obj.id
+    ).first()
+    
+    if not deducao_existente:
+        if nova_forca_valor == '':
+            nova_forca_valor = None
+
+        nova_deducao = deducao(
             espessura_id=espessura_obj.id,
             canal_id=canal_obj.id,
-            material_id=material_obj.id
-        ).first()
-        
-        if not deducao_existente:
-            if nova_forca_valor == '':
-                nova_forca_valor = None
+            material_id=material_obj.id,
+            valor=nova_deducao_valor,
+            observacao=nova_observacao_valor,
+            forca=nova_forca_valor
+        )
+        session.add(nova_deducao)
+        session.commit()
 
-            nova_deducao = deducao(
-                espessura_id=espessura_obj.id,
-                canal_id=canal_obj.id,
-                material_id=material_obj.id,
-                valor=nova_deducao_valor,
-                observacao=nova_observacao_valor,
-                forca=nova_forca_valor
-            )
-            session.add(nova_deducao)
-            session.commit()
+        g.deducao_espessura_combobox.set('')
+        g.deducao_canal_combobox.set('')
+        g.deducao_material_combobox.set('')
+        g.deducao_valor_entry.delete(0, tk.END)
+        g.deducao_obs_entry.delete(0, tk.END)
+        g.deducao_forca_entry.delete(0, tk.END)
 
-            g.deducao_espessura_combobox.set('')
-            g.deducao_canal_combobox.set('')
-            g.deducao_material_combobox.set('')
-            g.deducao_valor_entry.delete(0, tk.END)
-            g.deducao_obs_entry.delete(0, tk.END)
-            g.deducao_forca_entry.delete(0, tk.END)
+        messagebox.showinfo("Sucesso", "Nova dedução adicionada com sucesso!")
+    else:
+        messagebox.showerror("Erro", "Dedução já existe no banco de dados.")
 
-            messagebox.showinfo("Sucesso", "Nova dedução adicionada com sucesso!")
-        else:
-            messagebox.showerror("Erro", "Dedução já existe no banco de dados.")
-
-        atualizar_espessura()
-        atualizar_canal()
-        atualizar_deducao_e_obs()
-        carregar_lista_deducao()
+    atualizar_espessura()
+    atualizar_canal()
+    atualizar_deducao_e_obs()
+    carregar_lista_deducao()
 
 def editar_deducao():
+    if not admin_requerido():
+        return
     item_selecionado = g.lista_deducao.selection()[0]
     item = g.lista_deducao.item(item_selecionado)
     deducao_valor = item['values'][3]
@@ -409,14 +413,16 @@ def editar_deducao():
     g.deducao_forca_entry.delete(0, tk.END)
 
 def excluir_deducao():
-        selected_item = g.lista_deducao.selection()[0]
-        item = g.lista_deducao.item(selected_item)
-        deducao_valor = item['values'][3]
-        deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()
-        session.delete(deducao_obj)
-        session.commit()
-        g.lista_deducao.delete(selected_item)
-        messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")
+    if not admin_requerido():
+        return
+    selected_item = g.lista_deducao.selection()[0]
+    item = g.lista_deducao.item(selected_item)
+    deducao_valor = item['values'][3]
+    deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()
+    session.delete(deducao_obj)
+    session.commit()
+    g.lista_deducao.delete(selected_item)
+    messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")
 
 # Manipulação de dados de materiais (material_form.py)
 def carregar_lista_material():
@@ -428,6 +434,8 @@ def carregar_lista_material():
         g.lista_material.insert("", "end", values=(m.nome, m.densidade, m.escoamento, m.elasticidade))
 
 def novo_material():
+    if not login_requerido():
+        return
     nome_material = g.material_nome_entry.get()
     densidade_material = g.material_densidade_entry.get()
     escoamento_material = g.material_escoamento_entry.get()
@@ -456,13 +464,14 @@ def novo_material():
         messagebox.showinfo("Sucesso", "Novo material adicionado com sucesso!")
     else:
         messagebox.showerror("Erro", "Material já existe no banco de dados.")
-
     
     carregar_lista_material()
     atualizar_material()
     atualizar_combobox_deducao()        
 
 def editar_material():
+        if not admin_requerido():
+            return
         selected_item = g.lista_material.selection()[0]
         item = g.lista_material.item(selected_item)
         material_nome = item['values'][0]
@@ -485,6 +494,8 @@ def editar_material():
         atualizar_material()
 
 def excluir_material():
+        if not admin_requerido():
+            return
         item_selecionado = g.lista_material.selection()[0]
         item = g.lista_material.item(item_selecionado)
         material_nome = item['values'][0]
@@ -522,6 +533,8 @@ def carregar_lista_canal():
         g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
 
 def novo_canal():
+    if not login_requerido():
+        return
     valor_canal = g.canal_valor_entry.get()
     largura_canal = g.canal_largura_entry.get()
     altura_canal = g.canal_altura_entry.get()
@@ -560,6 +573,8 @@ def novo_canal():
     atualizar_combobox_deducao()
 
 def editar_canal ():
+    if not admin_requerido():
+        return
     item_selecionado = g.lista_canal.selection()[0]
     item = g.lista_canal.item(item_selecionado)
     canal_valor= item['values'][0]
@@ -574,9 +589,8 @@ def editar_canal ():
     carregar_lista_canal()
 
 def excluir_canal():
-    if not login_requerido():
+    if not admin_requerido():
         return
-
     item_selecionado = g.lista_canal.selection()[0]
     item = g.lista_canal.item(item_selecionado)
     canal_valor = item['values'][0]
@@ -612,6 +626,7 @@ def carregar_lista_espessura():
         g.lista_espessura.insert("","end", values=(f"{e.valor:.2f}"))
 
 def nova_espessura():
+    login_requerido()
     espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
     espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
     
@@ -633,6 +648,7 @@ def nova_espessura():
     buscar_espessura()
 
 def excluir_espessura():
+    admin_requerido()
     item_selecionado = g.lista_espessura.selection()[0]
     item = g.lista_espessura.item(item_selecionado)
     espessura_valor = item['values'][0]
@@ -717,11 +733,11 @@ def login_requerido():
 
 def admin_requerido():
     if g.usuario_id is None:
-        messagebox.showerror("Erro", "Login requerido.")
+        messagebox.showerror("Erro", "Admin requerido.")
         return False
     usuario_obj = session.query(usuario).filter_by(id=g.usuario_id).first()
     if not usuario_obj.admin:
-        messagebox.showerror("Erro", "Acesso negado.")
+        messagebox.showerror("Erro", "Admin requerido.")
         return False
     return True
 
