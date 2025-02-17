@@ -21,7 +21,8 @@ def main(root_app):
     g.material_form.resizable(False, False)
     g.material_form.geometry("340x420")
 
-    on_top()
+    on_top(g.material_form)
+    janela_direita(g.material_form)
 
     # Posicionar a janela nova_deducao em relação à janela principal
     g.material_form.update_idletasks() 

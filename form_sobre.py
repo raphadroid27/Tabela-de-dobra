@@ -1,6 +1,7 @@
 import tkinter as tk
 import webbrowser
 import globals as g
+from funcoes import *
 
 def main(root_app):
     g.sobre_form = tk.Toplevel()
@@ -9,11 +10,7 @@ def main(root_app):
     g.sobre_form.resizable(False, False)
     g.sobre_form.attributes("-topmost", True)
 
-    # Posicionar a janela nova_deducao em relação à janela principal
-    g.sobre_form.update_idletasks() 
-    x = root_app.winfo_x() + ((root_app.winfo_width() - g.sobre_form.winfo_width()) // 2)
-    y = root_app.winfo_y() + ((root_app.winfo_height() - g.sobre_form.winfo_height()) // 2)
-    g.sobre_form.geometry(f"+{x}+{y}")
+    janela_centro(g.sobre_form)
 
     label_titulo = tk.Label(g.sobre_form, text="Tabela de Dobra", font=("Arial", 16, "bold"))
     label_titulo.pack(pady=10)
