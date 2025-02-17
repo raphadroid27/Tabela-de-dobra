@@ -19,13 +19,8 @@ def main(root_app):
     g.espessura_form.geometry("340x280")
     g.espessura_form.resizable(False, False)
 
-    on_top()
-
-    # Posicionar a janela nova_deducao em relação à janela principal
-    g.espessura_form.update_idletasks() 
-    x = root_app.winfo_x() + root_app.winfo_width() + 10
-    y = root_app.winfo_y()
-    g.espessura_form.geometry(f"+{x}+{y}")
+    on_top(g.espessura_form)
+    janela_direita(g.espessura_form)
 
     main_frame = tk.Frame(g.espessura_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
