@@ -16,8 +16,7 @@ import form_deducao
 import form_material
 import form_canal
 import form_sobre 
-import form_novo_usuario
-import form_autenticacao
+import form_aut
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -29,7 +28,7 @@ CONFIG_FILE = 'config.json'
 def verificar_admin_existente(root):
     admin_existente = session.query(usuario).filter(usuario.admin == 1).first()
     if not admin_existente:
-        form_novo_usuario.main(root)
+        form_aut.main(root)
 
 verificar_admin_existente(g.principal_form)
 
@@ -43,11 +42,11 @@ def salvar_configuracao(config):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(config, f)
 
-def abrir_formulario(form, editar_attr, root):
+def form_true(form, editar_attr, root):
     setattr(g, editar_attr, True)
     form.main(root)
 
-def adicionar_formulario(form, editar_attr, root):
+def form_false(form, editar_attr, root):
     setattr(g, editar_attr, False)
     form.main(root)
 
@@ -75,19 +74,19 @@ def main():
     # Adicionando menus
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova Dedução", command=lambda: adicionar_formulario(form_deducao, 'editar_deducao', g.principal_form))
-    file_menu.add_command(label="Novo Material", command=lambda: adicionar_formulario(form_material, 'editar_material', g.principal_form))
-    file_menu.add_command(label="Nova Espessura", command=lambda: adicionar_formulario(form_espessura, 'editar_espessura', g.principal_form))
-    file_menu.add_command(label="Novo Canal", command=lambda: adicionar_formulario(form_canal, 'editar_canal', g.principal_form))
+    file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao, 'editar_deducao', g.principal_form))
+    file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material, 'editar_material', g.principal_form))
+    file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura, 'editar_espessura', g.principal_form))
+    file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal, 'editar_canal', g.principal_form))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: abrir_formulario(form_deducao, 'editar_deducao', g.principal_form))
-    edit_menu.add_command(label="Editar Material", command=lambda: abrir_formulario(form_material, 'editar_material', g.principal_form))
-    edit_menu.add_command(label="Editar Espessura", command=lambda: abrir_formulario(form_espessura, 'editar_espessura', g.principal_form))
-    edit_menu.add_command(label="Editar Canal", command=lambda: abrir_formulario(form_canal, 'editar_canal', g.principal_form))
+    edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao, 'editar_deducao', g.principal_form))
+    edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material, 'editar_material', g.principal_form))
+    edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura, 'editar_espessura', g.principal_form))
+    edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal, 'editar_canal', g.principal_form))
 
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
@@ -96,8 +95,8 @@ def main():
 
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
-    usuario_menu.add_command(label="Login", command=lambda: form_autenticacao.main(g.principal_form))
-    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_novo_usuario.main(g.principal_form))
+    usuario_menu.add_command(label="Login", command=lambda: form_true(form_aut,"login",g.aut_form))
+    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_false(form_aut,"login",g.aut_form))
     usuario_menu.add_separator()
     usuario_menu.add_command(label="Sair", command=logout)
 

@@ -678,23 +678,10 @@ def limpar_busca_espessura():
     g.espessura_valor_entry.delete(0, tk.END)
     carregar_lista_espessura()
 
-def set_topmost(window, on_top):
-        if window and window.winfo_exists():
-            window.attributes("-topmost",on_top)
-
-def on_top():
-    on_top_valor = g.on_top_var.get() == 1
-    set_topmost(g.principal_form, on_top_valor)
-    set_topmost(g.deducao_form, on_top_valor)
-    set_topmost(g.material_form, on_top_valor)
-    set_topmost(g.canal_form, on_top_valor)
-    set_topmost(g.espessura_form, on_top_valor)
-
 # manipulacao de usuarios
-
 def novo_usuario():
-    novo_usuario_nome = g.novo_usuario_entry.get()
-    novo_usuario_senha = g.novo_senha_entry.get()
+    novo_usuario_nome = g.usuario_entry.get()
+    novo_usuario_senha = g.senha_entry.get()
     senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
     if novo_usuario_nome == "" or novo_usuario_senha == "":
         messagebox.showerror("Erro", "Preencha todos os campos.")
@@ -748,4 +735,25 @@ def logout():
     g.usuario_id = None
     g.principal_form.title("Cálculo de Dobra")
     messagebox.showinfo("Logout", "Logout efetuado com sucesso.")
+
+# Manipulação formulários
+def set_topmost(window, on_top):
+    if window and window.winfo_exists():
+        window.attributes("-topmost",on_top)
+
+def on_top(form):
+    on_top_valor = g.on_top_var.get() == 1
+    set_topmost(form, on_top_valor)
+
+def janela_centro(form):
+    form.update_idletasks() 
+    x = g.principal_form.winfo_x() + ((g.principal_form.winfo_width() - form.winfo_width()) // 2)
+    y = g.principal_form.winfo_y() + ((g.principal_form.winfo_height() - form.winfo_height()) // 2)
+    form.geometry(f"+{x}+{y}")
+
+def janela_direita(form):   
+    form.update_idletasks() 
+    x = g.principal_form.winfo_x() + g.principal_form.winfo_width() + 10
+    y = g.principal_form.winfo_y()
+    form.geometry(f"+{x}+{y}")
     

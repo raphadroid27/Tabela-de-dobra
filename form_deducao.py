@@ -21,13 +21,8 @@ def main(root_app):
     g.deducao_form.geometry("500x420")
     g.deducao_form.resizable(False, False)
 
-    on_top()
-
-    # Posicionar a janela nova_deducao em relação à janela principal
-    g.deducao_form.update_idletasks() 
-    x = root_app.winfo_x() + root_app.winfo_width() + 10
-    y = root_app.winfo_y()
-    g.deducao_form.geometry(f"+{x}+{y}")
+    on_top(g.deducao_form)
+    janela_direita(g.deducao_form)
 
     main_frame = tk.Frame(g.deducao_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
