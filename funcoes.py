@@ -591,12 +591,24 @@ def editar_canal ():
 def excluir_canal():
     if not admin_requerido():
         return
+    
+    aviso = messagebox.askyesno("Atenção!", "Ao excluir um canal todas as deduções relacionadas serão excluídas também, deseja continuar?")
+    if not aviso:
+        return
+
     item_selecionado = g.lista_canal.selection()[0]
     item = g.lista_canal.item(item_selecionado)
     canal_valor = item['values'][0]
+    
     canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+    deducao_obj = session.query(deducao).filter(deducao.canal_id == canal_obj.id).all()
+    
+    for deducao_obj in deducao_obj:
+        session.delete(deducao_obj)
+
     session.delete(canal_obj)
     session.commit()
+
     g.lista_canal.delete(item_selecionado)
     messagebox.showinfo("Sucesso", "Canal excluído com sucesso!")
     atualizar_combobox_deducao()

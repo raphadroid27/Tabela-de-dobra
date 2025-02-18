@@ -58,7 +58,6 @@ def main():
     g.principal_form.resizable(False, False)
 
     g.principal_form.update_idletasks() 
-    print(f"{g.principal_form.winfo_width()}x{g.principal_form.winfo_height()}")
 
     def on_closing():
         config['geometry'] = g.principal_form.geometry()
@@ -91,7 +90,7 @@ def main():
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
     g.on_top_var = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="No topo", variable=g.on_top_var, command=on_top)
+    opcoes_menu.add_checkbutton(label="No topo", variable=g.on_top_var, command=lambda: on_top(g.principal_form))
 
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
