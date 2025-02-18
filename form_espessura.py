@@ -46,9 +46,10 @@ def main(root_app):
 
     tk.Button(frame_busca, text="Limpar", command=limpar_busca_espessura).grid(row=0, column=2, padx=5, pady=5)
 
-    columns = ("Valor",)
+    columns = ("Id","Valor")
     g.lista_espessura = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
+        g.lista_espessura["displaycolumns"] = ("Valor")
         g.lista_espessura.heading(col, text=col)
         g.lista_espessura.column(col, anchor="center")    
     

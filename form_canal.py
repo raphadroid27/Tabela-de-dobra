@@ -49,7 +49,7 @@ def main(root_app):
 
     tk.Button(frame_busca, text="Limpar", command=limpar_busca_canal).grid(row=0, column=2, padx=5, pady=5)
 
-    columns = ("Canal", "Largura", "Altura", "Comprimento", "Observação")
+    columns = ("Id","Canal", "Largura", "Altura", "Comprimento", "Observação")
     g.lista_canal = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
         g.lista_canal.heading(col, text=col)

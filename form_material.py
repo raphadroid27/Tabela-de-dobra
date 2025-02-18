@@ -24,12 +24,6 @@ def main(root_app):
     on_top(g.material_form)
     janela_direita(g.material_form)
 
-    # Posicionar a janela nova_deducao em relação à janela principal
-    g.material_form.update_idletasks() 
-    x = root_app.winfo_x() + root_app.winfo_width() + 10
-    y = root_app.winfo_y()
-    g.material_form.geometry(f"+{x}+{y}")
-
     main_frame = tk.Frame(g.material_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
@@ -62,7 +56,7 @@ def main(root_app):
     
     g.lista_material.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
-    carregar_lista_material()
+    listar('material')
 
     frame_edicoes = tk.LabelFrame(main_frame, text='Editar Material', pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
