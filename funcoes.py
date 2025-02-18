@@ -286,14 +286,6 @@ def todas_funcoes():
     calcular_metade_dobra()
     razao_raio_esp()
 
-def atualizar_combobox_deducao():
-    if g.deducao_material_combobox:
-        g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] 
-    if g.deducao_espessura_combobox:
-        g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(espessura).all()])
-    if g.deducao_canal_combobox:
-        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
-
 # Manipulação de dados de Dedução (deducao_form.py)
 def carregar_lista_deducao():       
     for item in g.lista_deducao.get_children():
@@ -412,17 +404,38 @@ def editar_deducao():
     g.deducao_obs_entry.delete(0, tk.END)
     g.deducao_forca_entry.delete(0, tk.END)
 
-def excluir_deducao():
+def excluir(lista, coluna, tabela, tipo = "tipo"):
     if not admin_requerido():
         return
-    selected_item = g.lista_deducao.selection()[0]
-    item = g.lista_deducao.item(selected_item)
-    deducao_valor = item['values'][3]
-    deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()
-    session.delete(deducao_obj)
+    
+    if tipo == "Dedução":
+        aviso = messagebox.askyesno("Atenção!", "A Dedução será excluída permanentemente, deseja continuar?")
+        if not aviso:
+            return
+    else:
+        aviso = messagebox.askyesno("Atenção!", f"Ao excluir um(a) {tipo} todas as deduções relacionadas serão excluídas também, deseja continuar?")
+        if not aviso:
+            return
+
+    selected_item =  lista.selection()[0]
+    item = lista.item(selected_item)
+    obj_valor = item['values'][coluna]
+    obj = session.query(tabela).filter_by(valor=obj_valor).first()
+    session.delete(obj)
     session.commit()
-    g.lista_deducao.delete(selected_item)
-    messagebox.showinfo("Sucesso", "Dedução excluída com sucesso!")
+    lista.delete(selected_item)
+    messagebox.showinfo("Sucesso", f"{tipo} excluído(a) com sucesso!")
+
+def excluir_deducao():
+    excluir (g.lista_deducao, 3, deducao, "Dedução")
+
+def atualizar_combobox_deducao():
+    if g.deducao_material_combobox:
+        g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] 
+    if g.deducao_espessura_combobox:
+        g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(espessura).all()])
+    if g.deducao_canal_combobox:
+        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
 
 # Manipulação de dados de materiais (material_form.py)
 def carregar_lista_material():
@@ -494,19 +507,7 @@ def editar_material():
         atualizar_material()
 
 def excluir_material():
-        if not admin_requerido():
-            return
-        item_selecionado = g.lista_material.selection()[0]
-        item = g.lista_material.item(item_selecionado)
-        material_nome = item['values'][0]
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
-        session.delete(material_obj)
-        session.commit()
-        g.lista_material.delete(item_selecionado)
-        messagebox.showinfo("Sucesso", "Material excluído com sucesso!")
-        atualizar_material()
-        carregar_lista_material()
-        atualizar_combobox_deducao()
+    excluir(g.lista_material,0,material,"Material")    
 
 def buscar_material(): 
     material_nome =  g.material_nome_entry.get()
@@ -530,7 +531,7 @@ def carregar_lista_canal():
 
     canais = sorted(session.query(canal).all(),key=lambda x: float(re.findall(r'\d+\.?\d*', x.valor)[0]))
     for c in canais:
-        g.lista_canal.insert("","end", values=(c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
+        g.lista_canal.insert("","end", values=(c.id, c.valor,c.largura,c.altura,c.comprimento_total,c.observacao))
 
 def novo_canal():
     if not login_requerido():
@@ -589,29 +590,7 @@ def editar_canal ():
     carregar_lista_canal()
 
 def excluir_canal():
-    if not admin_requerido():
-        return
-    
-    aviso = messagebox.askyesno("Atenção!", "Ao excluir um canal todas as deduções relacionadas serão excluídas também, deseja continuar?")
-    if not aviso:
-        return
-
-    item_selecionado = g.lista_canal.selection()[0]
-    item = g.lista_canal.item(item_selecionado)
-    canal_valor = item['values'][0]
-    
-    canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
-    deducao_obj = session.query(deducao).filter(deducao.canal_id == canal_obj.id).all()
-    
-    for deducao_obj in deducao_obj:
-        session.delete(deducao_obj)
-
-    session.delete(canal_obj)
-    session.commit()
-
-    g.lista_canal.delete(item_selecionado)
-    messagebox.showinfo("Sucesso", "Canal excluído com sucesso!")
-    atualizar_combobox_deducao()
+    excluir(g.lista_canal,0,canal,"Canal")
 
 def buscar_canal(): 
     canal_valor = g.canal_valor_entry.get()
@@ -635,7 +614,7 @@ def carregar_lista_espessura():
 
     espessuras = sorted(session.query(espessura).all(), key=lambda x: x.valor)
     for e in espessuras:
-        g.lista_espessura.insert("","end", values=(f"{e.valor:.2f}"))
+        g.lista_espessura.insert("","end", values=(e.id,f"{e.valor:.2f}"))
 
 def nova_espessura():
     login_requerido()
@@ -660,20 +639,7 @@ def nova_espessura():
     buscar_espessura()
 
 def excluir_espessura():
-    admin_requerido()
-    item_selecionado = g.lista_espessura.selection()[0]
-    item = g.lista_espessura.item(item_selecionado)
-    espessura_valor = item['values'][0]
-    espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-    session.delete(espessura_obj)
-    session.commit()
-    g.lista_espessura.delete(item_selecionado)
-    messagebox.showinfo("Sucesso", "Espessura excluída com sucesso!")
-    g.espessura_valor_entry.delete(0, tk.END)
-
-    atualizar_espessura()
-    atualizar_combobox_deducao()
-    carregar_lista_espessura()
+    excluir(g.lista_espessura,0,espessura,"Espessura")
 
 def buscar_espessura(): 
     espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
@@ -684,7 +650,29 @@ def buscar_espessura():
         g.lista_espessura.delete(item)
 
     for e in espessuras:
-        g.lista_espessura.insert("","end", values=(e.valor))
+        g.lista_espessura.insert("","end", values=(e.id, e.valor))
+
+def listar(tipo):
+
+    configuracoes = {
+        'material': {
+            'lista': g.lista_material,
+            'modelo': material,
+            'campo_busca': material.nome,
+            'valores': lambda m: (m.nome, m.densidade, m.escoamento, m.elasticidade)
+        }
+    }
+
+    config = configuracoes[tipo]
+
+    for item in config['lista'].get_children():
+        config['lista'].delete(item)
+
+    itens = (session.query(config['modelo']).all())
+    
+    for item in itens:
+        config['lista'].insert("", "end", values=config['valores'](item))
+
 
 def limpar_busca_espessura():
     g.espessura_valor_entry.delete(0, tk.END)
