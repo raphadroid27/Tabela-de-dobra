@@ -15,7 +15,7 @@ def main(root_app):
     label_titulo = tk.Label(g.sobre_form, text="Tabela de Dobra", font=("Arial", 16, "bold"))
     label_titulo.pack(pady=10)
 
-    label_versao = tk.Label(g.sobre_form, text="Versão: 0.1.3-beta", font=("Arial", 12))
+    label_versao = tk.Label(g.sobre_form, text="Versão: 0.3.8-beta", font=("Arial", 12))
     label_versao.pack(pady=5)
 
     label_autor = tk.Label(g.sobre_form, text="Autor: raphadroid27", font=("Arial", 12))
