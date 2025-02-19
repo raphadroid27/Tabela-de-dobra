@@ -25,12 +25,10 @@ session = Session()
 
 CONFIG_FILE = 'config.json'
 
-def verificar_admin_existente(root):
+def verificar_admin_existente():
     admin_existente = session.query(usuario).filter(usuario.admin == 1).first()
     if not admin_existente:
-        form_aut.main(root)
-
-verificar_admin_existente(g.principal_form)
+        form_aut.main(g.principal_form)
 
 def carregar_configuracao():
     if os.path.exists(CONFIG_FILE):
@@ -144,6 +142,7 @@ def main():
         getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
         getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
     
+    verificar_admin_existente()
     g.principal_form.mainloop()
 
 if __name__ == "__main__":
