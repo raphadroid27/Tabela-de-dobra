@@ -704,12 +704,12 @@ def login():
     usuario_obj = session.query(usuario).filter_by(nome=usuario_nome).first()
 
     if usuario_obj and usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest():
-        messagebox.showinfo("Login", "Login efetuado com sucesso.")
+        messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=g.aut_form)
         g.usuario_id = usuario_obj.id
         g.aut_form.destroy()
         g.principal_form.title(f"Cálculo de Dobra - {usuario_obj.nome}")
     else:
-        messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+        messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.aut_form)
 
 def login_requerido():
     if g.usuario_id is None:
