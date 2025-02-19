@@ -624,21 +624,25 @@ def listar(tipo):
             'lista': g.lista_deducao,
             'modelo': deducao,
             'valores': g.valores_deducao,
+            'ordem': deducao.valor
         },
         'material': {
             'lista': g.lista_material,
             'modelo': material,
             'valores': g.valores_material,
+            'ordem': material.nome
         },
         'espessura': {
             'lista': g.lista_espessura,
             'modelo': espessura,
             'valores': g.valores_espessura,
+            'ordem': espessura.valor
         },
         'canal': {
             'lista': g.lista_canal,
             'modelo': canal,
             'valores': g.valores_canal,
+            'ordem': canal.valor
         }
     }
 
@@ -647,7 +651,7 @@ def listar(tipo):
     for item in config['lista'].get_children():
         config['lista'].delete(item)
 
-    itens = (session.query(config['modelo']).all())
+    itens = session.query(config['modelo']).order_by(config['ordem']).all()
     
     for item in itens:
         config['lista'].insert("", "end", values=config['valores'](item))
