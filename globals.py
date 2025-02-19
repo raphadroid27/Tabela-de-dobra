@@ -142,4 +142,4 @@ aut_form = None
 valores_deducao = lambda d: (d.id, d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca)
 valores_material = lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade)
 valores_espessura = lambda e: (e.id, e.valor)
-valores_canal = lambda c: (c.id, c.valor, c.largura, c.altura, c.comprimento, c.observacao)
+valores_canal = lambda c: (c.id, c.valor, c.largura, c.altura, c.comprimento_total, c.observacao)
