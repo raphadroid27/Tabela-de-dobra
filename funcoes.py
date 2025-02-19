@@ -750,12 +750,25 @@ def listar(tipo):
 
 def limpar_busca(tipo):
     configuracoes = {
-        'dedução': g.deducao_material_combobox,
+        'dedução': {'entries':{'material_combo':g.deducao_material_combobox,
+                              'espessura_combo': g.deducao_espessura_combobox,
+                              'canal_combo': g.deducao_canal_combobox
+                              }},
         'material': g.material_nome_entry,
         'espessura': g.espessura_valor_entry,
         'canal': g.canal_valor_entry
     }
-    configuracoes[tipo].delete(0, tk.END)
+    
+
+    
+    if tipo == 'dedução':
+        configuracoes[tipo]['entries']['material_combo'].delete(0, tk.END)
+        configuracoes[tipo]['entries']['espessura_combo'].delete(0, tk.END)
+        configuracoes[tipo]['entries']['canal_combo'].delete(0, tk.END)
+
+    else:
+        configuracoes[tipo].delete(0, tk.END)
+        
     listar(tipo)
 
 # manipulacao de usuarios

@@ -45,9 +45,9 @@ def main(root_app):
     tk.Label(frame_busca, text="Valor canal:").grid(row=0,column=0)
     g.canal_valor_entry=tk.Entry(frame_busca)
     g.canal_valor_entry.grid(row=0, column=1, sticky="ew")
-    g.canal_valor_entry.bind("<KeyRelease>", lambda event: buscar_canal())
+    g.canal_valor_entry.bind("<KeyRelease>", lambda event: buscar('canal'))
 
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_canal).grid(row=0, column=2, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command =lambda:limpar_busca('canal')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id","Canal", "Largura", "Altura", "Comprimento", "Observação")
     g.lista_canal = ttk.Treeview(main_frame, columns=columns, show="headings")
@@ -83,7 +83,7 @@ def main(root_app):
     g.canal_observacao_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
 
     if g.editar_canal == True:
-        tk.Button(main_frame, text="Excluir", command=excluir_canal, bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        tk.Button(main_frame, text="Excluir", command=lambda:excluir('canal'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         g.canal_form.title("Editar/Excluir Canal")
         tk.Button(frame_edicoes, text="Atualizar", command=editar_canal, bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=3)
     else:

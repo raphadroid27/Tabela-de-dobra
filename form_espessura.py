@@ -42,9 +42,9 @@ def main(root_app):
     tk.Label(frame_busca, text="Espessura:").grid(row=0,column=0)
     g.espessura_valor_entry=tk.Entry(frame_busca)
     g.espessura_valor_entry.grid(row=0, column=1, sticky="ew")
-    g.espessura_valor_entry.bind("<KeyRelease>", lambda event: buscar_espessura())
+    g.espessura_valor_entry.bind("<KeyRelease>", lambda event: buscar('espessura'))
 
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_espessura).grid(row=0, column=2, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id","Valor")
     g.lista_espessura = ttk.Treeview(main_frame, columns=columns, show="headings")
@@ -55,11 +55,11 @@ def main(root_app):
     
     g.lista_espessura.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
-    carregar_lista_espessura()
+    listar('espessura')
 
     if g.editar_espessura == True:
         g.espessura_form.title("Editar/Excluir Espessura")
-        tk.Button(main_frame, text="Excluir", command=excluir_espessura, bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        tk.Button(main_frame, text="Excluir", command=lambda:excluir('espessura'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     else:
         g.espessura_form.title("Adicionar Espessura")
         tk.Button(main_frame, text="Adicionar", command=nova_espessura, bg="cyan").grid(row=2, column=0, padx=5, pady=5, sticky="e")
