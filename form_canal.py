@@ -52,6 +52,7 @@ def main(root_app):
     columns = ("Id","Canal", "Largura", "Altura", "Comprimento", "Observação")
     g.lista_canal = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
+        g.lista_canal["displaycolumns"] = ("Canal", "Largura", "Altura", "Comprimento", "Observação")
         g.lista_canal.heading(col, text=col)
         g.lista_canal.column(col, anchor="center", width=20)    
     
