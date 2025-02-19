@@ -425,25 +425,67 @@ def adicionar(tipo):
     atualizar_deducao_e_obs()
     atualizar_combobox_deducao()
     listar(tipo)
-  
-def editar_deducao():
+
+def editar(tipo):
     if not admin_requerido():
         return
-    item_selecionado = g.lista_deducao.selection()[0]
-    item = g.lista_deducao.item(item_selecionado)
-    deducao_valor = item['values'][3]
-    deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()    
+        
+    if tipo == 'dedução':  
+        item_selecionado = g.lista_deducao.selection()[0]
+        item = g.lista_deducao.item(item_selecionado)
+        deducao_valor = item['values'][3]
+        deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()    
 
-    deducao_obj.valor = float(g.deducao_valor_entry.get().replace(',', '.')) if g.deducao_valor_entry.get() else deducao_obj.valor
-    deducao_obj.observacao = g.deducao_obs_entry.get() if g.deducao_obs_entry.get() else deducao_obj.observacao
-    deducao_obj.forca = float(g.deducao_forca_entry.get().replace(',', '.')) if g.deducao_forca_entry.get() else deducao_obj.forca
-    session.commit()
+        deducao_obj.valor = float(g.deducao_valor_entry.get().replace(',', '.')) if g.deducao_valor_entry.get() else deducao_obj.valor
+        deducao_obj.observacao = g.deducao_obs_entry.get() if g.deducao_obs_entry.get() else deducao_obj.observacao
+        deducao_obj.forca = float(g.deducao_forca_entry.get().replace(',', '.')) if g.deducao_forca_entry.get() else deducao_obj.forca
+        session.commit()
 
-    messagebox.showinfo("Sucesso", "Dedução editada com sucesso!")
-    g.lista_deducao.item(item_selecionado, values=(deducao_obj.material.nome, deducao_obj.espessura.valor, deducao_obj.canal.valor, deducao_obj.valor, deducao_obj.observacao,deducao_obj.forca))
-    g.deducao_valor_entry.delete(0, tk.END)
-    g.deducao_obs_entry.delete(0, tk.END)
-    g.deducao_forca_entry.delete(0, tk.END)
+        messagebox.showinfo("Sucesso", "Dedução editada com sucesso!")
+        g.deducao_valor_entry.delete(0, tk.END)
+        g.deducao_obs_entry.delete(0, tk.END)
+        g.deducao_forca_entry.delete(0, tk.END)
+    
+    if tipo == 'material':
+        selected_item = g.lista_material.selection()[0]
+        item = g.lista_material.item(selected_item)
+        material_nome = item['values'][0]
+        material_obj = session.query(material).filter_by(nome=material_nome).first()
+
+        material_obj.nome = g.material_nome_entry.get() if g.material_nome_entry.get() else material_obj.nome
+        material_obj.densidade = float(g.material_densidade_entry.get().replace(',', '.')) if g.material_densidade_entry.get() else material_obj.densidade
+        material_obj.escoamento = float(g.material_escoamento_entry.get().replace(',', '.')) if g.material_escoamento_entry.get() else material_obj.escoamento
+        material_obj.elasticidade = float(g.material_elasticidade_entry.get().replace(',', '.')) if g.material_elasticidade_entry.get() else material_obj.elasticidade
+        session.commit()
+
+        messagebox.showinfo("Sucesso", "Material editado com sucesso!")
+        
+        g.material_nome_entry.delete(0, tk.END)
+        g.material_densidade_entry.delete(0, tk.END)
+        g.material_escoamento_entry.delete(0, tk.END)
+        g.material_elasticidade_entry.delete(0, tk.END)
+
+    if tipo == 'canal':
+        if not admin_requerido():
+            return
+        item_selecionado = g.lista_canal.selection()[0]
+        item = g.lista_canal.item(item_selecionado)
+        canal_valor= item['values'][0]
+        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+
+        canal_obj.largura = float(g.canal_largura_entry.get()) if g.canal_largura_entry.get() else canal_obj.largura
+        canal_obj.altura = float(g.canal_altura_entry.get()) if g.canal_altura_entry.get() else canal_obj.altura
+        canal_obj.comprimento_total = float(g.canal_comprimento_entry.get()) if g.canal_comprimento_entry.get() else canal_obj.comprimento_total
+        canal_obj.observacao = g.canal_observacao_entry.get() if g.canal_observacao_entry.get() else canal_obj.observacao
+        session.commit() 
+        messagebox.showinfo("Sucesso", "Canal editado com suceso!")
+
+    atualizar_espessura()
+    atualizar_canal()
+    atualizar_deducao_e_obs()
+    atualizar_combobox_deducao()
+    listar('dedução'), listar('material'), listar('espessura'), listar('canal')
+
 
 def excluir(tipo):
     if not admin_requerido():
@@ -501,6 +543,12 @@ def excluir(tipo):
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
+    atualizar_espessura()
+    atualizar_canal()
+    atualizar_deducao_e_obs()
+    atualizar_combobox_deducao()
+    listar('dedução'), listar('material'), listar('espessura'), listar('canal')
+
 def atualizar_combobox_deducao():
     if g.deducao_material_combobox:
         g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] 
@@ -509,49 +557,6 @@ def atualizar_combobox_deducao():
     if g.deducao_canal_combobox:
         g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
 
-# Manipulação de dados de materiais (material_form.py)
-def editar_material():
-    if not admin_requerido():
-        return
-    selected_item = g.lista_material.selection()[0]
-    item = g.lista_material.item(selected_item)
-    material_nome = item['values'][0]
-    material_obj = session.query(material).filter_by(nome=material_nome).first()
-
-    material_obj.nome = g.material_nome_entry.get() if g.material_nome_entry.get() else material_obj.nome
-    material_obj.densidade = float(g.material_densidade_entry.get().replace(',', '.')) if g.material_densidade_entry.get() else material_obj.densidade
-    material_obj.escoamento = float(g.material_escoamento_entry.get().replace(',', '.')) if g.material_escoamento_entry.get() else material_obj.escoamento
-    material_obj.elasticidade = float(g.material_elasticidade_entry.get().replace(',', '.')) if g.material_elasticidade_entry.get() else material_obj.elasticidade
-    session.commit()
-
-    g.material_nome_entry.delete(0, tk.END)
-    g.material_densidade_entry.delete(0, tk.END)
-    g.material_escoamento_entry.delete(0, tk.END)
-    g.material_elasticidade_entry.delete(0, tk.END)
-
-    messagebox.showinfo("Sucesso", "Material editado com sucesso!")
-    listar('material')
-    listar('dedução')
-    atualizar_material()
-
-# Manipulação de dados de canais (Canal_form.py)
-def editar_canal ():
-    if not admin_requerido():
-        return
-    item_selecionado = g.lista_canal.selection()[0]
-    item = g.lista_canal.item(item_selecionado)
-    canal_valor= item['values'][0]
-    canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
-
-    canal_obj.largura = float(g.canal_largura_entry.get()) if g.canal_largura_entry.get() else canal_obj.largura
-    canal_obj.altura = float(g.canal_altura_entry.get()) if g.canal_altura_entry.get() else canal_obj.altura
-    canal_obj.comprimento_total = float(g.canal_comprimento_entry.get()) if g.canal_comprimento_entry.get() else canal_obj.comprimento_total
-    canal_obj.observacao = g.canal_observacao_entry.get() if g.canal_observacao_entry.get() else canal_obj.observacao
-    session.commit() 
-    messagebox.showinfo("Sucesso", "Canal editado com suceso!")
-    listar('canal')
-
-# Manipulação de dados de espessuras (espessura_form.py)
 def buscar(tipo):
     configuracao = {
         'dedução':{'entries':{'material_combo':g.deducao_material_combobox,
