@@ -57,7 +57,7 @@ def main(root_app):
     
     g.lista_canal.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
-    carregar_lista_canal()
+    listar('canal')
 
     frame_edicoes = tk.LabelFrame(main_frame, text='Editar Canal', pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
@@ -88,7 +88,7 @@ def main(root_app):
         tk.Button(frame_edicoes, text="Atualizar", command=editar_canal, bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=3)
     else:
         g.canal_form.title("Adicionar Canal")
-        tk.Button(frame_edicoes, text="Adicionar", command=novo_canal, bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=3)
+        tk.Button(frame_edicoes, text="Adicionar", command=lambda:adicionar('canal'), bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=3)
 
     g.canal_form.mainloop()
 
