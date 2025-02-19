@@ -51,6 +51,7 @@ def main(root_app):
     columns = ("Id", "Nome", "Densidade", "Escoamento", "Elasticidade")
     g.lista_material = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
+        g.lista_material["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
         g.lista_material.heading(col, text=col)
         g.lista_material.column(col, anchor="center", width=20)    
     
@@ -83,7 +84,6 @@ def main(root_app):
     else:
         g.material_form.title("Adicionar Material")
         tk.Button(frame_edicoes, text="Adicionar", command= lambda: adicionar('material'), bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
-
 
     g.material_form.mainloop()
 

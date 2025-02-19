@@ -62,6 +62,7 @@ def main(root_app):
     columns = ("Id","Material", "Espessura","Canal", "Dedução", "Observação", "Força")
     g.lista_deducao = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
+        g.lista_deducao["displaycolumns"] = ("Material", "Espessura", "Canal", "Dedução", "Observação", "Força")
         g.lista_deducao.heading(col, text=col)
         g.lista_deducao.column(col, anchor="center", width=60)
         g.lista_deducao.column("Material", width=80)
