@@ -45,21 +45,21 @@ def main(root_app):
     tk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
     g.deducao_material_combobox = ttk.Combobox(frame_busca)
     g.deducao_material_combobox.grid(row=1, column=0, padx=5, sticky="ew")
-    g.deducao_material_combobox.bind("<<ComboboxSelected>>", lambda event: buscar_deducoes())
+    g.deducao_material_combobox.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
     tk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
     g.deducao_espessura_combobox = ttk.Combobox(frame_busca)
     g.deducao_espessura_combobox.grid(row=1, column=1, padx=5, sticky="ew")
-    g.deducao_espessura_combobox.bind("<<ComboboxSelected>>", lambda event: buscar_deducoes())
+    g.deducao_espessura_combobox.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
     tk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
     g.deducao_canal_combobox = ttk.Combobox(frame_busca)
     g.deducao_canal_combobox.grid(row=1, column=2, padx=5, sticky="ew")
-    g.deducao_canal_combobox.bind("<<ComboboxSelected>>", lambda event: buscar_deducoes())
+    g.deducao_canal_combobox.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
-    tk.Button(frame_busca, text="Limpar", command=limpar_busca_deducao).grid(row=1, column=3, padx=5, pady=5)
+    tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
 
-    columns = ("Material", "Espessura","Canal", "Dedução", "Observação", "Força")
+    columns = ("Id","Material", "Espessura","Canal", "Dedução", "Observação", "Força")
     g.lista_deducao = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
         g.lista_deducao.heading(col, text=col)
@@ -69,7 +69,7 @@ def main(root_app):
 
     g.lista_deducao.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
-    carregar_lista_deducao()
+    listar('dedução')
 
     frame_edicoes = tk.LabelFrame(main_frame, text='Editar Dedução', pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
@@ -95,10 +95,10 @@ def main(root_app):
     if g.editar_deducao == True:
         g.deducao_form.title("Editar/Excluir Dedução")
         tk.Button(frame_edicoes, text="Atualizar", command=editar_deducao, bg="green").grid(row=1, column=3, padx=5, pady=5, sticky="eW")       
-        tk.Button(main_frame, text="Excluir", command=excluir_deducao, bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
+        tk.Button(main_frame, text="Excluir", command = lambda:excluir('dedução'), bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
     else:
         g.deducao_form.title("Adicionar Dedução")
-        tk.Button(frame_edicoes, text="Adicionar", command=nova_deducao, bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
+        tk.Button(frame_edicoes, text="Adicionar", command = lambda event:nova_deducao, bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
 
     atualizar_combobox_deducao()
           
