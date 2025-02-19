@@ -95,10 +95,10 @@ def main(root_app):
     if g.editar_deducao == True:
         g.deducao_form.title("Editar/Excluir Dedução")
         tk.Button(frame_edicoes, text="Atualizar", command=editar_deducao, bg="green").grid(row=1, column=3, padx=5, pady=5, sticky="eW")       
-        tk.Button(main_frame, text="Excluir", command = lambda:excluir('dedução'), bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
+        tk.Button(main_frame, text="Excluir", command = lambda: excluir('dedução'), bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
     else:
         g.deducao_form.title("Adicionar Dedução")
-        tk.Button(frame_edicoes, text="Adicionar", command = lambda event:nova_deducao, bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
+        tk.Button(frame_edicoes, text="Adicionar", command = nova_deducao, bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
 
     atualizar_combobox_deducao()
           
