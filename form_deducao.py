@@ -98,7 +98,7 @@ def main(root_app):
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('dedução'), bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
     else:
         g.deducao_form.title("Adicionar Dedução")
-        tk.Button(frame_edicoes, text="Adicionar", command = nova_deducao, bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
+        tk.Button(frame_edicoes, text="Adicionar", command = lambda: adicionar('dedução'), bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
 
     atualizar_combobox_deducao()
           
