@@ -62,7 +62,7 @@ def main(root_app):
         tk.Button(main_frame, text="Excluir", command=lambda:excluir('espessura'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     else:
         g.espessura_form.title("Adicionar Espessura")
-        tk.Button(main_frame, text="Adicionar", command=nova_espessura, bg="cyan").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        tk.Button(main_frame, text="Adicionar", command = lambda: adicionar('espessura'), bg="cyan").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
     g.espessura_form.mainloop()
 
