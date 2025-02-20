@@ -130,6 +130,11 @@ admin_var = None
 usuario_id = None
 login = None
 
+# form_usuario.py widgets
+usuario_valor_entry = None
+lista_usuario = None
+editar_usuario = None
+
 # formularios
 principal_form = None
 deducao_form = None
@@ -138,8 +143,13 @@ canal_form = None
 espessura_form = None
 sobre_form = None
 aut_form = None
+usuario_form = None
+
+
+
 
 valores_deducao = lambda d: (d.id, d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca)
 valores_material = lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade)
 valores_espessura = lambda e: (e.id, e.valor)
 valores_canal = lambda c: (c.id, c.valor, c.largura, c.altura, c.comprimento_total, c.observacao)
+valores_usuario = lambda u: (u.id, u.nome, u.admin)
