@@ -777,7 +777,7 @@ def excluir_usuario():
 
     listar('usuario')
 
-# Manipulação formulários
+# Manipulação de formulários
 def no_topo(form):
     def set_topmost(window, on_top):
         if window and window.winfo_exists():
@@ -794,8 +794,11 @@ def posicionar_janela(form, posicao):
     elif posicao == 'direita':
         x = g.principal_form.winfo_x() + g.principal_form.winfo_width() + 10
         y = g.principal_form.winfo_y()
+    elif posicao == 'esquerda':
+        x = g.principal_form.winfo_x() - form.winfo_width() - 10
+        y = g.principal_form.winfo_y()
     else:
-        raise ValueError("Posição inválida. Use 'centro' ou 'direita'.")
+        return
     form.geometry(f"+{x}+{y}")
 
 def desabilitar_janelas():
