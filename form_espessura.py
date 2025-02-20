@@ -20,7 +20,7 @@ def main(root_app):
     g.espessura_form.resizable(False, False)
 
     no_topo(g.espessura_form)
-    janela_direita(g.espessura_form)
+    posicionar_janela(g.espessura_form, 'centro')
 
     main_frame = tk.Frame(g.espessura_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
