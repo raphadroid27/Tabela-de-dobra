@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import pyperclip
 from math import pi
 from sqlalchemy.orm import sessionmaker
@@ -749,16 +749,25 @@ def login():
     
     usuario_obj = session.query(usuario).filter_by(nome=usuario_nome).first()
 
-    if usuario_obj and usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest():
-        messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=g.aut_form)
-        g.usuario_id = usuario_obj.id
-        g.aut_form.destroy()
-        g.principal_form.title(f"Cálculo de Dobra - {usuario_obj.nome}")
+    if usuario_obj:
+        if usuario_obj.senha == "nova_senha":
+            nova_senha = simpledialog.askstring("Nova Senha", "Digite uma nova senha:", show="*", parent=g.aut_form)
+            if nova_senha:
+                usuario_obj.senha = hashlib.sha256(nova_senha.encode()).hexdigest()
+                session.commit()
+                messagebox.showinfo("Sucesso", "Senha alterada com sucesso. Faça login novamente.", parent=g.aut_form)
+                return
+        elif usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest():
+            messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=g.aut_form)
+            g.usuario_id = usuario_obj.id
+            g.aut_form.destroy()
+            g.principal_form.title(f"Cálculo de Dobra - {usuario_obj.nome}")
+        else:
+            messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.aut_form)
     else:
         messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.aut_form)
 
     habilitar_janelas()
-
 
 def logado(tipo):
     configuracoes = {
@@ -799,12 +808,28 @@ def logout():
     g.principal_form.title("Cálculo de Dobra")
     messagebox.showinfo("Logout", "Logout efetuado com sucesso.")
 
-# Manipulação formulários
-def set_topmost(window, on_top):
-    if window and window.winfo_exists():
-        window.attributes("-topmost",on_top)
+def resetar_senha():
+    selected_item = g.lista_usuario.selection()
+    if not selected_item:
+        tk.messagebox.showwarning("Aviso", "Selecione um usuário para resetar a senha.")
+        return
 
-def on_top(form):
+    user_id = g.lista_usuario.item(selected_item, "values")[0]
+    novo_password = "nova_senha"  # Defina a nova senha padrão aqui
+    usuario_obj = session.query(usuario).filter_by(id=user_id).first()
+    if usuario_obj:
+        usuario_obj.senha = novo_password
+        session.commit()
+        tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.")
+    else:
+        tk.messagebox.showerror("Erro", "Usuário não encontrado.")
+
+# Manipulação formulários
+def no_topo(form):
+    def set_topmost(window, on_top):
+        if window and window.winfo_exists():
+            window.attributes("-topmost",on_top)
+
     on_top_valor = g.on_top_var.get() == 1
     set_topmost(form, on_top_valor)
 
@@ -825,6 +850,7 @@ def desabilitar_janelas():
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', True)
+            form.focus_force()
 
 def habilitar_janelas():
     forms = [g.principal_form, g.deducao_form, g.espessura_form, g.material_form, g.canal_form]

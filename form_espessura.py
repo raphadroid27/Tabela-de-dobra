@@ -19,7 +19,7 @@ def main(root_app):
     g.espessura_form.geometry("340x280")
     g.espessura_form.resizable(False, False)
 
-    on_top(g.espessura_form)
+    no_topo(g.espessura_form)
     janela_direita(g.espessura_form)
 
     main_frame = tk.Frame(g.espessura_form)

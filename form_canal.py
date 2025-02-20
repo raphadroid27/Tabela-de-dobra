@@ -21,7 +21,7 @@ def main(root_app):
     g.canal_form.resizable(False, False)
     g.canal_form.geometry("340x420")
 
-    on_top(g.canal_form)
+    no_topo(g.canal_form)
     janela_direita(g.canal_form)
 
     main_frame = tk.Frame(g.canal_form)

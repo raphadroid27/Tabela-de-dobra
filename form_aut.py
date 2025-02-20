@@ -1,11 +1,10 @@
 import tkinter as tk
-from tkinter import messagebox
 import globals as g
-from models import usuario  # Certifique-se de importar a classe correta
-import sqlalchemy
+from models import usuario
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from funcoes import *
+
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
