@@ -139,11 +139,7 @@ def main():
 
     for combobox in comboboxes:
         combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
-
-    for i in range(1, 6):
-        getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_medidadobra(i))
-        getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar_metadedobra(i))
-    
+        
     verificar_admin_existente()
     g.principal_form.mainloop()
 

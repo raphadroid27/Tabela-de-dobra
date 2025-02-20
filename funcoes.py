@@ -207,35 +207,48 @@ def razao_raio_esp():
         except ValueError:
             return
 
-def copiar_valor(label, funcao_calculo):
+def copiar(tipo, numero=None):
+    configuracoes = {
+        'deducao': {
+            'label': g.deducao_label,
+            'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
+        },
+        'fator_k': {
+            'label': g.fator_k_label,
+            'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
+        },
+        'offset': {
+            'label': g.offset_label,
+            'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
+        },
+        'medida_dobra': {
+            'label': lambda numero: getattr(g, f'medidadobra{numero}_label'),
+            'funcao_calculo': calcular_dobra
+        },
+        'metade_dobra': {
+            'label': lambda numero: getattr(g, f'metadedobra{numero}_label'),
+            'funcao_calculo': lambda: (calcular_dobra(), calcular_metade_dobra())
+        },
+        'blank': {
+            'label': g.medida_blank_label,
+            'funcao_calculo': lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank())
+        },
+        'metade_blank': {
+            'label': g.metade_blank_label,
+            'funcao_calculo': lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank())
+        }
+    }
+
+    config = configuracoes[tipo]
+
+    label = config['label'](numero) if callable(config['label']) else config['label']
+    funcao_calculo = config['funcao_calculo']
+
     if label['text']:
         funcao_calculo()
         pyperclip.copy(label['text'])
         print(f'Valor copiado {label["text"]}')
         label.config(text=f'{label["text"]} Copiado!', fg="green")
-
-def copiar_deducao():
-    copiar_valor(g.deducao_label, lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset()))
-
-def copiar_fatork():
-    copiar_valor(g.fator_k_label, lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset()))
-
-def copiar_offset():
-    copiar_valor(g.offset_label, lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset()))
-
-def copiar_medidadobra(numero):
-    medida_dobra_label = getattr(g, f'medidadobra{numero}_label')
-    copiar_valor(medida_dobra_label, calcular_dobra)
-
-def copiar_metadedobra(numero):
-    metade_dobra_label = getattr(g, f'metadedobra{numero}_label')
-    copiar_valor(metade_dobra_label, lambda: (calcular_dobra(), calcular_metade_dobra()))
-
-def copiar_blank():
-    copiar_valor(g.medida_blank_label, lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank()))
-
-def copiar_metade_blank():
-    copiar_valor(g.metade_blank_label, lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank()))
 
 def limpar_dobras():
     dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
