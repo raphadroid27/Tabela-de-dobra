@@ -25,7 +25,7 @@ def main(root_app):
     g.usuario_form.resizable(False, False)
 
     no_topo(g.usuario_form)
-    janela_direita(g.usuario_form)
+    posicionar_janela(g.usuario_form, 'centro')
 
     main_frame = tk.Frame(g.usuario_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)

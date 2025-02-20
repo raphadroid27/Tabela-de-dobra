@@ -22,8 +22,8 @@ def main(root_app):
     g.deducao_form.resizable(False, False)
 
     no_topo(g.deducao_form)
-    janela_direita(g.deducao_form)
-
+    posicionar_janela(g.deducao_form, 'direita')
+    
     main_frame = tk.Frame(g.deducao_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 

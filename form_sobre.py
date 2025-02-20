@@ -10,8 +10,9 @@ def main(root_app):
     g.sobre_form.resizable(False, False)
     g.sobre_form.attributes("-topmost", True)
 
-    janela_centro(g.sobre_form)
-
+    no_topo(g.sobre_form)
+    posicionar_janela(g.sobre_form, 'centro')
+    
     label_titulo = tk.Label(g.sobre_form, text="Tabela de Dobra", font=("Arial", 16, "bold"))
     label_titulo.pack(pady=10)
 
