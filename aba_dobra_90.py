@@ -78,8 +78,13 @@ def criar_aba1(notebook):
     
     g.medida_blank_label = tk.Label(frame_aba1, relief="sunken", width=10)
     g.medida_blank_label.grid(row=6, column=2, sticky='we',padx=2)
-    g.medida_blank_label.bind("<Button-1>", lambda event: copiar_blank())
+    g.medida_blank_label.bind("<Button-1>", lambda event: copiar('blank'))
 
     g.metade_blank_label = tk.Label(frame_aba1, relief="sunken", width=10)
     g.metade_blank_label.grid(row=6, column=3, sticky='we',padx=2)
-    g.metade_blank_label.bind("<Button-1>", lambda event: copiar_metade_blank())
+    g.metade_blank_label.bind("<Button-1>", lambda event: copiar('metade_blank'))
+
+    for i in range(1, 6):
+        getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('medida_dobra',i))
+        getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('metade_dobra',i))
+    
