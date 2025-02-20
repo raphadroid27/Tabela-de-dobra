@@ -22,7 +22,7 @@ def main(root_app):
     g.material_form.geometry("340x420")
 
     no_topo(g.material_form)
-    janela_direita(g.material_form)
+    posicionar_janela(g.material_form,'direita')
 
     main_frame = tk.Frame(g.material_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
