@@ -22,7 +22,7 @@ def main(root_app):
     g.canal_form.geometry("340x420")
 
     no_topo(g.canal_form)
-    posicionar_janela(g.canal_form,'direita')
+    posicionar_janela(g.canal_form,'esquerda')
 
     main_frame = tk.Frame(g.canal_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
