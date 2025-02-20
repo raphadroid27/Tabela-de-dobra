@@ -89,7 +89,7 @@ def main():
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
     g.on_top_var = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="No topo", variable=g.on_top_var, command=lambda: on_top(g.principal_form))
+    opcoes_menu.add_checkbutton(label="No topo", variable=g.on_top_var, command=lambda: no_topo(g.principal_form))
 
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
