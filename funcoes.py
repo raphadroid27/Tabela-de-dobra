@@ -786,16 +786,16 @@ def no_topo(form):
     on_top_valor = g.on_top_var.get() == 1
     set_topmost(form, on_top_valor)
 
-def janela_centro(form):
-    form.update_idletasks() 
-    x = g.principal_form.winfo_x() + ((g.principal_form.winfo_width() - form.winfo_width()) // 2)
-    y = g.principal_form.winfo_y() + ((g.principal_form.winfo_height() - form.winfo_height()) // 2)
-    form.geometry(f"+{x}+{y}")
-
-def janela_direita(form):   
-    form.update_idletasks() 
-    x = g.principal_form.winfo_x() + g.principal_form.winfo_width() + 10
-    y = g.principal_form.winfo_y()
+def posicionar_janela(form, posicao):
+    form.update_idletasks()
+    if posicao == 'centro':
+        x = g.principal_form.winfo_x() + ((g.principal_form.winfo_width() - form.winfo_width()) // 2)
+        y = g.principal_form.winfo_y() + ((g.principal_form.winfo_height() - form.winfo_height()) // 2)
+    elif posicao == 'direita':
+        x = g.principal_form.winfo_x() + g.principal_form.winfo_width() + 10
+        y = g.principal_form.winfo_y()
+    else:
+        raise ValueError("Posição inválida. Use 'centro' ou 'direita'.")
     form.geometry(f"+{x}+{y}")
 
 def desabilitar_janelas():
