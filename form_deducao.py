@@ -21,7 +21,7 @@ def main(root_app):
     g.deducao_form.geometry("500x420")
     g.deducao_form.resizable(False, False)
 
-    on_top(g.deducao_form)
+    no_topo(g.deducao_form)
     janela_direita(g.deducao_form)
 
     main_frame = tk.Frame(g.deducao_form)

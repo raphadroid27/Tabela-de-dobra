@@ -21,7 +21,7 @@ def main(root_app):
     g.material_form.resizable(False, False)
     g.material_form.geometry("340x420")
 
-    on_top(g.material_form)
+    no_topo(g.material_form)
     janela_direita(g.material_form)
 
     main_frame = tk.Frame(g.material_form)
