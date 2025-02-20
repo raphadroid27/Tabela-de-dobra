@@ -9,6 +9,7 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 def main(root_app):
     # Verificar se o usuário é administrador
     if not admin('usuario'):
@@ -23,7 +24,7 @@ def main(root_app):
     g.usuario_form.geometry("340x280")
     g.usuario_form.resizable(False, False)
 
-    on_top(g.usuario_form)
+    no_topo(g.usuario_form)
     janela_direita(g.usuario_form)
 
     main_frame = tk.Frame(g.usuario_form)
@@ -60,6 +61,7 @@ def main(root_app):
     g.lista_usuario.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
         
     tk.Button(main_frame, text="Excluir", command=excluir_usuario, bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+    tk.Button(main_frame, text="Resetar Senha", command=resetar_senha, bg="yellow").grid(row=3, column=0, padx=5, pady=5, sticky="e")
 
     listar('usuario')
 
