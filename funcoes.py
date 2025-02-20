@@ -551,16 +551,20 @@ def excluir_usuario():
     if g.lista_usuario is None:
         return
 
-    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?")
-    if not aviso:
-        return
-
     selected_item = g.lista_usuario.selection()[0]
     item = g.lista_usuario.item(selected_item)
     obj_id = item['values'][0]
     obj = session.query(usuario).filter_by(id=obj_id).first()
     if obj is None:
         messagebox.showerror("Erro", "Usuário não encontrado.")
+        return
+
+    if obj.admin:
+        messagebox.showerror("Erro", "Não é possível excluir o administrador.")
+        return
+    
+    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?")
+    if not aviso:
         return
 
     session.delete(obj)
@@ -755,6 +759,7 @@ def login():
 
     habilitar_janelas()
 
+
 def logado(tipo):
     configuracoes = {
         'dedução': g.deducao_form,
@@ -826,4 +831,4 @@ def habilitar_janelas():
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', False)
-            form.focus_force() 
+            form.focus_force()
