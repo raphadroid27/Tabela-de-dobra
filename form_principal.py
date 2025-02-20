@@ -17,6 +17,7 @@ import form_material
 import form_canal
 import form_sobre 
 import form_aut
+import form_usuario
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -94,6 +95,7 @@ def main():
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
     usuario_menu.add_command(label="Login", command=lambda: form_true(form_aut,"login",g.aut_form))
     usuario_menu.add_command(label="Novo Usuário", command=lambda: form_false(form_aut,"login",g.aut_form))
+    usuario_menu.add_command(label="Gerenciar Usuários", command=lambda: form_usuario.main(g.principal_form))
     usuario_menu.add_separator()
     usuario_menu.add_command(label="Sair", command=logout)
 

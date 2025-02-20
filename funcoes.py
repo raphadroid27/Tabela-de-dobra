@@ -288,7 +288,7 @@ def todas_funcoes():
 
 # Manipulação de dados de Dedução (deducao_form.py)
 def adicionar(tipo):
-    if not login_requerido():
+    if not logado(tipo):
         return
        
     if tipo == 'dedução':
@@ -427,7 +427,7 @@ def adicionar(tipo):
     listar(tipo)
 
 def editar(tipo):
-    if not admin_requerido():
+    if not admin(tipo):
         return
         
     if tipo == 'dedução':  
@@ -466,8 +466,6 @@ def editar(tipo):
         g.material_elasticidade_entry.delete(0, tk.END)
 
     if tipo == 'canal':
-        if not admin_requerido():
-            return
         item_selecionado = g.lista_canal.selection()[0]
         item = g.lista_canal.item(item_selecionado)
         canal_valor= item['values'][0]
@@ -484,11 +482,11 @@ def editar(tipo):
     atualizar_canal()
     atualizar_deducao_e_obs()
     atualizar_combobox_deducao()
-    listar('dedução'), listar('material'), listar('espessura'), listar('canal')
+    listar('dedução'), listar('material'), listar('espessura'), listar('canal'), listar('usuario')
 
 
 def excluir(tipo):
-    if not admin_requerido():
+    if not admin(tipo):
         return
 
     configuracoes = {
@@ -516,14 +514,12 @@ def excluir(tipo):
 
     config = configuracoes[tipo]
     
-    if tipo == "dedução":
-        aviso = messagebox.askyesno("Atenção!", "A Dedução será excluída permanentemente, deseja continuar?")
-        if not aviso:
-            return
-    else:
-        aviso = messagebox.askyesno("Atenção!", f"Ao excluir um(a) {tipo} todas as deduções relacionadas serão excluídas também, deseja continuar?")
-        if not aviso:
-            return
+    if config['lista'] is None:
+        return
+
+    aviso = messagebox.askyesno("Atenção!", f"Ao excluir um(a) {tipo} todas as deduções relacionadas serão excluídas também, deseja continuar?")
+    if not aviso:
+        return
 
     selected_item = config['lista'].selection()[0]
     item = config['lista'].item(selected_item)
@@ -533,10 +529,9 @@ def excluir(tipo):
         messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
         return
 
-    if tipo != "dedução":
-        deducao_objs = session.query(deducao).filter(config['item_id']==obj.id).all()
-        for d in deducao_objs:
-            session.delete(d)
+    deducao_objs = session.query(deducao).filter(config['item_id']==obj.id).all()
+    for d in deducao_objs:
+        session.delete(d)
 
     session.delete(obj)
     session.commit()
@@ -548,6 +543,32 @@ def excluir(tipo):
     atualizar_deducao_e_obs()
     atualizar_combobox_deducao()
     listar('dedução'), listar('material'), listar('espessura'), listar('canal')
+
+def excluir_usuario():
+    if not admin('usuario'):
+        return
+
+    if g.lista_usuario is None:
+        return
+
+    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?")
+    if not aviso:
+        return
+
+    selected_item = g.lista_usuario.selection()[0]
+    item = g.lista_usuario.item(selected_item)
+    obj_id = item['values'][0]
+    obj = session.query(usuario).filter_by(id=obj_id).first()
+    if obj is None:
+        messagebox.showerror("Erro", "Usuário não encontrado.")
+        return
+
+    session.delete(obj)
+    session.commit()
+    g.lista_usuario.delete(selected_item)
+    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!")
+
+    listar('usuario')
 
 def atualizar_combobox_deducao():
     if g.deducao_material_combobox:
@@ -587,6 +608,13 @@ def buscar(tipo):
         'modelo': canal,
         'campo_busca': canal.valor,
         'valores': g.valores_canal,
+        },
+        'usuario': {
+            'entry': g.usuario_valor_entry,
+            'lista': g.lista_usuario,
+            'modelo': usuario,
+            'campo_busca': usuario.nome,
+            'valores': g.valores_usuario
         }
     }
     config = configuracao[tipo]
@@ -643,10 +671,19 @@ def listar(tipo):
             'modelo': canal,
             'valores': g.valores_canal,
             'ordem': canal.valor
+        },
+        'usuario': {
+            'lista': g.lista_usuario,
+            'modelo': usuario,
+            'valores': g.valores_usuario,
+            'ordem': usuario.nome
         }
     }
 
     config = configuracoes[tipo]
+
+    if config['lista'] is None or not config['lista'].winfo_exists():
+        return
 
     for item in config['lista'].get_children():
         config['lista'].delete(item)
@@ -654,6 +691,9 @@ def listar(tipo):
     itens = session.query(config['modelo']).order_by(config['ordem']).all()
     
     for item in itens:
+        if tipo == 'dedução':
+            if item.material is None or item.espessura is None or item.canal is None:
+                continue
         config['lista'].insert("", "end", values=config['valores'](item))
 
 def limpar_busca(tipo):
@@ -683,19 +723,21 @@ def novo_usuario():
     novo_usuario_senha = g.senha_entry.get()
     senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
     if novo_usuario_nome == "" or novo_usuario_senha == "":
-        messagebox.showerror("Erro", "Preencha todos os campos.")
+        messagebox.showerror("Erro", "Preencha todos os campos.", parent=g.aut_form)
         return
     
     usuario_obj = session.query(usuario).filter_by(nome=novo_usuario_nome).first()
     if usuario_obj:
-        messagebox.showerror("Erro", "Usuário já existente.")
+        messagebox.showerror("Erro", "Usuário já existente.", parent=g.aut_form)
         return
     else:
         novo_usuario = usuario(nome=novo_usuario_nome, senha=senha_hash, admin=g.admin_var.get())
         session.add(novo_usuario)
         session.commit()
-        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.")
-        g.novo_usuario_form.destroy()
+        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.aut_form)
+        g.aut_form.destroy()
+    
+    habilitar_janelas()
 
 def login():
     usuario_nome = g.usuario_entry.get()
@@ -711,19 +753,36 @@ def login():
     else:
         messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.aut_form)
 
-def login_requerido():
+    habilitar_janelas()
+
+def logado(tipo):
+    configuracoes = {
+        'dedução': g.deducao_form,
+        'espessura': g.espessura_form,
+        'material': g.material_form,
+        'canal': g.canal_form
+    }
+
     if g.usuario_id is None:
-        messagebox.showerror("Erro", "Login requerido.")
+        messagebox.showerror("Erro", "Login requerido.", parent=configuracoes[tipo])
         return False
     return True
 
-def admin_requerido():
+def admin(tipo):
+    configuracoes = {
+        'dedução': g.deducao_form,
+        'espessura': g.espessura_form,
+        'material': g.material_form,
+        'canal': g.canal_form,
+        'usuario': g.usuario_form
+    }
+
     if g.usuario_id is None:
-        messagebox.showerror("Erro", "Admin requerido.")
+        messagebox.showerror("Erro", "Admin requerido.", parent=configuracoes[tipo])
         return False
     usuario_obj = session.query(usuario).filter_by(id=g.usuario_id).first()
     if not usuario_obj.admin:
-        messagebox.showerror("Erro", "Admin requerido.")
+        messagebox.showerror("Erro", "Admin requerido.", parent=configuracoes[tipo])
         return False
     return True
 
@@ -755,3 +814,16 @@ def janela_direita(form):
     x = g.principal_form.winfo_x() + g.principal_form.winfo_width() + 10
     y = g.principal_form.winfo_y()
     form.geometry(f"+{x}+{y}")
+
+def desabilitar_janelas():
+    forms = [g.principal_form, g.deducao_form, g.espessura_form, g.material_form, g.canal_form]
+    for form in forms:
+        if form is not None and form.winfo_exists():
+            form.attributes('-disabled', True)
+
+def habilitar_janelas():
+    forms = [g.principal_form, g.deducao_form, g.espessura_form, g.material_form, g.canal_form]
+    for form in forms:
+        if form is not None and form.winfo_exists():
+            form.attributes('-disabled', False)
+            form.focus_force() 
