@@ -13,12 +13,12 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 session = sessionmaker(bind=engine)
 session = session()
 
-# App principal (app.py)
+# App
 def carregar_variaveis_globais():
     g.espessura_valor = float(g.espessura_combobox.get()) if g.espessura_combobox.get() else None
     g.canal_valor = float(re.findall(r'\d+\.?\d*', g.canal_combobox.get())[0]) if g.canal_combobox.get() else None
     g.raio_interno = float(re.findall(r'\d+\.?\d*', g.raio_interno_entry.get().replace(',', '.'))[0]) if g.raio_interno_entry.get() else None
-    g.deducao_espec = float(g.deducao_espec_entry.get()) if g.deducao_espec_entry.get() else None
+    g.deducao_espec = float(re.findall(r'\d+\.?\d*',g.deducao_espec_entry.get().replace(',', '.'))[0]) if g.deducao_espec_entry.get() else None
     
     print(f'{g.canal_valor} {g.espessura_valor} {g.deducao_valor}')
 
@@ -285,7 +285,134 @@ def todas_funcoes():
     calcular_metade_dobra()
     razao_raio_esp()
 
-# Manipulação de dados de Dedução (deducao_form.py)
+# Manipulação de dados
+def obter_configuracoes():
+    return {
+        'dedução': {
+            'lista': g.lista_deducao,
+            'modelo': deducao,
+            'campos': {
+                'valor': g.deducao_valor_entry,
+                'observacao': g.deducao_obs_entry,
+                'forca': g.deducao_forca_entry
+            },
+            'item_id': deducao.id,
+            'valores': g.valores_deducao,
+            'ordem': deducao.valor,
+            'entries': {
+                'material_combo': g.deducao_material_combobox,
+                'espessura_combo': g.deducao_espessura_combobox,
+                'canal_combo': g.deducao_canal_combobox
+            }
+        },
+        'material': {
+            'lista': g.lista_material,
+            'modelo': material,
+            'campos': {
+                'nome': g.material_nome_entry,
+                'densidade': g.material_densidade_entry,
+                'escoamento': g.material_escoamento_entry,
+                'elasticidade': g.material_elasticidade_entry
+            },
+            'item_id': deducao.material_id,
+            'valores': g.valores_material,
+            'ordem': material.nome,
+            'entry': g.material_nome_entry,
+            'campo_busca': material.nome
+        },
+        'espessura': {
+            'lista': g.lista_espessura,
+            'modelo': espessura,
+            'valores': g.valores_espessura,
+            'ordem': espessura.valor,
+            'entry': g.espessura_valor_entry,
+            'campo_busca': espessura.valor
+        },
+        'canal': {
+            'lista': g.lista_canal,
+            'modelo': canal,
+            'campos': {
+                'largura': g.canal_largura_entry,
+                'altura': g.canal_altura_entry,
+                'comprimento_total': g.canal_comprimento_entry,
+                'observacao': g.canal_observacao_entry
+            },
+            'item_id': deducao.canal_id,
+            'valores': g.valores_canal,
+            'ordem': canal.valor,
+            'entry': g.canal_valor_entry,
+            'campo_busca': canal.valor
+        },
+        'usuario': {
+            'lista': g.lista_usuario,
+            'modelo': usuario,
+            'valores': g.valores_usuario,
+            'ordem': usuario.nome,
+            'entry': g.usuario_valor_entry,
+            'campo_busca': usuario.nome
+        }
+    }
+
+def listar(tipo):
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
+    if config['lista'] is None or not config['lista'].winfo_exists():
+        return
+
+    for item in config['lista'].get_children():
+        config['lista'].delete(item)
+
+    itens = session.query(config['modelo']).order_by(config['ordem']).all()
+    
+    for item in itens:
+        if tipo == 'dedução':
+            if item.material is None or item.espessura is None or item.canal is None:
+                continue
+        config['lista'].insert("", "end", values=config['valores'](item))
+
+def buscar(tipo):
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
+    def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
+        query = session.query(deducao).join(material).join(espessura).join(canal)
+        
+        if material_nome:
+            query = query.filter(material.nome == material_nome)
+        if espessura_valor:
+            query = query.filter(espessura.valor == espessura_valor)
+        if canal_valor:
+            query = query.filter(canal.valor == canal_valor)
+        
+        return query.all()
+
+    if tipo == 'dedução':
+        material_nome = config['entries']['material_combo'].get()
+        espessura_valor = config['entries']['espessura_combo'].get()
+        canal_valor = config['entries']['canal_combo'].get()
+        itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
+    else:
+        item = config['entry'].get().replace(',', '.')
+        itens = session.query(config['modelo']).filter(config['campo_busca'].like(f"{item}%"))
+    
+    for item in config['lista'].get_children():
+        config['lista'].delete(item)
+
+    for item in itens:
+        config['lista'].insert("", "end", values=config['valores'](item))
+
+def limpar_busca(tipo):
+    configuracoes = obter_configuracoes()
+    if tipo == 'dedução':
+        configuracoes[tipo]['entries']['material_combo'].delete(0, tk.END)
+        configuracoes[tipo]['entries']['espessura_combo'].delete(0, tk.END)
+        configuracoes[tipo]['entries']['canal_combo'].delete(0, tk.END)
+    else:
+        configuracoes[tipo]['entry'].delete(0, tk.END)
+
+    listar(tipo)
+
 def adicionar(tipo):
     if not logado(tipo):
         return
@@ -425,57 +552,33 @@ def adicionar(tipo):
     atualizar_combobox_deducao()
     listar(tipo)
 
-def editar(tipo):
+def atualizar(tipo):
     if not admin(tipo):
         return
-        
-    if tipo == 'dedução':  
-        item_selecionado = g.lista_deducao.selection()[0]
-        item = g.lista_deducao.item(item_selecionado)
-        deducao_valor = item['values'][3]
-        deducao_obj = session.query(deducao).filter_by(valor=deducao_valor).first()    
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
 
-        deducao_obj.valor = float(g.deducao_valor_entry.get().replace(',', '.')) if g.deducao_valor_entry.get() else deducao_obj.valor
-        deducao_obj.observacao = g.deducao_obs_entry.get() if g.deducao_obs_entry.get() else deducao_obj.observacao
-        deducao_obj.forca = float(g.deducao_forca_entry.get().replace(',', '.')) if g.deducao_forca_entry.get() else deducao_obj.forca
+    if not config['lista'].selection():
+        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
+        return
+
+    selected_item = config['lista'].selection()[0]
+    item = config['lista'].item(selected_item)
+    obj_id = item['values'][0]
+    obj = session.query(config['modelo']).filter_by(id=obj_id).first()
+
+    if obj:
+        for campo, entry in config['campos'].items():
+            valor = entry.get().replace(',', '.') if entry.get() else getattr(obj, campo)
+            setattr(obj, campo, float(valor) if valor.replace('.', '', 1).isdigit() else valor)
         session.commit()
 
-        messagebox.showinfo("Sucesso", "Dedução editada com sucesso!")
-        g.deducao_valor_entry.delete(0, tk.END)
-        g.deducao_obs_entry.delete(0, tk.END)
-        g.deducao_forca_entry.delete(0, tk.END)
-    
-    if tipo == 'material':
-        selected_item = g.lista_material.selection()[0]
-        item = g.lista_material.item(selected_item)
-        material_nome = item['values'][0]
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
+        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
 
-        material_obj.nome = g.material_nome_entry.get() if g.material_nome_entry.get() else material_obj.nome
-        material_obj.densidade = float(g.material_densidade_entry.get().replace(',', '.')) if g.material_densidade_entry.get() else material_obj.densidade
-        material_obj.escoamento = float(g.material_escoamento_entry.get().replace(',', '.')) if g.material_escoamento_entry.get() else material_obj.escoamento
-        material_obj.elasticidade = float(g.material_elasticidade_entry.get().replace(',', '.')) if g.material_elasticidade_entry.get() else material_obj.elasticidade
-        session.commit()
-
-        messagebox.showinfo("Sucesso", "Material editado com sucesso!")
-        
-        g.material_nome_entry.delete(0, tk.END)
-        g.material_densidade_entry.delete(0, tk.END)
-        g.material_escoamento_entry.delete(0, tk.END)
-        g.material_elasticidade_entry.delete(0, tk.END)
-
-    if tipo == 'canal':
-        item_selecionado = g.lista_canal.selection()[0]
-        item = g.lista_canal.item(item_selecionado)
-        canal_valor= item['values'][0]
-        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
-
-        canal_obj.largura = float(g.canal_largura_entry.get()) if g.canal_largura_entry.get() else canal_obj.largura
-        canal_obj.altura = float(g.canal_altura_entry.get()) if g.canal_altura_entry.get() else canal_obj.altura
-        canal_obj.comprimento_total = float(g.canal_comprimento_entry.get()) if g.canal_comprimento_entry.get() else canal_obj.comprimento_total
-        canal_obj.observacao = g.canal_observacao_entry.get() if g.canal_observacao_entry.get() else canal_obj.observacao
-        session.commit() 
-        messagebox.showinfo("Sucesso", "Canal editado com suceso!")
+        for entry in config['campos'].values():
+            entry.delete(0, tk.END)
+    else:
+        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
 
     atualizar_espessura()
     atualizar_canal()
@@ -483,34 +586,11 @@ def editar(tipo):
     atualizar_combobox_deducao()
     listar('dedução'), listar('material'), listar('espessura'), listar('canal'), listar('usuario')
 
-
 def excluir(tipo):
     if not admin(tipo):
         return
 
-    configuracoes = {
-        'dedução': {
-            'lista': g.lista_deducao,
-            'modelo': deducao,
-            'item_id': deducao.id,
-        },
-        'material': {
-            'lista': g.lista_material,
-            'modelo': material,
-            'item_id': deducao.material_id,
-        },
-        'espessura': {
-            'lista': g.lista_espessura,
-            'modelo': espessura,
-            'item_id': deducao.espessura_id,
-        },
-        'canal': {
-            'lista': g.lista_canal,
-            'modelo': canal,
-            'item_id': deducao.canal_id,
-        }
-    }
-
+    configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
     
     if config['lista'] is None:
@@ -543,36 +623,6 @@ def excluir(tipo):
     atualizar_combobox_deducao()
     listar('dedução'), listar('material'), listar('espessura'), listar('canal')
 
-def excluir_usuario():
-    if not admin('usuario'):
-        return
-
-    if g.lista_usuario is None:
-        return
-
-    selected_item = g.lista_usuario.selection()[0]
-    item = g.lista_usuario.item(selected_item)
-    obj_id = item['values'][0]
-    obj = session.query(usuario).filter_by(id=obj_id).first()
-    if obj is None:
-        messagebox.showerror("Erro", "Usuário não encontrado.")
-        return
-
-    if obj.admin:
-        messagebox.showerror("Erro", "Não é possível excluir o administrador.")
-        return
-    
-    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?")
-    if not aviso:
-        return
-
-    session.delete(obj)
-    session.commit()
-    g.lista_usuario.delete(selected_item)
-    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!")
-
-    listar('usuario')
-
 def atualizar_combobox_deducao():
     if g.deducao_material_combobox:
         g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] 
@@ -581,146 +631,7 @@ def atualizar_combobox_deducao():
     if g.deducao_canal_combobox:
         g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
 
-def buscar(tipo):
-    configuracao = {
-        'dedução':{'entries':{'material_combo':g.deducao_material_combobox,
-                              'espessura_combo': g.deducao_espessura_combobox,
-                              'canal_combo': g.deducao_canal_combobox
-                              },
-        'lista':g.lista_deducao,
-        'modelo':deducao,
-        'valores':g.valores_deducao,
-        },  
-        'material':{
-        'entry': g.material_nome_entry,
-        'lista': g.lista_material,
-        'modelo': material,
-        'campo_busca': material.nome,
-        'valores': g.valores_material,
-        },
-        'espessura':{
-        'entry': g.espessura_valor_entry,
-        'lista': g.lista_espessura,
-        'modelo': espessura,
-        'campo_busca': espessura.valor,
-        'valores': g.valores_espessura,
-        },
-        'canal':{
-        'entry': g.canal_valor_entry,
-        'lista': g.lista_canal,
-        'modelo': canal,
-        'campo_busca': canal.valor,
-        'valores': g.valores_canal,
-        },
-        'usuario': {
-            'entry': g.usuario_valor_entry,
-            'lista': g.lista_usuario,
-            'modelo': usuario,
-            'campo_busca': usuario.nome,
-            'valores': g.valores_usuario
-        }
-    }
-    config = configuracao[tipo]
-
-    def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
-        query = session.query(deducao).join(material).join(espessura).join(canal)
-        
-        if material_nome:
-            query = query.filter(material.nome == material_nome)
-        if espessura_valor:
-            query = query.filter(espessura.valor == espessura_valor)
-        if canal_valor:
-            query = query.filter(canal.valor == canal_valor)
-        
-        return query.all()
-
-    if tipo == 'dedução':
-        material_nome = config['entries']['material_combo'].get()
-        espessura_valor = config['entries']['espessura_combo'].get()
-        canal_valor = config['entries']['canal_combo'].get()
-        itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
-    else:
-        item = config['entry'].get().replace(',', '.')
-        itens = session.query(config['modelo']).filter(config['campo_busca'].like(f"{item}%"))
-    
-    for item in config['lista'].get_children():
-        config['lista'].delete(item)
-
-    for item in itens:
-        config['lista'].insert("", "end", values=config['valores'](item))
-
-def listar(tipo):
-    configuracoes = {
-        'dedução': {
-            'lista': g.lista_deducao,
-            'modelo': deducao,
-            'valores': g.valores_deducao,
-            'ordem': deducao.valor
-        },
-        'material': {
-            'lista': g.lista_material,
-            'modelo': material,
-            'valores': g.valores_material,
-            'ordem': material.nome
-        },
-        'espessura': {
-            'lista': g.lista_espessura,
-            'modelo': espessura,
-            'valores': g.valores_espessura,
-            'ordem': espessura.valor
-        },
-        'canal': {
-            'lista': g.lista_canal,
-            'modelo': canal,
-            'valores': g.valores_canal,
-            'ordem': canal.valor
-        },
-        'usuario': {
-            'lista': g.lista_usuario,
-            'modelo': usuario,
-            'valores': g.valores_usuario,
-            'ordem': usuario.nome
-        }
-    }
-
-    config = configuracoes[tipo]
-
-    if config['lista'] is None or not config['lista'].winfo_exists():
-        return
-
-    for item in config['lista'].get_children():
-        config['lista'].delete(item)
-
-    itens = session.query(config['modelo']).order_by(config['ordem']).all()
-    
-    for item in itens:
-        if tipo == 'dedução':
-            if item.material is None or item.espessura is None or item.canal is None:
-                continue
-        config['lista'].insert("", "end", values=config['valores'](item))
-
-def limpar_busca(tipo):
-    configuracoes = {
-        'dedução': {'entries':{'material_combo':g.deducao_material_combobox,
-                              'espessura_combo': g.deducao_espessura_combobox,
-                              'canal_combo': g.deducao_canal_combobox
-                              }},
-        'material': g.material_nome_entry,
-        'espessura': g.espessura_valor_entry,
-        'canal': g.canal_valor_entry
-    }
-    
-    if tipo == 'dedução':
-        configuracoes[tipo]['entries']['material_combo'].delete(0, tk.END)
-        configuracoes[tipo]['entries']['espessura_combo'].delete(0, tk.END)
-        configuracoes[tipo]['entries']['canal_combo'].delete(0, tk.END)
-
-    else:
-        configuracoes[tipo].delete(0, tk.END)
-
-    listar(tipo)
-
-# manipulacao de usuarios
+# Manipulação de usuarios
 def novo_usuario():
     novo_usuario_nome = g.usuario_entry.get()
     novo_usuario_senha = g.senha_entry.get()
@@ -822,6 +733,36 @@ def resetar_senha():
         tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.")
     else:
         tk.messagebox.showerror("Erro", "Usuário não encontrado.")
+
+def excluir_usuario():
+    if not admin('usuario'):
+        return
+
+    if g.lista_usuario is None:
+        return
+
+    selected_item = g.lista_usuario.selection()[0]
+    item = g.lista_usuario.item(selected_item)
+    obj_id = item['values'][0]
+    obj = session.query(usuario).filter_by(id=obj_id).first()
+    if obj is None:
+        messagebox.showerror("Erro", "Usuário não encontrado.")
+        return
+
+    if obj.admin:
+        messagebox.showerror("Erro", "Não é possível excluir o administrador.")
+        return
+    
+    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?")
+    if not aviso:
+        return
+
+    session.delete(obj)
+    session.commit()
+    g.lista_usuario.delete(selected_item)
+    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!")
+
+    listar('usuario')
 
 # Manipulação formulários
 def no_topo(form):
