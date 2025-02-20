@@ -29,8 +29,7 @@ def atualizar_espessura():
     material_nome = g.material_combobox.get()
     material_obj = session.query(material).filter_by(nome=material_nome).first()
     if material_obj:
-        espessuras_valores = sorted(
-            [str(e.valor) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).all()])
+        espessuras_valores = [str(e.valor) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).order_by(espessura.valor).all()]
         g.espessura_combobox['values'] = espessuras_valores
 
 def atualizar_canal():
