@@ -59,7 +59,6 @@ def main(root_app):
 
     if g.editar_espessura == True:
         g.espessura_form.title("Editar/Excluir Espessura")
-        g.lista_espessura.bind("<ButtonRelease-1>", lambda event: preencher_campos('espessura'))
         tk.Button(main_frame, text="Excluir", command=lambda:excluir('espessura'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     else:
         g.espessura_form.title("Adicionar Espessura")
