@@ -55,7 +55,6 @@ def main():
     g.principal_form.title("Cálculo de Dobra")
     g.principal_form.geometry(config.get('geometry'))
     g.principal_form.resizable(False, False)
-
     g.principal_form.update_idletasks() 
 
     def on_closing():
