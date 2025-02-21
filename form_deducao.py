@@ -22,7 +22,7 @@ def main(root_app):
     g.deducao_form.resizable(False, False)
 
     no_topo(g.deducao_form)
-    posicionar_janela(g.deducao_form, 'direita')
+    posicionar_janela(g.deducao_form, None)
     
     main_frame = tk.Frame(g.deducao_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
@@ -69,7 +69,7 @@ def main(root_app):
         g.lista_deducao.column("Observação", width=120, anchor="w")
 
     g.lista_deducao.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-
+    
     listar('dedução')
 
     frame_edicoes = tk.LabelFrame(main_frame, pady=5)
@@ -80,7 +80,7 @@ def main(root_app):
     frame_edicoes.columnconfigure(2, weight=2)
     frame_edicoes.columnconfigure(3, weight=1)
 
-    tk.Label(frame_edicoes, text="Dedução:").grid(row=0, column=0, padx=2, sticky='sw')
+    tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, padx=2, sticky='sw')
     g.deducao_valor_entry = tk.Entry(frame_edicoes)
     g.deducao_valor_entry.grid(row=1, column=0, padx=5, sticky="ew")
 
@@ -95,7 +95,9 @@ def main(root_app):
 
     if g.editar_deducao == True:
         g.deducao_form.title("Editar/Excluir Dedução")
+        g.lista_deducao.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução'))
         frame_edicoes.config(text='Editar Dedução')
+        
         tk.Button(frame_edicoes, text="Atualizar", command = lambda: atualizar('dedução'), bg="green").grid(row=1, column=3, padx=5, pady=5, sticky="eW")       
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('dedução'), bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
     else:
