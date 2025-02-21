@@ -22,7 +22,7 @@ def main(root_app):
     g.material_form.geometry("340x420")
 
     no_topo(g.material_form)
-    posicionar_janela(g.material_form,'direita')
+    posicionar_janela(g.material_form, None)
 
     main_frame = tk.Frame(g.material_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
@@ -81,15 +81,17 @@ def main(root_app):
 
     tk.Label(frame_edicoes, text="Escoamento:", anchor="w").grid(row=2, column=0, padx=2, sticky='sw')
     g.material_escoamento_entry = tk.Entry(frame_edicoes)
-    g.material_escoamento_entry.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+    g.material_escoamento_entry.grid(row=3, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Elasticidade:", anchor="w").grid(row=2, column=1, padx=2, sticky='sw')
     g.material_elasticidade_entry = tk.Entry(frame_edicoes)
-    g.material_elasticidade_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+    g.material_elasticidade_entry.grid(row=3, column=1, padx=5, sticky="ew")
 
     if g.editar_material == True:
         g.material_form.title("Editar/Excluir Material")
+        g.lista_material.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
         frame_edicoes.config(text='Editar Material')
+        
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('material'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         tk.Button(frame_edicoes, text="Atualizar", command = lambda: atualizar('material'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
     else:
