@@ -22,7 +22,7 @@ def main(root_app):
     g.canal_form.geometry("340x420")
 
     no_topo(g.canal_form)
-    posicionar_janela(g.canal_form,'esquerda')
+    posicionar_janela(g.canal_form,None)
 
     main_frame = tk.Frame(g.canal_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
@@ -94,7 +94,9 @@ def main(root_app):
 
     if g.editar_canal == True:     
         g.canal_form.title("Editar/Excluir Canal")
+        g.lista_canal.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal'))
         frame_edicoes.config(text='Editar Canal')
+
         tk.Button(main_frame, text="Excluir", command=lambda:excluir('canal'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         tk.Button(frame_edicoes, text="Atualizar", command=lambda:atualizar('canal'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=5)
     else:  

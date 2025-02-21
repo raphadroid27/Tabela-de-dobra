@@ -572,6 +572,26 @@ def adicionar(tipo):
     atualizar_combobox_deducao()
     listar(tipo)
 
+def preencher_campos(tipo):
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
+    if not config['lista'].selection():
+        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
+        return
+
+    selected_item = config['lista'].selection()[0]
+    item = config['lista'].item(selected_item)
+    obj_id = item['values'][0]
+    obj = session.query(config['modelo']).filter_by(id=obj_id).first()
+
+    if obj:
+        for campo, entry in config['campos'].items():
+            entry.delete(0, tk.END)
+            entry.insert(0, getattr(obj, campo)) if getattr(obj, campo) is not None else entry.insert(0, '')
+    else:
+        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a.")
+
 def atualizar(tipo):
     if not admin(tipo):
         return
@@ -796,8 +816,19 @@ def no_topo(form):
     on_top_valor = g.on_top_var.get() == 1
     set_topmost(form, on_top_valor)
 
-def posicionar_janela(form, posicao):
+def posicionar_janela(form, posicao=None):
     form.update_idletasks()
+    g.principal_form.update_idletasks()
+    largura_monitor = g.principal_form.winfo_screenwidth()
+    posicao_x = g.principal_form.winfo_x()
+    largura_janela = g.principal_form.winfo_width()
+
+    if posicao is None:
+        if posicao_x > largura_monitor / 2:
+            posicao = 'esquerda'
+        else:
+            posicao = 'direita'
+
     if posicao == 'centro':
         x = g.principal_form.winfo_x() + ((g.principal_form.winfo_width() - form.winfo_width()) // 2)
         y = g.principal_form.winfo_y() + ((g.principal_form.winfo_height() - form.winfo_height()) // 2)
@@ -809,6 +840,7 @@ def posicionar_janela(form, posicao):
         y = g.principal_form.winfo_y()
     else:
         return
+
     form.geometry(f"+{x}+{y}")
 
 def desabilitar_janelas():
