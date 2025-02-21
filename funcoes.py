@@ -331,6 +331,7 @@ def obter_configuracoes():
             'valores': g.valores_material,
             'ordem': material.nome,
             'entry': g.material_nome_entry,
+            'busca': g.material_busca_entry,
             'campo_busca': material.nome
         },
         'espessura': {
@@ -339,12 +340,14 @@ def obter_configuracoes():
             'valores': g.valores_espessura,
             'ordem': espessura.valor,
             'entry': g.espessura_valor_entry,
+            'busca': g.espessura_busca_entry,
             'campo_busca': espessura.valor
         },
         'canal': {
             'lista': g.lista_canal,
             'modelo': canal,
             'campos': {
+                'valor': g.canal_valor_entry,
                 'largura': g.canal_largura_entry,
                 'altura': g.canal_altura_entry,
                 'comprimento_total': g.canal_comprimento_entry,
@@ -354,6 +357,7 @@ def obter_configuracoes():
             'valores': g.valores_canal,
             'ordem': canal.valor,
             'entry': g.canal_valor_entry,
+            'busca': g.canal_busca_entry,
             'campo_busca': canal.valor
         },
         'usuario': {
@@ -378,6 +382,9 @@ def listar(tipo):
 
     itens = session.query(config['modelo']).order_by(config['ordem']).all()
     
+    if tipo == 'canal':
+        itens = sorted(itens, key=lambda x: float(re.findall(r'\d+\.?\d*', x.valor)[0]))
+
     for item in itens:
         if tipo == 'dedução':
             if item.material is None or item.espessura is None or item.canal is None:
@@ -406,7 +413,7 @@ def buscar(tipo):
         canal_valor = config['entries']['canal_combo'].get()
         itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
     else:
-        item = config['entry'].get().replace(',', '.')
+        item = config['busca'].get().replace(',', '.')
         itens = session.query(config['modelo']).filter(config['campo_busca'].like(f"{item}%"))
     
     for item in config['lista'].get_children():
@@ -422,7 +429,7 @@ def limpar_busca(tipo):
         configuracoes[tipo]['entries']['espessura_combo'].delete(0, tk.END)
         configuracoes[tipo]['entries']['canal_combo'].delete(0, tk.END)
     else:
-        configuracoes[tipo]['entry'].delete(0, tk.END)
+        configuracoes[tipo]['busca'].delete(0, tk.END)
 
     listar(tipo)
 
@@ -568,6 +575,7 @@ def adicionar(tipo):
 def atualizar(tipo):
     if not admin(tipo):
         return
+
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -582,8 +590,10 @@ def atualizar(tipo):
 
     if obj:
         for campo, entry in config['campos'].items():
-            valor = entry.get().replace(',', '.') if entry.get() else getattr(obj, campo)
-            setattr(obj, campo, float(valor) if valor.replace('.', '', 1).isdigit() else valor)
+            valor = entry.get() if entry.get() else getattr(obj, campo)
+            if valor is not None:
+                valor = valor.replace(',', '.') if isinstance(valor, str) else valor
+                setattr(obj, campo, float(valor) if isinstance(valor, str) and valor.replace('.', '', 1).isdigit() else valor)
         session.commit()
 
         messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
