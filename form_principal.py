@@ -5,9 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
 import os
-from aba_dobra_90 import criar_aba1
-from aba2 import criar_aba2
-from aba_raio_fatorK import criar_aba3
+from dobra_90 import dados_dobra
 from cabecalho import cabecalho
 import form_espessura
 import globals as g
@@ -103,14 +101,7 @@ def main():
     help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(g.principal_form))
 
     cabecalho(g.principal_form)
-
-    # Criando o Notebook (abas)
-    notebook = ttk.Notebook(g.principal_form, height=140)
-    notebook.pack(fill='both', expand=True, padx=10, pady=5)
-
-    criar_aba1(notebook)
-    # criar_aba2(notebook)
-    criar_aba3(notebook)
+    dados_dobra(g.principal_form)
 
     frame_botoes = tk.Frame(g.principal_form, width=200)
     frame_botoes.pack(expand=True)
@@ -119,26 +110,11 @@ def main():
     frame_botoes.columnconfigure(1, weight=1)
 
     # Botão para limpar valores de dobras
-    limpar_dobras_button = tk.Button(frame_botoes, text="Limpar Dobras", command=limpar_dobras, width=15, bg='yellow')
-    limpar_dobras_button.grid(row=0, column=0, sticky='we', padx=2)
+    tk.Button(frame_botoes, text="Limpar Dobras", command=limpar_dobras, width=15, bg='yellow').grid(row=0, column=0, sticky='we', padx=2)
 
     # Botão para limpar todos os valores
-    limpar_tudo_button = tk.Button(frame_botoes, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red')
-    limpar_tudo_button.grid(row=0, column=1, sticky='we', padx=2)
-
-    # Funções de atualização
-    entries = [
-        g.deducao_label, g.deducao_espec_entry, g.aba1_entry, g.aba2_entry, 
-        g.aba3_entry, g.aba4_entry, g.aba5_entry, g.raio_interno_entry, g.comprimento_entry
-    ]
-    comboboxes = [g.canal_combobox, g.espessura_combobox, g.material_combobox]
-
-    for entry in entries:
-        entry.bind("<KeyRelease>", lambda event: todas_funcoes())
-
-    for combobox in comboboxes:
-        combobox.bind("<<ComboboxSelected>>", lambda event: todas_funcoes())
-        
+    tk.Button(frame_botoes, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red').grid(row=0, column=1, sticky='we', padx=2)
+     
     verificar_admin_existente()
     g.principal_form.mainloop()
 

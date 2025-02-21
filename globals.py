@@ -27,21 +27,11 @@ aba_min_externa_label = None
 z_min_externa_label = None
 
 # aba1.py widgets
-aba1_entry = None
-aba2_entry = None
-aba3_entry = None
-aba4_entry = None
-aba5_entry = None
-medidadobra1_label = None
-medidadobra2_label = None
-medidadobra3_label = None
-medidadobra4_label = None
-medidadobra5_label = None
-metadedobra1_label = None
-metadedobra2_label = None
-metadedobra3_label = None
-metadedobra4_label = None
-metadedobra5_label = None
+n = 6
+for i in range(1, n):
+    globals()[f'aba{i}_entry'] = None
+    globals()[f'medidadobra{i}_label'] = None
+    globals()[f'metadedobra{i}_label'] = None
 deducao_espec_entry = None
 medida_blank_label = None
 metade_blank_label = None
