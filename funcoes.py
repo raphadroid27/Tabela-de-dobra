@@ -337,6 +337,7 @@ def obter_configuracoes():
         'espessura': {
             'lista': g.lista_espessura,
             'modelo': espessura,
+            'item_id': deducao.espessura_id,
             'valores': g.valores_espessura,
             'ordem': espessura.valor,
             'entry': g.espessura_valor_entry,
@@ -822,6 +823,7 @@ def posicionar_janela(form, posicao=None):
     largura_monitor = g.principal_form.winfo_screenwidth()
     posicao_x = g.principal_form.winfo_x()
     largura_janela = g.principal_form.winfo_width()
+    largura_form = form.winfo_width()
 
     if posicao is None:
         if posicao_x > largura_monitor / 2:
@@ -830,14 +832,18 @@ def posicionar_janela(form, posicao=None):
             posicao = 'direita'
 
     if posicao == 'centro':
-        x = g.principal_form.winfo_x() + ((g.principal_form.winfo_width() - form.winfo_width()) // 2)
+        x = g.principal_form.winfo_x() + ((g.principal_form.winfo_width() - largura_form) // 2)
         y = g.principal_form.winfo_y() + ((g.principal_form.winfo_height() - form.winfo_height()) // 2)
     elif posicao == 'direita':
-        x = g.principal_form.winfo_x() + g.principal_form.winfo_width() + 10
+        x = g.principal_form.winfo_x() + largura_janela + 10
         y = g.principal_form.winfo_y()
+        if x + largura_form > largura_monitor:
+            x = g.principal_form.winfo_x() - largura_form - 10
     elif posicao == 'esquerda':
-        x = g.principal_form.winfo_x() - form.winfo_width() - 10
+        x = g.principal_form.winfo_x() - largura_form - 10
         y = g.principal_form.winfo_y()
+        if x < 0:
+            x = g.principal_form.winfo_x() + largura_janela + 10
     else:
         return
 
