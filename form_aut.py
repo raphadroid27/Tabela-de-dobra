@@ -26,7 +26,7 @@ def main(root_app):
     desabilitar_janelas()
     g.aut_form.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(), g.aut_form.destroy()])
 
-    janela_centro(g.aut_form)
+    posicionar_janela(g.aut_form, 'centro')
 
     main_frame = tk.Frame(g.aut_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
