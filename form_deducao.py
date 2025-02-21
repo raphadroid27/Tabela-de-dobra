@@ -34,7 +34,7 @@ def main(root_app):
     main_frame.rowconfigure(2, weight=0)
     main_frame.rowconfigure(3, weight=0)
 
-    frame_busca = tk.LabelFrame(main_frame, text='Filtrar Deduções', pady=5)
+    frame_busca = tk.LabelFrame(main_frame, text='Buscar Deduções', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
     frame_busca.columnconfigure(0, weight=1)
@@ -72,7 +72,7 @@ def main(root_app):
 
     listar('dedução')
 
-    frame_edicoes = tk.LabelFrame(main_frame, text='Editar Dedução', pady=5)
+    frame_edicoes = tk.LabelFrame(main_frame, pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
 
     frame_edicoes.columnconfigure(0, weight=2)
@@ -95,10 +95,12 @@ def main(root_app):
 
     if g.editar_deducao == True:
         g.deducao_form.title("Editar/Excluir Dedução")
+        frame_edicoes.config(text='Editar Dedução')
         tk.Button(frame_edicoes, text="Atualizar", command = lambda: atualizar('dedução'), bg="green").grid(row=1, column=3, padx=5, pady=5, sticky="eW")       
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('dedução'), bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
     else:
         g.deducao_form.title("Adicionar Dedução")
+        frame_edicoes.config(text='Nova Dedução')
         tk.Button(frame_edicoes, text="Adicionar", command = lambda: adicionar('dedução'), bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
 
     atualizar_combobox_deducao()
