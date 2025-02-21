@@ -5,9 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
 import os
-from aba_dobra_90 import criar_aba1
-from aba2 import criar_aba2
-from aba_raio_fatorK import criar_aba3
+from aba_dobra_90 import dados_dobra
 from cabecalho import cabecalho
 import form_espessura
 import globals as g
@@ -104,13 +102,7 @@ def main():
 
     cabecalho(g.principal_form)
 
-    # Criando o Notebook (abas)
-    notebook = ttk.Notebook(g.principal_form, height=140)
-    notebook.pack(fill='both', expand=True, padx=10, pady=5)
-
-    criar_aba1(notebook)
-    # criar_aba2(notebook)
-    criar_aba3(notebook)
+    dados_dobra(g.principal_form)
 
     frame_botoes = tk.Frame(g.principal_form, width=200)
     frame_botoes.pack(expand=True)
