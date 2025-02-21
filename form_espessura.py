@@ -16,11 +16,11 @@ def main(root_app):
         pass
 
     g.espessura_form = tk.Toplevel()
-    g.espessura_form.geometry("340x280")
+    g.espessura_form.geometry("240x280")
     g.espessura_form.resizable(False, False)
 
     no_topo(g.espessura_form)
-    posicionar_janela(g.espessura_form, 'centro')
+    posicionar_janela(g.espessura_form, 'esquerda')
 
     main_frame = tk.Frame(g.espessura_form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
@@ -32,17 +32,17 @@ def main(root_app):
     main_frame.rowconfigure(2,weight=0)
     main_frame.rowconfigure(3,weight=0)
 
-    frame_busca = tk.LabelFrame(main_frame, text='Filtrar Espessuras', pady=5)
+    frame_busca = tk.LabelFrame(main_frame, text='Buscar Espessuras', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
     frame_busca.columnconfigure(0, weight=0)
     frame_busca.columnconfigure(1, weight=1)
     frame_busca.columnconfigure(2, weight=0)
 
-    tk.Label(frame_busca, text="Espessura:").grid(row=0,column=0)
-    g.espessura_valor_entry=tk.Entry(frame_busca)
-    g.espessura_valor_entry.grid(row=0, column=1, sticky="ew")
-    g.espessura_valor_entry.bind("<KeyRelease>", lambda event: buscar('espessura'))
+    tk.Label(frame_busca, text="Valor:").grid(row=0,column=0)
+    g.espessura_busca_entry=tk.Entry(frame_busca)
+    g.espessura_busca_entry.grid(row=0, column=1, sticky="ew")
+    g.espessura_busca_entry.bind("<KeyRelease>", lambda event: buscar('espessura'))
 
     tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
@@ -62,7 +62,18 @@ def main(root_app):
         tk.Button(main_frame, text="Excluir", command=lambda:excluir('espessura'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     else:
         g.espessura_form.title("Adicionar Espessura")
-        tk.Button(main_frame, text="Adicionar", command = lambda: adicionar('espessura'), bg="cyan").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        
+        frame_edicoes = tk.LabelFrame(main_frame, text='Nova Espessura', pady=5)
+        frame_edicoes.grid(row=3, column=0, padx=5,pady=5, sticky="ew")
+
+        frame_edicoes.columnconfigure(0, weight=1)
+        frame_edicoes.columnconfigure(1, weight=2)
+        frame_edicoes.columnconfigure(2, weight=0)
+
+        tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, sticky="w", padx=5)
+        g.espessura_valor_entry = tk.Entry(frame_edicoes)
+        g.espessura_valor_entry.grid(row=0, column=1, sticky="ew")
+        tk.Button(frame_edicoes, text="Adicionar", command = lambda: adicionar('espessura'), bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
     g.espessura_form.mainloop()
 

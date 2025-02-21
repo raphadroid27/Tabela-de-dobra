@@ -95,6 +95,7 @@ raio_fator_k = {
 espessura_valor_entry = None
 lista_espessura = None
 editar_espessura = None
+espessura_busca_entry = None
 
 # deducao_form.py widgets
 deducao_material_combobox = None
@@ -113,6 +114,7 @@ material_escoamento_entry = None
 material_elasticidade_entry = None
 lista_material = None
 editar_material = None
+material_busca_entry = None
 
 # canal_form.py widgets
 canal_valor_entry = None
@@ -122,6 +124,7 @@ canal_comprimento_entry = None
 canal_observacao_entry = None
 lista_canal = None
 editar_canal = None
+canal_busca_entry = None
 
 # form_autenticacao.py widgets
 usuario_entry = None
