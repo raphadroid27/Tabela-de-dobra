@@ -24,31 +24,40 @@ def cabecalho(root):
     main_frame.columnconfigure(2, weight=1)
     main_frame.columnconfigure(3, weight=1)
 
-    tk.Label(main_frame, text="Material:").grid(row=0, column=0, sticky='sw')
+    main_frame.rowconfigure(0, weight=0)
+    main_frame.rowconfigure(1, weight=0)
+    main_frame.rowconfigure(2, weight=0)
+    main_frame.rowconfigure(3, weight=0)
+    main_frame.rowconfigure(4, weight=0)
+    main_frame.rowconfigure(5, weight=0)
+    main_frame.rowconfigure(6, weight=0)
 
+    tk.Label(main_frame, text="Material:").grid(row=0, column=0, sticky='sw')
     g.material_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.material_combobox.grid(row=1, column=0, padx=2, sticky='we')
+    g.material_combobox.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
 
     tk.Label(main_frame, text="Espessura:").grid(row=0, column=1, sticky='sw')
-
     g.espessura_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.espessura_combobox.grid(row=1, column=1, padx=2, sticky='we')
+    g.espessura_combobox.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
 
     tk.Label(main_frame, text="Canal:").grid(row=0, column=2, sticky='sw')
-
     g.canal_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.canal_combobox.grid(row=1, column=2, padx=2, sticky='we')
+    g.canal_combobox.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
 
     tk.Label(main_frame, text="Comprimento:").grid(row=0, column=3, sticky='sw')
-
     g.comprimento_entry = tk.Entry(main_frame, width=10, justify="center")
     g.comprimento_entry.grid(row=1, column=3, padx=2, sticky='we')
+    g.comprimento_entry.bind("<KeyRelease>", func=lambda event: atualizar_toneladas_m())
 
 
     # Raio interno
     tk.Label(main_frame, text="Raio Int.:").grid(row=2, column=0, sticky='sw')
     g.raio_interno_entry = tk.Entry(main_frame, width=10, justify="center")
     g.raio_interno_entry.grid(row=3, column=0, padx=2, sticky='we')
+    g.raio_interno_entry.bind("<KeyRelease>", func=lambda event: todas_funcoes())
 
     # Fator K
     tk.Label(main_frame, text="Fator K:").grid(row=2, column=1, sticky='sw')
@@ -89,7 +98,7 @@ def cabecalho(root):
     g.ton_m_label.grid(row=5, column=3, padx=2, sticky='we')
 
     #Observações
-    g.obs_label = tk.Label(cabecalho, text="Observações:", relief="sunken", anchor='w')
-    g.obs_label.pack(side='top', fill='x', expand=True, padx=2)
+    g.obs_label = tk.Label(main_frame, text="Observações:", relief="sunken", anchor='w')
+    g.obs_label.grid(row=6, column=0, columnspan=4, sticky='wen', padx=2, pady=5)
 
     atualizar_material()

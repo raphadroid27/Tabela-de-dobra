@@ -113,13 +113,6 @@ def z_minimo_externo():
             g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}', fg="black")
 
 def calcular_dobra():
-
-    dobra1 = g.aba1_entry.get().replace(',', '.')
-    dobra2 = g.aba2_entry.get().replace(',', '.')
-    dobra3 = g.aba3_entry.get().replace(',', '.')
-    dobra4 = g.aba4_entry.get().replace(',', '.')
-    dobra5 = g.aba5_entry.get().replace(',', '.')
-
     if g.deducao_label['text'] == "" or g.deducao_label['text'] == 'N/A':
         if g.deducao_espec_entry.get() == "":
             return
@@ -130,50 +123,32 @@ def calcular_dobra():
         if g.deducao_espec_entry.get() != "":
             deducao_valor = g.deducao_espec
 
-    def calcular_medida(deducao_valor):
-        if dobra1 == "":
-            g.medidadobra1_label.config(text="")
-        else:
-            medidadobra1 = float(dobra1) - (deducao_valor / 2)
-            g.medidadobra1_label.config(text=f'{medidadobra1:.2f}', fg="black")
+    def calcular_medida(deducao_valor, i):
+        dobra = getattr(g, f'aba{i}_entry').get().replace(',', '.')
 
-        if dobra2 == "":
-            g.medidadobra2_label.config(text="")
+        if dobra == "":
+            getattr(g, f'medidadobra{i}_label').config(text="")
         else:
-            if dobra3 == "":
-                medidadobra2 = float(dobra2) - (deducao_valor / 2)
+            if i == 1 or i == g.n-1:
+                medidadobra = float(dobra) - deducao_valor / 2
             else:
-                medidadobra2 = float(dobra2) - deducao_valor
-            g.medidadobra2_label.config(text=f'{medidadobra2:.2f}', fg="black")
+                if getattr(g, f'aba{i+1}_entry').get() == "":
+                    medidadobra = float(dobra) - deducao_valor / 2
+                else:
+                    medidadobra = float(dobra) - deducao_valor
 
-        if dobra3 == "":
-            g.medidadobra3_label.config(text="")
-        else:
-            if dobra4 == "":
-                medidadobra3 = float(dobra3) - (deducao_valor / 2)
-            else:
-                medidadobra3 = float(dobra3) - deducao_valor
-            g.medidadobra3_label.config(text=f'{medidadobra3:.2f}', fg="black")
+            metade_dobra = medidadobra / 2
 
-        if dobra4 == "":
-            g.medidadobra4_label.config(text="")
-        else:
-            if dobra5 == "":
-                medidadobra4 = float(dobra4) - (deducao_valor / 2)
-            else:
-                medidadobra4 = float(dobra4) - deducao_valor
-            g.medidadobra4_label.config(text=f'{medidadobra4:.2f}', fg="black")
+            getattr(g, f'medidadobra{i}_label').config(text=f'{medidadobra:.2f}', fg="black")
+            getattr(g, f'metadedobra{i}_label').config(text=f'{metade_dobra:.2f}', fg="black")
 
-        if dobra5 == "":
-            g.medidadobra5_label.config(text="")
-        else:
-            medidadobra5 = float(dobra5) - (deducao_valor / 2)
-            g.medidadobra5_label.config(text=f'{medidadobra5:.2f}', fg="black")
-
-    calcular_medida(deducao_valor)
+    for i in range(1, g.n):
+        calcular_medida(deducao_valor, i)
 
 def calcular_blank():
-    medidas = [g.medidadobra1_label, g.medidadobra2_label, g.medidadobra3_label, g.medidadobra4_label, g.medidadobra5_label]
+    for i in range(1, g.n):
+        medidas = getattr(g, f'medidadobra{i}_label')['text']
+
     medidas_validas = [float(medida['text']) for medida in medidas if medida['text']]
 
     if medidas_validas:
@@ -296,7 +271,7 @@ def todas_funcoes():
     calcular_dobra()
     calcular_blank()
     calcular_metade_dobra()
-    razao_raio_esp()
+    #razao_raio_esp()
 
 # Manipulação de dados
 def obter_configuracoes():
