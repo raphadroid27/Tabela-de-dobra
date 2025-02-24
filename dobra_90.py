@@ -40,30 +40,14 @@ def dados_dobra(root):
         setattr(g, f'aba{i}_entry', tk.Entry(frame_dobra, width=10))
         getattr(g, f'aba{i}_entry').grid(row=i, column=1, sticky='we', padx=2)
         getattr(g, f'aba{i}_entry').bind("<FocusOut>", lambda event, i=i: calcular_dobra(i))
-    
-    # Medida da linha de dobra
-    g.medidadobra1_label = tk.Label(frame_dobra,relief="sunken", width=10)
-    g.medidadobra1_label.grid(row=1, column=2, sticky='we',padx=2)
-    g.medidadobra2_label = tk.Label(frame_dobra, relief="sunken", width=10)
-    g.medidadobra2_label.grid(row=2, column=2, sticky='we',padx=2)
-    g.medidadobra3_label = tk.Label(frame_dobra, relief="sunken", width=10)
-    g.medidadobra3_label.grid(row=3, column=2, sticky='we',padx=2)
-    g.medidadobra4_label = tk.Label(frame_dobra, relief="sunken", width=10)
-    g.medidadobra4_label.grid(row=4, column=2, sticky='we',padx=2)
-    g.medidadobra5_label = tk.Label(frame_dobra, relief="sunken", width=10)
-    g.medidadobra5_label.grid(row=5, column=2, sticky='we',padx=2)
 
-    # Medida da linha de dobra
-    g.metadedobra1_label = tk.Label(frame_dobra,relief="sunken", width=10)
-    g.metadedobra1_label.grid(row=1, column=3, sticky='we',padx=2)
-    g.metadedobra2_label = tk.Label(frame_dobra,relief="sunken", width=10)
-    g.metadedobra2_label.grid(row=2, column=3, sticky='we',padx=2)
-    g.metadedobra3_label = tk.Label(frame_dobra,relief="sunken", width=10)
-    g.metadedobra3_label.grid(row=3, column=3, sticky='we',padx=2)
-    g.metadedobra4_label = tk.Label(frame_dobra,relief="sunken", width=10)
-    g.metadedobra4_label.grid(row=4, column=3, sticky='we',padx=2)
-    g.metadedobra5_label = tk.Label(frame_dobra,relief="sunken", width=10)
-    g.metadedobra5_label.grid(row=5, column=3, sticky='we',padx=2)
+        setattr(g, f'medidadobra{i}_label', tk.Label(frame_dobra, relief="sunken", width=10))
+        getattr(g, f'medidadobra{i}_label').grid(row=i, column=2, sticky='we', padx=2)
+        getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('medida_dobra',i))
+
+        setattr(g, f'metadedobra{i}_label', tk.Label(frame_dobra, relief="sunken", width=10))
+        getattr(g, f'metadedobra{i}_label').grid(row=i, column=3, sticky='we', padx=2)
+        getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('metade_dobra',i))
 
     tk.Label(frame_dobra, text="Medida do Blank:").grid(row=6, column=0,columnspan=2,sticky='e',padx=2)
     
@@ -74,8 +58,3 @@ def dados_dobra(root):
     g.metade_blank_label = tk.Label(frame_dobra, relief="sunken", width=10)
     g.metade_blank_label.grid(row=6, column=3, sticky='we',padx=2)
     g.metade_blank_label.bind("<Button-1>", lambda event: copiar('metade_blank'))
-
-    for i in range(1, 6):
-        getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('medida_dobra',i))
-        getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('metade_dobra',i))
-    
