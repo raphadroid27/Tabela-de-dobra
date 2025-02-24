@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
 import os
-from aba_dobra_90 import dados_dobra
+from dobra_90 import dados_dobra
 from cabecalho import cabecalho
 import form_espessura
 import globals as g
