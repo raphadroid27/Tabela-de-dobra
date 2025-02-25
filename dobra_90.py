@@ -61,14 +61,15 @@ def dados_dobra(root):
     frame_inferior = tk.Frame(dobra)
     frame_inferior.pack(fill='both', expand=True)
     
-    tk.Button(frame_inferior, text="+", command=lambda: dobras(11)).pack(side='right')
-    tk.Button(frame_inferior, text="-", command=lambda: dobras(6)).pack(side='right')
+    tk.Button(frame_inferior, text="+", command=lambda: dobras(11)).grid(row=0, column=0, sticky='we', padx=2)
+    tk.Button(frame_inferior, text="-", command=lambda: dobras(6)).grid(row=0, column=1, sticky='we', padx=2)
     
-    tk.Label(frame_inferior, text="Medida do Blank:").pack(side='left')
+    tk.Label(frame_inferior, text="Medida do Blank:").grid(row=1, column=0,columnspan=2,sticky='e',padx=2)
+    
     g.medida_blank_label = tk.Label(frame_inferior, relief="sunken", width=10)
-    g.medida_blank_label.pack(side='left')
+    g.medida_blank_label.grid(row=1, column=2, sticky='we',padx=2)
     g.medida_blank_label.bind("<Button-1>", lambda event: copiar('blank'))
 
     g.metade_blank_label = tk.Label(frame_inferior, relief="sunken", width=10)
-    g.metade_blank_label.pack(side='left')
+    g.metade_blank_label.grid(row=1, column=3, sticky='we',padx=2)
     g.metade_blank_label.bind("<Button-1>", lambda event: copiar('metade_blank'))
