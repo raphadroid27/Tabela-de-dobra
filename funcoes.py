@@ -123,24 +123,24 @@ def calcular_dobra():
         if g.deducao_espec_entry.get() != "":
             deducao_valor = g.deducao_espec
 
-    def calcular_medida(deducao_valor, i):
-        dobra = getattr(g, f'aba{i}_entry').get().replace(',', '.')
+    def calcular_medida(deducao_valor, i, w):
+        dobra = getattr(g, f'aba{i}_entry_{w}').get().replace(',', '.')
 
         if dobra == "":
-            getattr(g, f'medidadobra{i}_label').config(text="")
+            getattr(g, f'medidadobra{i}_label_{w}').config(text="")
         else:
             if i == 1 or i == g.n-1:
                 medidadobra = float(dobra) - deducao_valor / 2
             else:
-                if getattr(g, f'aba{i+1}_entry').get() == "":
+                if getattr(g, f'aba{i+1}_entry_{w}').get() == "":
                     medidadobra = float(dobra) - deducao_valor / 2
                 else:
                     medidadobra = float(dobra) - deducao_valor
 
             metade_dobra = medidadobra / 2
 
-            getattr(g, f'medidadobra{i}_label').config(text=f'{medidadobra:.2f}', fg="black")
-            getattr(g, f'metadedobra{i}_label').config(text=f'{metade_dobra:.2f}', fg="black")
+            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
+            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
 
     for i in range(1, g.n):
         calcular_medida(deducao_valor, i)
@@ -269,8 +269,8 @@ def todas_funcoes():
     aba_minima_externa()
     z_minimo_externo()
     calcular_dobra()
-    calcular_blank()
-    calcular_metade_dobra()
+    #calcular_blank()
+    #calcular_metade_dobra()
     #razao_raio_esp()
 
 # Manipulação de dados
