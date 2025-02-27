@@ -11,6 +11,7 @@ raio_interno = None
 canal_valor = None
 largura_canal = None
 on_top_var = None
+dobras_get = None
 
 # head.py widgets
 material_combobox = None
@@ -27,14 +28,16 @@ aba_min_externa_label = None
 z_min_externa_label = None
 
 # aba1.py widgets
+w = None
 n = 6
 for i in range(1, n):
-    globals()[f'aba{i}_entry'] = None
-    globals()[f'medidadobra{i}_label'] = None
-    globals()[f'metadedobra{i}_label'] = None
+    globals()[f'aba{i}_entry_{w}'] = None
+    globals()[f'medidadobra{i}_label_{w}'] = None
+    globals()[f'metadedobra{i}_label_{w}'] = None
 deducao_espec_entry = None
 medida_blank_label = None
 metade_blank_label = None
+frame_dobra = None
 
 #aba2.py widgets
 

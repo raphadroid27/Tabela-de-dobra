@@ -112,7 +112,24 @@ def z_minimo_externo():
             z_minimo_externo = g.espessura_valor + (g.deducao_valor / 2) + (g.largura_canal / 2) + 2
             g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}', fg="black")
 
-def calcular_dobra():
+def restaurar_dobras(w):
+     # Verificar se g.dobras_get foi inicializada
+    if not hasattr(g, 'dobras_get') or g.dobras_get is None:
+        print("Erro: g.dobras_get não foi inicializada.")
+        return
+
+    for i in range(1, g.n):
+        for dobra in g.dobras_get:
+            print(f"Processando dobra: {dobra}, i: {i}, len(dobra): {len(dobra)}")
+            if i < len(dobra):
+                getattr(g, f'aba{i}_entry_{w}').insert(0, dobra[i])
+            else:
+                print(f"Índice {i} está fora do intervalo para dobra: {dobra}")
+
+def calcular_dobra(w):
+
+    g.dobras_get = [getattr(g, f'aba{i}_entry_{w}').get() for i in range(1, g.n)]
+
     if g.deducao_label['text'] == "" or g.deducao_label['text'] == 'N/A':
         if g.deducao_espec_entry.get() == "":
             return
@@ -123,27 +140,28 @@ def calcular_dobra():
         if g.deducao_espec_entry.get() != "":
             deducao_valor = g.deducao_espec
 
-    def calcular_medida(deducao_valor, i):
-        dobra = getattr(g, f'aba{i}_entry').get().replace(',', '.')
+    def calcular_medida(deducao_valor, i, w):
+        dobra = getattr(g, f'aba{i}_entry_{w}').get().replace(',', '.')
 
         if dobra == "":
-            getattr(g, f'medidadobra{i}_label').config(text="")
+            getattr(g, f'medidadobra{i}_label_{w}').config(text="")
         else:
             if i == 1 or i == g.n-1:
                 medidadobra = float(dobra) - deducao_valor / 2
             else:
-                if getattr(g, f'aba{i+1}_entry').get() == "":
+                if getattr(g, f'aba{i+1}_entry_{w}').get() == "":
                     medidadobra = float(dobra) - deducao_valor / 2
                 else:
                     medidadobra = float(dobra) - deducao_valor
 
             metade_dobra = medidadobra / 2
 
-            getattr(g, f'medidadobra{i}_label').config(text=f'{medidadobra:.2f}', fg="black")
-            getattr(g, f'metadedobra{i}_label').config(text=f'{metade_dobra:.2f}', fg="black")
+            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
+            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
 
     for i in range(1, g.n):
-        calcular_medida(deducao_valor, i)
+        calcular_medida(deducao_valor, i, w)
+    
 
 def calcular_blank():
     for i in range(1, g.n):
@@ -258,7 +276,7 @@ def limpar_tudo():
     g.aba_min_externa_label.config(text="")
     g.z_min_externa_label.config(text="")
 
-def todas_funcoes():
+def todas_funcoes(w):
     carregar_variaveis_globais()
     atualizar_espessura()
     atualizar_canal()
@@ -268,9 +286,9 @@ def todas_funcoes():
     calcular_offset()
     aba_minima_externa()
     z_minimo_externo()
-    calcular_dobra()
-    calcular_blank()
-    calcular_metade_dobra()
+    calcular_dobra(w)
+    #calcular_blank()
+    #calcular_metade_dobra()
     #razao_raio_esp()
 
 # Manipulação de dados
