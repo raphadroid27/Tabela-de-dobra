@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
 import os
-from dobra_90 import dados_dobra
+from dobra_90 import *
 from cabecalho import cabecalho
 import form_espessura
 import globals as g
@@ -51,7 +51,7 @@ def main():
     config = carregar_configuracao()
     g.principal_form = tk.Tk()
     g.principal_form.title("Cálculo de Dobra")
-    g.principal_form.geometry('340x400')
+    g.principal_form.geometry('680x400')
     if 'geometry' in config:
         g.principal_form.geometry(config['geometry'])
     g.principal_form.resizable(False, False)
@@ -106,10 +106,59 @@ def main():
     help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(g.principal_form))
 
     cabecalho(g.principal_form)
-    dados_dobra(g.principal_form)
+
+    frame_teste = tk.Frame(g.principal_form)
+    frame_teste.pack(fill='both', expand=True, padx=10)
+
+    frame_teste.columnconfigure(0, weight=1)
+    frame_teste.columnconfigure(1, weight=1)
+  
+    def carregar_form_dobra():
+
+        for widget in frame_teste.winfo_children():
+            widget.destroy()
+
+        form_dobra(frame_teste,1).grid(row=1, column=0, sticky='we', padx=2, pady=2)
+        form_dobra(frame_teste,2).grid(row=1, column=1, sticky='we', padx=2, pady=2)
+        
+
+    carregar_form_dobra()
 
     frame_botoes = tk.Frame(g.principal_form, width=200)
     frame_botoes.pack(expand=True)
+
+    frame_inferior = tk.Frame(g.principal_form)
+    frame_inferior.pack(fill='both', expand=True)
+
+    frame_inferior.columnconfigure(0, weight=1)
+    
+    estado = tk.StringVar(value="+")
+
+    def alternar_dobras():
+        if estado.get() == "+":
+            dobras(11, 1)
+            dobras(11, 2)
+            
+            carregar_form_dobra()
+            restaurar_dobras(1)
+            estado.set("-")
+            g.principal_form.geometry('680x500')
+        else:
+            dobras(6, 1)
+            dobras(6, 2)
+            
+            carregar_form_dobra()
+            restaurar_dobras(1)
+            estado.set("+")
+            g.principal_form.geometry('680x400')
+        
+        
+        calcular_dobra(1)
+        calcular_dobra(2)
+
+    botao_alternar = tk.Button(frame_inferior, textvariable=estado, width=1, height=1, command=alternar_dobras)
+    botao_alternar.grid(row=0, column=0, sticky='we', padx=12)
+
 
     frame_botoes.columnconfigure(0, weight=1)
     frame_botoes.columnconfigure(1, weight=1)
