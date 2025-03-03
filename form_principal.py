@@ -113,8 +113,15 @@ def main():
     frame_teste.columnconfigure(0, weight=1)
     frame_teste.columnconfigure(1, weight=1)
 
-    form_dobra(frame_teste,1).grid(row=1, column=0, sticky='we', padx=2, pady=2)
-    form_dobra(frame_teste,2).grid(row=1, column=1, sticky='we', padx=2, pady=2)
+    def carregar_form_dobra():
+
+        for widget in frame_teste.winfo_children():
+            widget.destroy()
+
+        form_dobra(frame_teste,1).grid(row=1, column=0, sticky='we', padx=2, pady=2)
+        form_dobra(frame_teste,2).grid(row=1, column=1, sticky='we', padx=2, pady=2)
+
+    carregar_form_dobra()
 
     frame_botoes = tk.Frame(g.principal_form, width=200)
     frame_botoes.pack(expand=True)
@@ -130,10 +137,12 @@ def main():
         if estado.get() == "+":
             dobras(11, 1)
             dobras(11, 2)
+            carregar_form_dobra()
             estado.set("-")
         else:
             dobras(6, 1)
             dobras(6, 2)
+            carregar_form_dobra()
             estado.set("+")
 
         calcular_dobra(1)
