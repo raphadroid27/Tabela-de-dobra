@@ -51,7 +51,7 @@ def main():
     config = carregar_configuracao()
     g.principal_form = tk.Tk()
     g.principal_form.title("Cálculo de Dobra")
-    g.principal_form.geometry('680x400')
+    g.principal_form.geometry('680x500')
     if 'geometry' in config:
         g.principal_form.geometry(config['geometry'])
     g.principal_form.resizable(False, False)
@@ -112,7 +112,7 @@ def main():
 
     frame_teste.columnconfigure(0, weight=1)
     frame_teste.columnconfigure(1, weight=1)
-  
+
     def carregar_form_dobra():
 
         for widget in frame_teste.winfo_children():
@@ -120,7 +120,6 @@ def main():
 
         form_dobra(frame_teste,1).grid(row=1, column=0, sticky='we', padx=2, pady=2)
         form_dobra(frame_teste,2).grid(row=1, column=1, sticky='we', padx=2, pady=2)
-        
 
     carregar_form_dobra()
 
@@ -138,21 +137,14 @@ def main():
         if estado.get() == "+":
             dobras(11, 1)
             dobras(11, 2)
-            
             carregar_form_dobra()
-            restaurar_dobras(1)
             estado.set("-")
-            g.principal_form.geometry('680x500')
         else:
             dobras(6, 1)
             dobras(6, 2)
-            
             carregar_form_dobra()
-            restaurar_dobras(1)
             estado.set("+")
-            g.principal_form.geometry('680x400')
-        
-        
+
         calcular_dobra(1)
         calcular_dobra(2)
 

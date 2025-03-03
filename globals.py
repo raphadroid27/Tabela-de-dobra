@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 
 #variáveis globais
-
 fator_k = None
 espessura_valor = None
 deducao_espec = None
