@@ -10,6 +10,7 @@ raio_interno = None
 canal_valor = None
 largura_canal = None
 on_top_var = None
+dobras_get = None
 
 # head.py widgets
 material_combobox = None

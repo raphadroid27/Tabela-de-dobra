@@ -112,7 +112,19 @@ def z_minimo_externo():
             z_minimo_externo = g.espessura_valor + (g.deducao_valor / 2) + (g.largura_canal / 2) + 2
             g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}', fg="black")
 
+def restaurar_dobras(w):
+    for i in range(1, g.n):
+        for dobra in g.dobras_get:
+            print(f"Processando dobra: {dobra}, i: {i}, len(dobra): {len(dobra)}")
+            if i < len(dobra):
+                getattr(g, f'aba{i}_entry_{w}').insert(0, dobra[i])
+            else:
+                print(f"Índice {i} está fora do intervalo para dobra: {dobra}")
+
 def calcular_dobra(w):
+
+    g.dobras_get = [getattr(g, f'aba{i}_entry_{w}').get() for i in range(1, g.n)]
+
     if g.deducao_label['text'] == "" or g.deducao_label['text'] == 'N/A':
         if g.deducao_espec_entry.get() == "":
             return
@@ -144,6 +156,7 @@ def calcular_dobra(w):
 
     for i in range(1, g.n):
         calcular_medida(deducao_valor, i, w)
+    
 
 def calcular_blank():
     for i in range(1, g.n):
