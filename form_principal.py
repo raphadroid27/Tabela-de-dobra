@@ -51,7 +51,7 @@ def main():
     config = carregar_configuracao()
     g.principal_form = tk.Tk()
     g.principal_form.title("Cálculo de Dobra")
-    g.principal_form.geometry('680x500')
+    g.principal_form.geometry('680x400')
     if 'geometry' in config:
         g.principal_form.geometry(config['geometry'])
     g.principal_form.resizable(False, False)
@@ -143,6 +143,7 @@ def main():
             restaurar_dobras(1)
             restaurar_dobras(2)
             estado.set("-")
+            g.principal_form.geometry('680x500')
         else:
             dobras(6, 1)
             dobras(6, 2)
@@ -151,6 +152,7 @@ def main():
             restaurar_dobras(1)
             restaurar_dobras(2)
             estado.set("+")
+            g.principal_form.geometry('680x400')
         
         
         calcular_dobra(1)

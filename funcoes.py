@@ -113,6 +113,11 @@ def z_minimo_externo():
             g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}', fg="black")
 
 def restaurar_dobras(w):
+     # Verificar se g.dobras_get foi inicializada
+    if not hasattr(g, 'dobras_get') or g.dobras_get is None:
+        print("Erro: g.dobras_get não foi inicializada.")
+        return
+
     for i in range(1, g.n):
         for col in range(1, w + 1):
             if i - 1 < len(g.dobras_get) and col - 1 < len(g.dobras_get[i - 1]):
