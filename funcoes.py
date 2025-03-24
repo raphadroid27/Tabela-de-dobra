@@ -119,17 +119,31 @@ def restaurar_dobras(w):
         return
 
     for i in range(1, g.n):
-        for dobra in g.dobras_get:
-            print(f"Processando dobra: {dobra}, i: {i}, len(dobra): {len(dobra)}")
-            if i < len(dobra):
-                getattr(g, f'aba{i}_entry_{w}').insert(0, dobra[i])
-            else:
-                print(f"Índice {i} está fora do intervalo para dobra: {dobra}")
+        for col in range(1, w + 1):
+            if i - 1 < len(g.dobras_get) and col - 1 < len(g.dobras_get[i - 1]):
+                valor = g.dobras_get[i - 1][col - 1]
+                print(f"Restaurando valor para aba{i}_entry_{col}: {valor}")
+                entry = getattr(g, f'aba{i}_entry_{col}', None)
+                if entry:
+                    entry.delete(0, tk.END)
+                    entry.insert(0, valor)
 
 def calcular_dobra(w):
+    # Criar uma lista de listas para armazenar os valores de linha i e coluna w
+    g.dobras_get = [
+        [
+            getattr(g, f'aba{i}_entry_{col}').get() or ''  # Substitui valores vazios por '0'
+            for col in range(1, w + 1)
+        ]
+        for i in range(1, g.n)
+    ]
 
-    g.dobras_get = [getattr(g, f'aba{i}_entry_{w}').get() for i in range(1, g.n)]
+    # Exibir a matriz de valores para depuração
+    print("Matriz de dobras (g.dobras_get):")
+    for linha in g.dobras_get:
+        print(linha)
 
+    # Determinar o valor da dedução
     if g.deducao_label['text'] == "" or g.deducao_label['text'] == 'N/A':
         if g.deducao_espec_entry.get() == "":
             return
@@ -140,58 +154,45 @@ def calcular_dobra(w):
         if g.deducao_espec_entry.get() != "":
             deducao_valor = g.deducao_espec
 
+    # Função auxiliar para calcular medidas
     def calcular_medida(deducao_valor, i, w):
-        dobra = getattr(g, f'aba{i}_entry_{w}').get().replace(',', '.')
+        dobra = g.dobras_get[i - 1][w - 1].replace(',', '.')
 
         if dobra == "":
             getattr(g, f'medidadobra{i}_label_{w}').config(text="")
+            getattr(g, f'metadedobra{i}_label_{w}').config(text="")
         else:
-            if i == 1 or i == g.n-1:
+            if i == 1 or i == g.n - 1:
                 medidadobra = float(dobra) - deducao_valor / 2
             else:
-                if getattr(g, f'aba{i+1}_entry_{w}').get() == "":
+                if g.dobras_get[i][w - 1] == "":
                     medidadobra = float(dobra) - deducao_valor / 2
                 else:
                     medidadobra = float(dobra) - deducao_valor
 
             metade_dobra = medidadobra / 2
 
+            # Atualizar os widgets com os valores calculados
             getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
             getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
-
-    for i in range(1, g.n):
-        calcular_medida(deducao_valor, i, w)
-    
-
-def calcular_blank():
-    for i in range(1, g.n):
-        medidas = getattr(g, f'medidadobra{i}_label')['text']
-
-    medidas_validas = [float(medida['text']) for medida in medidas if medida['text']]
-
-    if medidas_validas:
-        blank = sum(medidas_validas)
+        
+        blank = sum([
+        float(getattr(g, f'medidadobra{i}_label_{w}').cget('text').replace(' Copiado!', ''))
+        for i in range(1, g.n)
+        if getattr(g, f'medidadobra{i}_label_{w}').cget('text')
+        ])
+        
         metade_blank = blank / 2
-        g.medida_blank_label.config(text=f"{blank:.2f}", fg="black")
-        g.metade_blank_label.config(text=f"{metade_blank:.2f}", fg="black")
 
-def calcular_metade_dobra():
-    entradas = [
-        (g.medidadobra1_label, g.metadedobra1_label),
-        (g.medidadobra2_label, g.metadedobra2_label),
-        (g.medidadobra3_label, g.metadedobra3_label),
-        (g.medidadobra4_label, g.metadedobra4_label),
-        (g.medidadobra5_label, g.metadedobra5_label)
-    ]
+        # Atualizar os widgets com os valores calculados
+        getattr(g, f'medida_blank_label_{w}').config(text=f"{blank:.2f}", fg="black")
+        getattr(g, f'metade_blank_label_{w}').config(text=f"{metade_blank:.2f}", fg="black")
 
-    for medidadobra_entry, metadedobra_entry in entradas:
-        try:
-            medidadobra = float(medidadobra_entry['text'])
-            metadedobra = medidadobra / 2
-            metadedobra_entry.config(text=f'{metadedobra:.2f}', fg="black")
-        except ValueError:
-            metadedobra_entry.config(text="")
-
+    # Iterar pelas linhas e colunas para calcular as medidas
+    for i in range(1, g.n):
+        for col in range(1, w + 1):
+            calcular_medida(deducao_valor, i, col)
+    
 def razao_raio_esp():
     if g.raio_interno is not None and g.espessura_valor is not None:
         try:
@@ -200,7 +201,7 @@ def razao_raio_esp():
         except ValueError:
             return
 
-def copiar(tipo, numero=None):
+def copiar(tipo, numero=None, w=None):
     configuracoes = {
         'deducao': {
             'label': g.deducao_label,
@@ -215,33 +216,37 @@ def copiar(tipo, numero=None):
             'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
         },
         'medida_dobra': {
-            'label': lambda numero: getattr(g, f'medidadobra{numero}_label'),
-            'funcao_calculo': calcular_dobra
+            'label': lambda numero: getattr(g, f'medidadobra{numero}_label_{w}', None),
+            'funcao_calculo': lambda: calcular_dobra(w)
         },
         'metade_dobra': {
-            'label': lambda numero: getattr(g, f'metadedobra{numero}_label'),
-            'funcao_calculo': lambda: (calcular_dobra(), calcular_metade_dobra())
+            'label': lambda numero: getattr(g, f'metadedobra{numero}_label_{w}', None),
+            'funcao_calculo': lambda: calcular_dobra(w)
         },
         'blank': {
-            'label': g.medida_blank_label,
-            'funcao_calculo': lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank())
+            'label': getattr(g, f'medida_blank_label_{w}', None),
+            'funcao_calculo': lambda: calcular_dobra(w)
         },
         'metade_blank': {
-            'label': g.metade_blank_label,
-            'funcao_calculo': lambda: (calcular_dobra(), calcular_metade_dobra(), calcular_blank())
+            'label': getattr(g, f'metade_blank_label_{w}', None),
+            'funcao_calculo': lambda: calcular_dobra(w)
         }
     }
 
     config = configuracoes[tipo]
 
     label = config['label'](numero) if callable(config['label']) else config['label']
-    funcao_calculo = config['funcao_calculo']
+    if label is None:
+        print(f"Erro: Label não encontrado para o tipo '{tipo}' com numero={numero} e w={w}.")
+        return
 
-    if label['text']:
-        funcao_calculo()
-        pyperclip.copy(label['text'])
-        print(f'Valor copiado {label["text"]}')
-        label.config(text=f'{label["text"]} Copiado!', fg="green")
+    if hasattr(label, 'cget') and 'text' in label.keys():
+        config['funcao_calculo']()
+        pyperclip.copy(label.cget('text'))
+        print(f'Valor copiado {label.cget("text")}')
+        label.config(text=f'{label.cget("text")} Copiado!', fg="green")
+    else:
+        print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
 def limpar_dobras():
     dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
