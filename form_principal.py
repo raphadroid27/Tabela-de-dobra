@@ -141,6 +141,7 @@ def main():
             
             carregar_form_dobra()
             restaurar_dobras(1)
+            restaurar_dobras(2)
             estado.set("-")
         else:
             dobras(6, 1)
@@ -148,6 +149,7 @@ def main():
             
             carregar_form_dobra()
             restaurar_dobras(1)
+            restaurar_dobras(2)
             estado.set("+")
         
         

@@ -114,17 +114,31 @@ def z_minimo_externo():
 
 def restaurar_dobras(w):
     for i in range(1, g.n):
-        for dobra in g.dobras_get:
-            print(f"Processando dobra: {dobra}, i: {i}, len(dobra): {len(dobra)}")
-            if i < len(dobra):
-                getattr(g, f'aba{i}_entry_{w}').insert(0, dobra[i])
-            else:
-                print(f"Índice {i} está fora do intervalo para dobra: {dobra}")
+        for col in range(1, w + 1):
+            if i - 1 < len(g.dobras_get) and col - 1 < len(g.dobras_get[i - 1]):
+                valor = g.dobras_get[i - 1][col - 1]
+                print(f"Restaurando valor para aba{i}_entry_{col}: {valor}")
+                entry = getattr(g, f'aba{i}_entry_{col}', None)
+                if entry:
+                    entry.delete(0, tk.END)
+                    entry.insert(0, valor)
 
 def calcular_dobra(w):
+    # Criar uma lista de listas para armazenar os valores de linha i e coluna w
+    g.dobras_get = [
+        [
+            getattr(g, f'aba{i}_entry_{col}').get() or ''  # Substitui valores vazios por '0'
+            for col in range(1, w + 1)
+        ]
+        for i in range(1, g.n)
+    ]
 
-    g.dobras_get = [getattr(g, f'aba{i}_entry_{w}').get() for i in range(1, g.n)]
+    # Exibir a matriz de valores para depuração
+    print("Matriz de dobras (g.dobras_get):")
+    for linha in g.dobras_get:
+        print(linha)
 
+    # Determinar o valor da dedução
     if g.deducao_label['text'] == "" or g.deducao_label['text'] == 'N/A':
         if g.deducao_espec_entry.get() == "":
             return
@@ -135,27 +149,31 @@ def calcular_dobra(w):
         if g.deducao_espec_entry.get() != "":
             deducao_valor = g.deducao_espec
 
-    def calcular_medida(deducao_valor, i, w):
-        dobra = getattr(g, f'aba{i}_entry_{w}').get().replace(',', '.')
+    # Função auxiliar para calcular medidas
+    def calcular_medida(deducao_valor, i, col):
+        dobra = g.dobras_get[i - 1][col - 1].replace(',', '.')
 
         if dobra == "":
-            getattr(g, f'medidadobra{i}_label_{w}').config(text="")
+            getattr(g, f'medidadobra{i}_label_{col}').config(text="")
         else:
-            if i == 1 or i == g.n-1:
+            if i == 1 or i == g.n - 1:
                 medidadobra = float(dobra) - deducao_valor / 2
             else:
-                if getattr(g, f'aba{i+1}_entry_{w}').get() == "":
+                if g.dobras_get[i][col - 1] == "":
                     medidadobra = float(dobra) - deducao_valor / 2
                 else:
                     medidadobra = float(dobra) - deducao_valor
 
             metade_dobra = medidadobra / 2
 
-            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
-            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
+            # Atualizar os widgets com os valores calculados
+            getattr(g, f'medidadobra{i}_label_{col}').config(text=f'{medidadobra:.2f}', fg="black")
+            getattr(g, f'metadedobra{i}_label_{col}').config(text=f'{metade_dobra:.2f}', fg="black")
 
+    # Iterar pelas linhas e colunas para calcular as medidas
     for i in range(1, g.n):
-        calcular_medida(deducao_valor, i, w)
+        for col in range(1, w + 1):
+            calcular_medida(deducao_valor, i, col)
     
 
 def calcular_blank():
