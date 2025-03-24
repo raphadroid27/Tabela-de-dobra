@@ -43,23 +43,23 @@ def dobras(valor, w):
         setattr(g, f'medidadobra{i}_label_{w}', tk.Label(g.frame_dobra, relief="sunken", width=10))
         label = getattr(g, f'medidadobra{i}_label_{w}')
         label.grid(row=i, column=2, sticky='we', padx=2)
-        label.bind("<Button-1>", lambda event, i=i: copiar('medida_dobra', i))
+        label.bind("<Button-1>", lambda event, i=i: copiar('medida_dobra', i, w))
         
         setattr(g, f'metadedobra{i}_label_{w}', tk.Label(g.frame_dobra, relief="sunken", width=10))
         label = getattr(g, f'metadedobra{i}_label_{w}')
         label.grid(row=i, column=3, sticky='we', padx=2)
-        label.bind("<Button-1>", lambda event, i=i: copiar('metade_dobra', i))
+        label.bind("<Button-1>", lambda event, i=i: copiar('metade_dobra', i, w))
 
     tk.Label(g.frame_dobra, text="Medida do Blank:").grid(row=i+1, column=0, columnspan=2, sticky='e', padx=2)
 
     setattr(g, f'medida_blank_label_{w}', tk.Label(g.frame_dobra, relief="sunken", width=10))
     medida_blank = getattr(g, f'medida_blank_label_{w}')
     medida_blank.grid(row=i+1, column=2, sticky='we', padx=2)
-    medida_blank.bind("<Button-1>", lambda event: copiar('blank'))
+    medida_blank.bind("<Button-1>", lambda event: copiar('blank', i, w))
                       
     setattr(g, f'metade_blank_label_{w}', tk.Label(g.frame_dobra, relief="sunken", width=10))
     metade_blank = getattr(g,f'metade_blank_label_{w}')
     metade_blank.grid(row=i+1, column=3, sticky='we', padx=2)
-    metade_blank.bind("<Button-1>", lambda event: copiar('metade_blank'))
+    metade_blank.bind("<Button-1>", lambda event: copiar('metade_blank', i, w))
 
 

@@ -112,7 +112,7 @@ def main():
 
     frame_teste.columnconfigure(0, weight=1)
     frame_teste.columnconfigure(1, weight=1)
-
+  
     def carregar_form_dobra():
 
         for widget in frame_teste.winfo_children():
@@ -120,6 +120,7 @@ def main():
 
         form_dobra(frame_teste,1).grid(row=1, column=0, sticky='we', padx=2, pady=2)
         form_dobra(frame_teste,2).grid(row=1, column=1, sticky='we', padx=2, pady=2)
+        
 
     carregar_form_dobra()
 
@@ -137,14 +138,21 @@ def main():
         if estado.get() == "+":
             dobras(11, 1)
             dobras(11, 2)
+            
             carregar_form_dobra()
+            restaurar_dobras(1)
+            restaurar_dobras(2)
             estado.set("-")
         else:
             dobras(6, 1)
             dobras(6, 2)
+            
             carregar_form_dobra()
+            restaurar_dobras(1)
+            restaurar_dobras(2)
             estado.set("+")
-
+        
+        
         calcular_dobra(1)
         calcular_dobra(2)
 
