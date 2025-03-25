@@ -35,17 +35,17 @@ def cabecalho(root):
     tk.Label(main_frame, text="Material:").grid(row=0, column=0, sticky='sw')
     g.material_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.material_combobox.grid(row=1, column=0, padx=2, sticky='we')
-    g.material_combobox.bind("<<ComboboxSelected>>", func=lambda event: (todas_funcoes(1), todas_funcoes(2)))
+    g.material_combobox.bind("<<ComboboxSelected>>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
 
     tk.Label(main_frame, text="Espessura:").grid(row=0, column=1, sticky='sw')
     g.espessura_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.espessura_combobox.grid(row=1, column=1, padx=2, sticky='we')
-    g.espessura_combobox.bind("<<ComboboxSelected>>", func=lambda event: (todas_funcoes(1), todas_funcoes(2)))
+    g.espessura_combobox.bind("<<ComboboxSelected>>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
 
     tk.Label(main_frame, text="Canal:").grid(row=0, column=2, sticky='sw')
     g.canal_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.canal_combobox.grid(row=1, column=2, padx=2, sticky='we')
-    g.canal_combobox.bind("<<ComboboxSelected>>", func=lambda event: (todas_funcoes(1), todas_funcoes(2)))
+    g.canal_combobox.bind("<<ComboboxSelected>>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
 
     tk.Label(main_frame, text="Comprimento:").grid(row=0, column=3, sticky='sw')
     g.comprimento_entry = tk.Entry(main_frame, width=10, justify="center")
@@ -57,7 +57,7 @@ def cabecalho(root):
     tk.Label(main_frame, text="Raio Int.:").grid(row=2, column=0, sticky='sw')
     g.raio_interno_entry = tk.Entry(main_frame, width=10, justify="center")
     g.raio_interno_entry.grid(row=3, column=0, padx=2, sticky='we')
-    g.raio_interno_entry.bind("<KeyRelease>", func=lambda event: (todas_funcoes(1), todas_funcoes(2)))
+    g.raio_interno_entry.bind("<KeyRelease>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
 
     # Fator K
     tk.Label(main_frame, text="Fator K:").grid(row=2, column=1, sticky='sw')

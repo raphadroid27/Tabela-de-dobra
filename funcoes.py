@@ -127,6 +127,8 @@ def restaurar_dobras(w):
                 if entry:
                     entry.delete(0, tk.END)
                     entry.insert(0, valor)
+                    
+    calcular_dobra(w)
 
 def calcular_dobra(w):
     # Criar uma lista de listas para armazenar os valores de linha i e coluna w
@@ -185,8 +187,8 @@ def calcular_dobra(w):
         metade_blank = blank / 2
 
         # Atualizar os widgets com os valores calculados
-        getattr(g, f'medida_blank_label_{w}').config(text=f"{blank:.2f}", fg="black")
-        getattr(g, f'metade_blank_label_{w}').config(text=f"{metade_blank:.2f}", fg="black")
+        getattr(g, f'medida_blank_label_{w}').config(text=f"{blank:.2f}", fg="black") if blank else getattr(g, f'medida_blank_label_{w}').config(text="")
+        getattr(g, f'metade_blank_label_{w}').config(text=f"{metade_blank:.2f}", fg="black") if metade_blank else getattr(g, f'metade_blank_label_{w}').config(text="")
 
     # Iterar pelas linhas e colunas para calcular as medidas
     for i in range(1, g.n):
@@ -248,10 +250,10 @@ def copiar(tipo, numero=None, w=None):
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
-def limpar_dobras():
-    dobras = [g.aba1_entry, g.aba2_entry, g.aba3_entry, g.aba4_entry, g.aba5_entry]
-    medidas = [g.medidadobra1_label, g.medidadobra2_label, g.medidadobra3_label, g.medidadobra4_label, g.medidadobra5_label]
-    metades = [g.metadedobra1_label, g.metadedobra2_label, g.metadedobra3_label, g.metadedobra4_label, g.metadedobra5_label]
+def limpar_dobras(w):
+    dobras = [getattr(g, f'aba{i}_entry_{col}') for i in range(1, g.n) for col in range(1, w + 1)]
+    medidas = [getattr(g, f'medidadobra{i}_label_{col}') for i in range(1, g.n) for col in range(1, w + 1)]
+    metades = [getattr(g, f'metadedobra{i}_label_{col}') for i in range(1, g.n) for col in range(1, w + 1)]
 
     for dobra in dobras:
         dobra.delete(0, tk.END)
@@ -263,11 +265,13 @@ def limpar_dobras():
         metade.config(text="")
 
     g.deducao_espec_entry.delete(0, tk.END)
-    g.medida_blank_label.config(text="")
-    g.metade_blank_label.config(text="")
+    getattr(g, f'medida_blank_label_{w}').config(text="")
+    getattr(g, f'metade_blank_label_{w}').config(text="")
 
 def limpar_tudo():
-    limpar_dobras()
+    for w in g.valores_w:
+        limpar_dobras(w)
+
     g.material_combobox.set('')
     g.espessura_combobox.set('')
     g.canal_combobox.set('')
