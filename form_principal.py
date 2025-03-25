@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from models import espessura, material, canal, deducao, usuario
+from models import Usuario
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
@@ -25,7 +25,7 @@ session = Session()
 CONFIG_FILE = 'config.json'
 
 def verificar_admin_existente():
-    admin_existente = session.query(usuario).filter(usuario.admin == 1).first()
+    admin_existente = session.query(Usuario).filter(Usuario.admin == 1).first()
     if not admin_existente:
         form_aut.main(g.principal_form)
 

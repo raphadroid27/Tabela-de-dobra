@@ -1,6 +1,6 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from models import espessura, material, canal, deducao
+from models import Espessura, Material, Canal, Deducao
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
@@ -26,26 +26,26 @@ def adicionar_dados_h14():
         {"espessura": 10.0, "canal": "80", "deducao": 17.5, "obs": ""},
     ]
 
-    material_obj = session.query(material).filter_by(nome="H14").first()
+    material_obj = session.query(Material).filter_by(nome="H14").first()
     if not material_obj:
-        material_obj = material(nome="H14")
+        material_obj = Material(nome="H14")
         session.add(material_obj)
         session.commit()
 
     for dado in dados:
-        espessura_obj = session.query(espessura).filter_by(valor=dado["espessura"]).first()
+        espessura_obj = session.query(Espessura).filter_by(valor=dado["espessura"]).first()
         if not espessura_obj:
-            espessura_obj = espessura(valor=dado["espessura"])
+            espessura_obj = Espessura(valor=dado["espessura"])
             session.add(espessura_obj)
             session.commit()
 
-        canal_obj = session.query(canal).filter_by(valor=dado["canal"]).first()
+        canal_obj = session.query(Canal).filter_by(valor=dado["canal"]).first()
         if not canal_obj:
-            canal_obj = canal(valor=dado["canal"])
+            canal_obj = Canal(valor=dado["canal"])
             session.add(canal_obj)
             session.commit()
 
-        deducao_obj = session.query(deducao).filter_by(
+        deducao_obj = session.query(Deducao).filter_by(
             espessura_id=espessura_obj.id,
             canal_id=canal_obj.id,
             material_id=material_obj.id,
@@ -53,7 +53,7 @@ def adicionar_dados_h14():
             observacao=dado["obs"]
         ).first()
         if not deducao_obj:
-            deducao_obj = deducao(
+            deducao_obj = Deducao(
                 espessura_id=espessura_obj.id,
                 canal_id=canal_obj.id,
                 material_id=material_obj.id,

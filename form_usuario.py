@@ -17,7 +17,6 @@ def main(root_app):
 
     if g.usuario_form is not None:
         g.usuario_form.destroy()   
-        pass
 
     g.usuario_form = tk.Toplevel()
     g.usuario_form.title("Editar/Excluir Usuário")

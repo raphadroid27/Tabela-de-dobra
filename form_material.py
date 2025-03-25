@@ -1,6 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-from models import material
+from tkinter import ttk
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from funcoes import *
