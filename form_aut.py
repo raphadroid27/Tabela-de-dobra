@@ -1,6 +1,6 @@
 import tkinter as tk
 import globals as g
-from models import usuario
+from models import Usuario
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from funcoes import *
@@ -47,7 +47,7 @@ def main(root_app):
     g.senha_entry = tk.Entry(main_frame, show="*")
     g.senha_entry.grid(row=1, column=1,padx=5, pady=5)
 
-    admin_existente = session.query(usuario).filter(usuario.admin == True).first()
+    admin_existente = session.query(Usuario).filter(Usuario.admin == True).first()
     
     if g.login == True:
         g.aut_form.title("Login")

@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-from models import espessura, material, canal, deducao
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import globals as g
