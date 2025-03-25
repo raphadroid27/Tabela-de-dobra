@@ -39,9 +39,14 @@ def atualizar_canal():
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
     if espessura_obj:
         canais_valores = sorted(
-            [str(c.valor) for c in session.query(Canal).join(Deducao).filter(Deducao.espessura_id == espessura_obj.id).filter(Deducao.material_id==material_obj.id).all()])
+        [str(c.valor) for c in session.query(Canal).join(Deducao)
+        .filter(Deducao.espessura_id == espessura_obj.id)
+        .filter(Deducao.material_id == material_obj.id)
+        .order_by(Canal.valor).all()],
+        key=lambda x: float(x)
+        )
         
-        g.canal_combobox['values'] = canais_valores
+    g.canal_combobox['values'] = canais_valores
 
 def atualizar_deducao_e_obs():
     espessura_valor = g.espessura_combobox.get()
