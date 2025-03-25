@@ -51,7 +51,7 @@ def main():
     config = carregar_configuracao()
     g.principal_form = tk.Tk()
     g.principal_form.title("Cálculo de Dobra")
-    g.principal_form.geometry('680x500')
+    g.principal_form.geometry('340x400')
     if 'geometry' in config:
         g.principal_form.geometry(config['geometry'])
     g.principal_form.resizable(False, False)
@@ -109,62 +109,90 @@ def main():
 
     frame_teste = tk.Frame(g.principal_form)
     frame_teste.pack(fill='both', expand=True, padx=10)
-
-    frame_teste.columnconfigure(0, weight=1)
-    frame_teste.columnconfigure(1, weight=1)
-  
+ 
     def carregar_form_dobra():
-
+        # Limpar widgets antigos
         for widget in frame_teste.winfo_children():
             widget.destroy()
 
-        form_dobra(frame_teste,1).grid(row=1, column=0, sticky='we', padx=2, pady=2)
-        form_dobra(frame_teste,2).grid(row=1, column=1, sticky='we', padx=2, pady=2)
+        # Redefinir as configurações de colunas
+        for col in range(frame_teste.grid_size()[0]):  # Obtém o número de colunas configuradas
+            frame_teste.columnconfigure(col, weight=0)  # Redefine o peso para 0
+
+        # Recriar as configurações de colunas
+        for col in range(len(g.valores_w)):
+            frame_teste.columnconfigure(col, weight=1)
+
+        # Recriar os widgets no frame
+        for w in g.valores_w:
+            form_dobra(frame_teste, w).grid(row=1, column=w-1, sticky='we', padx=2, pady=2)
+            print(w)
         
+    g.valores_w = [1]
 
     carregar_form_dobra()
+    g.expandir_v = tk.IntVar()
+    g.expandir_h = tk.IntVar()
+
+    def expandir_v():
+        largura_atual = g.principal_form.winfo_width() 
+        if g.expandir_v.get() == 1:
+            g.principal_form.geometry(f"{largura_atual}x500")  # Define a largura atual e a nova altura
+            for w in g.valores_w:
+                dobras(11, w)
+            carregar_form_dobra()
+        else:
+            g.principal_form.geometry(f"{largura_atual}x400")  # Define a largura atual e a nova altura
+            for w in g.valores_w:
+                dobras(6, w)
+            carregar_form_dobra()
+        restaurar_dobras(w)
+
+    def expandir_h():
+        altura_atual = g.principal_form.winfo_height()
+        if g.expandir_h.get() == 1:
+            g.principal_form.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
+            g.valores_w = [1,2]
+            carregar_form_dobra() 
+        else:
+            g.principal_form.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
+            g.valores_w = [1]
+            carregar_form_dobra()
+        for w in g.valores_w:
+            restaurar_dobras(w)
 
     frame_botoes = tk.Frame(g.principal_form, width=200)
     frame_botoes.pack(expand=True)
+
+    frame_botoes.columnconfigure(0, weight=1)
+    frame_botoes.columnconfigure(1, weight=1)
 
     frame_inferior = tk.Frame(g.principal_form)
     frame_inferior.pack(fill='both', expand=True)
 
     frame_inferior.columnconfigure(0, weight=1)
-    
-    estado = tk.StringVar(value="+")
+    frame_inferior.columnconfigure(1, weight=1)
 
-    def alternar_dobras():
-        if estado.get() == "+":
-            dobras(11, 1)
-            dobras(11, 2)
-            
-            carregar_form_dobra()
-            restaurar_dobras(1)
-            restaurar_dobras(2)
-            estado.set("-")
-        else:
-            dobras(6, 1)
-            dobras(6, 2)
-            
-            carregar_form_dobra()
-            restaurar_dobras(1)
-            restaurar_dobras(2)
-            estado.set("+")
-        
-        
-        calcular_dobra(1)
-        calcular_dobra(2)
+    tk.Checkbutton(
+        frame_inferior,
+        text="Expandir Vertical",
+        variable=g.expandir_v,
+        width=1,
+        height=1,
+        command=expandir_v
+    ).grid(row=0, column=0, sticky='we', padx=12)
 
-    botao_alternar = tk.Button(frame_inferior, textvariable=estado, width=1, height=1, command=alternar_dobras)
-    botao_alternar.grid(row=0, column=0, sticky='we', padx=12)
-
-
-    frame_botoes.columnconfigure(0, weight=1)
-    frame_botoes.columnconfigure(1, weight=1)
+    tk.Checkbutton(
+        frame_inferior,
+        text="Expandir Horizontal",
+        variable=g.expandir_h,
+        width=1,
+        height=1,
+        command=expandir_h
+    ).grid(row=0, column=1, sticky='we', padx=12)
 
     # Botão para limpar valores de dobras
-    tk.Button(frame_botoes, text="Limpar Dobras", command=limpar_dobras, width=15, bg='yellow').grid(row=0, column=0, sticky='we', padx=2)
+    tk.Button(frame_botoes, text="Limpar Dobras", command=lambda : [limpar_dobras(w) for w in g.valores_w], width=15, bg='yellow').grid(row=0, column=0, sticky='we', padx=2)
 
     # Botão para limpar todos os valores
     tk.Button(frame_botoes, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red').grid(row=0, column=1, sticky='we', padx=2)
