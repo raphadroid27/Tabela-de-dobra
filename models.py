@@ -4,48 +4,48 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-class usuario(Base):
+class Usuario(Base):  # Ajustado para PascalCase
     __tablename__ = 'usuario'
     id = Column(Integer, primary_key=True)
     nome = Column(String, unique=True, nullable=False)
     senha = Column(String, nullable=False)
-    admin = Column(Boolean, default=False)
+    admin = Column(Boolean, default=False, nullable=False)  # Adicionado nullable=False
 
-class espessura(Base):
+class Espessura(Base):  # Ajustado para PascalCase
     __tablename__ = 'espessura'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    valor = Column(Float)
+    valor = Column(Float, nullable=False)  # Adicionado nullable=False
 
-class material(Base):
+class Material(Base):  # Ajustado para PascalCase
     __tablename__ = 'material'
     id = Column(Integer, primary_key=True)
-    nome = Column(String)
+    nome = Column(String, nullable=False)  # Adicionado nullable=False
     densidade = Column(Float)
     escoamento = Column(Float)
     elasticidade = Column(Float)
 
-class canal(Base):
+class Canal(Base):  # Ajustado para PascalCase
     __tablename__ = 'canal'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    valor = Column(String)
+    valor = Column(String, nullable=False)  # Adicionado nullable=False
     largura = Column(Float)
     altura = Column(Float)
     comprimento_total = Column(Float)
     observacao = Column(String)
 
-class deducao(Base):
+class Deducao(Base):  # Ajustado para PascalCase
     __tablename__ = 'deducao'
     id = Column(Integer, primary_key=True)
-    canal_id = Column(Integer, ForeignKey('canal.id'))
-    espessura_id = Column(Integer, ForeignKey('espessura.id'))
-    material_id = Column(Integer, ForeignKey('material.id'))
-    valor = Column(Float)
+    canal_id = Column(Integer, ForeignKey('canal.id'), nullable=False)  # Adicionado nullable=False
+    espessura_id = Column(Integer, ForeignKey('espessura.id'), nullable=False)  # Adicionado nullable=False
+    material_id = Column(Integer, ForeignKey('material.id'), nullable=False)  # Adicionado nullable=False
+    valor = Column(Float, nullable=False)  # Adicionado nullable=False
     observacao = Column(String)
     forca = Column(Float)
 
-    canal = relationship("canal")
-    espessura = relationship("espessura")
-    material = relationship("material")
+    canal = relationship("Canal")
+    espessura = relationship("Espessura")
+    material = relationship("Material")
 
     __table_args__ = (UniqueConstraint('canal_id', 'espessura_id', 'material_id', name='_canal_espessura_material_uc'),)
 

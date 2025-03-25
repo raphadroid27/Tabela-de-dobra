@@ -4,7 +4,7 @@ import pyperclip
 from math import pi
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from models import espessura, material, canal, deducao, usuario
+from models import Espessura, Material, Canal, Deducao, Usuario
 import globals as g
 import re
 import hashlib
@@ -23,40 +23,45 @@ def carregar_variaveis_globais():
     print(f'{g.canal_valor} {g.espessura_valor} {g.deducao_valor}')
 
 def atualizar_material():
-    g.material_combobox['values'] = [m.nome for m in session.query(material).all()]
+    g.material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.nome).all()]
 
 def atualizar_espessura():
     material_nome = g.material_combobox.get()
-    material_obj = session.query(material).filter_by(nome=material_nome).first()
+    material_obj = session.query(Material).filter_by(nome=material_nome).first()
     if material_obj:
-        espessuras_valores = [str(e.valor) for e in session.query(espessura).join(deducao).filter(deducao.material_id == material_obj.id).order_by(espessura.valor).all()]
+        espessuras_valores = [str(e.valor) for e in session.query(Espessura).join(Deducao).filter(Deducao.material_id == material_obj.id).order_by(Espessura.valor).all()]
         g.espessura_combobox['values'] = espessuras_valores
 
 def atualizar_canal():
     espessura_valor = g.espessura_combobox.get()
     material_nome = g.material_combobox.get()
-    espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(material).filter_by(nome=material_nome).first()
+    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
+    material_obj = session.query(Material).filter_by(nome=material_nome).first()
     if espessura_obj:
         canais_valores = sorted(
-            [str(c.valor) for c in session.query(canal).join(deducao).filter(deducao.espessura_id == espessura_obj.id).filter(deducao.material_id==material_obj.id).all()])
+        [str(c.valor) for c in session.query(Canal).join(Deducao)
+        .filter(Deducao.espessura_id == espessura_obj.id)
+        .filter(Deducao.material_id == material_obj.id)
+        .order_by(Canal.valor).all()],
+        key=lambda x: float(x)
+        )
         
-        g.canal_combobox['values'] = canais_valores
+    g.canal_combobox['values'] = canais_valores
 
 def atualizar_deducao_e_obs():
     espessura_valor = g.espessura_combobox.get()
     material_nome = g.material_combobox.get()
     canal_valor = g.canal_combobox.get()
 
-    espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(material).filter_by(nome=material_nome).first()
-    canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
+    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
+    material_obj = session.query(Material).filter_by(nome=material_nome).first()
+    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
     if espessura_obj and material_obj and canal_obj:
-        deducao_obj = session.query(deducao).filter(
-            deducao.espessura_id == espessura_obj.id,
-            deducao.material_id == material_obj.id,
-            deducao.canal_id == canal_obj.id
+        deducao_obj = session.query(Deducao).filter(
+            Deducao.espessura_id == espessura_obj.id,
+            Deducao.material_id == material_obj.id,
+            Deducao.canal_id == canal_obj.id
         ).first()
 
         if deducao_obj:
@@ -71,7 +76,7 @@ def atualizar_deducao_e_obs():
 
 def atualizar_toneladas_m():
     comprimento = g.comprimento_entry.get()
-    deducao_obj = session.query(deducao).filter_by(valor=g.deducao_valor).first()
+    deducao_obj = session.query(Deducao).filter_by(valor=g.deducao_valor).first()
 
     if g.material_combobox.get() != "" and g.espessura_combobox.get() != "" and g.canal_combobox.get() != "":
         if deducao_obj and deducao_obj.forca is not None:
@@ -320,15 +325,15 @@ def obter_configuracoes():
     return {
         'dedução': {
             'lista': g.lista_deducao,
-            'modelo': deducao,
+            'modelo': Deducao,
             'campos': {
                 'valor': g.deducao_valor_entry,
                 'observacao': g.deducao_obs_entry,
                 'forca': g.deducao_forca_entry
             },
-            'item_id': deducao.id,
+            'item_id': Deducao.id,
             'valores': g.valores_deducao,
-            'ordem': deducao.valor,
+            'ordem': Deducao.valor,
             'entries': {
                 'material_combo': g.deducao_material_combobox,
                 'espessura_combo': g.deducao_espessura_combobox,
@@ -337,33 +342,33 @@ def obter_configuracoes():
         },
         'material': {
             'lista': g.lista_material,
-            'modelo': material,
+            'modelo': Material,
             'campos': {
                 'nome': g.material_nome_entry,
                 'densidade': g.material_densidade_entry,
                 'escoamento': g.material_escoamento_entry,
                 'elasticidade': g.material_elasticidade_entry
             },
-            'item_id': deducao.material_id,
+            'item_id': Material.id,  # Corrigido de Deducao.material_id
             'valores': g.valores_material,
-            'ordem': material.nome,
+            'ordem': Material.nome,
             'entry': g.material_nome_entry,
             'busca': g.material_busca_entry,
-            'campo_busca': material.nome
+            'campo_busca': Material.nome
         },
         'espessura': {
             'lista': g.lista_espessura,
-            'modelo': espessura,
-            'item_id': deducao.espessura_id,
+            'modelo': Espessura,
+            'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
             'valores': g.valores_espessura,
-            'ordem': espessura.valor,
+            'ordem': Espessura.valor,
             'entry': g.espessura_valor_entry,
             'busca': g.espessura_busca_entry,
-            'campo_busca': espessura.valor
+            'campo_busca': Espessura.valor  # Corrigido de espessura.valor
         },
         'canal': {
             'lista': g.lista_canal,
-            'modelo': canal,
+            'modelo': Canal,  # Corrigido de canal
             'campos': {
                 'valor': g.canal_valor_entry,
                 'largura': g.canal_largura_entry,
@@ -371,20 +376,20 @@ def obter_configuracoes():
                 'comprimento_total': g.canal_comprimento_entry,
                 'observacao': g.canal_observacao_entry
             },
-            'item_id': deducao.canal_id,
+            'item_id': Canal.id,  # Corrigido de deducao.canal_id
             'valores': g.valores_canal,
-            'ordem': canal.valor,
+            'ordem': Canal.valor,  # Corrigido de canal.valor
             'entry': g.canal_valor_entry,
             'busca': g.canal_busca_entry,
-            'campo_busca': canal.valor
+            'campo_busca': Canal.valor  # Corrigido de canal.valor
         },
         'usuario': {
             'lista': g.lista_usuario,
-            'modelo': usuario,
+            'modelo': Usuario,  # Corrigido de usuario
             'valores': g.valores_usuario,
-            'ordem': usuario.nome,
+            'ordem': Usuario.nome,  # Corrigido de usuario.nome
             'entry': g.usuario_valor_entry,
-            'campo_busca': usuario.nome
+            'campo_busca': Usuario.nome  # Corrigido de usuario.nome
         }
     }
 
@@ -414,14 +419,14 @@ def buscar(tipo):
     config = configuracoes[tipo]
 
     def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
-        query = session.query(deducao).join(material).join(espessura).join(canal)
+        query = session.query(Deducao).join(Material).join(Espessura).join(Canal)
         
         if material_nome:
-            query = query.filter(material.nome == material_nome)
+            query = query.filter(Material.nome == material_nome)
         if espessura_valor:
-            query = query.filter(espessura.valor == espessura_valor)
+            query = query.filter(Espessura.valor == espessura_valor)
         if canal_valor:
-            query = query.filter(canal.valor == canal_valor)
+            query = query.filter(Canal.valor == canal_valor)
         
         return query.all()
 
@@ -459,9 +464,9 @@ def adicionar(tipo):
         espessura_valor = g.deducao_espessura_combobox.get()
         canal_valor = g.deducao_canal_combobox.get()
         material_nome = g.deducao_material_combobox.get()
-        espessura_obj = session.query(espessura).filter_by(valor=espessura_valor).first()
-        canal_obj = session.query(canal).filter_by(valor=canal_valor).first()
-        material_obj = session.query(material).filter_by(nome=material_nome).first()
+        espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
+        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+        material_obj = session.query(Material).filter_by(nome=material_nome).first()
         nova_observacao_valor = g.deducao_obs_entry.get()
         nova_forca_valor = g.deducao_forca_entry.get()
         
@@ -472,7 +477,7 @@ def adicionar(tipo):
             nova_deducao_valor = float(g.deducao_valor_entry.get().replace(',', '.'))
 
         # Verificar se a dedução já existe
-        deducao_existente = session.query(deducao).filter_by(
+        deducao_existente = session.query(Deducao).filter_by(
             espessura_id=espessura_obj.id,
             canal_id=canal_obj.id,
             material_id=material_obj.id
@@ -482,7 +487,7 @@ def adicionar(tipo):
             if nova_forca_valor == '':
                 nova_forca_valor = None
 
-            nova_deducao = deducao(
+            nova_deducao = Deducao(
                 espessura_id=espessura_obj.id,
                 canal_id=canal_obj.id,
                 material_id=material_obj.id,
@@ -507,7 +512,7 @@ def adicionar(tipo):
     if tipo == 'espessura':
    
         espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
-        espessura_existente = session.query(espessura).filter_by(valor=espessura_valor).first()
+        espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
         
         if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
            messagebox.showwarning("Atenção!", "A espessura deve conter apenas números ou números decimais.")
@@ -515,7 +520,7 @@ def adicionar(tipo):
            return
 
         if not espessura_existente:
-            nova_espessura = espessura(valor=espessura_valor)
+            nova_espessura = Espessura(valor=espessura_valor)
             session.add(nova_espessura)
             session.commit()
             messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
@@ -533,9 +538,9 @@ def adicionar(tipo):
             messagebox.showerror("Erro", "O campo Material é obrigatório.")
             return
         
-        material_existente = session.query(material).filter_by(nome=nome_material).first()
+        material_existente = session.query(Material).filter_by(nome=nome_material).first()
         if not material_existente:
-            novo_material = material(
+            novo_material = Material(
                 nome=nome_material, 
                 densidade=float(densidade_material) if densidade_material else None, 
                 escoamento=float(escoamento_material) if escoamento_material else None, 
@@ -564,9 +569,9 @@ def adicionar(tipo):
             messagebox.showerror("Erro", "O campo Canal é obrigatório.")
             return
         
-        canal_existente = session.query(canal).filter_by(valor=valor_canal).first()
+        canal_existente = session.query(Canal).filter_by(valor=valor_canal).first()
         if not canal_existente:
-            novo_canal = canal(
+            novo_canal = Canal(
                 valor=valor_canal,
                 largura=float(largura_canal) if largura_canal else None,
                 altura=float(altura_canal) if altura_canal else None,
@@ -669,7 +674,7 @@ def excluir(tipo):
         messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
         return
 
-    deducao_objs = session.query(deducao).filter(config['item_id']==obj.id).all()
+    deducao_objs = session.query(Deducao).filter(config['item_id']==obj.id).all()
     for d in deducao_objs:
         session.delete(d)
 
@@ -686,11 +691,11 @@ def excluir(tipo):
 
 def atualizar_combobox_deducao():
     if g.deducao_material_combobox and g.deducao_material_combobox.winfo_exists():
-        g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()]
+        g.deducao_material_combobox['values'] = [m.nome for m in session.query(Material).all()]
     if g.deducao_espessura_combobox and g.deducao_espessura_combobox.winfo_exists():
-        g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(espessura).all()])
+        g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(Espessura).all()])
     if g.deducao_canal_combobox and g.deducao_canal_combobox.winfo_exists():
-        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()], key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
+        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(Canal).all()], key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
 
 # Manipulação de usuarios
 def novo_usuario():
@@ -701,12 +706,12 @@ def novo_usuario():
         messagebox.showerror("Erro", "Preencha todos os campos.", parent=g.aut_form)
         return
     
-    usuario_obj = session.query(usuario).filter_by(nome=novo_usuario_nome).first()
+    usuario_obj = session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
     if usuario_obj:
         messagebox.showerror("Erro", "Usuário já existente.", parent=g.aut_form)
         return
     else:
-        novo_usuario = usuario(nome=novo_usuario_nome, senha=senha_hash, admin=g.admin_var.get())
+        novo_usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, admin=g.admin_var.get())
         session.add(novo_usuario)
         session.commit()
         messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.aut_form)
@@ -718,7 +723,7 @@ def login():
     usuario_nome = g.usuario_entry.get()
     usuario_senha = g.senha_entry.get()
     
-    usuario_obj = session.query(usuario).filter_by(nome=usuario_nome).first()
+    usuario_obj = session.query(Usuario).filter_by(nome=usuario_nome).first()
 
     if usuario_obj:
         if usuario_obj.senha == "nova_senha":
@@ -765,7 +770,7 @@ def admin(tipo):
     if g.usuario_id is None:
         messagebox.showerror("Erro", "Admin requerido.", parent=configuracoes[tipo])
         return False
-    usuario_obj = session.query(usuario).filter_by(id=g.usuario_id).first()
+    usuario_obj = session.query(Usuario).filter_by(id=g.usuario_id).first()
     if not usuario_obj.admin:
         messagebox.showerror("Erro", "Admin requerido.", parent=configuracoes[tipo])
         return False
@@ -787,7 +792,7 @@ def resetar_senha():
 
     user_id = g.lista_usuario.item(selected_item, "values")[0]
     novo_password = "nova_senha"  # Defina a nova senha padrão aqui
-    usuario_obj = session.query(usuario).filter_by(id=user_id).first()
+    usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
     if usuario_obj:
         usuario_obj.senha = novo_password
         session.commit()
@@ -805,7 +810,7 @@ def excluir_usuario():
     selected_item = g.lista_usuario.selection()[0]
     item = g.lista_usuario.item(selected_item)
     obj_id = item['values'][0]
-    obj = session.query(usuario).filter_by(id=obj_id).first()
+    obj = session.query(Usuario).filter_by(id=obj_id).first()
     if obj is None:
         messagebox.showerror("Erro", "Usuário não encontrado.")
         return
