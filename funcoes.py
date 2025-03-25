@@ -127,7 +127,7 @@ def restaurar_dobras(w):
                 if entry:
                     entry.delete(0, tk.END)
                     entry.insert(0, valor)
-                    
+
     calcular_dobra(w)
 
 def calcular_dobra(w):
@@ -240,6 +240,9 @@ def copiar(tipo, numero=None, w=None):
     label = config['label'](numero) if callable(config['label']) else config['label']
     if label is None:
         print(f"Erro: Label não encontrado para o tipo '{tipo}' com numero={numero} e w={w}.")
+        return
+    
+    if label.cget('text') == "":
         return
 
     if hasattr(label, 'cget') and 'text' in label.keys():
@@ -670,12 +673,12 @@ def excluir(tipo):
     listar('dedução'), listar('material'), listar('espessura'), listar('canal')
 
 def atualizar_combobox_deducao():
-    if g.deducao_material_combobox:
-        g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()] 
-    if g.deducao_espessura_combobox:
+    if g.deducao_material_combobox and g.deducao_material_combobox.winfo_exists():
+        g.deducao_material_combobox['values'] = [m.nome for m in session.query(material).all()]
+    if g.deducao_espessura_combobox and g.deducao_espessura_combobox.winfo_exists():
         g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(espessura).all()])
-    if g.deducao_canal_combobox:
-        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()],key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
+    if g.deducao_canal_combobox and g.deducao_canal_combobox.winfo_exists():
+        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(canal).all()], key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
 
 # Manipulação de usuarios
 def novo_usuario():
