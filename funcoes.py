@@ -23,7 +23,7 @@ def carregar_variaveis_globais():
     print(f'{g.canal_valor} {g.espessura_valor} {g.deducao_valor}')
 
 def atualizar_material():
-    g.material_combobox['values'] = [m.nome for m in session.query(Material).all()]
+    g.material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.nome).all()]
 
 def atualizar_espessura():
     material_nome = g.material_combobox.get()
