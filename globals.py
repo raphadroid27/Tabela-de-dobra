@@ -11,6 +11,9 @@ canal_valor = None
 largura_canal = None
 on_top_var = None
 dobras_get = None
+valores_w = [1,2]
+expandir_v = None
+expandir_h = None
 
 # head.py widgets
 material_combobox = None
