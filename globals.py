@@ -143,9 +143,6 @@ sobre_form = None
 aut_form = None
 usuario_form = None
 
-
-
-
 valores_deducao = lambda d: (d.id, d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca)
 valores_material = lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade)
 valores_espessura = lambda e: (e.id, e.valor)
