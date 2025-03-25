@@ -254,22 +254,34 @@ def copiar(tipo, numero=None, w=None):
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
 def limpar_dobras(w):
-    dobras = [getattr(g, f'aba{i}_entry_{col}') for i in range(1, g.n) for col in range(1, w + 1)]
-    medidas = [getattr(g, f'medidadobra{i}_label_{col}') for i in range(1, g.n) for col in range(1, w + 1)]
-    metades = [getattr(g, f'metadedobra{i}_label_{col}') for i in range(1, g.n) for col in range(1, w + 1)]
+    def obter_atributos(prefixo):
+        return [
+            getattr(g, f'{prefixo}{i}_label_{col}', None)
+            for i in range(1, g.n)
+            for col in range(1, w + 1)
+        ]
+
+    dobras = [getattr(g, f'aba{i}_entry_{col}', None) for i in range(1, g.n) for col in range(1, w + 1)]
+    medidas = obter_atributos('medidadobra')
+    metades = obter_atributos('metadedobra')
+
+    g.dobras_get = []
 
     for dobra in dobras:
-        dobra.delete(0, tk.END)
+        if dobra:
+            dobra.delete(0, tk.END)
 
     for medida in medidas:
-        medida.config(text="")
+        if medida:
+            medida.config(text="")
 
     for metade in metades:
-        metade.config(text="")
+        if metade:
+            metade.config(text="")
 
     g.deducao_espec_entry.delete(0, tk.END)
-    getattr(g, f'medida_blank_label_{w}').config(text="")
-    getattr(g, f'metade_blank_label_{w}').config(text="")
+    getattr(g, f'medida_blank_label_{w}', None).config(text="") if getattr(g, f'medida_blank_label_{w}', None) else None
+    getattr(g, f'metade_blank_label_{w}', None).config(text="") if getattr(g, f'metade_blank_label_{w}', None) else None
 
 def limpar_tudo():
     for w in g.valores_w:
