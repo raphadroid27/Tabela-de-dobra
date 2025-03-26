@@ -682,9 +682,15 @@ def excluir(tipo):
         messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
         return
 
-    deducao_objs = session.query(Deducao).filter(config['item_id']==obj.id).all()
+    deducao_objs = (
+        session.query(Deducao)
+        .join(Canal, Deducao.canal_id == Canal.id)  # Junção explícita entre Deducao e Canal
+        .filter(Canal.id == obj.id)  # Filtrar pelo ID do objeto selecionado
+        .all()
+    )   
+     
     for d in deducao_objs:
-        session.delete(d)
+            session.delete(d)
 
     session.delete(obj)
     session.commit()
