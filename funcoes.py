@@ -96,8 +96,13 @@ def calcular_fatork():
     if not g.raio_interno or not g.espessura_valor or not g.deducao_valor or g.deducao_valor == 'N/A':
         return
 
-    g.fator_k = (4 * (g.espessura_valor - (g.deducao_valor / 2) + g.raio_interno) - (pi * g.raio_interno)) / (pi * g.espessura_valor)    
+    g.fator_k = (4 * (g.espessura_valor - (g.deducao_valor / 2) + g.raio_interno) - (pi * g.raio_interno)) / (pi * g.espessura_valor)  
+
+    if g.fator_k > 0.5:
+        g.fator_k = 0.5
+
     g.fator_k_label.config(text=f"{g.fator_k:.2f}", fg="red" if g.deducao_valor == g.deducao_espec else "black")
+
 
 def calcular_offset():
     if not g.fator_k or not g.espessura_valor:
@@ -688,7 +693,7 @@ def excluir(tipo):
         .filter(Canal.id == obj.id)  # Filtrar pelo ID do objeto selecionado
         .all()
     )   
-     
+
     for d in deducao_objs:
             session.delete(d)
 
