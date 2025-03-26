@@ -301,18 +301,29 @@ def limpar_tudo():
     for w in g.valores_w:
         limpar_dobras(w)
 
-    g.material_combobox.set('')
-    g.espessura_combobox.set('')
-    g.canal_combobox.set('')
-    g.raio_interno_entry.delete(0, tk.END)
-    g.fator_k_label.config(text="")
-    g.deducao_label.config(text="")
-    g.offset_label.config(text="")
-    g.obs_label.config(text="Observações:")
-    g.ton_m_label.config(text="")
-    g.comprimento_entry.delete(0, tk.END)
-    g.aba_min_externa_label.config(text="")
-    g.z_min_externa_label.config(text="")
+    campos = [
+        g.material_combobox, g.espessura_combobox, g.canal_combobox
+    ]
+    for campo in campos:
+        campo.set('')
+
+    entradas = [
+        g.raio_interno_entry, g.comprimento_entry
+    ]
+    for entrada in entradas:
+        entrada.delete(0, tk.END)
+
+    etiquetas = {
+        g.fator_k_label: "",
+        g.deducao_label: "",
+        g.offset_label: "",
+        g.obs_label: "Observações:",
+        g.ton_m_label: "",
+        g.aba_min_externa_label: "",
+        g.z_min_externa_label: ""
+    }
+    for etiqueta, texto in etiquetas.items():
+        etiqueta.config(text=texto)
 
 def todas_funcoes(w):
     carregar_variaveis_globais()
@@ -325,9 +336,6 @@ def todas_funcoes(w):
     aba_minima_externa()
     z_minimo_externo()
     calcular_dobra(w)
-    #calcular_blank()
-    #calcular_metade_dobra()
-    #razao_raio_esp()
 
 # Manipulação de dados
 def obter_configuracoes():
@@ -604,27 +612,7 @@ def adicionar(tipo):
     atualizar_combobox_deducao()
     listar(tipo)
 
-def preencher_campos(tipo):
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
-    if not config['lista'].selection():
-        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
-        return
-
-    selected_item = config['lista'].selection()[0]
-    item = config['lista'].item(selected_item)
-    obj_id = item['values'][0]
-    obj = session.query(config['modelo']).filter_by(id=obj_id).first()
-
-    if obj:
-        for campo, entry in config['campos'].items():
-            entry.delete(0, tk.END)
-            entry.insert(0, getattr(obj, campo)) if getattr(obj, campo) is not None else entry.insert(0, '')
-    else:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a.")
-
-def atualizar(tipo):
+def editar(tipo):
     if not admin(tipo):
         return
 
@@ -707,6 +695,26 @@ def excluir(tipo):
     atualizar_deducao_e_obs()
     atualizar_combobox_deducao()
     listar('dedução'), listar('material'), listar('espessura'), listar('canal')
+
+def preencher_campos(tipo):
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
+    if not config['lista'].selection():
+        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
+        return
+
+    selected_item = config['lista'].selection()[0]
+    item = config['lista'].item(selected_item)
+    obj_id = item['values'][0]
+    obj = session.query(config['modelo']).filter_by(id=obj_id).first()
+
+    if obj:
+        for campo, entry in config['campos'].items():
+            entry.delete(0, tk.END)
+            entry.insert(0, getattr(obj, campo)) if getattr(obj, campo) is not None else entry.insert(0, '')
+    else:
+        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a.")
 
 def atualizar_combobox_deducao():
     if g.deducao_material_combobox and g.deducao_material_combobox.winfo_exists():
