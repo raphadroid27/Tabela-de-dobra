@@ -20,7 +20,7 @@ def main(root_app):
 
     g.usuario_form = tk.Toplevel()
     g.usuario_form.title("Editar/Excluir Usuário")
-    g.usuario_form.geometry("340x280")
+    g.usuario_form.geometry("300x280")
     g.usuario_form.resizable(False, False)
 
     no_topo(g.usuario_form)
@@ -37,7 +37,7 @@ def main(root_app):
     main_frame.rowconfigure(3,weight=0)
 
     frame_busca = tk.LabelFrame(main_frame, text='Filtrar Usuários', pady=5)
-    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew", columnspan=2)
 
     frame_busca.columnconfigure(0, weight=0)
     frame_busca.columnconfigure(1, weight=1)
@@ -57,10 +57,10 @@ def main(root_app):
         g.lista_usuario.heading(col, text=col)
         g.lista_usuario.column(col, anchor="center")    
     
-    g.lista_usuario.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        
-    tk.Button(main_frame, text="Excluir", command=excluir_usuario, bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
-    tk.Button(main_frame, text="Resetar Senha", command=resetar_senha, bg="yellow").grid(row=3, column=0, padx=5, pady=5, sticky="e")
+    g.lista_usuario.grid(row=1, column=0, padx=5, pady=5, sticky="ew", columnspan=2)
+
+    tk.Button(main_frame, text="Resetar Senha", command=resetar_senha, bg="yellow").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+    tk.Button(main_frame, text="Excluir", command=excluir_usuario, bg="red").grid(row=2, column=1, padx=5, pady=5, sticky="e")
 
     listar('usuario')
 
