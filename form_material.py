@@ -92,7 +92,7 @@ def main(root_app):
         frame_edicoes.config(text='Editar Material')
         
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('material'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
-        tk.Button(frame_edicoes, text="Atualizar", command = lambda: atualizar('material'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+        tk.Button(frame_edicoes, text="Atualizar", command = lambda: editar('material'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
     else:
         g.material_form.title("Adicionar Material")
         frame_edicoes.config(text='Novo Material')

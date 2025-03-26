@@ -97,7 +97,7 @@ def main(root_app):
         frame_edicoes.config(text='Editar Canal')
 
         tk.Button(main_frame, text="Excluir", command=lambda:excluir('canal'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
-        tk.Button(frame_edicoes, text="Atualizar", command=lambda:atualizar('canal'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=5)
+        tk.Button(frame_edicoes, text="Atualizar", command=lambda:editar('canal'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=5)
     else:  
         g.canal_form.title("Novo Canal")
         frame_edicoes.config(text='Novo Canal')
