@@ -161,12 +161,6 @@ def main():
         for w in g.valores_w:
             restaurar_dobras(w)
 
-    frame_botoes = tk.Frame(g.principal_form, width=200)
-    frame_botoes.pack(expand=True)
-
-    frame_botoes.columnconfigure(0, weight=1)
-    frame_botoes.columnconfigure(1, weight=1)
-
     frame_inferior = tk.Frame(g.principal_form)
     frame_inferior.pack(fill='both', expand=True)
 
@@ -180,7 +174,7 @@ def main():
         width=1,
         height=1,
         command=expandir_v
-    ).grid(row=0, column=0, sticky='we', padx=12)
+    ).grid(row=0, column=0, sticky='we')
 
     tk.Checkbutton(
         frame_inferior,
@@ -189,7 +183,13 @@ def main():
         width=1,
         height=1,
         command=expandir_h
-    ).grid(row=0, column=1, sticky='we', padx=12)
+    ).grid(row=0, column=1, sticky='we')
+
+    frame_botoes = tk.Frame(g.principal_form, width=200)
+    frame_botoes.pack(expand=True)
+
+    frame_botoes.columnconfigure(0, weight=1)
+    frame_botoes.columnconfigure(1, weight=1)
 
     # Botão para limpar valores de dobras
     tk.Button(frame_botoes, text="Limpar Dobras", command=lambda : [limpar_dobras(w) for w in g.valores_w], width=15, bg='yellow').grid(row=0, column=0, sticky='we', padx=2)
