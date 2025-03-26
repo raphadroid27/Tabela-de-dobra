@@ -37,6 +37,10 @@ def atualizar_canal():
     material_nome = g.material_combobox.get()
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
+
+    # Inicializar canais_valores como uma lista vazia
+    canais_valores = []    
+    
     if espessura_obj:
         canais_valores = sorted(
         [str(c.valor) for c in session.query(Canal).join(Deducao)
@@ -635,8 +639,12 @@ def atualizar(tipo):
         for campo, entry in config['campos'].items():
             valor = entry.get() if entry.get() else getattr(obj, campo)
             if valor is not None:
+                # Substituir vírgula por ponto e converter para float, se necessário
                 valor = valor.replace(',', '.') if isinstance(valor, str) else valor
-                setattr(obj, campo, float(valor) if isinstance(valor, str) and valor.replace('.', '', 1).isdigit() else valor)
+                if isinstance(valor, str) and valor.replace('.', '', 1).isdigit():
+                    valor = f'{float(valor):.0f}' if tipo == 'canal' else float(valor)
+                setattr(obj, campo, valor)
+        
         session.commit()
 
         messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
