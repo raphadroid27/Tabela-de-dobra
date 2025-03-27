@@ -196,7 +196,8 @@ def main():
 
     # Botão para limpar todos os valores
     tk.Button(frame_botoes, text="Limpar Tudo", command=limpar_tudo, width=15, bg='red').grid(row=0, column=1, sticky='we', padx=2)
-     
+
+    # Exemplo de uso para g.comprimento_entry
     verificar_admin_existente()
     g.principal_form.mainloop()
 

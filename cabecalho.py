@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
+from models import Canal
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import globals as g
 from funcoes import *
+
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -35,28 +37,32 @@ def cabecalho(root):
     g.material_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.material_combobox.grid(row=1, column=0, padx=2, sticky='we')
     g.material_combobox.bind("<<ComboboxSelected>>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
+    tp.ToolTip(g.material_combobox, "Selecione o material")
 
     tk.Label(main_frame, text="Espessura:").grid(row=0, column=1, sticky='sw')
     g.espessura_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.espessura_combobox.grid(row=1, column=1, padx=2, sticky='we')
     g.espessura_combobox.bind("<<ComboboxSelected>>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
+    tp.ToolTip(g.espessura_combobox, "Selecione a espessura da peça.")
 
     tk.Label(main_frame, text="Canal:").grid(row=0, column=2, sticky='sw')
     g.canal_combobox = ttk.Combobox(main_frame, width=10,justify="center")
     g.canal_combobox.grid(row=1, column=2, padx=2, sticky='we')
     g.canal_combobox.bind("<<ComboboxSelected>>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
+    tp.ToolTip(g.canal_combobox, "Selecione o canal de dobra.")
 
     tk.Label(main_frame, text="Comprimento:").grid(row=0, column=3, sticky='sw')
     g.comprimento_entry = tk.Entry(main_frame, width=10, justify="center")
     g.comprimento_entry.grid(row=1, column=3, padx=2, sticky='we')
     g.comprimento_entry.bind("<KeyRelease>", func=lambda event: atualizar_toneladas_m())
-
+    tp.ToolTip(g.comprimento_entry, "Digite o comprimento da peça em milímetros.")
 
     # Raio interno
     tk.Label(main_frame, text="Raio Int.:").grid(row=2, column=0, sticky='sw')
     g.raio_interno_entry = tk.Entry(main_frame, width=10, justify="center")
     g.raio_interno_entry.grid(row=3, column=0, padx=2, sticky='we')
     g.raio_interno_entry.bind("<KeyRelease>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
+    tp.ToolTip(g.raio_interno_entry, "Digite o raio interno da peça em milímetros.")
 
     # Fator K
     tk.Label(main_frame, text="Fator K:").grid(row=2, column=1, sticky='sw')
@@ -80,6 +86,8 @@ def cabecalho(root):
     tk.Label(main_frame, text="Ded. Espec.:").grid(row=4, column=0, sticky='sw')
     g.deducao_espec_entry = tk.Entry(main_frame, width=10, fg="red", justify="center")
     g.deducao_espec_entry.grid(row=5, column=0, padx=2, sticky='we')
+    g.deducao_espec_entry.bind("<KeyRelease>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
+    tp.ToolTip(g.deducao_espec_entry, "Digite a dedução específica da peça em milímetros.")
 
     # Aba mínima
     tk.Label(main_frame, text="Aba Mín.:").grid(row=4, column=1, sticky='sw')
