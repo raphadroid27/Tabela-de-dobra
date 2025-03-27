@@ -54,36 +54,18 @@ def atualizar_canal():
         
     g.canal_combobox['values'] = canais_valores
 
-    canal_obj = session.query(Canal).filter_by(valor=g.canal_combobox.get()).first()
-
-    if canal_obj and canal_obj.comprimento_total is not None:
-        g.comprimento_entry.placeholder = f"Total: {canal_obj.comprimento_total}"
-        g.comprimento_entry.focus()
-        g.canal_combobox.focus()
-    else:
-            if g.comprimento_entry.get() == "":
-                g.comprimento_entry.delete(0, tk.END)
-            g.comprimento_entry.placeholder = ""
-
 def canal_tooltip():
     # Verificar se o combobox está vazio
     if g.canal_combobox.get() == "":
         g.canal_combobox.set("")
-        tp.ToolTip(g.canal_combobox, "Selecione o canal desejado.")
+        tp.ToolTip(g.canal_combobox, "Selecione o canal de dobra.")
     else:
         canal_obj = session.query(Canal).filter_by(valor=g.canal_combobox.get()).first()
         if canal_obj:
-            if canal_obj.observacao is None:
-                tp.ToolTip(g.canal_combobox, "Nenhuma observação encontrada.")
-            else:
-                tp.ToolTip(g.canal_combobox, f'{canal_obj.observacao}')
+                canal_obs = canal_obj.observacao if canal_obj.observacao else "N/A."
+                canal_comprimento_total = canal_obj.comprimento_total if canal_obj.comprimento_total else "N/A."
 
-def comprimento_tooltip():
-    if g.comprimento_entry.get() == "":
-        tp.ToolTip(g.comprimento_entry, "Digite o comprimento da peça em milímetros.")
-    else:
-        if g.comprimento_entry.get().startswith("Total: "):
-            tp.ToolTip(g.comprimento_entry, "Comprimento total do canal.")
+                tp.ToolTip(g.canal_combobox, f'Obs: {canal_obs}\nComprimento total: {canal_comprimento_total}')
 
 def atualizar_deducao_e_obs():
     espessura_valor = g.espessura_combobox.get()
@@ -124,8 +106,6 @@ def atualizar_toneladas_m():
             g.ton_m_label.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
             g.ton_m_label.config(text='N/A', fg="red") 
-
-    comprimento_tooltip()
 
 def calcular_fatork():
     if g.deducao_espec:
@@ -380,7 +360,6 @@ def todas_funcoes(w):
 
     # Atualizar tooltips
     canal_tooltip()
-    comprimento_tooltip()
 
 # Manipulação de dados
 def obter_configuracoes():
