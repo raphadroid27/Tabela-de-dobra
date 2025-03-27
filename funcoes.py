@@ -84,10 +84,39 @@ def atualizar_toneladas_m():
 
     if g.material_combobox.get() != "" and g.espessura_combobox.get() != "" and g.canal_combobox.get() != "":
         if deducao_obj and deducao_obj.forca is not None:
-            toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
+            if comprimento.startswith("Total: "):
+                toneladas_m = float(deducao_obj.forca)
+            else:
+                toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
             g.ton_m_label.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
-            g.ton_m_label.config(text='N/A', fg="red")        
+            g.ton_m_label.config(text='N/A', fg="red")  
+
+def atualizar_comprimento_total():
+    canal_valor = g.canal_combobox.get()
+    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+
+    g.comprimento_entry.delete(0, tk.END)
+    placeholder_text = ""
+
+    if canal_obj and canal_obj.comprimento_total is not None:
+        placeholder_text = f'Total: {canal_obj.comprimento_total:.0f}'
+        g.comprimento_entry.insert(0, placeholder_text)
+        g.comprimento_entry.config(fg="gray")
+
+    # Adicionar eventos para gerenciar o placeholder
+    def on_focus_in(event):
+        if g.comprimento_entry.get() == placeholder_text:
+            g.comprimento_entry.delete(0, tk.END)
+            g.comprimento_entry.config(fg="black")
+
+    def on_focus_out(event):
+        if not g.comprimento_entry.get():
+            g.comprimento_entry.insert(0, placeholder_text)
+            g.comprimento_entry.config(fg="gray")
+
+    g.comprimento_entry.bind("<FocusIn>", on_focus_in)
+    g.comprimento_entry.bind("<FocusOut>", on_focus_out)
 
 def calcular_fatork():
     if g.deducao_espec:
@@ -331,6 +360,7 @@ def todas_funcoes(w):
     atualizar_canal()
     atualizar_deducao_e_obs()
     atualizar_toneladas_m()
+    atualizar_comprimento_total()
     calcular_fatork()
     calcular_offset()
     aba_minima_externa()

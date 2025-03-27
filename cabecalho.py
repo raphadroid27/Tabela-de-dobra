@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import globals as g
 from funcoes import *
+import tooltip as tp
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -50,7 +51,7 @@ def cabecalho(root):
     g.comprimento_entry = tk.Entry(main_frame, width=10, justify="center")
     g.comprimento_entry.grid(row=1, column=3, padx=2, sticky='we')
     g.comprimento_entry.bind("<KeyRelease>", func=lambda event: atualizar_toneladas_m())
-
+    tp.ToolTip(g.comprimento_entry, "Comprimento da chapa em milímetros")
 
     # Raio interno
     tk.Label(main_frame, text="Raio Int.:").grid(row=2, column=0, sticky='sw')
