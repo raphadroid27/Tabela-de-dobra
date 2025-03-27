@@ -8,6 +8,8 @@ from models import Espessura, Material, Canal, Deducao, Usuario
 import globals as g
 import re
 import hashlib
+import tooltip as tp
+import placeholder as ph
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 session = sessionmaker(bind=engine)
@@ -52,6 +54,37 @@ def atualizar_canal():
         
     g.canal_combobox['values'] = canais_valores
 
+    canal_obj = session.query(Canal).filter_by(valor=g.canal_combobox.get()).first()
+
+    if canal_obj and canal_obj.comprimento_total is not None:
+        g.comprimento_entry.placeholder = f"Total: {canal_obj.comprimento_total}"
+        g.comprimento_entry.focus()
+        g.canal_combobox.focus()
+    else:
+            if g.comprimento_entry.get() == "":
+                g.comprimento_entry.delete(0, tk.END)
+            g.comprimento_entry.placeholder = ""
+
+def canal_tooltip():
+    # Verificar se o combobox está vazio
+    if g.canal_combobox.get() == "":
+        g.canal_combobox.set("")
+        tp.ToolTip(g.canal_combobox, "Selecione o canal desejado.")
+    else:
+        canal_obj = session.query(Canal).filter_by(valor=g.canal_combobox.get()).first()
+        if canal_obj:
+            if canal_obj.observacao is None:
+                tp.ToolTip(g.canal_combobox, "Nenhuma observação encontrada.")
+            else:
+                tp.ToolTip(g.canal_combobox, f'{canal_obj.observacao}')
+
+def comprimento_tooltip():
+    if g.comprimento_entry.get() == "":
+        tp.ToolTip(g.comprimento_entry, "Digite o comprimento da peça em milímetros.")
+    else:
+        if g.comprimento_entry.get().startswith("Total: "):
+            tp.ToolTip(g.comprimento_entry, "Comprimento total do canal.")
+
 def atualizar_deducao_e_obs():
     espessura_valor = g.espessura_combobox.get()
     material_nome = g.material_combobox.get()
@@ -90,33 +123,9 @@ def atualizar_toneladas_m():
                 toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
             g.ton_m_label.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
-            g.ton_m_label.config(text='N/A', fg="red")  
+            g.ton_m_label.config(text='N/A', fg="red") 
 
-def atualizar_comprimento_total():
-    canal_valor = g.canal_combobox.get()
-    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-
-    g.comprimento_entry.delete(0, tk.END)
-    placeholder_text = ""
-
-    if canal_obj and canal_obj.comprimento_total is not None:
-        placeholder_text = f'Total: {canal_obj.comprimento_total:.0f}'
-        g.comprimento_entry.insert(0, placeholder_text)
-        g.comprimento_entry.config(fg="gray")
-
-    # Adicionar eventos para gerenciar o placeholder
-    def on_focus_in(event):
-        if g.comprimento_entry.get() == placeholder_text:
-            g.comprimento_entry.delete(0, tk.END)
-            g.comprimento_entry.config(fg="black")
-
-    def on_focus_out(event):
-        if not g.comprimento_entry.get():
-            g.comprimento_entry.insert(0, placeholder_text)
-            g.comprimento_entry.config(fg="gray")
-
-    g.comprimento_entry.bind("<FocusIn>", on_focus_in)
-    g.comprimento_entry.bind("<FocusOut>", on_focus_out)
+    comprimento_tooltip()
 
 def calcular_fatork():
     if g.deducao_espec:
@@ -131,7 +140,6 @@ def calcular_fatork():
         g.fator_k = 0.5
 
     g.fator_k_label.config(text=f"{g.fator_k:.2f}", fg="red" if g.deducao_valor == g.deducao_espec else "black")
-
 
 def calcular_offset():
     if not g.fator_k or not g.espessura_valor:
@@ -327,14 +335,13 @@ def limpar_dobras(w):
     getattr(g, f'metade_blank_label_{w}', None).config(text="") if getattr(g, f'metade_blank_label_{w}', None) else None
 
 def limpar_tudo():
-    for w in g.valores_w:
-        limpar_dobras(w)
-
     campos = [
         g.material_combobox, g.espessura_combobox, g.canal_combobox
     ]
     for campo in campos:
         campo.set('')
+        if campo != g.material_combobox:
+            campo['values'] = []
 
     entradas = [
         g.raio_interno_entry, g.comprimento_entry
@@ -354,18 +361,26 @@ def limpar_tudo():
     for etiqueta, texto in etiquetas.items():
         etiqueta.config(text=texto)
 
+    for w in g.valores_w:
+        limpar_dobras(w)
+        todas_funcoes(w)
+
 def todas_funcoes(w):
     carregar_variaveis_globais()
     atualizar_espessura()
     atualizar_canal()
     atualizar_deducao_e_obs()
     atualizar_toneladas_m()
-    atualizar_comprimento_total()
+    #atualizar_comprimento_total()
     calcular_fatork()
     calcular_offset()
     aba_minima_externa()
     z_minimo_externo()
     calcular_dobra(w)
+
+    # Atualizar tooltips
+    canal_tooltip()
+    comprimento_tooltip()
 
 # Manipulação de dados
 def obter_configuracoes():
