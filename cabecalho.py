@@ -74,7 +74,7 @@ def cabecalho(root):
     tk.Label(main_frame, text="Dedução:").grid(row=2, column=2, sticky='sw')
     g.deducao_label = tk.Label(main_frame, relief="sunken", width=10)
     g.deducao_label.grid(row=3, column=2, padx=2, sticky='we')
-    g.deducao_label.bind("<Button-1>", func=lambda event: copiar('deducao'))
+    g.deducao_label.bind("<Button-1>", func=lambda event: copiar('dedução'))
 
     # Offset
     tk.Label(main_frame, text="Offset:").grid(row=2, column=3, sticky='sw')
