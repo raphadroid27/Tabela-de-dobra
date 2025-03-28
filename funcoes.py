@@ -244,7 +244,7 @@ def razao_raio_esp():
 
 def copiar(tipo, numero=None, w=None):
     configuracoes = {
-        'deducao': {
+        'dedução': {
             'label': g.deducao_label,
             'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
         },
@@ -467,6 +467,15 @@ def buscar(tipo):
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
+    try:
+        config = configuracoes[tipo]
+    except KeyError:
+        messagebox.showerror("Erro", f"Tipo '{tipo}' não encontrado nas configurações.")
+        return
+
+    if tipo != 'dedução' and (config.get('busca') is None or not config['busca'].winfo_exists()):
+        return
+
     def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
         query = session.query(Deducao).join(Material).join(Espessura).join(Canal)
         
@@ -485,7 +494,7 @@ def buscar(tipo):
         canal_valor = config['entries']['canal_combo'].get()
         itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
     else:
-        item = config['busca'].get().replace(',', '.')
+        item = config['busca'].get().replace(',', '.') if config['busca'] else ""
         itens = session.query(config['modelo']).filter(config['campo_busca'].like(f"{item}%"))
     
     for item in config['lista'].get_children():
@@ -646,8 +655,8 @@ def adicionar(tipo):
     listar(tipo)
 
 def editar(tipo):
-    if not admin(tipo):
-        return
+    # if not admin(tipo):
+    #     return
 
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
@@ -697,6 +706,7 @@ def editar(tipo):
     atualizar_combobox_deducao()
     for tipo in configuracoes:
         listar(tipo)
+        buscar(tipo)
 
 def excluir(tipo):
     if not admin(tipo):
@@ -742,6 +752,7 @@ def excluir(tipo):
     atualizar_combobox_deducao()
     for tipo in configuracoes:
         listar(tipo)
+        buscar(tipo)
 
 def preencher_campos(tipo):
     configuracoes = obter_configuracoes()
@@ -765,7 +776,7 @@ def preencher_campos(tipo):
 
 def atualizar_combobox_deducao():
     if g.deducao_material_combobox and g.deducao_material_combobox.winfo_exists():
-        g.deducao_material_combobox['values'] = [m.nome for m in session.query(Material).all()]
+        g.deducao_material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.nome).all()]
     if g.deducao_espessura_combobox and g.deducao_espessura_combobox.winfo_exists():
         g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(Espessura).all()])
     if g.deducao_canal_combobox and g.deducao_canal_combobox.winfo_exists():
