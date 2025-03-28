@@ -638,6 +638,7 @@ def adicionar(tipo):
         else:
             messagebox.showerror("Erro", "Canal já existe no banco de dados.")
 
+    atualizar_material()
     atualizar_espessura()
     atualizar_canal()
     atualizar_deducao_e_obs()
@@ -734,6 +735,7 @@ def excluir(tipo):
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
+    atualizar_material()
     atualizar_espessura()
     atualizar_canal()
     atualizar_deducao_e_obs()
