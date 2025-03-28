@@ -662,28 +662,40 @@ def editar(tipo):
 
     if obj:
         for campo, entry in config['campos'].items():
-            valor = entry.get() if entry.get() else getattr(obj, campo)
-            if valor is not None:
-                # Substituir vírgula por ponto e converter para float, se necessário
-                valor = valor.replace(',', '.') if isinstance(valor, str) else valor
-                if isinstance(valor, str) and valor.replace('.', '', 1).isdigit():
-                    valor = f'{float(valor):.0f}' if tipo == 'canal' else float(valor)
-                setattr(obj, campo, valor)
-        
-        session.commit()
+            valor = entry.get().strip()  # Remove espaços em branco
+            if valor == "":
+                valor = None  # Define como None se o campo estiver vazio
+            else:
+                # Tenta converter para float se necessário
+                try:
+                    if campo in ["largura", "altura", "comprimento_total"]:  # Campos numéricos
+                        valor = float(valor.replace(",", "."))
+                except ValueError:
+                    messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
+                    return
 
-        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
+            setattr(obj, campo, valor)  # Atualiza o objeto com o valor convertido
 
-        for entry in config['campos'].values():
-            entry.delete(0, tk.END)
+        try:
+            session.commit()
+            messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
+        except Exception as e:
+            session.rollback()
+            messagebox.showerror("Erro", f"Erro ao salvar no banco de dados: {e}")
     else:
         messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
 
+    # Limpar os campos após a edição
+    for entry in config['campos'].values():
+        entry.delete(0, tk.END)
+
+    # Atualizar as listas e comboboxes
     atualizar_espessura()
     atualizar_canal()
     atualizar_deducao_e_obs()
     atualizar_combobox_deducao()
-    listar('dedução'), listar('material'), listar('espessura'), listar('canal'), listar('usuario')
+    for tipo in configuracoes:
+        listar(tipo)
 
 def excluir(tipo):
     if not admin(tipo):
@@ -726,7 +738,8 @@ def excluir(tipo):
     atualizar_canal()
     atualizar_deducao_e_obs()
     atualizar_combobox_deducao()
-    listar('dedução'), listar('material'), listar('espessura'), listar('canal')
+    for tipo in configuracoes:
+        listar(tipo)
 
 def preencher_campos(tipo):
     configuracoes = obter_configuracoes()
