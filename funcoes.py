@@ -65,7 +65,7 @@ def canal_tooltip():
                 canal_obs = canal_obj.observacao if canal_obj.observacao else "N/A."
                 canal_comprimento_total = canal_obj.comprimento_total if canal_obj.comprimento_total else "N/A."
 
-                tp.ToolTip(g.canal_combobox, f'Obs: {canal_obs}\nComprimento total: {canal_comprimento_total}')
+                tp.ToolTip(g.canal_combobox, f'Obs: {canal_obs}\nComprimento total: {canal_comprimento_total}', delay=0)
 
 def atualizar_deducao_e_obs():
     espessura_valor = g.espessura_combobox.get()
@@ -99,14 +99,22 @@ def atualizar_toneladas_m():
 
     if g.material_combobox.get() != "" and g.espessura_combobox.get() != "" and g.canal_combobox.get() != "":
         if deducao_obj and deducao_obj.forca is not None:
-            if comprimento.startswith("Total: "):
-                toneladas_m = float(deducao_obj.forca)
-            else:
-                toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
+            toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
             g.ton_m_label.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
             g.ton_m_label.config(text='N/A', fg="red") 
+    
+    # Verificar se o comprimento é menor que o comprimento total do canal
+    canal_obj = session.query(Canal).filter_by(valor=g.canal_combobox.get()).first()
+    comprimento_total = canal_obj.comprimento_total if canal_obj else None
+    comprimento = float(comprimento) if comprimento else None
 
+    if canal_obj and comprimento and comprimento_total:
+        if comprimento < comprimento_total:
+            g.comprimento_entry.config(fg="black")
+        elif comprimento >= comprimento_total:
+            g.comprimento_entry.config(fg="red")
+        
 def calcular_fatork():
     if g.deducao_espec:
         g.deducao_valor = g.deducao_espec
