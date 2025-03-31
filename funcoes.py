@@ -4,7 +4,7 @@ import pyperclip
 from math import pi
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from models import Espessura, Material, Canal, Deducao, Usuario
+from models import Espessura, Material, Canal, Deducao, Usuario, Log
 import globals as g
 import re
 import hashlib
@@ -558,6 +558,7 @@ def adicionar(tipo):
             )
             session.add(nova_deducao)
             session.commit()
+            registrar_log(g.usuario_id, 'adicionar', 'dedução',nova_deducao.id,f'espessura: {espessura_valor}, canal: {canal_valor}, material: {material_nome}, valor: {nova_deducao_valor}, forca: {nova_forca_valor}, obs: {nova_observacao_valor}')
 
             g.deducao_espessura_combobox.set('')
             g.deducao_canal_combobox.set('')
@@ -584,6 +585,7 @@ def adicionar(tipo):
             nova_espessura = Espessura(valor=espessura_valor)
             session.add(nova_espessura)
             session.commit()
+            registrar_log(g.usuario_id, 'adicionar', 'espessura', nova_espessura.id, f'valor: {espessura_valor}')
             messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
         else:
             messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
@@ -609,6 +611,7 @@ def adicionar(tipo):
             )
             session.add(novo_material)
             session.commit()
+            registrar_log(g.usuario_id, 'adicionar', 'material', novo_material.id, f'nome: {nome_material}, densidade: {(densidade_material) if densidade_material else "N/A"}, escoamento: {escoamento_material}, elasticidade: {elasticidade_material}')
 
             g.material_nome_entry.delete(0, tk.END)
             g.material_densidade_entry.delete(0, tk.END)
@@ -641,6 +644,8 @@ def adicionar(tipo):
             )
             session.add(novo_canal)
             session.commit()
+            registrar_log(g.usuario_id, 'adicionar', 'canal', novo_canal.id, f'valor: {valor_canal}, largura: {largura_canal}, altura: {altura_canal}, comprimento_total: {comprimento_total_canal}, observacao: {observacao_canal}')
+
             g.canal_valor_entry.delete(0, tk.END)
             g.canal_largura_entry.delete(0, tk.END)
             g.canal_altura_entry.delete(0, tk.END)
@@ -661,6 +666,9 @@ def editar(tipo):
     if not admin(tipo):
         return
 
+    if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
+        return
+
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -672,25 +680,30 @@ def editar(tipo):
     item = config['lista'].item(selected_item)
     obj_id = item['values'][0]
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
-
+    
     if obj:
+        alteracoes = []  # Lista para armazenar as alterações
         for campo, entry in config['campos'].items():
-            valor = entry.get().strip()  # Remove espaços em branco
-            if valor == "":
-                valor = None  # Define como None se o campo estiver vazio
+            valor_novo = entry.get().strip()
+            if valor_novo == "":
+                valor_novo = None
             else:
-                # Tenta converter para float se necessário
                 try:
-                    if campo in ["largura", "altura", "comprimento_total"]:  # Campos numéricos
-                        valor = float(valor.replace(",", "."))
+                    if campo in ["largura", "altura", "comprimento_total"]:
+                        valor_novo = float(valor_novo.replace(",", "."))
                 except ValueError:
                     messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
                     return
 
-            setattr(obj, campo, valor)  # Atualiza o objeto com o valor convertido
+            valor_antigo = getattr(obj, campo)
+            if valor_antigo != valor_novo:  # Verifica se houve alteração
+                alteracoes.append(f"{campo}: '{valor_antigo}' -> '{valor_novo}'")
+                setattr(obj, campo, valor_novo)
 
         try:
             session.commit()
+            detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
+            registrar_log(g.usuario_id, "editar", tipo, obj_id, detalhes)  # Registrar a edição com detalhes
             messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
         except Exception as e:
             session.rollback()
@@ -745,6 +758,7 @@ def excluir(tipo):
 
     session.delete(obj)
     session.commit()
+    registrar_log(g.usuario_id, "excluir", tipo, obj_id, f"Excluído(a) {tipo} com ID {obj_id}")  # Registrar a exclusão
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
@@ -972,3 +986,14 @@ def habilitar_janelas():
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', False)
             form.focus_force()
+
+def registrar_log(usuario_id, acao, tabela, registro_id, detalhes=None):
+    log = Log(
+        usuario_id=usuario_id,
+        acao=acao,
+        tabela=tabela,
+        registro_id=registro_id,
+        detalhes=detalhes
+    )
+    session.add(log)
+    session.commit()

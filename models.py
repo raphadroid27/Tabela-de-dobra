@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, create_engine, UniqueConstraint, Boolean
+from sqlalchemy import Column, Integer, String, Float, ForeignKey,DateTime, create_engine, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -48,6 +49,18 @@ class Deducao(Base):  # Ajustado para PascalCase
     material = relationship("Material")
 
     __table_args__ = (UniqueConstraint('canal_id', 'espessura_id', 'material_id', name='_canal_espessura_material_uc'),)
+
+class Log(Base):
+    __tablename__ = 'log'
+    id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey('usuario.id'))
+    acao = Column(String, nullable=False)
+    tabela = Column(String, nullable=False)
+    registro_id = Column(Integer, nullable=False)
+    detalhes = Column(String)  # Adicionado para armazenar os detalhes das alterações
+    data_hora = Column(DateTime, default=datetime.utcnow)
+
+    usuario = relationship("Usuario")
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Base.metadata.create_all(engine)
