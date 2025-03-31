@@ -84,7 +84,7 @@ def cabecalho(root):
 
     # Dedução específica
     tk.Label(main_frame, text="Ded. Espec.:").grid(row=4, column=0, sticky='sw')
-    g.deducao_espec_entry = tk.Entry(main_frame, width=10, fg="red", justify="center")
+    g.deducao_espec_entry = tk.Entry(main_frame, width=10, fg="blue", justify="center")
     g.deducao_espec_entry.grid(row=5, column=0, padx=2, sticky='we')
     g.deducao_espec_entry.bind("<KeyRelease>", func=lambda event: [todas_funcoes(w) for w in g.valores_w])
     tp.ToolTip(g.deducao_espec_entry, "Digite a dedução específica da peça em milímetros.")
