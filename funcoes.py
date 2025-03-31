@@ -45,11 +45,11 @@ def atualizar_canal():
     
     if espessura_obj:
         canais_valores = sorted(
-        [str(c.valor) for c in session.query(Canal).join(Deducao)
-        .filter(Deducao.espessura_id == espessura_obj.id)
-        .filter(Deducao.material_id == material_obj.id)
-        .order_by(Canal.valor).all()],
-        key=lambda x: float(x)
+            [str(c.valor) for c in session.query(Canal).join(Deducao)
+             .filter(Deducao.espessura_id == espessura_obj.id)
+             .filter(Deducao.material_id == material_obj.id)
+             .order_by(Canal.valor).all()],
+            key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]) if re.search(r'\d+\.?\d*', x) else float('inf')
         )
         
     g.canal_combobox['values'] = canais_valores
@@ -127,7 +127,7 @@ def calcular_fatork():
     if g.fator_k > 0.5:
         g.fator_k = 0.5
 
-    g.fator_k_label.config(text=f"{g.fator_k:.2f}", fg="red" if g.deducao_valor == g.deducao_espec else "black")
+    g.fator_k_label.config(text=f"{g.fator_k:.2f}", fg="blue" if g.deducao_valor == g.deducao_espec else "black")
 
 def calcular_offset():
     if not g.fator_k or not g.espessura_valor:
@@ -135,7 +135,7 @@ def calcular_offset():
         return
 
     offset = g.fator_k * g.espessura_valor
-    g.offset_label.config(text=f"{offset:.2f}", fg="red" if g.deducao_valor == g.deducao_espec else "black")
+    g.offset_label.config(text=f"{offset:.2f}", fg="blue" if g.deducao_valor == g.deducao_espec else "black")
 
 def aba_minima_externa():
     if g.canal_valor:
@@ -475,6 +475,9 @@ def buscar(tipo):
 
     if tipo != 'dedução' and (config.get('busca') is None or not config['busca'].winfo_exists()):
         return
+    
+    if config['lista'] is None or not config['lista'].winfo_exists():
+        return
 
     def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
         query = session.query(Deducao).join(Material).join(Espessura).join(Canal)
@@ -655,8 +658,8 @@ def adicionar(tipo):
     listar(tipo)
 
 def editar(tipo):
-    # if not admin(tipo):
-    #     return
+    if not admin(tipo):
+        return
 
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
