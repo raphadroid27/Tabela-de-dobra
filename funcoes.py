@@ -558,7 +558,7 @@ def adicionar(tipo):
             )
             session.add(nova_deducao)
             session.commit()
-            registrar_log(g.usuario_id, 'adicionar', 'dedução',nova_deducao.id,f'espessura: {espessura_valor}, canal: {canal_valor}, material: {material_nome}, valor: {nova_deducao_valor}, forca: {nova_forca_valor}, obs: {nova_observacao_valor}')
+            registrar_log(g.usuario_nome, 'adicionar', tipo, nova_deducao.id,f'{tipo} espessura: {espessura_valor}, canal: {canal_valor}, material: {material_nome}, valor: {nova_deducao_valor}, forca: {(nova_forca_valor if nova_deducao_valor else "N/A")}, obs: {(nova_observacao_valor if nova_observacao_valor else "N/A")}')
 
             g.deducao_espessura_combobox.set('')
             g.deducao_canal_combobox.set('')
@@ -585,7 +585,7 @@ def adicionar(tipo):
             nova_espessura = Espessura(valor=espessura_valor)
             session.add(nova_espessura)
             session.commit()
-            registrar_log(g.usuario_id, 'adicionar', 'espessura', nova_espessura.id, f'valor: {espessura_valor}')
+            registrar_log(g.usuario_nome, 'adicionar', tipo, nova_espessura.id, f'{tipo} valor: {espessura_valor}')
             messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
         else:
             messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
@@ -611,7 +611,7 @@ def adicionar(tipo):
             )
             session.add(novo_material)
             session.commit()
-            registrar_log(g.usuario_id, 'adicionar', 'material', novo_material.id, f'nome: {nome_material}, densidade: {(densidade_material) if densidade_material else "N/A"}, escoamento: {escoamento_material}, elasticidade: {elasticidade_material}')
+            registrar_log(g.usuario_nome, 'adicionar', tipo, novo_material.id, f'{tipo} nome: {nome_material}, densidade: {(densidade_material if densidade_material else "N/A")}, escoamento: {(escoamento_material if escoamento_material else "N/A")}, elasticidade: {(elasticidade_material if elasticidade_material else "N/A")}')
 
             g.material_nome_entry.delete(0, tk.END)
             g.material_densidade_entry.delete(0, tk.END)
@@ -644,7 +644,7 @@ def adicionar(tipo):
             )
             session.add(novo_canal)
             session.commit()
-            registrar_log(g.usuario_id, 'adicionar', 'canal', novo_canal.id, f'valor: {valor_canal}, largura: {largura_canal}, altura: {altura_canal}, comprimento_total: {comprimento_total_canal}, observacao: {observacao_canal}')
+            registrar_log(g.usuario_nome, 'adicionar', tipo, novo_canal.id, f'{tipo} valor: {valor_canal}, largura: {(largura_canal if largura_canal else "N/A")}, altura: {(altura_canal if altura_canal else "N/A")}, comprimento_total: {(comprimento_total_canal if comprimento_total_canal else "N/A")}, observacao: {(observacao_canal if observacao_canal else "N/A")}')
 
             g.canal_valor_entry.delete(0, tk.END)
             g.canal_largura_entry.delete(0, tk.END)
@@ -697,13 +697,13 @@ def editar(tipo):
 
             valor_antigo = getattr(obj, campo)
             if valor_antigo != valor_novo:  # Verifica se houve alteração
-                alteracoes.append(f"{campo}: '{valor_antigo}' -> '{valor_novo}'")
+                alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
                 setattr(obj, campo, valor_novo)
 
         try:
             session.commit()
             detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
-            registrar_log(g.usuario_id, "editar", tipo, obj_id, detalhes)  # Registrar a edição com detalhes
+            registrar_log(g.usuario_nome, "editar", tipo, obj_id, detalhes)  # Registrar a edição com detalhes
             messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
         except Exception as e:
             session.rollback()
@@ -758,7 +758,7 @@ def excluir(tipo):
 
     session.delete(obj)
     session.commit()
-    registrar_log(g.usuario_id, "excluir", tipo, obj_id, f"Excluído(a) {tipo} com ID {obj_id}")  # Registrar a exclusão
+    registrar_log(g.usuario_nome, "excluir", tipo, obj_id, f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")  # Registrar a exclusão
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
@@ -822,10 +822,10 @@ def novo_usuario():
     habilitar_janelas()
 
 def login():
-    usuario_nome = g.usuario_entry.get()
+    g.usuario_nome = g.usuario_entry.get()
     usuario_senha = g.senha_entry.get()
     
-    usuario_obj = session.query(Usuario).filter_by(nome=usuario_nome).first()
+    usuario_obj = session.query(Usuario).filter_by(nome=g.usuario_nome).first()
 
     if usuario_obj:
         if usuario_obj.senha == "nova_senha":
@@ -987,9 +987,9 @@ def habilitar_janelas():
             form.attributes('-disabled', False)
             form.focus_force()
 
-def registrar_log(usuario_id, acao, tabela, registro_id, detalhes=None):
+def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
     log = Log(
-        usuario_id=usuario_id,
+        usuario_nome=usuario_nome,
         acao=acao,
         tabela=tabela,
         registro_id=registro_id,

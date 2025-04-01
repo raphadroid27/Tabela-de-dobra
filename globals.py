@@ -14,6 +14,8 @@ dobras_get = None
 valores_w = [1,2]
 expandir_v = None
 expandir_h = None
+usuario_id = None
+usuario_nome = None
 
 # head.py widgets
 material_combobox = None
@@ -125,7 +127,6 @@ canal_busca_entry = None
 usuario_entry = None
 senha_entry = None
 admin_var = None
-usuario_id = None
 login = None
 
 # form_usuario.py widgets
