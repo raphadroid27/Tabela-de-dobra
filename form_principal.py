@@ -22,7 +22,11 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-CONFIG_FILE = 'config.json'
+# Define o caminho para salvar o arquivo config.json na pasta Documentos
+DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")  # Caminho para a pasta Documentos
+CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Tabela de Dobra")  # Subpasta "Tabela de Dobra"
+os.makedirs(CONFIG_DIR, exist_ok=True)  # Cria o diretório se ele não existir
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")  # Caminho completo para o arquivo config.json
 
 def verificar_admin_existente():
     admin_existente = session.query(Usuario).filter(Usuario.admin == 1).first()
