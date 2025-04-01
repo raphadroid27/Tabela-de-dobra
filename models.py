@@ -53,14 +53,12 @@ class Deducao(Base):  # Ajustado para PascalCase
 class Log(Base):
     __tablename__ = 'log'
     id = Column(Integer, primary_key=True)
-    usuario_id = Column(Integer, ForeignKey('usuario.id'))
+    usuario_nome = Column(String, nullable=False)
     acao = Column(String, nullable=False)
     tabela = Column(String, nullable=False)
     registro_id = Column(Integer, nullable=False)
     detalhes = Column(String)  # Adicionado para armazenar os detalhes das alterações
     data_hora = Column(DateTime, default=datetime.utcnow)
-
-    usuario = relationship("Usuario")
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Base.metadata.create_all(engine)
