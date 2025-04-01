@@ -16,11 +16,8 @@ def main(root_app):
     label_titulo = tk.Label(g.sobre_form, text="Tabela de Dobra", font=("Arial", 16, "bold"))
     label_titulo.pack(pady=10)
 
-<<<<<<< HEAD
+
     label_versao = tk.Label(g.sobre_form, text="Versão: 0.1.0-beta", font=("Arial", 12))
-=======
-    label_versao = tk.Label(g.sobre_form, text="Versão: 1.1.6-beta", font=("Arial", 12))
->>>>>>> fed4a61 (melhora a lógica de verificação em funções de cópia e de atualização de comboboxes)
     label_versao.pack(pady=5)
 
     label_autor = tk.Label(g.sobre_form, text="Autor: raphadroid27", font=("Arial", 12))
