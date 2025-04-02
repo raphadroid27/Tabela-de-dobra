@@ -39,6 +39,10 @@ def dobras(valor, w):
         entry = getattr(g, f'aba{i}_entry_{w}')
         entry.grid(row=i, column=1, sticky='we', padx=2)
         entry.bind("<KeyRelease>", lambda event: calcular_dobra(w))
+
+        # Adicionar navegação com teclas direcionais
+        entry.bind("<Down>", lambda event, i=i: focus_next_entry(i, w))
+        entry.bind("<Up>", lambda event, i=i: focus_previous_entry(i, w))
         
         setattr(g, f'medidadobra{i}_label_{w}', tk.Label(g.frame_dobra, relief="sunken", width=10))
         label = getattr(g, f'medidadobra{i}_label_{w}')
