@@ -11,7 +11,7 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def main(root_app):
+def main(root):
     
     if g.aut_form is not None:
         g.aut_form.destroy()   
