@@ -3,7 +3,7 @@ import webbrowser
 import globals as g
 from funcoes import *
 
-def main(root_app):
+def main(root):
     g.sobre_form = tk.Toplevel()
     g.sobre_form.title("Sobre")
     g.sobre_form.geometry("300x210")

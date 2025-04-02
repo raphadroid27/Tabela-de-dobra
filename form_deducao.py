@@ -10,7 +10,7 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def main(root_app):
+def main(root):
     # Verificar se a janela já está aberta
     if g.deducao_form is not None:
         g.deducao_form.destroy()   

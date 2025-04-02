@@ -10,7 +10,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def main(root_app):
+def main(root):
     # Verificar se o usuário é administrador
     if not tem_permissao('admin'):
         return
