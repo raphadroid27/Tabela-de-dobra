@@ -35,7 +35,7 @@ def dobras(valor, w):
 
         tk.Label(g.frame_dobra, text=f"Aba {i}:").grid(row=i, column=0)
 
-        setattr(g, f'aba{i}_entry_{w}', tk.Entry(g.frame_dobra, width=10))
+        setattr(g, f'aba{i}_entry_{w}', tk.Entry(g.frame_dobra, width=10, justify="center"))
         entry = getattr(g, f'aba{i}_entry_{w}')
         entry.grid(row=i, column=1, sticky='we', padx=2)
         entry.bind("<KeyRelease>", lambda event: calcular_dobra(w))
