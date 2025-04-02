@@ -25,7 +25,7 @@ def carregar_variaveis_globais():
     print(f'{g.canal_valor} {g.espessura_valor} {g.deducao_valor}')
 
 def atualizar_material():
-    g.material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.nome).all()]
+    g.material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.id).all()]
 
 def atualizar_espessura():
     material_nome = g.material_combobox.get()
@@ -400,7 +400,7 @@ def obter_configuracoes():
             },
             'item_id': Material.id,  # Corrigido de Deducao.material_id
             'valores': g.valores_material,
-            'ordem': Material.nome,
+            'ordem': Material.id,
             'entry': g.material_nome_entry,
             'busca': g.material_busca_entry,
             'campo_busca': Material.nome
@@ -794,7 +794,7 @@ def preencher_campos(tipo):
 
 def atualizar_combobox_deducao():
     if g.deducao_material_combobox and g.deducao_material_combobox.winfo_exists():
-        g.deducao_material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.nome).all()]
+        g.deducao_material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.id).all()]
     if g.deducao_espessura_combobox and g.deducao_espessura_combobox.winfo_exists():
         g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(Espessura).all()])
     if g.deducao_canal_combobox and g.deducao_canal_combobox.winfo_exists():
@@ -1006,6 +1006,21 @@ def habilitar_janelas():
             form.attributes('-disabled', False)
             form.focus_force()
 
+def focus_next_entry(current_index, w):
+    next_index = current_index + 1
+    if next_index < g.n:
+        next_entry = getattr(g, f'aba{next_index}_entry_{w}', None)
+        if next_entry:
+            next_entry.focus()
+
+def focus_previous_entry(current_index, w):
+    previous_index = current_index - 1
+    if previous_index > 0:
+        previous_entry = getattr(g, f'aba{previous_index}_entry_{w}', None)
+        if previous_entry:
+            previous_entry.focus()
+
+# Manipulação de logs
 def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
     log = Log(
         usuario_nome=usuario_nome,
