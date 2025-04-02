@@ -2,14 +2,9 @@
 Este módulo define variáveis globais para uso em diferentes partes da aplicação.
 """
 #variáveis globais
-FATOR_K = None
-ESP_VALOR = None
-DED_ESPEC = None
 DED_VALOR = None
-R_INT = None
-CANAL_VALOR = None
-LARG_CANAL = None
 NO_TOPO_VAR = None
+TRANSP_VAR = None
 DOBRAS_VALORES = None
 VALORES_W = [1,2]
 EXP_V = None
@@ -21,7 +16,7 @@ USUARIO_NOME = None
 MAT_COMB = None
 ESP_COMB = None
 CANAL_COMB = None
-DED_COMB = None
+DED_LBL = None
 RI_ENTRY = None
 K_LBL = None
 OFFSET_LBL = None
@@ -39,8 +34,6 @@ for i in range(1, N):
     globals()[f'medidadobra{i}_label_{W}'] = None
     globals()[f'metadedobra{i}_label_{W}'] = None
 DED_ESPEC_ENTRY = None
-MED_BLANK_LBL = None
-MET_BLANK_LBL = None
 FRAME_DOBRA = None #Verificar se é necessário
 
 #aba3.py widgets
@@ -125,90 +118,3 @@ ESPES_FORM = None
 SOBRE_FORM = None
 AUTEN_FORM = None
 USUAR_FORM = None
-
-def valores_deducao(d):
-    '''
-    Retorna os valores de um objeto Deducao como uma tupla.
-    Os valores retornados são:
-    - ID da dedução
-    - Nome do material
-    - Valor da espessura
-    - Valor do canal
-    - Valor da dedução
-    - Observação da dedução
-    - Força da dedução
-    '''
-    return (
-        d.id,
-        d.material.nome,
-        d.espessura.valor,
-        d.canal.valor,
-        d.valor,
-        d.observacao,
-        d.forca,
-    )
-
-def valores_material(m):
-    '''
-    Retorna os valores de um objeto Material como uma tupla.
-    Os valores retornados são:
-    - ID do material
-    - Nome do material
-    - Densidade do material
-    - Escoamento do material
-    - Elasticidade do material
-    '''
-    return (
-        m.id,
-        m.nome,
-        m.densidade,
-        m.escoamento,
-        m.elasticidade,
-    )
-
-def valores_espessura(e):
-    '''
-    Retorna os valores de um objeto Espessura como uma tupla.
-    Os valores retornados são:
-    - ID da espessura
-    - Valor da espessura
-    '''
-    return (
-        e.id,
-        e.valor,
-    )
-
-def valores_canal(c):
-    '''
-    Retorna os valores de um objeto Canal como uma tupla.
-    Os valores retornados são:
-    - ID do canal
-    - Valor do canal
-    - Largura do canal
-    - Altura do canal
-    - Comprimento total do canal
-    - Observação do canal
-    '''
-    return (
-        c.id,
-        c.valor,
-        c.largura,
-        c.altura,
-        c.comprimento_total,
-        c.observacao,
-    )
-
-def valores_usuario(u):
-    '''
-    Retorna os valores de um objeto Usuario como uma tupla.
-    Os valores retornados são:
-    - ID do usuário
-    - Nome do usuário
-    - Senha do usuário
-    - Papel do usuário (admin ou viewer)
-    '''
-    return (
-        u.id,
-        u.nome,
-        u.role,
-    )

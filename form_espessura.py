@@ -1,21 +1,27 @@
+'''
+# Formulário de Espessura
+# Este módulo implementa a interface gráfica para gerenciar espessuras de materiais.
+# Ele permite adicionar, editar e excluir registros de espessuras, utilizando a
+# biblioteca tkinter para a construção da interface. As variáveis globais são
+# gerenciadas pelo módulo `globals`, enquanto as operações de banco de dados
+# são realizadas pelo módulo `funcoes`.
+'''
 import tkinter as tk
 from tkinter import ttk
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from funcoes import *
+import globals as g
+from funcoes import (no_topo, posicionar_janela, buscar,
+                     limpar_busca, listar, adicionar, excluir)
 
-# Configuração do banco de dados
-engine = create_engine('sqlite:///tabela_de_dobra.db')
-Session = sessionmaker(bind=engine)
-session = Session()
 
 def main(root):
+    """
+    Inicializa a janela de gerenciamento de espessuras.
+    Configura a interface gráfica para adicionar, editar e excluir espessuras.
+    """
+    if g.ESPES_FORM:
+        g.ESPES_FORM.destroy()
 
-    if g.ESPES_FORM is not None:
-        g.ESPES_FORM.destroy()   
-        pass
-
-    g.ESPES_FORM = tk.Toplevel()
+    g.ESPES_FORM = tk.Toplevel(root)
     g.ESPES_FORM.geometry("240x280")
     g.ESPES_FORM.resizable(False, False)
 
@@ -44,25 +50,30 @@ def main(root):
     g.ESP_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
     g.ESP_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('espessura'))
 
-    tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
+    tk.Button(frame_busca,
+              text="Limpar",
+              command = lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id","Valor")
     g.LIST_ESP = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.LIST_ESP["displaycolumns"] = ("Valor")
+        g.LIST_ESP["displaycolumns"] = "Valor"
         g.LIST_ESP.heading(col, text=col)
-        g.LIST_ESP.column(col, anchor="center")    
-    
+        g.LIST_ESP.column(col, anchor="center")
+
     g.LIST_ESP.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-    
+
     listar('espessura')
 
-    if g.EDIT_ESP == True:
+    if g.EDIT_ESP:
         g.ESPES_FORM.title("Editar/Excluir Espessura")
-        tk.Button(main_frame, text="Excluir", command=lambda:excluir('espessura'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        tk.Button(main_frame,
+                  text="Excluir",
+                  command=lambda:excluir('espessura'),
+                  bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     else:
         g.ESPES_FORM.title("Adicionar Espessura")
-        
+
         frame_edicoes = tk.LabelFrame(main_frame, text='Nova Espessura', pady=5)
         frame_edicoes.grid(row=3, column=0, padx=5,pady=5, sticky="ew")
 
@@ -73,7 +84,10 @@ def main(root):
         tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, sticky="w", padx=5)
         g.ESP_VALOR_ENTRY = tk.Entry(frame_edicoes)
         g.ESP_VALOR_ENTRY.grid(row=0, column=1, sticky="ew")
-        tk.Button(frame_edicoes, text="Adicionar", command = lambda: adicionar('espessura'), bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+        tk.Button(frame_edicoes,
+                  text="Adicionar",
+                  command = lambda: adicionar('espessura'),
+                  bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
     g.ESPES_FORM.mainloop()
 

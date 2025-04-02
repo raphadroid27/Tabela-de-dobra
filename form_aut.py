@@ -1,10 +1,18 @@
+"""
+# Formulário de Autenticação
+# Este módulo implementa uma interface gráfica para autenticação de usuários no sistema.
+# As funcionalidades incluem login de usuários existentes e criação de novos usuários,
+# com a possibilidade de definir permissões administrativas. A interface é construída
+# com a biblioteca tkinter, utilizando o módulo globals para variáveis globais e o
+# módulo funcoes para operações auxiliares. O banco de dados é gerenciado com SQLAlchemy.
+"""
+
 import tkinter as tk
-import globals as g
-from models import Usuario
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from funcoes import *
-
+import globals as g
+from models import Usuario
+from funcoes import (desabilitar_janelas, habilitar_janelas, login, novo_usuario, posicionar_janela)
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -12,12 +20,17 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 def main(root):
-    
-    if g.AUTEN_FORM is not None:
-        g.AUTEN_FORM.destroy()   
-        pass
+    """
+    Função principal que cria a janela de autenticação.
+    Se a janela já existir, ela é destruída antes de criar uma nova.
+    A janela é configurada com campos para usuário e senha, e um botão para login ou
+    criação de novo usuário, dependendo do estado atual do sistema.
+    """
 
-    g.AUTEN_FORM = tk.Toplevel()
+    if g.AUTEN_FORM:
+        g.AUTEN_FORM.destroy()
+
+    g.AUTEN_FORM = tk.Toplevel(root)
     g.AUTEN_FORM.geometry("200x120")
     g.AUTEN_FORM.resizable(False, False)
     g.AUTEN_FORM.attributes('-toolwindow', True)
@@ -48,22 +61,26 @@ def main(root):
     g.SENHA_ENTRY.grid(row=1, column=1,padx=5, pady=5)
 
     admin_existente = session.query(Usuario).filter(Usuario.role == 'admin').first()
-    
-    if g.LOGIN == True:
+
+    if g.LOGIN:
         g.AUTEN_FORM.title("Login")
-        tk.Button(main_frame, text="Login", command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
+        tk.Button(main_frame,
+                  text="Login",
+                  command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
     else:
         if not admin_existente:
             g.AUTEN_FORM.geometry("200x150")
-            tk.Label(main_frame, text="Admin:").grid(row=2, column=0,padx=5, pady=5)
+            tk.Label(main_frame, text="Admin:").grid(row=2, column=0, padx=5, pady=5)
             g.ADMIN_VAR = 'admin'
             admin_checkbox = tk.Checkbutton(main_frame, variable=g.ADMIN_VAR)
-            admin_checkbox.grid(row=2, column=1,padx=5, pady=5)
+            admin_checkbox.grid(row=2, column=1, padx=5, pady=5)
         else:
-             g.ADMIN_VAR = 'viewer'
-    
+            g.ADMIN_VAR = 'viewer'
+
         g.AUTEN_FORM.title("Novo Usuário")
-        tk.Button(main_frame, text="Salvar", command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
+        tk.Button(main_frame,
+                  text="Salvar",
+                  command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
 
     g.AUTEN_FORM.mainloop()
 
