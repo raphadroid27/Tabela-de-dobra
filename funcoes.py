@@ -663,7 +663,7 @@ def adicionar(tipo):
     listar(tipo)
 
 def editar(tipo):
-    if not admin(tipo):
+    if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
         return
 
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
@@ -716,6 +716,7 @@ def editar(tipo):
         entry.delete(0, tk.END)
 
     # Atualizar as listas e comboboxes
+    atualizar_material()
     atualizar_espessura()
     atualizar_canal()
     atualizar_deducao_e_obs()
@@ -725,7 +726,7 @@ def editar(tipo):
         buscar(tipo)
 
 def excluir(tipo):
-    if not admin(tipo):
+    if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
         return
 
     configuracoes = obter_configuracoes()
@@ -813,7 +814,7 @@ def novo_usuario():
         messagebox.showerror("Erro", "Usuário já existente.", parent=g.aut_form)
         return
     else:
-        novo_usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, admin=g.admin_var.get())
+        novo_usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.admin_var)  # Define o role padrão
         session.add(novo_usuario)
         session.commit()
         messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.aut_form)
@@ -860,21 +861,15 @@ def logado(tipo):
         return False
     return True
 
-def admin(tipo):
-    configuracoes = {
-        'dedução': g.deducao_form,
-        'espessura': g.espessura_form,
-        'material': g.material_form,
-        'canal': g.canal_form,
-        'usuario': g.usuario_form
-    }
-
-    if g.usuario_id is None:
-        messagebox.showerror("Erro", "Admin requerido.", parent=configuracoes[tipo])
-        return False
+def tem_permissao(role_requerida):
     usuario_obj = session.query(Usuario).filter_by(id=g.usuario_id).first()
-    if not usuario_obj.admin:
-        messagebox.showerror("Erro", "Admin requerido.", parent=configuracoes[tipo])
+    if not usuario_obj:
+        messagebox.showerror("Erro", "Você não tem permissão para acessar esta função.")
+        return False
+    # Permitir hierarquia de permissões
+    roles_hierarquia = ["viewer", "editor", "admin"]
+    if roles_hierarquia.index(usuario_obj.role) < roles_hierarquia.index(role_requerida):
+        messagebox.showerror("Erro", f"Permissão '{role_requerida}' requerida.")
         return False
     return True
 
@@ -889,7 +884,7 @@ def logout():
 def resetar_senha():
     selected_item = g.lista_usuario.selection()
     if not selected_item:
-        tk.messagebox.showwarning("Aviso", "Selecione um usuário para resetar a senha.")
+        tk.messagebox.showwarning("Aviso", "Selecione um usuário para resetar a senha.", parent=g.usuario_form)
         return
 
     user_id = g.lista_usuario.item(selected_item, "values")[0]
@@ -898,12 +893,12 @@ def resetar_senha():
     if usuario_obj:
         usuario_obj.senha = novo_password
         session.commit()
-        tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.")
+        tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.", parent=g.usuario_form)
     else:
-        tk.messagebox.showerror("Erro", "Usuário não encontrado.")
+        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.usuario_form)
 
 def excluir_usuario():
-    if not admin('usuario'):
+    if not tem_permissao("admin"):
         return
 
     if g.lista_usuario is None:
@@ -914,23 +909,47 @@ def excluir_usuario():
     obj_id = item['values'][0]
     obj = session.query(Usuario).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro", "Usuário não encontrado.")
+        messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.usuario_form)
         return
 
-    if obj.admin:
-        messagebox.showerror("Erro", "Não é possível excluir o administrador.")
+    if obj.role == "admin":
+        messagebox.showerror("Erro", "Não é possível excluir um administrador.", parent=g.usuario_form)
         return
     
-    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?")
+    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?", parent=g.usuario_form)
     if not aviso:
         return
 
     session.delete(obj)
     session.commit()
     g.lista_usuario.delete(selected_item)
-    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!")
+    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!", parent=g.usuario_form)
 
     listar('usuario')
+
+def tornar_editor():
+    selected_item = g.lista_usuario.selection()
+    if not selected_item:
+        tk.messagebox.showwarning("Aviso", "Selecione um usuário para promover a editor.", parent=g.usuario_form)
+        return
+
+    user_id = g.lista_usuario.item(selected_item, "values")[0]
+    usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
+
+    if usuario_obj:
+        if usuario_obj.role == "admin":
+            tk.messagebox.showerror("Erro", "O usuário já é um administrador.", parent=g.usuario_form)
+            return
+        if usuario_obj.role == "editor":
+            tk.messagebox.showinfo("Informação", "O usuário já é um editor.", parent=g.usuario_form)
+            return
+
+        usuario_obj.role = "editor"
+        session.commit()
+        tk.messagebox.showinfo("Sucesso", "Usuário promovido a editor com sucesso.", parent=g.usuario_form)
+        listar('usuario')  # Atualiza a lista de usuários na interface
+    else:
+        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.usuario_form)
 
 # Manipulação de formulários
 def no_topo(form):

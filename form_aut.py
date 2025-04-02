@@ -47,7 +47,7 @@ def main(root_app):
     g.senha_entry = tk.Entry(main_frame, show="*")
     g.senha_entry.grid(row=1, column=1,padx=5, pady=5)
 
-    admin_existente = session.query(Usuario).filter(Usuario.admin == True).first()
+    admin_existente = session.query(Usuario).filter(Usuario.role == 'admin').first()
     
     if g.login == True:
         g.aut_form.title("Login")
@@ -56,11 +56,11 @@ def main(root_app):
         if not admin_existente:
             g.aut_form.geometry("200x150")
             tk.Label(main_frame, text="Admin:").grid(row=2, column=0,padx=5, pady=5)
-            g.admin_var = tk.IntVar()
+            g.admin_var = 'admin'
             admin_checkbox = tk.Checkbutton(main_frame, variable=g.admin_var)
             admin_checkbox.grid(row=2, column=1,padx=5, pady=5)
         else:
-            g.admin_var = tk.IntVar(value=0)
+             g.admin_var = 'viewer'
     
         g.aut_form.title("Novo Usuário")
         tk.Button(main_frame, text="Salvar", command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)

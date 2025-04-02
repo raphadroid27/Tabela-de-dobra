@@ -12,7 +12,7 @@ session = Session()
 
 def main(root_app):
     # Verificar se o usuário é administrador
-    if not admin('usuario'):
+    if not tem_permissao('admin'):
         return
 
     if g.usuario_form is not None:
@@ -50,10 +50,10 @@ def main(root_app):
 
     tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('usuario')).grid(row=0, column=2, padx=5, pady=5)
 
-    columns = ("Id","Nome")
+    columns = ("Id","Nome", "Permissões")
     g.lista_usuario = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.lista_usuario["displaycolumns"] = ("Nome")
+        g.lista_usuario["displaycolumns"] = ("Nome", "Permissões")
         g.lista_usuario.heading(col, text=col)
         g.lista_usuario.column(col, anchor="center")    
     
@@ -61,6 +61,7 @@ def main(root_app):
 
     tk.Button(main_frame, text="Resetar Senha", command=resetar_senha, bg="yellow").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     tk.Button(main_frame, text="Excluir", command=excluir_usuario, bg="red").grid(row=2, column=1, padx=5, pady=5, sticky="e")
+    tk.Button(main_frame, text="Tornar Editor", command=tornar_editor, bg="green").grid(row=3, column=0, padx=5, pady=5, sticky="e")
 
     listar('usuario')
 

@@ -29,7 +29,7 @@ os.makedirs(CONFIG_DIR, exist_ok=True)  # Cria o diretório se ele não existir
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")  # Caminho completo para o arquivo config.json
 
 def verificar_admin_existente():
-    admin_existente = session.query(Usuario).filter(Usuario.admin == 1).first()
+    admin_existente = session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
         form_aut.main(g.principal_form)
 
