@@ -10,7 +10,7 @@ class Usuario(Base):  # Ajustado para PascalCase
     id = Column(Integer, primary_key=True)
     nome = Column(String, unique=True, nullable=False)
     senha = Column(String, nullable=False)
-    admin = Column(Boolean, default=False, nullable=False)  # Adicionado nullable=False
+    role = Column(String, default="viewer")  # Exemplo de roles: admin, editor, viewer
 
 class Espessura(Base):  # Ajustado para PascalCase
     __tablename__ = 'espessura'

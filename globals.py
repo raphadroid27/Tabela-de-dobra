@@ -148,4 +148,4 @@ valores_deducao = lambda d: (d.id, d.material.nome, d.espessura.valor, d.canal.v
 valores_material = lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade)
 valores_espessura = lambda e: (e.id, e.valor)
 valores_canal = lambda c: (c.id, c.valor, c.largura, c.altura, c.comprimento_total, c.observacao)
-valores_usuario = lambda u: (u.id, u.nome, u.admin)
+valores_usuario = lambda u: (u.id, u.nome, u.role)
