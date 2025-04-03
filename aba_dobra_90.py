@@ -77,13 +77,13 @@ def dados_dobra(root):
 
     tk.Label(frame_dobra, text="Medida do Blank:").grid(row=6, column=0,columnspan=2,sticky='e',padx=2)
     
-    g.medida_blank_label = tk.Label(frame_dobra, relief="sunken", width=10)
-    g.medida_blank_label.grid(row=6, column=2, sticky='we',padx=2)
-    g.medida_blank_label.bind("<Button-1>", lambda event: copiar('blank'))
+    g.MED_BLANK_LBL = tk.Label(frame_dobra, relief="sunken", width=10)
+    g.MED_BLANK_LBL.grid(row=6, column=2, sticky='we',padx=2)
+    g.MED_BLANK_LBL.bind("<Button-1>", lambda event: copiar('blank'))
 
-    g.metade_blank_label = tk.Label(frame_dobra, relief="sunken", width=10)
-    g.metade_blank_label.grid(row=6, column=3, sticky='we',padx=2)
-    g.metade_blank_label.bind("<Button-1>", lambda event: copiar('metade_blank'))
+    g.MET_BLANK_LBL = tk.Label(frame_dobra, relief="sunken", width=10)
+    g.MET_BLANK_LBL.grid(row=6, column=3, sticky='we',padx=2)
+    g.MET_BLANK_LBL.bind("<Button-1>", lambda event: copiar('metade_blank'))
 
     for i in range(1, 6):
         getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('medida_dobra',i))

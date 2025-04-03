@@ -11,18 +11,18 @@ session = Session()
 
 def main(root):
 
-    if g.espessura_form is not None:
-        g.espessura_form.destroy()   
+    if g.ESPES_FORM is not None:
+        g.ESPES_FORM.destroy()   
         pass
 
-    g.espessura_form = tk.Toplevel()
-    g.espessura_form.geometry("240x280")
-    g.espessura_form.resizable(False, False)
+    g.ESPES_FORM = tk.Toplevel()
+    g.ESPES_FORM.geometry("240x280")
+    g.ESPES_FORM.resizable(False, False)
 
-    no_topo(g.espessura_form)
-    posicionar_janela(g.espessura_form,None)
+    no_topo(g.ESPES_FORM)
+    posicionar_janela(g.ESPES_FORM,None)
 
-    main_frame = tk.Frame(g.espessura_form)
+    main_frame = tk.Frame(g.ESPES_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
     main_frame.columnconfigure(0,weight=1)
@@ -40,28 +40,28 @@ def main(root):
     frame_busca.columnconfigure(2, weight=0)
 
     tk.Label(frame_busca, text="Valor:").grid(row=0,column=0)
-    g.espessura_busca_entry=tk.Entry(frame_busca)
-    g.espessura_busca_entry.grid(row=0, column=1, sticky="ew")
-    g.espessura_busca_entry.bind("<KeyRelease>", lambda event: buscar('espessura'))
+    g.ESP_BUSCA_ENTRY=tk.Entry(frame_busca)
+    g.ESP_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
+    g.ESP_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('espessura'))
 
     tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id","Valor")
-    g.lista_espessura = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_ESP = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.lista_espessura["displaycolumns"] = ("Valor")
-        g.lista_espessura.heading(col, text=col)
-        g.lista_espessura.column(col, anchor="center")    
+        g.LIST_ESP["displaycolumns"] = ("Valor")
+        g.LIST_ESP.heading(col, text=col)
+        g.LIST_ESP.column(col, anchor="center")    
     
-    g.lista_espessura.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    g.LIST_ESP.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     
     listar('espessura')
 
-    if g.editar_espessura == True:
-        g.espessura_form.title("Editar/Excluir Espessura")
+    if g.EDIT_ESP == True:
+        g.ESPES_FORM.title("Editar/Excluir Espessura")
         tk.Button(main_frame, text="Excluir", command=lambda:excluir('espessura'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     else:
-        g.espessura_form.title("Adicionar Espessura")
+        g.ESPES_FORM.title("Adicionar Espessura")
         
         frame_edicoes = tk.LabelFrame(main_frame, text='Nova Espessura', pady=5)
         frame_edicoes.grid(row=3, column=0, padx=5,pady=5, sticky="ew")
@@ -71,11 +71,11 @@ def main(root):
         frame_edicoes.columnconfigure(2, weight=0)
 
         tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, sticky="w", padx=5)
-        g.espessura_valor_entry = tk.Entry(frame_edicoes)
-        g.espessura_valor_entry.grid(row=0, column=1, sticky="ew")
+        g.ESP_VALOR_ENTRY = tk.Entry(frame_edicoes)
+        g.ESP_VALOR_ENTRY.grid(row=0, column=1, sticky="ew")
         tk.Button(frame_edicoes, text="Adicionar", command = lambda: adicionar('espessura'), bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
-    g.espessura_form.mainloop()
+    g.ESPES_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)
