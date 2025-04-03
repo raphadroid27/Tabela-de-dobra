@@ -154,7 +154,6 @@ def z_minimo_externo():
 def restaurar_dobras(w):
      # Verificar se g.dobras_get foi inicializada
     if not hasattr(g, 'dobras_get') or g.dobras_get is None:
-        print("Erro: g.dobras_get não foi inicializada.")
         return
 
     for i in range(1, g.n):

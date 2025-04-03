@@ -65,4 +65,3 @@ def criar_aba2(notebook):
     tk.Label(frame_aba2, text="Soma:").grid(row=6, column=2, sticky='e', padx=2)
     g.soma_linha_dobra_label = tk.Label(frame_aba2, relief="sunken", width=10)
     g.soma_linha_dobra_label.grid(row=6, column=3, sticky='we', padx=2)
-
