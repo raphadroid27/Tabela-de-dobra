@@ -6,18 +6,16 @@ from sqlalchemy import create_engine
 import globals as g
 from funcoes import *
 
-
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
 def cabecalho(root):
-    cabecalho = ttk.Frame(root)
-    cabecalho.pack(padx=10, fill='both', expand=True)
+    frame_cabecalho = ttk.Frame(root)
+    frame_cabecalho.grid(row=0, column=0, sticky='nsew', padx=10)
 
-    # Primeira linha frame
-    main_frame = tk.Frame(cabecalho)
+    main_frame = tk.Frame(frame_cabecalho)
     main_frame.pack(fill='both', expand=True)
 
     main_frame.columnconfigure(0, weight=1)
@@ -109,3 +107,5 @@ def cabecalho(root):
     g.obs_label.grid(row=6, column=0, columnspan=4, sticky='wen', padx=2, pady=5)
 
     atualizar_material()
+
+    return frame_cabecalho

@@ -27,12 +27,10 @@ def dados_dobra(root):
     frame_dobra.rowconfigure(3,weight=1)
     frame_dobra.rowconfigure(4,weight=1)
     frame_dobra.rowconfigure(5,weight=1)
-
-    
+ 
     tk.Label(frame_dobra, text="Medida Ext.:").grid(row=0, column=1)
     tk.Label(frame_dobra, text="Medida Dobra:").grid(row=0, column=2)
     tk.Label(frame_dobra, text="Metade Dobra:").grid(row=0, column=3)
-
 
     # Labels para as entradas de valores de dobra
     tk.Label(frame_dobra, text="Aba 1:").grid(row=1, column=0)
@@ -90,4 +88,3 @@ def dados_dobra(root):
     for i in range(1, 6):
         getattr(g, f'medidadobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('medida_dobra',i))
         getattr(g, f'metadedobra{i}_label').bind("<Button-1>", lambda event, i=i: copiar('metade_dobra',i))
-    
