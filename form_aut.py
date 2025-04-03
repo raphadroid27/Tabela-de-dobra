@@ -13,22 +13,22 @@ session = Session()
 
 def main(root):
     
-    if g.aut_form is not None:
-        g.aut_form.destroy()   
+    if g.AUTEN_FORM is not None:
+        g.AUTEN_FORM.destroy()   
         pass
 
-    g.aut_form = tk.Toplevel()
-    g.aut_form.geometry("200x120")
-    g.aut_form.resizable(False, False)
-    g.aut_form.attributes('-toolwindow', True)
-    g.aut_form.attributes("-topmost", True)
-    g.aut_form.focus()
+    g.AUTEN_FORM = tk.Toplevel()
+    g.AUTEN_FORM.geometry("200x120")
+    g.AUTEN_FORM.resizable(False, False)
+    g.AUTEN_FORM.attributes('-toolwindow', True)
+    g.AUTEN_FORM.attributes("-topmost", True)
+    g.AUTEN_FORM.focus()
     desabilitar_janelas()
-    g.aut_form.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(), g.aut_form.destroy()])
+    g.AUTEN_FORM.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(), g.AUTEN_FORM.destroy()])
 
-    posicionar_janela(g.aut_form, 'centro')
+    posicionar_janela(g.AUTEN_FORM, 'centro')
 
-    main_frame = tk.Frame(g.aut_form)
+    main_frame = tk.Frame(g.AUTEN_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
     main_frame.columnconfigure(0, weight=1)
@@ -40,32 +40,32 @@ def main(root):
     main_frame.rowconfigure(3,weight=1)
 
     tk.Label(main_frame, text="Usuário:").grid(row=0, column=0,padx=5, pady=5)
-    g.usuario_entry = tk.Entry(main_frame)
-    g.usuario_entry.focus()
-    g.usuario_entry.grid(row=0, column=1,padx=5, pady=5)
+    g.USUARIO_ENTRY = tk.Entry(main_frame)
+    g.USUARIO_ENTRY.focus()
+    g.USUARIO_ENTRY.grid(row=0, column=1,padx=5, pady=5)
     tk.Label(main_frame, text="Senha:").grid(row=1, column=0,padx=5, pady=5)
-    g.senha_entry = tk.Entry(main_frame, show="*")
-    g.senha_entry.grid(row=1, column=1,padx=5, pady=5)
+    g.SENHA_ENTRY = tk.Entry(main_frame, show="*")
+    g.SENHA_ENTRY.grid(row=1, column=1,padx=5, pady=5)
 
     admin_existente = session.query(Usuario).filter(Usuario.role == 'admin').first()
     
-    if g.login == True:
-        g.aut_form.title("Login")
+    if g.LOGIN == True:
+        g.AUTEN_FORM.title("Login")
         tk.Button(main_frame, text="Login", command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
     else:
         if not admin_existente:
-            g.aut_form.geometry("200x150")
+            g.AUTEN_FORM.geometry("200x150")
             tk.Label(main_frame, text="Admin:").grid(row=2, column=0,padx=5, pady=5)
-            g.admin_var = 'admin'
-            admin_checkbox = tk.Checkbutton(main_frame, variable=g.admin_var)
+            g.ADMIN_VAR = 'admin'
+            admin_checkbox = tk.Checkbutton(main_frame, variable=g.ADMIN_VAR)
             admin_checkbox.grid(row=2, column=1,padx=5, pady=5)
         else:
-             g.admin_var = 'viewer'
+             g.ADMIN_VAR = 'viewer'
     
-        g.aut_form.title("Novo Usuário")
+        g.AUTEN_FORM.title("Novo Usuário")
         tk.Button(main_frame, text="Salvar", command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
 
-    g.aut_form.mainloop()
+    g.AUTEN_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)
