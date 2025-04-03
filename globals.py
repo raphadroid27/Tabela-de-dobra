@@ -1,71 +1,53 @@
-import tkinter as tk
-from tkinter import ttk
-
+"""
+Este módulo define variáveis globais para uso em diferentes partes da aplicação.
+"""
 #variáveis globais
-fator_k = None
-espessura_valor = None
-deducao_espec = None
-deducao_valor = None
-raio_interno = None
-canal_valor = None
-largura_canal = None
-on_top_var = None
-dobras_get = None
-valores_w = [1,2]
-expandir_v = None
-expandir_h = None
-usuario_id = None
-usuario_nome = None
+FATOR_K = None
+ESP_VALOR = None
+DED_ESPEC = None
+DED_VALOR = None
+R_INT = None
+CANAL_VALOR = None
+LARG_CANAL = None
+NO_TOPO_VAR = None
+DOBRAS_VALORES = None
+VALORES_W = [1,2]
+EXP_V = None
+EXP_H = None
+USUARIO_ID = None
+USUARIO_NOME = None
 
 # head.py widgets
-material_combobox = None
-espessura_combobox = None
-canal_combobox = None
-deducao_label = None
-raio_interno_entry = None
-fator_k_label = None
-offset_label = None
-obs_label = None
-ton_m_label = None
-comprimento_entry = None
-aba_min_externa_label = None
-z_min_externa_label = None
+MAT_COMB = None
+ESP_COMB = None
+CANAL_COMB = None
+DED_COMB = None
+RI_ENTRY = None
+K_LBL = None
+OFFSET_LBL = None
+OBS_LBL = None
+FORCA_LBL = None
+COMPR_ENTRY = None
+ABA_EXT_LBL = None
+Z_EXT_LBL = None
 
 # aba1.py widgets
-w = None
-n = 6
-for i in range(1, n):
-    globals()[f'aba{i}_entry_{w}'] = None
-    globals()[f'medidadobra{i}_label_{w}'] = None
-    globals()[f'metadedobra{i}_label_{w}'] = None
-deducao_espec_entry = None
-medida_blank_label = None
-metade_blank_label = None
-frame_dobra = None
-
-#aba2.py widgets
-
-dist1_entry = None
-dist2_entry = None
-dist3_entry = None
-dist4_entry = None
-dist5_entry = None
-angulo1_entry = None
-angulo2_entry = None
-angulo3_entry = None
-angulo4_entry = None
-angulo5_entry = None
-linha_dobra1_label = None
-linha_dobra2_label = None
-linha_dobra3_label = None
-linha_dobra4_label = None
-linha_dobra5_label = None
+W = None
+N = 6
+for i in range(1, N):
+    globals()[f'aba{i}_entry_{W}'] = None
+    globals()[f'medidadobra{i}_label_{W}'] = None
+    globals()[f'metadedobra{i}_label_{W}'] = None
+DED_ESPEC_ENTRY = None
+MED_BLANK_LBL = None
+MET_BLANK_LBL = None
+FRAME_DOBRA = None #Verificar se é necessário
 
 #aba3.py widgets
-razao_raio_esp_label = None
+RAZAO_RIE_LBL = None
 
 # Dicionário de valores de raio interno
-raio_fator_k = {
+RAIO_K = {
     0.1: 0.23,
     0.2: 0.29,
     0.3: 0.32,
@@ -89,63 +71,144 @@ raio_fator_k = {
     }
 
 # nova_espessura.py widgets
-espessura_valor_entry = None
-lista_espessura = None
-editar_espessura = None
-espessura_busca_entry = None
+ESP_VALOR_ENTRY = None
+LIST_ESP = None
+EDIT_ESP = None
+ESP_BUSCA_ENTRY = None
 
 # deducao_form.py widgets
-deducao_material_combobox = None
-deducao_espessura_combobox = None
-deducao_canal_combobox = None
-deducao_valor_entry = None
-deducao_obs_entry = None
-deducao_forca_entry = None
-lista_deducao = None
-editar_deducao = None
+DED_MATER_COMB = None
+DED_ESPES_COMB = None
+DED_CANAL_COMB = None
+DED_VALOR_ENTRY = None
+DED_OBSER_ENTRY = None
+DED_FORCA_ENTRY = None
+LIST_DED = None
+EDIT_DED = None
 
 #material_form.py widgets
-material_nome_entry = None
-material_densidade_entry = None
-material_escoamento_entry = None
-material_elasticidade_entry = None
-lista_material = None
-editar_material = None
-material_busca_entry = None
+MAT_NOME_ENTRY = None
+MAT_DENS_ENTRY = None
+MAT_ESCO_ENTRY = None
+MAT_ELAS_ENTRY = None
+LIST_MAT = None
+EDIT_MAT = None
+MAT_BUSCA_ENTRY = None
 
 # canal_form.py widgets
-canal_valor_entry = None
-canal_largura_entry = None
-canal_altura_entry = None
-canal_comprimento_entry = None
-canal_observacao_entry = None
-lista_canal = None
-editar_canal = None
-canal_busca_entry = None
+CANAL_VALOR_ENTRY = None
+CANAL_LARGU_ENTRY = None
+CANAL_ALTUR_ENTRY = None
+CANAL_COMPR_ENTRY = None
+CANAL_OBSER_ENTRY = None
+LIST_CANAL = None
+EDIT_CANAL = None
+CANAL_BUSCA_ENTRY = None
 
 # form_autenticacao.py widgets
-usuario_entry = None
-senha_entry = None
-admin_var = None
-login = None
+USUARIO_ENTRY = None
+SENHA_ENTRY = None
+ADMIN_VAR = None
+LOGIN = None
 
 # form_usuario.py widgets
-usuario_valor_entry = None
-lista_usuario = None
-editar_usuario = None
+USUARIO_BUSCA_ENTRY = None
+LIST_USUARIO = None
+EDIT_USUARIO = None
 
 # formularios
-principal_form = None
-deducao_form = None
-material_form = None
-canal_form = None
-espessura_form = None
-sobre_form = None
-aut_form = None
-usuario_form = None
+PRINC_FORM = None
+DEDUC_FORM = None
+MATER_FORM = None
+CANAL_FORM = None
+ESPES_FORM = None
+SOBRE_FORM = None
+AUTEN_FORM = None
+USUAR_FORM = None
 
-valores_deducao = lambda d: (d.id, d.material.nome, d.espessura.valor, d.canal.valor, d.valor, d.observacao, d.forca)
-valores_material = lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade)
-valores_espessura = lambda e: (e.id, e.valor)
-valores_canal = lambda c: (c.id, c.valor, c.largura, c.altura, c.comprimento_total, c.observacao)
-valores_usuario = lambda u: (u.id, u.nome, u.role)
+def valores_deducao(d):
+    '''
+    Retorna os valores de um objeto Deducao como uma tupla.
+    Os valores retornados são:
+    - ID da dedução
+    - Nome do material
+    - Valor da espessura
+    - Valor do canal
+    - Valor da dedução
+    - Observação da dedução
+    - Força da dedução
+    '''
+    return (
+        d.id,
+        d.material.nome,
+        d.espessura.valor,
+        d.canal.valor,
+        d.valor,
+        d.observacao,
+        d.forca,
+    )
+
+def valores_material(m):
+    '''
+    Retorna os valores de um objeto Material como uma tupla.
+    Os valores retornados são:
+    - ID do material
+    - Nome do material
+    - Densidade do material
+    - Escoamento do material
+    - Elasticidade do material
+    '''
+    return (
+        m.id,
+        m.nome,
+        m.densidade,
+        m.escoamento,
+        m.elasticidade,
+    )
+
+def valores_espessura(e):
+    '''
+    Retorna os valores de um objeto Espessura como uma tupla.
+    Os valores retornados são:
+    - ID da espessura
+    - Valor da espessura
+    '''
+    return (
+        e.id,
+        e.valor,
+    )
+
+def valores_canal(c):
+    '''
+    Retorna os valores de um objeto Canal como uma tupla.
+    Os valores retornados são:
+    - ID do canal
+    - Valor do canal
+    - Largura do canal
+    - Altura do canal
+    - Comprimento total do canal
+    - Observação do canal
+    '''
+    return (
+        c.id,
+        c.valor,
+        c.largura,
+        c.altura,
+        c.comprimento_total,
+        c.observacao,
+    )
+
+def valores_usuario(u):
+    '''
+    Retorna os valores de um objeto Usuario como uma tupla.
+    Os valores retornados são:
+    - ID do usuário
+    - Nome do usuário
+    - Senha do usuário
+    - Papel do usuário (admin ou viewer)
+    '''
+    return (
+        u.id,
+        u.nome,
+        u.role,
+    )

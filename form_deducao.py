@@ -12,18 +12,18 @@ session = Session()
 
 def main(root):
     # Verificar se a janela já está aberta
-    if g.deducao_form is not None:
-        g.deducao_form.destroy()   
+    if g.DEDUC_FORM is not None:
+        g.DEDUC_FORM.destroy()   
         pass
     
-    g.deducao_form = tk.Toplevel()
-    g.deducao_form.geometry("500x420")
-    g.deducao_form.resizable(False, False)
+    g.DEDUC_FORM = tk.Toplevel()
+    g.DEDUC_FORM.geometry("500x420")
+    g.DEDUC_FORM.resizable(False, False)
 
-    no_topo(g.deducao_form)
-    posicionar_janela(g.deducao_form, None)
+    no_topo(g.DEDUC_FORM)
+    posicionar_janela(g.DEDUC_FORM, None)
     
-    main_frame = tk.Frame(g.deducao_form)
+    main_frame = tk.Frame(g.DEDUC_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
     main_frame.columnconfigure(0, weight=1)
@@ -42,32 +42,32 @@ def main(root):
     frame_busca.columnconfigure(3, weight=0)
 
     tk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
-    g.deducao_material_combobox = ttk.Combobox(frame_busca)
-    g.deducao_material_combobox.grid(row=1, column=0, padx=5, sticky="ew")
-    g.deducao_material_combobox.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
+    g.DED_MATER_COMB = ttk.Combobox(frame_busca)
+    g.DED_MATER_COMB.grid(row=1, column=0, padx=5, sticky="ew")
+    g.DED_MATER_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
     tk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
-    g.deducao_espessura_combobox = ttk.Combobox(frame_busca)
-    g.deducao_espessura_combobox.grid(row=1, column=1, padx=5, sticky="ew")
-    g.deducao_espessura_combobox.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
+    g.DED_ESPES_COMB = ttk.Combobox(frame_busca)
+    g.DED_ESPES_COMB.grid(row=1, column=1, padx=5, sticky="ew")
+    g.DED_ESPES_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
     tk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
-    g.deducao_canal_combobox = ttk.Combobox(frame_busca)
-    g.deducao_canal_combobox.grid(row=1, column=2, padx=5, sticky="ew")
-    g.deducao_canal_combobox.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
+    g.DED_CANAL_COMB = ttk.Combobox(frame_busca)
+    g.DED_CANAL_COMB.grid(row=1, column=2, padx=5, sticky="ew")
+    g.DED_CANAL_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
     tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
 
     columns = ("Id","Material", "Espessura","Canal", "Dedução", "Observação", "Força")
-    g.lista_deducao = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_DED = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.lista_deducao["displaycolumns"] = ("Material", "Espessura", "Canal", "Dedução", "Observação", "Força")
-        g.lista_deducao.heading(col, text=col)
-        g.lista_deducao.column(col, anchor="center", width=60)
-        g.lista_deducao.column("Material", width=80)
-        g.lista_deducao.column("Observação", width=120, anchor="w")
+        g.LIST_DED["displaycolumns"] = ("Material", "Espessura", "Canal", "Dedução", "Observação", "Força")
+        g.LIST_DED.heading(col, text=col)
+        g.LIST_DED.column(col, anchor="center", width=60)
+        g.LIST_DED.column("Material", width=80)
+        g.LIST_DED.column("Observação", width=120, anchor="w")
 
-    g.lista_deducao.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    g.LIST_DED.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     
     listar('dedução')
 
@@ -80,33 +80,33 @@ def main(root):
     frame_edicoes.columnconfigure(3, weight=1)
 
     tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, padx=2, sticky='sw')
-    g.deducao_valor_entry = tk.Entry(frame_edicoes)
-    g.deducao_valor_entry.grid(row=1, column=0, padx=5, sticky="ew")
+    g.DED_VALOR_ENTRY = tk.Entry(frame_edicoes)
+    g.DED_VALOR_ENTRY.grid(row=1, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Observação:").grid(row=0, column=1,padx=2, sticky='sw')
-    g.deducao_obs_entry = tk.Entry(frame_edicoes)
-    g.deducao_obs_entry.grid(row=1, column=1, padx=5, sticky="ew")
+    g.DED_OBSER_ENTRY = tk.Entry(frame_edicoes)
+    g.DED_OBSER_ENTRY.grid(row=1, column=1, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Força:").grid(row=0, padx=2, column=2, sticky='sw')
-    g.deducao_forca_entry = tk.Entry(frame_edicoes)
-    g.deducao_forca_entry.grid(row=1, column=2, padx=5, sticky="ew")
+    g.DED_FORCA_ENTRY = tk.Entry(frame_edicoes)
+    g.DED_FORCA_ENTRY.grid(row=1, column=2, padx=5, sticky="ew")
 
 
-    if g.editar_deducao == True:
-        g.deducao_form.title("Editar/Excluir Dedução")
-        g.lista_deducao.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução'))
+    if g.EDIT_DED == True:
+        g.DEDUC_FORM.title("Editar/Excluir Dedução")
+        g.LIST_DED.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução'))
         frame_edicoes.config(text='Editar Dedução')
         
         tk.Button(frame_edicoes, text="Atualizar", command = lambda: editar('dedução'), bg="green").grid(row=1, column=3, padx=5, pady=5, sticky="eW")       
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('dedução'), bg="red").grid(row=2, column=0, padx=5, pady=5,sticky="e")
     else:
-        g.deducao_form.title("Adicionar Dedução")
+        g.DEDUC_FORM.title("Adicionar Dedução")
         frame_edicoes.config(text='Nova Dedução')
         tk.Button(frame_edicoes, text="Adicionar", command = lambda: adicionar('dedução'), bg="cyan").grid(row=1, column=3, padx=5, pady=5, sticky="eW")
 
     atualizar_combobox_deducao()
           
-    g.deducao_form.mainloop()
+    g.DEDUC_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)

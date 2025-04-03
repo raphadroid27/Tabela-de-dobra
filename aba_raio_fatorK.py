@@ -13,8 +13,8 @@ def criar_aba3(notebook):
     frame.pack(fill='both', expand=True, pady=5)
     
     tk.Label(frame, text='Raio interno / espessura: ').pack(side=tk.LEFT)
-    g.razao_raio_esp_label = tk.Label(frame, text="",relief="sunken",width=20)
-    g.razao_raio_esp_label.pack(side=tk.LEFT)
+    g.RAZAO_RIE_LBL = tk.Label(frame, text="",relief="sunken",width=20)
+    g.RAZAO_RIE_LBL.pack(side=tk.LEFT)
     
     def create_table(aba3, data):
         tree = ttk.Treeview(aba3, columns=('Raio/Esp', 'Fator K'), show='headings')
@@ -28,4 +28,4 @@ def criar_aba3(notebook):
 
         tree.pack(fill='both', expand=True)
 
-    create_table(aba3, g.raio_fator_k)
+    create_table(aba3, g.RAIO_K)
