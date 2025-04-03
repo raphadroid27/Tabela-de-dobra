@@ -1,22 +1,38 @@
+'''
+Módulo para criar a janela de edição/exclusão de usuários.
+Este módulo contém a função principal que cria a interface gráfica
+para editar e excluir usuários do sistema.
+Ele também inclui funções para buscar, limpar a busca,
+listar usuários, resetar senhas, excluir usuários e tornar usuários editores.
+'''
+
 import tkinter as tk
 from tkinter import ttk
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from funcoes import *
+from funcoes import (tem_permissao,
+                     no_topo, posicionar_janela,
+                     buscar, limpar_busca, listar,
+                     resetar_senha,
+                     excluir_usuario,
+                     tornar_editor)
+import globals as g
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-
-def main(root):
+def main():
+    '''
+    Função principal para criar a janela de edição/exclusão de usuários.
+    '''
     # Verificar se o usuário é administrador
     if not tem_permissao('admin'):
         return
 
     if g.USUAR_FORM is not None:
-        g.USUAR_FORM.destroy()   
+        g.USUAR_FORM.destroy()
 
     g.USUAR_FORM = tk.Toplevel()
     g.USUAR_FORM.title("Editar/Excluir Usuário")
@@ -48,24 +64,37 @@ def main(root):
     g.USUARIO_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
     g.USUARIO_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('usuario'))
 
-    tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('usuario')).grid(row=0, column=2, padx=5, pady=5)
+    tk.Button(frame_busca,
+              text="Limpar",
+              command = lambda: limpar_busca('usuario')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id","Nome", "Permissões")
     g.LIST_USUARIO = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
         g.LIST_USUARIO["displaycolumns"] = ("Nome", "Permissões")
         g.LIST_USUARIO.heading(col, text=col)
-        g.LIST_USUARIO.column(col, anchor="center")    
-    
+        g.LIST_USUARIO.column(col, anchor="center")
+
     g.LIST_USUARIO.grid(row=1, column=0, padx=5, pady=5, sticky="ew", columnspan=2)
 
-    tk.Button(main_frame, text="Resetar Senha", command=resetar_senha, bg="yellow").grid(row=2, column=0, padx=5, pady=5, sticky="e")
-    tk.Button(main_frame, text="Excluir", command=excluir_usuario, bg="red").grid(row=2, column=1, padx=5, pady=5, sticky="e")
-    tk.Button(main_frame, text="Tornar Editor", command=tornar_editor, bg="green").grid(row=3, column=0, padx=5, pady=5, sticky="e")
+    tk.Button(main_frame,
+              text="Resetar Senha",
+              command=resetar_senha,
+              bg="yellow").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+
+    tk.Button(main_frame,
+              text="Excluir",
+              command=excluir_usuario,
+              bg="red").grid(row=2, column=1, padx=5, pady=5, sticky="e")
+
+    tk.Button(main_frame,
+              text="Tornar Editor",
+              command=tornar_editor,
+              bg="green").grid(row=3, column=0, padx=5, pady=5, sticky="e")
 
     listar('usuario')
 
     g.USUAR_FORM.mainloop()
 
 if __name__ == "__main__":
-    main(None)
+    main()
