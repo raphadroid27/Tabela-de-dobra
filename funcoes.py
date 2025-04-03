@@ -1,7 +1,6 @@
 '''
-Funções
+Funções auxiliares para o aplicativo de cálculo de dobras.
 '''
-
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from math import pi
@@ -169,8 +168,7 @@ def calcular_fatork():
     g.FATOR_K = (4 * (g.ESP_VALOR - (g.DED_VALOR / 2) + g.R_INT) -
                  (pi * g.R_INT)) / (pi * g.ESP_VALOR)
 
-    if g.FATOR_K > 0.5:
-        g.FATOR_K = 0.5
+    g.FATOR_K = min(g.FATOR_K, 0.5)
 
     g.K_LBL.config(text=f"{g.FATOR_K:.2f}", fg="blue"
                    if g.DED_VALOR == g.DED_ESPEC else "black")
@@ -250,8 +248,8 @@ def calcular_dobra(w):
     if g.DED_COMB.get() == "" or g.DED_COMB.get() == 'N/A':
         if g.DED_ESPEC_ENTRY.get() == "":
             return
-        else:
-            deducao_valor = g.DED_ESPEC
+
+        deducao_valor = g.DED_ESPEC
     else:
         deducao_valor = g.DED_VALOR
         if g.DED_ESPEC_ENTRY.get() != "":
@@ -265,7 +263,7 @@ def calcular_dobra(w):
             getattr(g, f'medidadobra{i}_label_{w}').config(text="")
             getattr(g, f'metadedobra{i}_label_{w}').config(text="")
         else:
-            if i == 1 or i == g.N - 1:
+            if i in (1, g.N - 1):
                 medidadobra = float(dobra) - deducao_valor / 2
             else:
                 if g.DOBRAS_VALORES[i][w - 1] == "":
@@ -279,11 +277,11 @@ def calcular_dobra(w):
             getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
             getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
 
-        blank = sum([
+        blank = sum(
         float(getattr(g, f'medidadobra{i}_label_{w}').cget('text').replace(' Copiado!', ''))
         for i in range(1, g.N)
         if getattr(g, f'medidadobra{i}_label_{w}').cget('text')
-        ])
+    )
 
         metade_blank = blank / 2
 
@@ -304,18 +302,6 @@ def calcular_dobra(w):
     for i in range(1, g.N):
         for col in range(1, w + 1):
             calcular_medida(deducao_valor, i, col)
-
-def razao_raio_esp():
-    '''
-    Calcula a razão entre o raio interno e o valor da espessura.
-    Atualiza o label correspondente com o valor calculado.
-    '''
-    if g.R_INT is not None and g.ESP_VALOR is not None:
-        try:
-            razao_raio_esp_valor = g.R_INT / g.ESP_VALOR
-            g.RAZAO_RIE_LBL.config(text=f'{razao_raio_esp_valor:.2f}')
-        except ValueError:
-            return
 
 def copiar(tipo, numero=None, w=None):
     '''
@@ -633,241 +619,168 @@ def limpar_busca(tipo):
 def adicionar(tipo):
     '''
     Adiciona um novo item ao banco de dados com base no tipo especificado.
-    Os tipos disponíveis são:
-    - dedução
-    - espessura
-    - material
-    - canal
     '''
     if not logado(tipo):
         return
 
     if tipo == 'dedução':
-        espessura_valor = g.DED_ESPES_COMB.get()
-        canal_valor = g.DED_CANAL_COMB.get()
-        material_nome = g.DED_MATER_COMB.get()
-        espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
-        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-        material_obj = session.query(Material).filter_by(nome=material_nome).first()
-        nova_observacao_valor = g.DED_OBSER_ENTRY.get()
-        nova_forca_valor = g.DED_FORCA_ENTRY.get()
+        adicionar_deducao()
+    elif tipo == 'espessura':
+        adicionar_espessura()
+    elif tipo == 'material':
+        adicionar_material()
+    elif tipo == 'canal':
+        adicionar_canal()
 
-        if g.DED_VALOR_ENTRY.get() == ("" or material_nome == ""
-                                       or espessura_valor == ""
-                                       or canal_valor == ""):
-            messagebox.showerror("Erro",
-                                 "Material, espessura, canal e valor da dedução são obrigatórios.")
-            return
+    atualizar_interface(tipo=tipo)
 
-        nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
+def adicionar_deducao():
+    '''
+    Lógica para adicionar uma nova dedução.
+    '''
+    espessura_valor = g.DED_ESPES_COMB.get()
+    canal_valor = g.DED_CANAL_COMB.get()
+    material_nome = g.DED_MATER_COMB.get()
+    nova_observacao_valor = g.DED_OBSER_ENTRY.get()
+    nova_forca_valor = g.DED_FORCA_ENTRY.get()
 
-        # Verificar se a dedução já existe
-        deducao_existente = session.query(Deducao).filter_by(
-            espessura_id=espessura_obj.id,
-            canal_id=canal_obj.id,
-            material_id=material_obj.id
-        ).first()
+    if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
+        messagebox.showerror("Erro",
+                             "Material, espessura, canal e valor da dedução são obrigatórios.")
+        return
 
-        if not deducao_existente:
-            if nova_forca_valor == '':
-                nova_forca_valor = None
+    nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
+    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
+    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+    material_obj = session.query(Material).filter_by(nome=material_nome).first()
 
-            nova_deducao = Deducao(
-                espessura_id=espessura_obj.id,
-                canal_id=canal_obj.id,
-                material_id=material_obj.id,
-                valor=nova_deducao_valor,
-                observacao=nova_observacao_valor,
-                forca=nova_forca_valor
-            )
-            session.add(nova_deducao)
-            try:
-                session.commit()
-                print("Operação realizada com sucesso!")
-            except IntegrityError as e:
-                session.rollback()
-                print(f"Erro de integridade no banco de dados: {e}")
-            except OperationalError as e:
-                session.rollback()
-                print(f"Erro operacional no banco de dados: {e}")
-            except Exception as e:
-                session.rollback()
-                print(f"Erro inesperado: {e}")
-                raise
-            registrar_log(g.USUARIO_NOME,
-                          'adicionar',
-                          tipo,
-                          nova_deducao.id,
-                          f'{tipo} espessura: {espessura_valor}, '
-                          f'canal: {canal_valor}, '
-                          f'material: {material_nome}, '
-                          f'valor: {nova_deducao_valor}, '
-                          f'forca: {(nova_forca_valor if nova_deducao_valor else "N/A")}, '
-                          f'obs: {(nova_observacao_valor if nova_observacao_valor else "N/A")}')
+    deducao_existente = session.query(Deducao).filter_by(
+        espessura_id=espessura_obj.id,
+        canal_id=canal_obj.id,
+        material_id=material_obj.id
+    ).first()
 
-            g.DED_ESPES_COMB.set('')
-            g.DED_CANAL_COMB.set('')
-            g.DED_MATER_COMB.set('')
-            g.DED_VALOR_ENTRY.delete(0, tk.END)
-            g.DED_OBSER_ENTRY.delete(0, tk.END)
-            g.DED_FORCA_ENTRY.delete(0, tk.END)
+    if deducao_existente:
+        messagebox.showerror("Erro", "Dedução já existe no banco de dados.")
+        return
 
-            messagebox.showinfo("Sucesso", "Nova dedução adicionada com sucesso!")
-        else:
-            messagebox.showerror("Erro", "Dedução já existe no banco de dados.")
+    nova_deducao = Deducao(
+        espessura_id=espessura_obj.id,
+        canal_id=canal_obj.id,
+        material_id=material_obj.id,
+        valor=nova_deducao_valor,
+        observacao=nova_observacao_valor,
+        forca=nova_forca_valor if nova_forca_valor else None
+    )
+    salvar_no_banco(nova_deducao, 'dedução',
+                    f'espessura: {espessura_valor}, '
+                    f'canal: {canal_valor}, '
+                    f'material: {material_nome}, '
+                    f'valor: {nova_deducao_valor}')
 
-    if tipo == 'espessura':
+def adicionar_espessura():
+    '''
+    Lógica para adicionar uma nova espessura.
+    '''
+    espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
+    if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
+        messagebox.showwarning("Atenção!",
+                               "A espessura deve conter apenas números ou números decimais.")
+        g.ESP_VALOR_ENTRY.delete(0, tk.END)
+        return
 
-        espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
-        espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
+    espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
+    if espessura_existente:
+        messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
+        return
 
-        if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
-            messagebox.showwarning("Atenção!",
-                                "A espessura deve conter apenas números ou números decimais.")
-            g.ESP_VALOR_ENTRY.delete(0, tk.END)
-            return
+    nova_espessura = Espessura(valor=espessura_valor)
+    salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}')
 
-        if not espessura_existente:
-            nova_espessura = Espessura(valor=espessura_valor)
-            session.add(nova_espessura)
-            try:
-                session.commit()
-                print("Operação realizada com sucesso!")
-            except IntegrityError as e:
-                session.rollback()
-                print(f"Erro de integridade no banco de dados: {e}")
-            except OperationalError as e:
-                session.rollback()
-                print(f"Erro operacional no banco de dados: {e}")
-            except Exception as e:
-                session.rollback()
-                print(f"Erro inesperado: {e}")
-                raise
-            registrar_log(g.USUARIO_NOME,
-                          'adicionar',
-                          tipo,
-                          nova_espessura.id,
-                          f'{tipo} valor: {espessura_valor}')
-            messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
-        else:
-            messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
+def adicionar_material():
+    '''
+    Lógica para adicionar um novo material.
+    '''
+    nome_material = g.MAT_NOME_ENTRY.get()
+    densidade_material = g.MAT_DENS_ENTRY.get()
+    escoamento_material = g.MAT_ESCO_ENTRY.get()
+    elasticidade_material = g.MAT_ELAS_ENTRY.get()
 
-    if tipo == 'material':
+    if not nome_material:
+        messagebox.showerror("Erro", "O campo Material é obrigatório.")
+        return
 
-        nome_material = g.MAT_NOME_ENTRY.get()
-        densidade_material = g.MAT_DENS_ENTRY.get()
-        escoamento_material = g.MAT_ESCO_ENTRY.get()
-        elasticidade_material = g.MAT_ELAS_ENTRY.get()
+    material_existente = session.query(Material).filter_by(nome=nome_material).first()
+    if material_existente:
+        messagebox.showerror("Erro", "Material já existe no banco de dados.")
+        return
 
-        if not nome_material:
-            messagebox.showerror("Erro", "O campo Material é obrigatório.")
-            return
+    novo_material = Material(
+        nome=nome_material,
+        densidade=float(densidade_material) if densidade_material else None,
+        escoamento=float(escoamento_material) if escoamento_material else None,
+        elasticidade=float(elasticidade_material) if elasticidade_material else None
+    )
+    salvar_no_banco(novo_material,
+                    'material',
+                    f'nome: {nome_material}, '
+                    f'densidade: {densidade_material}, '
+                    f'escoamento: {escoamento_material}, '
+                    f'elasticidade: {elasticidade_material}')
 
-        material_existente = session.query(Material).filter_by(nome=nome_material).first()
-        if not material_existente:
-            novo_material = Material(
-                nome=nome_material,
-                densidade=float(densidade_material) if densidade_material else None,
-                escoamento=float(escoamento_material) if escoamento_material else None,
-                elasticidade=float(elasticidade_material) if elasticidade_material else None
-            )
-            session.add(novo_material)
-            try:
-                session.commit()
-                print("Operação realizada com sucesso!")
-            except IntegrityError as e:
-                session.rollback()
-                print(f"Erro de integridade no banco de dados: {e}")
-            except OperationalError as e:
-                session.rollback()
-                print(f"Erro operacional no banco de dados: {e}")
-            except Exception as e:
-                session.rollback()
-                print(f"Erro inesperado: {e}")
-                raise
-            registrar_log(
-                g.USUARIO_NOME,
-                'adicionar',
-                tipo,
-                novo_material.id,
-                (
-                    f'{tipo} nome: {nome_material}, '
-                    f'densidade: {(densidade_material if densidade_material else "N/A")}, '
-                    f'escoamento: {(escoamento_material if escoamento_material else "N/A")}, '
-                    f'elasticidade: {(elasticidade_material if elasticidade_material else "N/A")}'
-                )
-            )
+def adicionar_canal():
+    '''
+    Lógica para adicionar um novo canal.
+    '''
+    valor_canal = g.CANAL_VALOR_ENTRY.get()
+    largura_canal = g.CANAL_LARGU_ENTRY.get()
+    altura_canal = g.CANAL_ALTUR_ENTRY.get()
+    comprimento_total_canal = g.CANAL_COMPR_ENTRY.get()
+    observacao_canal = g.CANAL_OBSER_ENTRY.get()
 
-            g.MAT_NOME_ENTRY.delete(0, tk.END)
-            g.MAT_DENS_ENTRY.delete(0, tk.END)
-            g.MAT_ESCO_ENTRY.delete(0, tk.END)
-            g.MAT_ELAS_ENTRY.delete(0, tk.END)
+    if not valor_canal:
+        messagebox.showerror("Erro", "O campo Canal é obrigatório.")
+        return
 
-    if tipo == 'canal':
-        valor_canal = g.CANAL_VALOR_ENTRY.get()
-        largura_canal = g.CANAL_LARGU_ENTRY.get()
-        altura_canal = g.CANAL_ALTUR_ENTRY.get()
-        comprimento_total_canal = g.CANAL_COMPR_ENTRY.get()
-        observacao_canal = g.CANAL_OBSER_ENTRY.get()
+    canal_existente = session.query(Canal).filter_by(valor=valor_canal).first()
+    if canal_existente:
+        messagebox.showerror("Erro", "Canal já existe no banco de dados.")
+        return
 
-        if valor_canal.isalpha():
-            messagebox.showwarning("Atenção!", "O canal deve conter números ou números e letras.")
-            return
+    novo_canal = Canal(
+        valor=valor_canal,
+        largura=float(largura_canal) if largura_canal else None,
+        altura=float(altura_canal) if altura_canal else None,
+        comprimento_total=float(comprimento_total_canal) if comprimento_total_canal else None,
+        observacao=observacao_canal if observacao_canal else None
+    )
+    salvar_no_banco(novo_canal,
+                    'canal',
+                    f'valor: {valor_canal}, '
+                    f'largura: {largura_canal}, '
+                    f'altura: {altura_canal}, '
+                    f'comprimento_total: {comprimento_total_canal}, '
+                    f'observacao: {observacao_canal}')
 
-        if not valor_canal:
-            messagebox.showerror("Erro", "O campo Canal é obrigatório.")
-            return
-
-        canal_existente = session.query(Canal).filter_by(valor=valor_canal).first()
-        if not canal_existente:
-            novo_canal = Canal(
-                valor=valor_canal,
-                largura=float(largura_canal) if largura_canal else None,
-                altura=float(altura_canal) if altura_canal else None,
-                comprimento_total=(float(comprimento_total_canal)
-                                   if comprimento_total_canal else None),
-                observacao=observacao_canal if observacao_canal else None
-            )
-            session.add(novo_canal)
-            try:
-                session.commit()
-                print("Operação realizada com sucesso!")
-            except IntegrityError as e:
-                session.rollback()
-                print(f"Erro de integridade no banco de dados: {e}")
-            except OperationalError as e:
-                session.rollback()
-                print(f"Erro operacional no banco de dados: {e}")
-            except Exception as e:
-                session.rollback()
-                print(f"Erro inesperado: {e}")
-                raise
-            registrar_log(g.USUARIO_NOME,
-                          'adicionar',
-                          tipo,
-                          novo_canal.id,
-                          f'{tipo} valor: {valor_canal}, '
-                          f'largura: {(largura_canal if largura_canal else "N/A")}, '
-                          f'altura: {(altura_canal if altura_canal else "N/A")}, '
-                          f'comprimento_total: {(comprimento_total_canal
-                                                 if comprimento_total_canal else "N/A")}, '
-                          f'observacao: {(observacao_canal if observacao_canal else "N/A")}')
-
-            g.CANAL_VALOR_ENTRY.delete(0, tk.END)
-            g.CANAL_LARGU_ENTRY.delete(0, tk.END)
-            g.CANAL_ALTUR_ENTRY.delete(0, tk.END)
-            g.CANAL_COMPR_ENTRY.delete(0, tk.END)
-            g.CANAL_OBSER_ENTRY.delete(0, tk.END)
-            messagebox.showinfo("Sucesso", "Novo canal adicionado com sucesso!")
-        else:
-            messagebox.showerror("Erro", "Canal já existe no banco de dados.")
-
-    atualizar_material()
-    atualizar_espessura()
-    atualizar_canal()
-    atualizar_deducao_e_obs()
-    atualizar_combobox_deducao()
-    listar(tipo)
+def salvar_no_banco(obj, tipo, detalhes):
+    '''
+    Salva um objeto no banco de dados e registra o log.
+    '''
+    session.add(obj)
+    try:
+        session.commit()
+        registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, detalhes)
+        messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!")
+    except IntegrityError as e:
+        session.rollback()
+        print(f"Erro de integridade no banco de dados: {e}")
+    except OperationalError as e:
+        session.rollback()
+        print(f"Erro operacional no banco de dados: {e}")
+    except Exception as e:
+        session.rollback()
+        print(f"Erro inesperado: {e}")
+        raise
 
 def editar(tipo):
     '''
@@ -881,73 +794,114 @@ def editar(tipo):
     if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
         return
 
-    if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
+    if not confirmar_edicao(tipo):
         return
 
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    if not config['lista'].selection():
-        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
+    if not validar_selecao(config, tipo):
         return
 
+    obj = obter_objeto_selecionado(config)
+    if not obj:
+        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
+        return
+
+    alteracoes = processar_alteracoes(config, obj, tipo)
+    if not alteracoes:
+        messagebox.showinfo("Informação", "Nenhuma alteração foi realizada.")
+        return
+
+    if not salvar_alteracoes(obj, alteracoes, tipo):
+        return
+
+    limpar_campos(config)
+    atualizar_interface(configuracoes=configuracoes)
+
+def confirmar_edicao(tipo):
+    '''
+    Exibe uma mensagem de confirmação para a edição.
+    '''
+    return messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?")
+
+def validar_selecao(config, tipo):
+    '''
+    Valida se há um item selecionado na lista.
+    '''
+    if not config['lista'].selection():
+        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
+        return False
+    return True
+
+def obter_objeto_selecionado(config):
+    '''
+    Obtém o objeto selecionado na lista.
+    '''
     selected_item = config['lista'].selection()[0]
     item = config['lista'].item(selected_item)
     obj_id = item['values'][0]
-    obj = session.query(config['modelo']).filter_by(id=obj_id).first()
+    return session.query(config['modelo']).filter_by(id=obj_id).first()
 
-    if obj:
-        alteracoes = []  # Lista para armazenar as alterações
-        for campo, entry in config['campos'].items():
-            valor_novo = entry.get().strip()
-            if valor_novo == "":
-                valor_novo = None
-            else:
-                try:
-                    if campo in ["largura", "altura", "comprimento_total"]:
-                        valor_novo = float(valor_novo.replace(",", "."))
-                except ValueError:
-                    messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
-                    return
+def processar_alteracoes(config, obj, tipo):
+    '''
+    Processa as alterações feitas nos campos e retorna uma lista de alterações.
+    '''
+    alteracoes = []
+    for campo, entry in config['campos'].items():
+        valor_novo = obter_valor_novo(entry, campo)
+        if valor_novo is None:
+            return None  # Valor inválido
 
-            valor_antigo = getattr(obj, campo)
-            if valor_antigo != valor_novo:  # Verifica se houve alteração
-                alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
-                setattr(obj, campo, valor_novo)
+        valor_antigo = getattr(obj, campo)
+        if valor_antigo != valor_novo:
+            alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
+            setattr(obj, campo, valor_novo)
+    return alteracoes
 
+def obter_valor_novo(entry, campo):
+    '''
+    Obtém o novo valor do campo de entrada e realiza validações.
+    '''
+    valor_novo = entry.get().strip()
+    if valor_novo == "":
+        return None
+    if campo in ["largura", "altura", "comprimento_total"]:
         try:
-            session.commit()
-            print("Operação realizada com sucesso!")
-        except IntegrityError as e:
-            session.rollback()
-            print(f"Erro de integridade no banco de dados: {e}")
-        except OperationalError as e:
-            session.rollback()
-            print(f"Erro operacional no banco de dados: {e}")
-        except Exception as e:
-            session.rollback()
-            print(f"Erro inesperado: {e}")
-            raise
-        detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
-        # Registrar a edição com detalhes
-        registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
-        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
-    else:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
+            valor_novo = float(valor_novo.replace(",", "."))
+        except ValueError:
+            messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
+            return None
+    return valor_novo
 
-    # Limpar os campos após a edição
+def salvar_alteracoes(obj, alteracoes, tipo):
+    '''
+    Salva as alterações no banco de dados e registra o log.
+    '''
+    try:
+        session.commit()
+        detalhes = "; ".join(alteracoes)
+        registrar_log(g.USUARIO_NOME, "editar", tipo, obj.id, detalhes)
+        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
+        return True
+    except IntegrityError as e:
+        session.rollback()
+        print(f"Erro de integridade no banco de dados: {e}")
+    except OperationalError as e:
+        session.rollback()
+        print(f"Erro operacional no banco de dados: {e}")
+    except Exception as e:
+        session.rollback()
+        print(f"Erro inesperado: {e}")
+        raise
+    return False
+
+def limpar_campos(config):
+    '''
+    Limpa os campos de entrada após a edição.
+    '''
     for entry in config['campos'].values():
         entry.delete(0, tk.END)
-
-    # Atualizar as listas e comboboxes
-    atualizar_material()
-    atualizar_espessura()
-    atualizar_canal()
-    atualizar_deducao_e_obs()
-    atualizar_combobox_deducao()
-    for tipo in configuracoes:
-        listar(tipo)
-        buscar(tipo)
 
 def excluir(tipo):
     '''
@@ -1014,14 +968,7 @@ def excluir(tipo):
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
-    atualizar_material()
-    atualizar_espessura()
-    atualizar_canal()
-    atualizar_deducao_e_obs()
-    atualizar_combobox_deducao()
-    for tipo in configuracoes:
-        listar(tipo)
-        buscar(tipo)
+    atualizar_interface(configuracoes=configuracoes)
 
 def preencher_campos(tipo):
     '''
@@ -1082,26 +1029,25 @@ def novo_usuario():
     usuario_obj = session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
     if usuario_obj:
         messagebox.showerror("Erro", "Usuário já existente.", parent=g.AUTEN_FORM)
-        return
-    else:
-        usuario = Usuario(nome=novo_usuario_nome,
-                          senha=senha_hash,
-                          role=g.ADMIN_VAR)
-        session.add(usuario)
-        try:
-            session.commit()
-            messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
-            g.AUTEN_FORM.destroy()
-        except IntegrityError as e:
-            session.rollback()
-            print(f"Erro de integridade no banco de dados: {e}")
-        except OperationalError as e:
-            session.rollback()
-            print(f"Erro operacional no banco de dados: {e}")
-        except Exception as e:
-            session.rollback()
-            print(f"Erro inesperado: {e}")
-            raise  # Relança a exceção para depuração
+
+    usuario = Usuario(nome=novo_usuario_nome,
+                        senha=senha_hash,
+                        role=g.ADMIN_VAR)
+    session.add(usuario)
+    try:
+        session.commit()
+        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
+        g.AUTEN_FORM.destroy()
+    except IntegrityError as e:
+        session.rollback()
+        print(f"Erro de integridade no banco de dados: {e}")
+    except OperationalError as e:
+        session.rollback()
+        print(f"Erro operacional no banco de dados: {e}")
+    except Exception as e:
+        session.rollback()
+        print(f"Erro inesperado: {e}")
+        raise  # Relança a exceção para depuração
 
     habilitar_janelas()
 
@@ -1438,3 +1384,14 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
         session.rollback()
         print(f"Erro inesperado: {e}")
         raise
+
+def atualizar_interface(configuracoes=None, tipo=None):
+    '''
+    Atualiza as listas e comboboxes na interface.
+    '''
+    if tipo:
+        listar(tipo)
+    elif configuracoes:
+        for tipo_item in configuracoes:  # Renomeado para 'tipo_item'
+            listar(tipo_item)
+            buscar(tipo_item)
