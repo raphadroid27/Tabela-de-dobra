@@ -17,26 +17,32 @@ session = session()
 
 # App
 def carregar_variaveis_globais():
-    g.espessura_valor = float(g.espessura_combobox.get()) if g.espessura_combobox.get() else None
-    g.canal_valor = float(re.findall(r'\d+\.?\d*', g.canal_combobox.get())[0]) if g.canal_combobox.get() else None
-    g.raio_interno = float(re.findall(r'\d+\.?\d*', g.raio_interno_entry.get().replace(',', '.'))[0]) if g.raio_interno_entry.get() else None
-    g.deducao_espec = float(re.findall(r'\d+\.?\d*',g.deducao_espec_entry.get().replace(',', '.'))[0]) if g.deducao_espec_entry.get() else None
+    g.ESP_VALOR = float(g.ESP_COMB.get()) if g.ESP_COMB.get() else None
+    g.CANAL_VALOR = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0]) if g.CANAL_COMB.get() else None
+    g.R_INT = float(re.findall(r'\d+\.?\d*', g.RI_ENTRY.get().replace(',', '.'))[0]) if g.RI_ENTRY.get() else None
+    g.DED_ESPEC = float(re.findall(r'\d+\.?\d*',g.DED_ESPEC_ENTRY.get().replace(',', '.'))[0]) if g.DED_ESPEC_ENTRY.get() else None
     
-    print(f'{g.canal_valor} {g.espessura_valor} {g.deducao_valor}')
+    print(f'{g.CANAL_VALOR} {g.ESP_VALOR} {g.DED_VALOR}')
 
 def atualizar_material():
-    g.material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.id).all()]
+    '''
+    Atualiza o combobox de materiais com os valores do banco de dados.
+    '''
+    g.MAT_COMB['values'] = [m.nome for m in session.query(Material).order_by(Material.id).all()]
 
 def atualizar_espessura():
-    material_nome = g.material_combobox.get()
+    '''
+    Atualiza o combobox de espessuras com os valores do banco de dados.
+    '''
+    material_nome = g.MAT_COMB.get()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
     if material_obj:
         espessuras_valores = [str(e.valor) for e in session.query(Espessura).join(Deducao).filter(Deducao.material_id == material_obj.id).order_by(Espessura.valor).all()]
-        g.espessura_combobox['values'] = espessuras_valores
+        g.ESP_COMB['values'] = espessuras_valores
 
 def atualizar_canal():
-    espessura_valor = g.espessura_combobox.get()
-    material_nome = g.material_combobox.get()
+    espessura_valor = g.ESP_COMB.get()
+    material_nome = g.MAT_COMB.get()
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
 
@@ -52,25 +58,25 @@ def atualizar_canal():
             key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]) if re.search(r'\d+\.?\d*', x) else float('inf')
         )
         
-    g.canal_combobox['values'] = canais_valores
+    g.CANAL_COMB['values'] = canais_valores
 
 def canal_tooltip():
     # Verificar se o combobox está vazio
-    if g.canal_combobox.get() == "":
-        g.canal_combobox.set("")
-        tp.ToolTip(g.canal_combobox, "Selecione o canal de dobra.")
+    if g.CANAL_COMB.get() == "":
+        g.CANAL_COMB.set("")
+        tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
     else:
-        canal_obj = session.query(Canal).filter_by(valor=g.canal_combobox.get()).first()
+        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
         if canal_obj:
                 canal_obs = canal_obj.observacao if canal_obj.observacao else "N/A."
                 canal_comprimento_total = canal_obj.comprimento_total if canal_obj.comprimento_total else "N/A."
 
-                tp.ToolTip(g.canal_combobox, f'Obs: {canal_obs}\nComprimento total: {canal_comprimento_total}', delay=0)
+                tp.ToolTip(g.CANAL_COMB, f'Obs: {canal_obs}\nComprimento total: {canal_comprimento_total}', delay=0)
 
 def atualizar_deducao_e_obs():
-    espessura_valor = g.espessura_combobox.get()
-    material_nome = g.material_combobox.get()
-    canal_valor = g.canal_combobox.get()
+    espessura_valor = g.ESP_COMB.get()
+    material_nome = g.MAT_COMB.get()
+    canal_valor = g.CANAL_COMB.get()
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -84,82 +90,82 @@ def atualizar_deducao_e_obs():
         ).first()
 
         if deducao_obj:
-            g.deducao_label.config(text=deducao_obj.valor, fg="black")
-            g.obs_label.config(text=f'Observações: {deducao_obj.observacao}' if deducao_obj.observacao else 'Observações não encontradas')
+            g.DED_COMB.config(text=deducao_obj.valor, fg="black")
+            g.OBS_LBL.config(text=f'Observações: {deducao_obj.observacao}' if deducao_obj.observacao else 'Observações não encontradas')
         else:
-            g.deducao_label.config(text='N/A', fg="red")
-            g.obs_label.config(text='Observações não encontradas')
+            g.DED_COMB.config(text='N/A', fg="red")
+            g.OBS_LBL.config(text='Observações não encontradas')
     
-        g.deducao_valor = deducao_obj.valor if deducao_obj else None
-        g.largura_canal = canal_obj.largura if deducao_obj else None
+        g.DED_VALOR = deducao_obj.valor if deducao_obj else None
+        g.LARG_CANAL = canal_obj.largura if deducao_obj else None
 
 def atualizar_toneladas_m():
-    comprimento = g.comprimento_entry.get()
-    deducao_obj = session.query(Deducao).filter_by(valor=g.deducao_valor).first()
+    comprimento = g.COMPR_ENTRY.get()
+    deducao_obj = session.query(Deducao).filter_by(valor=g.DED_VALOR).first()
 
-    if g.material_combobox.get() != "" and g.espessura_combobox.get() != "" and g.canal_combobox.get() != "":
+    if g.MAT_COMB.get() != "" and g.ESP_COMB.get() != "" and g.CANAL_COMB.get() != "":
         if deducao_obj and deducao_obj.forca is not None:
             toneladas_m = (deducao_obj.forca * float(comprimento)) / 1000 if comprimento else deducao_obj.forca
-            g.ton_m_label.config(text=f'{toneladas_m:.0f}', fg="black")
+            g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
-            g.ton_m_label.config(text='N/A', fg="red") 
+            g.FORCA_LBL.config(text='N/A', fg="red") 
     
     # Verificar se o comprimento é menor que o comprimento total do canal
-    canal_obj = session.query(Canal).filter_by(valor=g.canal_combobox.get()).first()
+    canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
     comprimento_total = canal_obj.comprimento_total if canal_obj else None
     comprimento = float(comprimento) if comprimento else None
 
     if canal_obj and comprimento and comprimento_total:
         if comprimento < comprimento_total:
-            g.comprimento_entry.config(fg="black")
+            g.COMPR_ENTRY.config(fg="black")
         elif comprimento >= comprimento_total:
-            g.comprimento_entry.config(fg="red")
+            g.COMPR_ENTRY.config(fg="red")
         
 def calcular_fatork():
-    if g.deducao_espec:
-        g.deducao_valor = g.deducao_espec
+    if g.DED_ESPEC:
+        g.DED_VALOR = g.DED_ESPEC
 
-    if not g.raio_interno or not g.espessura_valor or not g.deducao_valor or g.deducao_valor == 'N/A':
+    if not g.R_INT or not g.ESP_VALOR or not g.DED_VALOR or g.DED_VALOR == 'N/A':
         return
 
-    g.fator_k = (4 * (g.espessura_valor - (g.deducao_valor / 2) + g.raio_interno) - (pi * g.raio_interno)) / (pi * g.espessura_valor)  
+    g.FATOR_K = (4 * (g.ESP_VALOR - (g.DED_VALOR / 2) + g.R_INT) - (pi * g.R_INT)) / (pi * g.ESP_VALOR)  
 
-    if g.fator_k > 0.5:
-        g.fator_k = 0.5
+    if g.FATOR_K > 0.5:
+        g.FATOR_K = 0.5
 
-    g.fator_k_label.config(text=f"{g.fator_k:.2f}", fg="blue" if g.deducao_valor == g.deducao_espec else "black")
+    g.K_LBL.config(text=f"{g.FATOR_K:.2f}", fg="blue" if g.DED_VALOR == g.DED_ESPEC else "black")
 
 def calcular_offset():
-    if not g.fator_k or not g.espessura_valor:
+    if not g.FATOR_K or not g.ESP_VALOR:
         print('Fator K não informado')
         return
 
-    offset = g.fator_k * g.espessura_valor
-    g.offset_label.config(text=f"{offset:.2f}", fg="blue" if g.deducao_valor == g.deducao_espec else "black")
+    offset = g.FATOR_K * g.ESP_VALOR
+    g.OFFSET_LBL.config(text=f"{offset:.2f}", fg="blue" if g.DED_VALOR == g.DED_ESPEC else "black")
 
 def aba_minima_externa():
-    if g.canal_valor:
-        aba_minima_valor = g.canal_valor / 2 + g.espessura_valor + 2
-        g.aba_min_externa_label.config(text=f"{aba_minima_valor:.0f}")
+    if g.CANAL_VALOR:
+        aba_minima_valor = g.CANAL_VALOR / 2 + g.ESP_VALOR + 2
+        g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
 
 def z_minimo_externo():
-    if g.material_combobox.get() != "" and g.espessura_combobox.get() != "" and g.canal_combobox.get() != "":
-        if not g.largura_canal:
-            g.z_min_externa_label.config(text="N/A", fg="red")
+    if g.MAT_COMB.get() != "" and g.ESP_COMB.get() != "" and g.CANAL_COMB.get() != "":
+        if not g.LARG_CANAL:
+            g.Z_EXT_LBL.config(text="N/A", fg="red")
             return
-        if g.canal_valor and g.deducao_valor:
-            z_minimo_externo = g.espessura_valor + (g.deducao_valor / 2) + (g.largura_canal / 2) + 2
-            g.z_min_externa_label.config(text=f'{z_minimo_externo:.0f}', fg="black")
+        if g.CANAL_VALOR and g.DED_VALOR:
+            z_minimo_externo = g.ESP_VALOR + (g.DED_VALOR / 2) + (g.LARG_CANAL / 2) + 2
+            g.Z_EXT_LBL.config(text=f'{z_minimo_externo:.0f}', fg="black")
 
 def restaurar_dobras(w):
      # Verificar se g.dobras_get foi inicializada
-    if not hasattr(g, 'dobras_get') or g.dobras_get is None:
+    if not hasattr(g, 'dobras_get') or g.DOBRAS_VALORES is None:
         return
 
-    for i in range(1, g.n):
+    for i in range(1, g.N):
         for col in range(1, w + 1):
-            if i - 1 < len(g.dobras_get) and col - 1 < len(g.dobras_get[i - 1]):
-                valor = g.dobras_get[i - 1][col - 1]
+            if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
+                valor = g.DOBRAS_VALORES[i - 1][col - 1]
                 print(f"Restaurando valor para aba{i}_entry_{col}: {valor}")
                 entry = getattr(g, f'aba{i}_entry_{col}', None)
                 if entry:
@@ -170,42 +176,42 @@ def restaurar_dobras(w):
 
 def calcular_dobra(w):
     # Criar uma lista de listas para armazenar os valores de linha i e coluna w
-    g.dobras_get = [
+    g.DOBRAS_VALORES = [
         [
             getattr(g, f'aba{i}_entry_{col}').get() or ''  # Substitui valores vazios por '0'
             for col in range(1, w + 1)
         ]
-        for i in range(1, g.n)
+        for i in range(1, g.N)
     ]
 
     # Exibir a matriz de valores para depuração
     print("Matriz de dobras (g.dobras_get):")
-    for linha in g.dobras_get:
+    for linha in g.DOBRAS_VALORES:
         print(linha)
 
     # Determinar o valor da dedução
-    if g.deducao_label['text'] == "" or g.deducao_label['text'] == 'N/A':
-        if g.deducao_espec_entry.get() == "":
+    if g.DED_COMB['text'] == "" or g.DED_COMB['text'] == 'N/A':
+        if g.DED_ESPEC_ENTRY.get() == "":
             return
         else:
-            deducao_valor = g.deducao_espec
+            deducao_valor = g.DED_ESPEC
     else:
-        deducao_valor = g.deducao_valor
-        if g.deducao_espec_entry.get() != "":
-            deducao_valor = g.deducao_espec
+        deducao_valor = g.DED_VALOR
+        if g.DED_ESPEC_ENTRY.get() != "":
+            deducao_valor = g.DED_ESPEC
 
     # Função auxiliar para calcular medidas
     def calcular_medida(deducao_valor, i, w):
-        dobra = g.dobras_get[i - 1][w - 1].replace(',', '.')
+        dobra = g.DOBRAS_VALORES[i - 1][w - 1].replace(',', '.')
 
         if dobra == "":
             getattr(g, f'medidadobra{i}_label_{w}').config(text="")
             getattr(g, f'metadedobra{i}_label_{w}').config(text="")
         else:
-            if i == 1 or i == g.n - 1:
+            if i == 1 or i == g.N - 1:
                 medidadobra = float(dobra) - deducao_valor / 2
             else:
-                if g.dobras_get[i][w - 1] == "":
+                if g.DOBRAS_VALORES[i][w - 1] == "":
                     medidadobra = float(dobra) - deducao_valor / 2
                 else:
                     medidadobra = float(dobra) - deducao_valor
@@ -218,7 +224,7 @@ def calcular_dobra(w):
         
         blank = sum([
         float(getattr(g, f'medidadobra{i}_label_{w}').cget('text').replace(' Copiado!', ''))
-        for i in range(1, g.n)
+        for i in range(1, g.N)
         if getattr(g, f'medidadobra{i}_label_{w}').cget('text')
         ])
         
@@ -229,30 +235,30 @@ def calcular_dobra(w):
         getattr(g, f'metade_blank_label_{w}').config(text=f"{metade_blank:.2f}", fg="black") if metade_blank else getattr(g, f'metade_blank_label_{w}').config(text="")
 
     # Iterar pelas linhas e colunas para calcular as medidas
-    for i in range(1, g.n):
+    for i in range(1, g.N):
         for col in range(1, w + 1):
             calcular_medida(deducao_valor, i, col)
     
 def razao_raio_esp():
-    if g.raio_interno is not None and g.espessura_valor is not None:
+    if g.R_INT is not None and g.ESP_VALOR is not None:
         try:
-            razao_raio_esp_valor = g.raio_interno / g.espessura_valor
-            g.razao_raio_esp_label.config(text=f'{razao_raio_esp_valor:.2f}')
+            razao_raio_esp_valor = g.R_INT / g.ESP_VALOR
+            g.RAZAO_RIE_LBL.config(text=f'{razao_raio_esp_valor:.2f}')
         except ValueError:
             return
 
 def copiar(tipo, numero=None, w=None):
     configuracoes = {
         'dedução': {
-            'label': g.deducao_label,
+            'label': g.DED_COMB,
             'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
         },
         'fator_k': {
-            'label': g.fator_k_label,
+            'label': g.K_LBL,
             'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
         },
         'offset': {
-            'label': g.offset_label,
+            'label': g.OFFSET_LBL,
             'funcao_calculo': lambda: (atualizar_deducao_e_obs(), calcular_fatork(), calcular_offset())
         },
         'medida_dobra': {
@@ -295,15 +301,15 @@ def limpar_dobras(w):
     def obter_atributos(prefixo):
         return [
             getattr(g, f'{prefixo}{i}_label_{col}', None)
-            for i in range(1, g.n)
+            for i in range(1, g.N)
             for col in range(1, w + 1)
         ]
 
-    dobras = [getattr(g, f'aba{i}_entry_{col}', None) for i in range(1, g.n) for col in range(1, w + 1)]
+    dobras = [getattr(g, f'aba{i}_entry_{col}', None) for i in range(1, g.N) for col in range(1, w + 1)]
     medidas = obter_atributos('medidadobra')
     metades = obter_atributos('metadedobra')
 
-    g.dobras_get = []
+    g.DOBRAS_VALORES = []
 
     for dobra in dobras:
         if dobra:
@@ -317,38 +323,38 @@ def limpar_dobras(w):
         if metade:
             metade.config(text="")
 
-    g.deducao_espec_entry.delete(0, tk.END)
+    g.DED_ESPEC_ENTRY.delete(0, tk.END)
     getattr(g, f'medida_blank_label_{w}', None).config(text="") if getattr(g, f'medida_blank_label_{w}', None) else None
     getattr(g, f'metade_blank_label_{w}', None).config(text="") if getattr(g, f'metade_blank_label_{w}', None) else None
 
 def limpar_tudo():
     campos = [
-        g.material_combobox, g.espessura_combobox, g.canal_combobox
+        g.MAT_COMB, g.ESP_COMB, g.CANAL_COMB
     ]
     for campo in campos:
         campo.set('')
-        if campo != g.material_combobox:
+        if campo != g.MAT_COMB:
             campo['values'] = []
 
     entradas = [
-        g.raio_interno_entry, g.comprimento_entry
+        g.RI_ENTRY, g.COMPR_ENTRY
     ]
     for entrada in entradas:
         entrada.delete(0, tk.END)
 
     etiquetas = {
-        g.fator_k_label: "",
-        g.deducao_label: "",
-        g.offset_label: "",
-        g.obs_label: "Observações:",
-        g.ton_m_label: "",
-        g.aba_min_externa_label: "",
-        g.z_min_externa_label: ""
+        g.K_LBL: "",
+        g.DED_COMB: "",
+        g.OFFSET_LBL: "",
+        g.OBS_LBL: "Observações:",
+        g.FORCA_LBL: "",
+        g.ABA_EXT_LBL: "",
+        g.Z_EXT_LBL: ""
     }
     for etiqueta, texto in etiquetas.items():
         etiqueta.config(text=texto)
 
-    for w in g.valores_w:
+    for w in g.VALORES_W:
         limpar_dobras(w)
         todas_funcoes(w)
 
@@ -372,71 +378,71 @@ def todas_funcoes(w):
 def obter_configuracoes():
     return {
         'dedução': {
-            'lista': g.lista_deducao,
+            'lista': g.LIST_DED,
             'modelo': Deducao,
             'campos': {
-                'valor': g.deducao_valor_entry,
-                'observacao': g.deducao_obs_entry,
-                'forca': g.deducao_forca_entry
+                'valor': g.DED_VALOR_ENTRY,
+                'observacao': g.DED_OBSER_ENTRY,
+                'forca': g.DED_FORCA_ENTRY
             },
             'item_id': Deducao.id,
             'valores': g.valores_deducao,
             'ordem': Deducao.valor,
             'entries': {
-                'material_combo': g.deducao_material_combobox,
-                'espessura_combo': g.deducao_espessura_combobox,
-                'canal_combo': g.deducao_canal_combobox
+                'material_combo': g.DED_MATER_COMB,
+                'espessura_combo': g.DED_ESPES_COMB,
+                'canal_combo': g.DED_CANAL_COMB
             }
         },
         'material': {
-            'lista': g.lista_material,
+            'lista': g.LSIT_MAT,
             'modelo': Material,
             'campos': {
-                'nome': g.material_nome_entry,
-                'densidade': g.material_densidade_entry,
-                'escoamento': g.material_escoamento_entry,
-                'elasticidade': g.material_elasticidade_entry
+                'nome': g.MAT_NOME_ENTRY,
+                'densidade': g.MAT_DENS_ENTRY,
+                'escoamento': g.MAT_ESCO_ENTRY,
+                'elasticidade': g.MAT_ELAS_ENTRY
             },
             'item_id': Material.id,  # Corrigido de Deducao.material_id
             'valores': g.valores_material,
             'ordem': Material.id,
-            'entry': g.material_nome_entry,
-            'busca': g.material_busca_entry,
+            'entry': g.MAT_NOME_ENTRY,
+            'busca': g.MAT_BUSCA_ENTRY,
             'campo_busca': Material.nome
         },
         'espessura': {
-            'lista': g.lista_espessura,
+            'lista': g.LIST_ESP,
             'modelo': Espessura,
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
             'valores': g.valores_espessura,
             'ordem': Espessura.valor,
-            'entry': g.espessura_valor_entry,
-            'busca': g.espessura_busca_entry,
+            'entry': g.ESP_VALOR_ENTRY,
+            'busca': g.ESP_BUSCA_ENTRY,
             'campo_busca': Espessura.valor  # Corrigido de espessura.valor
         },
         'canal': {
-            'lista': g.lista_canal,
+            'lista': g.LIST_CANAL,
             'modelo': Canal,  # Corrigido de canal
             'campos': {
-                'valor': g.canal_valor_entry,
-                'largura': g.canal_largura_entry,
-                'altura': g.canal_altura_entry,
-                'comprimento_total': g.canal_comprimento_entry,
-                'observacao': g.canal_observacao_entry
+                'valor': g.CANAL_VALOR_ENTRY,
+                'largura': g.CANAL_LARGU_ENTRY,
+                'altura': g.CANAL_ALTUR_ENTRY,
+                'comprimento_total': g.CANAL_COMPR_ENTRY,
+                'observacao': g.CANAL_OBSER_ENTRY
             },
             'item_id': Canal.id,  # Corrigido de deducao.canal_id
             'valores': g.valores_canal,
             'ordem': Canal.valor,  # Corrigido de canal.valor
-            'entry': g.canal_valor_entry,
-            'busca': g.canal_busca_entry,
+            'entry': g.CANAL_VALOR_ENTRY,
+            'busca': g.CANAL_BUSCA_ENTRY,
             'campo_busca': Canal.valor  # Corrigido de canal.valor
         },
         'usuario': {
-            'lista': g.lista_usuario,
+            'lista': g.LIST_USUARIO,
             'modelo': Usuario,  # Corrigido de usuario
             'valores': g.valores_usuario,
             'ordem': Usuario.nome,  # Corrigido de usuario.nome
-            'entry': g.usuario_valor_entry,
+            'entry': g.USUARIO_BUSCA_ENTRY,
             'campo_busca': Usuario.nome  # Corrigido de usuario.nome
         }
     }
@@ -521,20 +527,20 @@ def adicionar(tipo):
         return
        
     if tipo == 'dedução':
-        espessura_valor = g.deducao_espessura_combobox.get()
-        canal_valor = g.deducao_canal_combobox.get()
-        material_nome = g.deducao_material_combobox.get()
+        espessura_valor = g.DED_ESPES_COMB.get()
+        canal_valor = g.DED_CANAL_COMB.get()
+        material_nome = g.DED_MATER_COMB.get()
         espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
         canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
         material_obj = session.query(Material).filter_by(nome=material_nome).first()
-        nova_observacao_valor = g.deducao_obs_entry.get()
-        nova_forca_valor = g.deducao_forca_entry.get()
+        nova_observacao_valor = g.DED_OBSER_ENTRY.get()
+        nova_forca_valor = g.DED_FORCA_ENTRY.get()
         
-        if g.deducao_valor_entry.get() == "" or material_nome == "" or espessura_valor == "" or canal_valor == "":
+        if g.DED_VALOR_ENTRY.get() == "" or material_nome == "" or espessura_valor == "" or canal_valor == "":
             messagebox.showerror("Erro", "Material, espessura, canal e valor da dedução são obrigatórios.")
             return
         else:
-            nova_deducao_valor = float(g.deducao_valor_entry.get().replace(',', '.'))
+            nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
 
         # Verificar se a dedução já existe
         deducao_existente = session.query(Deducao).filter_by(
@@ -557,14 +563,14 @@ def adicionar(tipo):
             )
             session.add(nova_deducao)
             session.commit()
-            registrar_log(g.usuario_nome, 'adicionar', tipo, nova_deducao.id,f'{tipo} espessura: {espessura_valor}, canal: {canal_valor}, material: {material_nome}, valor: {nova_deducao_valor}, forca: {(nova_forca_valor if nova_deducao_valor else "N/A")}, obs: {(nova_observacao_valor if nova_observacao_valor else "N/A")}')
+            registrar_log(g.USUARIO_NOME, 'adicionar', tipo, nova_deducao.id,f'{tipo} espessura: {espessura_valor}, canal: {canal_valor}, material: {material_nome}, valor: {nova_deducao_valor}, forca: {(nova_forca_valor if nova_deducao_valor else "N/A")}, obs: {(nova_observacao_valor if nova_observacao_valor else "N/A")}')
 
-            g.deducao_espessura_combobox.set('')
-            g.deducao_canal_combobox.set('')
-            g.deducao_material_combobox.set('')
-            g.deducao_valor_entry.delete(0, tk.END)
-            g.deducao_obs_entry.delete(0, tk.END)
-            g.deducao_forca_entry.delete(0, tk.END)
+            g.DED_ESPES_COMB.set('')
+            g.DED_CANAL_COMB.set('')
+            g.DED_MATER_COMB.set('')
+            g.DED_VALOR_ENTRY.delete(0, tk.END)
+            g.DED_OBSER_ENTRY.delete(0, tk.END)
+            g.DED_FORCA_ENTRY.delete(0, tk.END)
 
             messagebox.showinfo("Sucesso", "Nova dedução adicionada com sucesso!")
         else:
@@ -572,29 +578,29 @@ def adicionar(tipo):
 
     if tipo == 'espessura':
    
-        espessura_valor = g.espessura_valor_entry.get().replace(',', '.')
+        espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
         espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
         
         if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
            messagebox.showwarning("Atenção!", "A espessura deve conter apenas números ou números decimais.")
-           g.espessura_valor_entry.delete(0, tk.END)
+           g.ESP_VALOR_ENTRY.delete(0, tk.END)
            return
 
         if not espessura_existente:
             nova_espessura = Espessura(valor=espessura_valor)
             session.add(nova_espessura)
             session.commit()
-            registrar_log(g.usuario_nome, 'adicionar', tipo, nova_espessura.id, f'{tipo} valor: {espessura_valor}')
+            registrar_log(g.USUARIO_NOME, 'adicionar', tipo, nova_espessura.id, f'{tipo} valor: {espessura_valor}')
             messagebox.showinfo("Sucesso", "Nova espessura adicionada com sucesso!")
         else:
             messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
 
     if tipo == 'material':
   
-        nome_material = g.material_nome_entry.get()
-        densidade_material = g.material_densidade_entry.get()
-        escoamento_material = g.material_escoamento_entry.get()
-        elasticidade_material = g.material_elasticidade_entry.get()
+        nome_material = g.MAT_NOME_ENTRY.get()
+        densidade_material = g.MAT_DENS_ENTRY.get()
+        escoamento_material = g.MAT_ESCO_ENTRY.get()
+        elasticidade_material = g.MAT_ELAS_ENTRY.get()
         
         if not nome_material:
             messagebox.showerror("Erro", "O campo Material é obrigatório.")
@@ -610,19 +616,19 @@ def adicionar(tipo):
             )
             session.add(novo_material)
             session.commit()
-            registrar_log(g.usuario_nome, 'adicionar', tipo, novo_material.id, f'{tipo} nome: {nome_material}, densidade: {(densidade_material if densidade_material else "N/A")}, escoamento: {(escoamento_material if escoamento_material else "N/A")}, elasticidade: {(elasticidade_material if elasticidade_material else "N/A")}')
+            registrar_log(g.USUARIO_NOME, 'adicionar', tipo, novo_material.id, f'{tipo} nome: {nome_material}, densidade: {(densidade_material if densidade_material else "N/A")}, escoamento: {(escoamento_material if escoamento_material else "N/A")}, elasticidade: {(elasticidade_material if elasticidade_material else "N/A")}')
 
-            g.material_nome_entry.delete(0, tk.END)
-            g.material_densidade_entry.delete(0, tk.END)
-            g.material_escoamento_entry.delete(0, tk.END)
-            g.material_elasticidade_entry.delete(0, tk.END)
+            g.MAT_NOME_ENTRY.delete(0, tk.END)
+            g.MAT_DENS_ENTRY.delete(0, tk.END)
+            g.MAT_ESCO_ENTRY.delete(0, tk.END)
+            g.MAT_ELAS_ENTRY.delete(0, tk.END)
 
     if tipo == 'canal':
-        valor_canal = g.canal_valor_entry.get()
-        largura_canal = g.canal_largura_entry.get()
-        altura_canal = g.canal_altura_entry.get()
-        comprimento_total_canal = g.canal_comprimento_entry.get()
-        observacao_canal = g.canal_observacao_entry.get()
+        valor_canal = g.CANAL_VALOR_ENTRY.get()
+        largura_canal = g.CANAL_LARGU_ENTRY.get()
+        altura_canal = g.CANAL_ALTUR_ENTRY.get()
+        comprimento_total_canal = g.CANAL_COMPR_ENTRY.get()
+        observacao_canal = g.CANAL_OBSER_ENTRY.get()
 
         if valor_canal.isalpha():
             messagebox.showwarning("Atenção!", "O canal deve conter números ou números e letras.")
@@ -643,13 +649,13 @@ def adicionar(tipo):
             )
             session.add(novo_canal)
             session.commit()
-            registrar_log(g.usuario_nome, 'adicionar', tipo, novo_canal.id, f'{tipo} valor: {valor_canal}, largura: {(largura_canal if largura_canal else "N/A")}, altura: {(altura_canal if altura_canal else "N/A")}, comprimento_total: {(comprimento_total_canal if comprimento_total_canal else "N/A")}, observacao: {(observacao_canal if observacao_canal else "N/A")}')
+            registrar_log(g.USUARIO_NOME, 'adicionar', tipo, novo_canal.id, f'{tipo} valor: {valor_canal}, largura: {(largura_canal if largura_canal else "N/A")}, altura: {(altura_canal if altura_canal else "N/A")}, comprimento_total: {(comprimento_total_canal if comprimento_total_canal else "N/A")}, observacao: {(observacao_canal if observacao_canal else "N/A")}')
 
-            g.canal_valor_entry.delete(0, tk.END)
-            g.canal_largura_entry.delete(0, tk.END)
-            g.canal_altura_entry.delete(0, tk.END)
-            g.canal_comprimento_entry.delete(0, tk.END)
-            g.canal_observacao_entry.delete(0, tk.END)
+            g.CANAL_VALOR_ENTRY.delete(0, tk.END)
+            g.CANAL_LARGU_ENTRY.delete(0, tk.END)
+            g.CANAL_ALTUR_ENTRY.delete(0, tk.END)
+            g.CANAL_COMPR_ENTRY.delete(0, tk.END)
+            g.CANAL_OBSER_ENTRY.delete(0, tk.END)
             messagebox.showinfo("Sucesso", "Novo canal adicionado com sucesso!")
         else:
             messagebox.showerror("Erro", "Canal já existe no banco de dados.")
@@ -702,7 +708,7 @@ def editar(tipo):
         try:
             session.commit()
             detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
-            registrar_log(g.usuario_nome, "editar", tipo, obj_id, detalhes)  # Registrar a edição com detalhes
+            registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)  # Registrar a edição com detalhes
             messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
         except Exception as e:
             session.rollback()
@@ -758,7 +764,7 @@ def excluir(tipo):
 
     session.delete(obj)
     session.commit()
-    registrar_log(g.usuario_nome, "excluir", tipo, obj_id, f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")  # Registrar a exclusão
+    registrar_log(g.USUARIO_NOME, "excluir", tipo, obj_id, f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")  # Registrar a exclusão
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
@@ -792,76 +798,76 @@ def preencher_campos(tipo):
         messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a.")
 
 def atualizar_combobox_deducao():
-    if g.deducao_material_combobox and g.deducao_material_combobox.winfo_exists():
-        g.deducao_material_combobox['values'] = [m.nome for m in session.query(Material).order_by(Material.id).all()]
-    if g.deducao_espessura_combobox and g.deducao_espessura_combobox.winfo_exists():
-        g.deducao_espessura_combobox['values'] = sorted([e.valor for e in session.query(Espessura).all()])
-    if g.deducao_canal_combobox and g.deducao_canal_combobox.winfo_exists():
-        g.deducao_canal_combobox['values'] = sorted([c.valor for c in session.query(Canal).all()], key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
+    if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
+        g.DED_MATER_COMB['values'] = [m.nome for m in session.query(Material).order_by(Material.id).all()]
+    if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
+        g.DED_ESPES_COMB['values'] = sorted([e.valor for e in session.query(Espessura).all()])
+    if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
+        g.DED_CANAL_COMB['values'] = sorted([c.valor for c in session.query(Canal).all()], key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]))
 
 # Manipulação de usuarios
 def novo_usuario():
-    novo_usuario_nome = g.usuario_entry.get()
-    novo_usuario_senha = g.senha_entry.get()
+    novo_usuario_nome = g.USUARIO_ENTRY.get()
+    novo_usuario_senha = g.SENHA_ENTRY.get()
     senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
     if novo_usuario_nome == "" or novo_usuario_senha == "":
-        messagebox.showerror("Erro", "Preencha todos os campos.", parent=g.aut_form)
+        messagebox.showerror("Erro", "Preencha todos os campos.", parent=g.AUTEN_FORM)
         return
     
     usuario_obj = session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
     if usuario_obj:
-        messagebox.showerror("Erro", "Usuário já existente.", parent=g.aut_form)
+        messagebox.showerror("Erro", "Usuário já existente.", parent=g.AUTEN_FORM)
         return
     else:
-        novo_usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.admin_var)  # Define o role padrão
+        novo_usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.ADMIN_VAR)  # Define o role padrão
         session.add(novo_usuario)
         session.commit()
-        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.aut_form)
-        g.aut_form.destroy()
+        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
+        g.AUTEN_FORM.destroy()
     
     habilitar_janelas()
 
 def login():
-    g.usuario_nome = g.usuario_entry.get()
-    usuario_senha = g.senha_entry.get()
+    g.USUARIO_NOME = g.USUARIO_ENTRY.get()
+    usuario_senha = g.SENHA_ENTRY.get()
     
-    usuario_obj = session.query(Usuario).filter_by(nome=g.usuario_nome).first()
+    usuario_obj = session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
 
     if usuario_obj:
         if usuario_obj.senha == "nova_senha":
-            nova_senha = simpledialog.askstring("Nova Senha", "Digite uma nova senha:", show="*", parent=g.aut_form)
+            nova_senha = simpledialog.askstring("Nova Senha", "Digite uma nova senha:", show="*", parent=g.AUTEN_FORM)
             if nova_senha:
                 usuario_obj.senha = hashlib.sha256(nova_senha.encode()).hexdigest()
                 session.commit()
-                messagebox.showinfo("Sucesso", "Senha alterada com sucesso. Faça login novamente.", parent=g.aut_form)
+                messagebox.showinfo("Sucesso", "Senha alterada com sucesso. Faça login novamente.", parent=g.AUTEN_FORM)
                 return
         elif usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest():
-            messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=g.aut_form)
-            g.usuario_id = usuario_obj.id
-            g.aut_form.destroy()
-            g.principal_form.title(f"Cálculo de Dobra - {usuario_obj.nome}")
+            messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=g.AUTEN_FORM)
+            g.USUARIO_ID = usuario_obj.id
+            g.AUTEN_FORM.destroy()
+            g.PRINC_FORM.title(f"Cálculo de Dobra - {usuario_obj.nome}")
         else:
-            messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.aut_form)
+            messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.AUTEN_FORM)
     else:
-        messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.aut_form)
+        messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.AUTEN_FORM)
 
     habilitar_janelas()
 
 def logado(tipo):
     configuracoes = {
-        'dedução': g.deducao_form,
-        'espessura': g.espessura_form,
-        'material': g.material_form,
-        'canal': g.canal_form
+        'dedução': g.DEDUC_FORM,
+        'espessura': g.ESPES_FORM,
+        'material': g.MATER_FORM,
+        'canal': g.CANAL_FORM
     }
 
-    if g.usuario_id is None:
+    if g.USUARIO_ID is None:
         messagebox.showerror("Erro", "Login requerido.", parent=configuracoes[tipo])
         return False
     return True
 
 def tem_permissao(role_requerida):
-    usuario_obj = session.query(Usuario).filter_by(id=g.usuario_id).first()
+    usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
     if not usuario_obj:
         messagebox.showerror("Erro", "Você não tem permissão para acessar esta função.")
         return False
@@ -873,82 +879,82 @@ def tem_permissao(role_requerida):
     return True
 
 def logout():
-    if g.usuario_id is None:
+    if g.USUARIO_ID is None:
         messagebox.showerror("Erro", "Nenhum usuário logado.")
         return
-    g.usuario_id = None
-    g.principal_form.title("Cálculo de Dobra")
+    g.USUARIO_ID = None
+    g.PRINC_FORM.title("Cálculo de Dobra")
     messagebox.showinfo("Logout", "Logout efetuado com sucesso.")
 
 def resetar_senha():
-    selected_item = g.lista_usuario.selection()
+    selected_item = g.LIST_USUARIO.selection()
     if not selected_item:
-        tk.messagebox.showwarning("Aviso", "Selecione um usuário para resetar a senha.", parent=g.usuario_form)
+        tk.messagebox.showwarning("Aviso", "Selecione um usuário para resetar a senha.", parent=g.USUAR_FORM)
         return
 
-    user_id = g.lista_usuario.item(selected_item, "values")[0]
+    user_id = g.LIST_USUARIO.item(selected_item, "values")[0]
     novo_password = "nova_senha"  # Defina a nova senha padrão aqui
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
     if usuario_obj:
         usuario_obj.senha = novo_password
         session.commit()
-        tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.", parent=g.usuario_form)
+        tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.", parent=g.USUAR_FORM)
     else:
-        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.usuario_form)
+        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.USUAR_FORM)
 
 def excluir_usuario():
     if not tem_permissao("admin"):
         return
 
-    if g.lista_usuario is None:
+    if g.LIST_USUARIO is None:
         return
 
-    selected_item = g.lista_usuario.selection()[0]
-    item = g.lista_usuario.item(selected_item)
+    selected_item = g.LIST_USUARIO.selection()[0]
+    item = g.LIST_USUARIO.item(selected_item)
     obj_id = item['values'][0]
     obj = session.query(Usuario).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.usuario_form)
+        messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.USUAR_FORM)
         return
 
     if obj.role == "admin":
-        messagebox.showerror("Erro", "Não é possível excluir um administrador.", parent=g.usuario_form)
+        messagebox.showerror("Erro", "Não é possível excluir um administrador.", parent=g.USUAR_FORM)
         return
     
-    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?", parent=g.usuario_form)
+    aviso = messagebox.askyesno("Atenção!", "Tem certeza que deseja excluir o usuário?", parent=g.USUAR_FORM)
     if not aviso:
         return
 
     session.delete(obj)
     session.commit()
-    g.lista_usuario.delete(selected_item)
-    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!", parent=g.usuario_form)
+    g.LIST_USUARIO.delete(selected_item)
+    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!", parent=g.USUAR_FORM)
 
     listar('usuario')
 
 def tornar_editor():
-    selected_item = g.lista_usuario.selection()
+    selected_item = g.LIST_USUARIO.selection()
     if not selected_item:
-        tk.messagebox.showwarning("Aviso", "Selecione um usuário para promover a editor.", parent=g.usuario_form)
+        tk.messagebox.showwarning("Aviso", "Selecione um usuário para promover a editor.", parent=g.USUAR_FORM)
         return
 
-    user_id = g.lista_usuario.item(selected_item, "values")[0]
+    user_id = g.LIST_USUARIO.item(selected_item, "values")[0]
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
 
     if usuario_obj:
         if usuario_obj.role == "admin":
-            tk.messagebox.showerror("Erro", "O usuário já é um administrador.", parent=g.usuario_form)
+            tk.messagebox.showerror("Erro", "O usuário já é um administrador.", parent=g.USUAR_FORM)
             return
         if usuario_obj.role == "editor":
-            tk.messagebox.showinfo("Informação", "O usuário já é um editor.", parent=g.usuario_form)
+            tk.messagebox.showinfo("Informação", "O usuário já é um editor.", parent=g.USUAR_FORM)
             return
 
         usuario_obj.role = "editor"
         session.commit()
-        tk.messagebox.showinfo("Sucesso", "Usuário promovido a editor com sucesso.", parent=g.usuario_form)
+        tk.messagebox.showinfo("Sucesso", "Usuário promovido a editor com sucesso.", parent=g.USUAR_FORM)
         listar('usuario')  # Atualiza a lista de usuários na interface
     else:
-        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.usuario_form)
+        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.USUAR_FORM)
 
 # Manipulação de formulários
 def no_topo(form):
@@ -956,15 +962,15 @@ def no_topo(form):
         if window and window.winfo_exists():
             window.attributes("-topmost",on_top)
 
-    on_top_valor = g.on_top_var.get() == 1
+    on_top_valor = g.NO_TOPO_VAR.get() == 1
     set_topmost(form, on_top_valor)
 
 def posicionar_janela(form, posicao=None):
     form.update_idletasks()
-    g.principal_form.update_idletasks()
-    largura_monitor = g.principal_form.winfo_screenwidth()
-    posicao_x = g.principal_form.winfo_x()
-    largura_janela = g.principal_form.winfo_width()
+    g.PRINC_FORM.update_idletasks()
+    largura_monitor = g.PRINC_FORM.winfo_screenwidth()
+    posicao_x = g.PRINC_FORM.winfo_x()
+    largura_janela = g.PRINC_FORM.winfo_width()
     largura_form = form.winfo_width()
 
     if posicao is None:
@@ -974,32 +980,32 @@ def posicionar_janela(form, posicao=None):
             posicao = 'direita'
 
     if posicao == 'centro':
-        x = g.principal_form.winfo_x() + ((g.principal_form.winfo_width() - largura_form) // 2)
-        y = g.principal_form.winfo_y() + ((g.principal_form.winfo_height() - form.winfo_height()) // 2)
+        x = g.PRINC_FORM.winfo_x() + ((g.PRINC_FORM.winfo_width() - largura_form) // 2)
+        y = g.PRINC_FORM.winfo_y() + ((g.PRINC_FORM.winfo_height() - form.winfo_height()) // 2)
     elif posicao == 'direita':
-        x = g.principal_form.winfo_x() + largura_janela + 10
-        y = g.principal_form.winfo_y()
+        x = g.PRINC_FORM.winfo_x() + largura_janela + 10
+        y = g.PRINC_FORM.winfo_y()
         if x + largura_form > largura_monitor:
-            x = g.principal_form.winfo_x() - largura_form - 10
+            x = g.PRINC_FORM.winfo_x() - largura_form - 10
     elif posicao == 'esquerda':
-        x = g.principal_form.winfo_x() - largura_form - 10
-        y = g.principal_form.winfo_y()
+        x = g.PRINC_FORM.winfo_x() - largura_form - 10
+        y = g.PRINC_FORM.winfo_y()
         if x < 0:
-            x = g.principal_form.winfo_x() + largura_janela + 10
+            x = g.PRINC_FORM.winfo_x() + largura_janela + 10
     else:
         return
 
     form.geometry(f"+{x}+{y}")
 
 def desabilitar_janelas():
-    forms = [g.principal_form, g.deducao_form, g.espessura_form, g.material_form, g.canal_form]
+    forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', True)
             form.focus_force()
 
 def habilitar_janelas():
-    forms = [g.principal_form, g.deducao_form, g.espessura_form, g.material_form, g.canal_form]
+    forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', False)
@@ -1007,7 +1013,7 @@ def habilitar_janelas():
 
 def focus_next_entry(current_index, w):
     next_index = current_index + 1
-    if next_index < g.n:
+    if next_index < g.N:
         next_entry = getattr(g, f'aba{next_index}_entry_{w}', None)
         if next_entry:
             next_entry.focus()

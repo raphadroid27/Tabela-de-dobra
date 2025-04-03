@@ -12,18 +12,18 @@ session = Session()
 
 def main(root):
 
-    if g.material_form is not None:
-        g.material_form.destroy()   
+    if g.MATER_FORM is not None:
+        g.MATER_FORM.destroy()   
         pass
 
-    g.material_form = tk.Toplevel()
-    g.material_form.resizable(False, False)
-    g.material_form.geometry("340x420")
+    g.MATER_FORM = tk.Toplevel()
+    g.MATER_FORM.resizable(False, False)
+    g.MATER_FORM.geometry("340x420")
 
-    no_topo(g.material_form)
-    posicionar_janela(g.material_form, None)
+    no_topo(g.MATER_FORM)
+    posicionar_janela(g.MATER_FORM, None)
 
-    main_frame = tk.Frame(g.material_form)
+    main_frame = tk.Frame(g.MATER_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
     main_frame.columnconfigure(0,weight=1)
@@ -41,20 +41,20 @@ def main(root):
     frame_busca.columnconfigure(2, weight=0)
 
     tk.Label(frame_busca, text="Nome:").grid(row=0,column=0)
-    g.material_busca_entry=tk.Entry(frame_busca)
-    g.material_busca_entry.grid(row=0, column=1, sticky="ew")
-    g.material_busca_entry.bind("<KeyRelease>", lambda event: buscar('material'))
+    g.MAT_BUSCA_ENTRY=tk.Entry(frame_busca)
+    g.MAT_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
+    g.MAT_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('material'))
 
     tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('material')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id", "Nome", "Densidade", "Escoamento", "Elasticidade")
-    g.lista_material = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LSIT_MAT = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.lista_material["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
-        g.lista_material.heading(col, text=col)
-        g.lista_material.column(col, anchor="center", width=20)    
+        g.LSIT_MAT["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
+        g.LSIT_MAT.heading(col, text=col)
+        g.LSIT_MAT.column(col, anchor="center", width=20)    
     
-    g.lista_material.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    g.LSIT_MAT.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
     listar('material')
 
@@ -71,34 +71,34 @@ def main(root):
     frame_edicoes.rowconfigure(3, weight=1)
 
     tk.Label(frame_edicoes, text="Nome:", anchor="w").grid(row=0, column=0, padx=2, sticky='sw')
-    g.material_nome_entry = tk.Entry(frame_edicoes)
-    g.material_nome_entry.grid(row=1, column=0, padx=5, sticky="ew")
+    g.MAT_NOME_ENTRY = tk.Entry(frame_edicoes)
+    g.MAT_NOME_ENTRY.grid(row=1, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Densidade:", anchor="w").grid(row=0, column=1, padx=2, sticky='sw')
-    g.material_densidade_entry = tk.Entry(frame_edicoes)
-    g.material_densidade_entry.grid(row=1, column=1, padx=5, sticky="ew")
+    g.MAT_DENS_ENTRY = tk.Entry(frame_edicoes)
+    g.MAT_DENS_ENTRY.grid(row=1, column=1, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Escoamento:", anchor="w").grid(row=2, column=0, padx=2, sticky='sw')
-    g.material_escoamento_entry = tk.Entry(frame_edicoes)
-    g.material_escoamento_entry.grid(row=3, column=0, padx=5, sticky="ew")
+    g.MAT_ESCO_ENTRY = tk.Entry(frame_edicoes)
+    g.MAT_ESCO_ENTRY.grid(row=3, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Elasticidade:", anchor="w").grid(row=2, column=1, padx=2, sticky='sw')
-    g.material_elasticidade_entry = tk.Entry(frame_edicoes)
-    g.material_elasticidade_entry.grid(row=3, column=1, padx=5, sticky="ew")
+    g.MAT_ELAS_ENTRY = tk.Entry(frame_edicoes)
+    g.MAT_ELAS_ENTRY.grid(row=3, column=1, padx=5, sticky="ew")
 
-    if g.editar_material == True:
-        g.material_form.title("Editar/Excluir Material")
-        g.lista_material.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
+    if g.EDIT_MAT == True:
+        g.MATER_FORM.title("Editar/Excluir Material")
+        g.LSIT_MAT.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
         frame_edicoes.config(text='Editar Material')
         
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('material'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         tk.Button(frame_edicoes, text="Atualizar", command = lambda: editar('material'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
     else:
-        g.material_form.title("Adicionar Material")
+        g.MATER_FORM.title("Adicionar Material")
         frame_edicoes.config(text='Novo Material')
         tk.Button(frame_edicoes, text="Adicionar", command= lambda: adicionar('material'), bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
 
-    g.material_form.mainloop()
+    g.MATER_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)

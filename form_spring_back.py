@@ -16,7 +16,7 @@ frame = tk.Frame(spring_back_form)
 frame.pack(pady=5, padx=5, fill='both', expand=True)
 
 tk.Label(frame, text = "Material:").grid(row=0, column=0)
-g.material_combobox = ttk.Combobox(frame, values = [session.query(Material)])
-g.material_combobox.grid(row=1, column=0)
+g.MAT_COMB = ttk.Combobox(frame, values = [session.query(Material)])
+g.MAT_COMB.grid(row=1, column=0)
 
 spring_back_form.mainloop()

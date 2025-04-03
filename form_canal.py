@@ -12,18 +12,18 @@ session = Session()
 
 def main(root):
 
-    if g.canal_form is not None:
-        g.canal_form.destroy()
+    if g.CANAL_FORM is not None:
+        g.CANAL_FORM.destroy()
         pass
 
-    g.canal_form = tk.Toplevel()
-    g.canal_form.resizable(False, False)
-    g.canal_form.geometry("340x420")
+    g.CANAL_FORM = tk.Toplevel()
+    g.CANAL_FORM.resizable(False, False)
+    g.CANAL_FORM.geometry("340x420")
 
-    no_topo(g.canal_form)
-    posicionar_janela(g.canal_form,None)
+    no_topo(g.CANAL_FORM)
+    posicionar_janela(g.CANAL_FORM,None)
 
-    main_frame = tk.Frame(g.canal_form)
+    main_frame = tk.Frame(g.CANAL_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
     main_frame.columnconfigure(0,weight=1)
@@ -41,20 +41,20 @@ def main(root):
     frame_busca.columnconfigure(2, weight=0)
     
     tk.Label(frame_busca, text="Valor:").grid(row=0,column=0)
-    g.canal_busca_entry=tk.Entry(frame_busca)
-    g.canal_busca_entry.grid(row=0, column=1, sticky="ew")
-    g.canal_busca_entry.bind("<KeyRelease>", lambda event: buscar('canal'))
+    g.CANAL_BUSCA_ENTRY=tk.Entry(frame_busca)
+    g.CANAL_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
+    g.CANAL_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('canal'))
 
     tk.Button(frame_busca, text="Limpar", command =lambda:limpar_busca('canal')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id","Canal", "Largura", "Altura", "Compr.", "Obs.")
-    g.lista_canal = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_CANAL = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.lista_canal["displaycolumns"] = ("Canal", "Largura", "Altura", "Compr.", "Obs.")
-        g.lista_canal.heading(col, text=col)
-        g.lista_canal.column(col, anchor="center", width=20)    
+        g.LIST_CANAL["displaycolumns"] = ("Canal", "Largura", "Altura", "Compr.", "Obs.")
+        g.LIST_CANAL.heading(col, text=col)
+        g.LIST_CANAL.column(col, anchor="center", width=20)    
     
-    g.lista_canal.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    g.LIST_CANAL.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
     listar('canal')
 
@@ -71,39 +71,39 @@ def main(root):
     frame_edicoes.rowconfigure(3, weight=1)
 
     tk.Label(frame_edicoes, text="Valor:", anchor="w").grid(row=0, column=0,padx=2, sticky='sw')
-    g.canal_valor_entry = tk.Entry(frame_edicoes)
-    g.canal_valor_entry.grid(row=1, column=0, padx=5, sticky="ew")
+    g.CANAL_VALOR_ENTRY = tk.Entry(frame_edicoes)
+    g.CANAL_VALOR_ENTRY.grid(row=1, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Largura:", anchor="w").grid(row=0, padx=2, column=1, sticky='sw')
-    g.canal_largura_entry = tk.Entry(frame_edicoes)
-    g.canal_largura_entry.grid(row=1, column=1, padx=5, sticky="ew")
+    g.CANAL_LARGU_ENTRY = tk.Entry(frame_edicoes)
+    g.CANAL_LARGU_ENTRY.grid(row=1, column=1, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Altura:", anchor="w").grid(row=2, column=0, padx=2, sticky='sw')
-    g.canal_altura_entry = tk.Entry(frame_edicoes)
-    g.canal_altura_entry.grid(row=3, column=0, padx=5, sticky="ew")
+    g.CANAL_ALTUR_ENTRY = tk.Entry(frame_edicoes)
+    g.CANAL_ALTUR_ENTRY.grid(row=3, column=0, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Comprimento total:", anchor="w").grid(row=2, column=1, padx=2, sticky='sw')
-    g.canal_comprimento_entry = tk.Entry(frame_edicoes)
-    g.canal_comprimento_entry.grid(row=3, column=1, padx=5, sticky="ew")
+    g.CANAL_COMPR_ENTRY = tk.Entry(frame_edicoes)
+    g.CANAL_COMPR_ENTRY.grid(row=3, column=1, padx=5, sticky="ew")
 
     tk.Label(frame_edicoes, text="Observação:", anchor="w").grid(row=4, column=0, padx=2, sticky='sw')
-    g.canal_observacao_entry = tk.Entry(frame_edicoes)
-    g.canal_observacao_entry.grid(row=5, column=0, columnspan=2, padx=5, sticky="ew")
+    g.CANAL_OBSER_ENTRY = tk.Entry(frame_edicoes)
+    g.CANAL_OBSER_ENTRY.grid(row=5, column=0, columnspan=2, padx=5, sticky="ew")
 
 
-    if g.editar_canal == True:     
-        g.canal_form.title("Editar/Excluir Canal")
-        g.lista_canal.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal'))
+    if g.EDIT_CANAL == True:     
+        g.CANAL_FORM.title("Editar/Excluir Canal")
+        g.LIST_CANAL.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal'))
         frame_edicoes.config(text='Editar Canal')
 
         tk.Button(main_frame, text="Excluir", command=lambda:excluir('canal'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         tk.Button(frame_edicoes, text="Atualizar", command=lambda:editar('canal'), bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=5)
     else:  
-        g.canal_form.title("Novo Canal")
+        g.CANAL_FORM.title("Novo Canal")
         frame_edicoes.config(text='Novo Canal')
         tk.Button(frame_edicoes, text="Adicionar", command=lambda:adicionar('canal'), bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=5)
 
-    g.canal_form.mainloop()
+    g.CANAL_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)
