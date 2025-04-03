@@ -1,12 +1,16 @@
+"""
+Este módulo implementa a interface principal do aplicativo Tabela de Dobra.
+"""
+
 import tkinter as tk
-from tkinter import ttk
 from models import Usuario
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import json
 import os
-from dobra_90 import *
+from dobra_90 import form_dobra, dobras
 from cabecalho import cabecalho
+from avisos import avisos
 import form_espessura
 import globals as g
 from funcoes import *
@@ -22,13 +26,16 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# Define o caminho para salvar o arquivo config.json na pasta Documentos
-DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")  # Caminho para a pasta Documentos
-CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Tabela de Dobra")  # Subpasta "Tabela de Dobra"
-os.makedirs(CONFIG_DIR, exist_ok=True)  # Cria o diretório se ele não existir
-CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")  # Caminho completo para o arquivo config.json
+DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")  
+CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Tabela de Dobra") 
+os.makedirs(CONFIG_DIR, exist_ok=True)
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json") 
 
 def verificar_admin_existente():
+    """
+    Verifica se existe um administrador cadastrado no banco de dados.
+    Caso contrário, abre a tela de autenticação para criar um.
+    """
     admin_existente = session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
         form_aut.main(g.principal_form)
@@ -52,6 +59,9 @@ def form_false(form, editar_attr, root):
     form.main(root)
 
 def main():
+    """
+    Função principal que inicializa a interface gráfica do aplicativo.
+    """
     config = carregar_configuracao()
     g.principal_form = tk.Tk()
     g.principal_form.title("Cálculo de Dobra")
@@ -95,13 +105,21 @@ def main():
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
     g.on_top_var = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="No topo", variable=g.on_top_var, command=lambda: no_topo(g.principal_form))
+    opcoes_menu.add_checkbutton(label="No topo", 
+                                variable=g.on_top_var, 
+                                ommand=lambda: no_topo(g.principal_form))
 
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
-    usuario_menu.add_command(label="Login", command=lambda: form_true(form_aut,"login",g.aut_form))
-    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_false(form_aut,"login",g.aut_form))
-    usuario_menu.add_command(label="Gerenciar Usuários", command=lambda: form_usuario.main(g.principal_form))
+    usuario_menu.add_command(label="Login", 
+                             command=lambda: form_true(form_aut,"login",g.aut_form))
+    
+    usuario_menu.add_command(label="Novo Usuário", 
+                             command=lambda: form_false(form_aut,"login",g.aut_form))
+    
+    usuario_menu.add_command(label="Gerenciar Usuários", 
+                             command=lambda: form_usuario.main(g.principal_form))
+    
     usuario_menu.add_separator()
     usuario_menu.add_command(label="Sair", command=logout)
 
@@ -109,7 +127,34 @@ def main():
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
     help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(g.principal_form))
 
-    cabecalho(g.principal_form)
+    frame_superior = tk.Frame(g.principal_form)
+    frame_superior.pack(fill='both', expand=True, padx=10)
+
+    frame_superior.columnconfigure(0, weight=1)
+    frame_superior.columnconfigure(1, weight=1)
+    
+    def carregar_cabecalho(var):
+        """
+        Atualiza o cabeçalho no frame_superior com base no valor de var.
+        
+        Args:
+            var (int): Define o layout do cabeçalho. 
+                       1 para apenas o cabeçalho principal.
+                       2 para cabeçalho com avisos.
+        """
+        # Remove widgets existentes
+        for widget in frame_superior.winfo_children():
+            widget.destroy()
+
+        # Adiciona o cabeçalho principal
+        cabecalho(frame_superior).grid(row=0, column=0, sticky='we', padx=2, pady=2)
+
+        # Adiciona avisos se var for 2
+        if var == 2:
+            avisos(frame_superior).grid(row=0, column=1, sticky='we', padx=2, pady=2)
+
+    # Chamada inicial
+    carregar_cabecalho(1)
 
     frame_teste = tk.Frame(g.principal_form)
     frame_teste.pack(fill='both', expand=True, padx=10)
@@ -130,7 +175,6 @@ def main():
         # Recriar os widgets no frame
         for w in g.valores_w:
             form_dobra(frame_teste, w).grid(row=1, column=w-1, sticky='we', padx=2, pady=2)
-            print(w)
         
     g.valores_w = [1]
 
@@ -141,12 +185,12 @@ def main():
     def expandir_v():
         largura_atual = g.principal_form.winfo_width() 
         if g.expandir_v.get() == 1:
-            g.principal_form.geometry(f"{largura_atual}x500")  # Define a largura atual e a nova altura
+            g.principal_form.geometry(f"{largura_atual}x500")
             for w in g.valores_w:
                 dobras(11, w)
             carregar_form_dobra()
         else:
-            g.principal_form.geometry(f"{largura_atual}x400")  # Define a largura atual e a nova altura
+            g.principal_form.geometry(f"{largura_atual}x400")
             for w in g.valores_w:
                 dobras(6, w)
             carregar_form_dobra()
@@ -157,10 +201,12 @@ def main():
         if g.expandir_h.get() == 1:
             g.principal_form.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
             g.valores_w = [1,2]
+            carregar_cabecalho(2)
             carregar_form_dobra() 
         else:
             g.principal_form.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
             g.valores_w = [1]
+            carregar_cabecalho(1)
             carregar_form_dobra()
         for w in g.valores_w:
             restaurar_dobras(w)
