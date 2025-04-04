@@ -14,8 +14,7 @@ session = Session()
 def main(root):
     
     if g.AUTEN_FORM is not None:
-        g.AUTEN_FORM.destroy()   
-        pass
+        g.AUTEN_FORM.destroy()
 
     g.AUTEN_FORM = tk.Toplevel()
     g.AUTEN_FORM.geometry("200x120")

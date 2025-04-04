@@ -118,11 +118,11 @@ def atualizar_deducao_e_obs():
         ).first()
 
         if deducao_obj:
-            g.DED_COMB.config(text=deducao_obj.valor, fg="black")
+            g.DED_LBL.config(text=deducao_obj.valor, fg="black")
             g.OBS_LBL.config(text=f'Observações: {deducao_obj.observacao}'
                              if deducao_obj.observacao else 'Observações não encontradas')
         else:
-            g.DED_COMB.config(text='N/A', fg="red")
+            g.DED_LBL.config(text='N/A', fg="red")
             g.OBS_LBL.config(text='Observações não encontradas')
 
         g.DED_VALOR = deducao_obj.valor if deducao_obj else None
@@ -245,7 +245,7 @@ def calcular_dobra(w):
         print(linha)
 
     # Determinar o valor da dedução
-    if g.DED_COMB.get() == "" or g.DED_COMB.get() == 'N/A':
+    if g.DED_LBL.cget('text') == "" or g.DED_LBL.cget('text') == 'N/A':
         if g.DED_ESPEC_ENTRY.get() == "":
             return
 
@@ -310,7 +310,7 @@ def copiar(tipo, numero=None, w=None):
     '''
     configuracoes = {
         'dedução': {
-            'label': g.DED_COMB,
+            'label': g.DED_LBL,
             'funcao_calculo': lambda: (atualizar_deducao_e_obs(), 
                                        calcular_fatork(),
                                        calcular_offset())
@@ -424,7 +424,7 @@ def limpar_tudo():
 
     etiquetas = {
         g.K_LBL: "",
-        g.DED_COMB: "",
+        g.DED_LBL: "",
         g.OFFSET_LBL: "",
         g.OBS_LBL: "Observações:",
         g.FORCA_LBL: "",
@@ -632,7 +632,8 @@ def adicionar(tipo):
     elif tipo == 'canal':
         adicionar_canal()
 
-    atualizar_interface(tipo=tipo)
+    limpar_campos(tipo)
+    listar(tipo)
 
 def adicionar_deducao():
     '''
@@ -794,114 +795,89 @@ def editar(tipo):
     if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
         return
 
-    if not confirmar_edicao(tipo):
+    if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
         return
 
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    if not validar_selecao(config, tipo):
-        return
+    obj = item_selecionado(tipo)
+    obj_id = obj.id
+    if obj:
+        alteracoes = []  # Lista para armazenar as alterações
+        for campo, entry in config['campos'].items():
+            valor_novo = entry.get().strip()
+            if valor_novo == "":
+                valor_novo = None
+            else:
+                try:
+                    if campo in ["largura", "altura", "comprimento_total"]:
+                        valor_novo = float(valor_novo.replace(",", "."))
+                except ValueError:
+                    messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
+                    return
 
-    obj = obter_objeto_selecionado(config)
-    if not obj:
+            valor_antigo = getattr(obj, campo)
+            if valor_antigo != valor_novo:  # Verifica se houve alteração
+                alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
+                setattr(obj, campo, valor_novo)
+
+        try:
+            session.commit()
+            print("Operação realizada com sucesso!")
+        except IntegrityError as e:
+            session.rollback()
+            print(f"Erro de integridade no banco de dados: {e}")
+        except OperationalError as e:
+            session.rollback()
+            print(f"Erro operacional no banco de dados: {e}")
+        except Exception as e:
+            session.rollback()
+            print(f"Erro inesperado: {e}")
+            raise
+        detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
+        # Registrar a edição com detalhes
+        registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
+        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
+    else:
         messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
-        return
 
-    alteracoes = processar_alteracoes(config, obj, tipo)
-    if not alteracoes:
-        messagebox.showinfo("Informação", "Nenhuma alteração foi realizada.")
-        return
+    # Limpar os campos após a edição
+    for entry in config['campos'].values():
+        entry.delete(0, tk.END)
 
-    if not salvar_alteracoes(obj, alteracoes, tipo):
-        return
+    # Atualizar as listas e comboboxes
+    atualizar_material()
+    atualizar_espessura()
+    atualizar_canal()
+    atualizar_deducao_e_obs()
+    atualizar_combobox_deducao()
+    for tipo_item in configuracoes:
+        listar(tipo_item)
+        buscar(tipo_item)
 
-    limpar_campos(config)
-    atualizar_interface(configuracoes=configuracoes)
-
-def confirmar_edicao(tipo):
+def item_selecionado(tipo):
     '''
-    Exibe uma mensagem de confirmação para a edição.
+    Retorna o objeto selecionado na lista correspondente ao tipo especificado.
+    Os tipos disponíveis são:
+    - dedução
+    - espessura
+    - material
+    - canal
     '''
-    return messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?")
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
 
-def validar_selecao(config, tipo):
-    '''
-    Valida se há um item selecionado na lista.
-    '''
     if not config['lista'].selection():
         messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
-        return False
-    return True
+        return None
 
-def obter_objeto_selecionado(config):
-    '''
-    Obtém o objeto selecionado na lista.
-    '''
     selected_item = config['lista'].selection()[0]
     item = config['lista'].item(selected_item)
     obj_id = item['values'][0]
-    return session.query(config['modelo']).filter_by(id=obj_id).first()
+    obj = session.query(config['modelo']).filter_by(id=obj_id).first()
 
-def processar_alteracoes(config, obj, tipo):
-    '''
-    Processa as alterações feitas nos campos e retorna uma lista de alterações.
-    '''
-    alteracoes = []
-    for campo, entry in config['campos'].items():
-        valor_novo = obter_valor_novo(entry, campo)
-        if valor_novo is None:
-            return None  # Valor inválido
-
-        valor_antigo = getattr(obj, campo)
-        if valor_antigo != valor_novo:
-            alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
-            setattr(obj, campo, valor_novo)
-    return alteracoes
-
-def obter_valor_novo(entry, campo):
-    '''
-    Obtém o novo valor do campo de entrada e realiza validações.
-    '''
-    valor_novo = entry.get().strip()
-    if valor_novo == "":
-        return None
-    if campo in ["largura", "altura", "comprimento_total"]:
-        try:
-            valor_novo = float(valor_novo.replace(",", "."))
-        except ValueError:
-            messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
-            return None
-    return valor_novo
-
-def salvar_alteracoes(obj, alteracoes, tipo):
-    '''
-    Salva as alterações no banco de dados e registra o log.
-    '''
-    try:
-        session.commit()
-        detalhes = "; ".join(alteracoes)
-        registrar_log(g.USUARIO_NOME, "editar", tipo, obj.id, detalhes)
-        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
-        return True
-    except IntegrityError as e:
-        session.rollback()
-        print(f"Erro de integridade no banco de dados: {e}")
-    except OperationalError as e:
-        session.rollback()
-        print(f"Erro operacional no banco de dados: {e}")
-    except Exception as e:
-        session.rollback()
-        print(f"Erro inesperado: {e}")
-        raise
-    return False
-
-def limpar_campos(config):
-    '''
-    Limpa os campos de entrada após a edição.
-    '''
-    for entry in config['campos'].values():
-        entry.delete(0, tk.END)
+    return obj
 
 def excluir(tipo):
     '''
@@ -932,7 +908,7 @@ def excluir(tipo):
     obj_id = item['values'][0]
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
+        # messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
         return
 
     deducao_objs = (
@@ -968,7 +944,23 @@ def excluir(tipo):
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
-    atualizar_interface(configuracoes=configuracoes)
+    limpar_campos(tipo)
+    listar(tipo)
+
+def limpar_campos(tipo):
+    '''
+    Limpa os campos de entrada na aba correspondente ao tipo especificado.
+    Os tipos disponíveis são:
+    - dedução
+    - espessura
+    - material
+    - canal
+    '''
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
+    for entry in config['campos'].values():
+        entry.delete(0, tk.END)
 
 def preencher_campos(tipo):
     '''
@@ -977,14 +969,7 @@ def preencher_campos(tipo):
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    if not config['lista'].selection():
-        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
-        return
-
-    selected_item = config['lista'].selection()[0]
-    item = config['lista'].item(selected_item)
-    obj_id = item['values'][0]
-    obj = session.query(config['modelo']).filter_by(id=obj_id).first()
+    obj = item_selecionado(tipo)
 
     if obj:
         for campo, entry in config['campos'].items():
@@ -1022,17 +1007,19 @@ def novo_usuario():
     novo_usuario_nome = g.USUARIO_ENTRY.get()
     novo_usuario_senha = g.SENHA_ENTRY.get()
     senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
+
     if novo_usuario_nome == "" or novo_usuario_senha == "":
         messagebox.showerror("Erro", "Preencha todos os campos.", parent=g.AUTEN_FORM)
         return
 
+    # Verificar se o usuário já existe
     usuario_obj = session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
     if usuario_obj:
         messagebox.showerror("Erro", "Usuário já existente.", parent=g.AUTEN_FORM)
+        return
 
-    usuario = Usuario(nome=novo_usuario_nome,
-                        senha=senha_hash,
-                        role=g.ADMIN_VAR)
+    # Criar o novo usuário
+    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.ADMIN_VAR)
     session.add(usuario)
     try:
         session.commit()
@@ -1385,13 +1372,13 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
         print(f"Erro inesperado: {e}")
         raise
 
-def atualizar_interface(configuracoes=None, tipo=None):
-    '''
-    Atualiza as listas e comboboxes na interface.
-    '''
-    if tipo:
-        listar(tipo)
-    elif configuracoes:
-        for tipo_item in configuracoes:  # Renomeado para 'tipo_item'
-            listar(tipo_item)
-            buscar(tipo_item)
+# def atualizar_interface(configuracoes=None, tipo=None):
+#     '''
+#     Atualiza as listas e comboboxes na interface.
+#     '''
+#     if tipo:
+#         listar(tipo)
+#     elif configuracoes:
+#         for tipo_item in configuracoes:
+#             listar(tipo_item)
+#             buscar(tipo_item)

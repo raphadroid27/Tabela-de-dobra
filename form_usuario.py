@@ -23,9 +23,9 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def main():
+def main(root):
     '''
-    Função principal para criar a janela de edição/exclusão de usuários.
+    Função principal para gerenciar usuários.
     '''
     # Verificar se o usuário é administrador
     if not tem_permissao('admin'):
@@ -34,7 +34,7 @@ def main():
     if g.USUAR_FORM is not None:
         g.USUAR_FORM.destroy()
 
-    g.USUAR_FORM = tk.Toplevel()
+    g.USUAR_FORM = tk.Toplevel(root)
     g.USUAR_FORM.title("Editar/Excluir Usuário")
     g.USUAR_FORM.geometry("300x280")
     g.USUAR_FORM.resizable(False, False)
@@ -97,4 +97,6 @@ def main():
     g.USUAR_FORM.mainloop()
 
 if __name__ == "__main__":
-    main()
+    root = tk.Tk()
+    root.withdraw()
+    main(root)

@@ -101,34 +101,34 @@ def main():
     # Adicionando menus
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao, 'editar_deducao', g.PRINC_FORM))
-    file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material, 'editar_material', g.PRINC_FORM))
-    file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura, 'editar_espessura', g.PRINC_FORM))
-    file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal, 'editar_canal', g.PRINC_FORM))
+    file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao, 'EDIT_DED', g.PRINC_FORM))
+    file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material, 'EDIT_MAT', g.PRINC_FORM))
+    file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
+    file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=on_closing)
 
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao, 'editar_deducao', g.PRINC_FORM))
-    edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material, 'editar_material', g.PRINC_FORM))
-    edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura, 'editar_espessura', g.PRINC_FORM))
-    edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal, 'editar_canal', g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao, 'EDIT_DED', g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material, 'EDIT_MAT', g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
 
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
     g.NO_TOPO_VAR = tk.IntVar()
     opcoes_menu.add_checkbutton(label="No topo", 
                                 variable=g.NO_TOPO_VAR, 
-                                ommand=lambda: no_topo(g.PRINC_FORM))
+                                command=lambda: no_topo(g.PRINC_FORM))
 
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
     usuario_menu.add_command(label="Login", 
-                             command=lambda: form_true(form_aut,"login",g.AUTEN_FORM))
+                             command=lambda: form_true(form_aut,"LOGIN",g.AUTEN_FORM))
     
     usuario_menu.add_command(label="Novo Usuário", 
-                             command=lambda: form_false(form_aut,"login",g.AUTEN_FORM))
+                             command=lambda: form_false(form_aut,"LOGIN",g.AUTEN_FORM))
     
     usuario_menu.add_command(label="Gerenciar Usuários", 
                              command=lambda: form_usuario.main(g.PRINC_FORM))
@@ -156,9 +156,7 @@ def main():
                        2 para cabeçalho com avisos.
         """
         # Remove widgets existentes
-        for widget in frame_superior.winfo_children():
-            widget.destroy()
-
+    
         # Adiciona o cabeçalho principal
         cabecalho(frame_superior).grid(row=0, column=0, sticky='we', padx=2, pady=2)
 
@@ -215,7 +213,7 @@ def main():
             g.PRINC_FORM.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
             g.VALORES_W = [1,2]
             carregar_cabecalho(2)
-            carregar_form_dobra() 
+            carregar_form_dobra()
         else:
             g.PRINC_FORM.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
             g.VALORES_W = [1]

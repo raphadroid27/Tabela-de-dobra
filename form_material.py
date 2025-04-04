@@ -48,13 +48,13 @@ def main(root):
     tk.Button(frame_busca, text="Limpar", command = lambda: limpar_busca('material')).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id", "Nome", "Densidade", "Escoamento", "Elasticidade")
-    g.LSIT_MAT = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_MAT = ttk.Treeview(main_frame, columns=columns, show="headings")
     for col in columns:
-        g.LSIT_MAT["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
-        g.LSIT_MAT.heading(col, text=col)
-        g.LSIT_MAT.column(col, anchor="center", width=20)    
+        g.LIST_MAT["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
+        g.LIST_MAT.heading(col, text=col)
+        g.LIST_MAT.column(col, anchor="center", width=20)    
     
-    g.LSIT_MAT.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    g.LIST_MAT.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
 
     listar('material')
 
@@ -88,7 +88,7 @@ def main(root):
 
     if g.EDIT_MAT == True:
         g.MATER_FORM.title("Editar/Excluir Material")
-        g.LSIT_MAT.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
+        g.LIST_MAT.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
         frame_edicoes.config(text='Editar Material')
         
         tk.Button(main_frame, text="Excluir", command = lambda: excluir('material'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")

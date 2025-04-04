@@ -70,9 +70,9 @@ def cabecalho(root):
 
     # Dedução
     tk.Label(main_frame, text="Dedução:").grid(row=2, column=2, sticky='sw')
-    g.DED_COMB = tk.Label(main_frame, relief="sunken", width=10)
-    g.DED_COMB.grid(row=3, column=2, padx=2, sticky='we')
-    g.DED_COMB.bind("<Button-1>", func=lambda event: copiar('dedução'))
+    g.DED_LBL = tk.Label(main_frame, relief="sunken", width=10)
+    g.DED_LBL.grid(row=3, column=2, padx=2, sticky='we')
+    g.DED_LBL.bind("<Button-1>", func=lambda event: copiar('dedução'))
 
     # Offset
     tk.Label(main_frame, text="Offset:").grid(row=2, column=3, sticky='sw')
