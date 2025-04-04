@@ -18,21 +18,6 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 session = sessionmaker(bind=engine)
 session = session()
 
-# App
-def carregar_variaveis_globais():
-    '''
-    Carrega as variáveis globais necessárias para o funcionamento do aplicativo.
-    '''
-    g.ESP_VALOR = float(g.ESP_COMB.get()) if g.ESP_COMB.get() else None
-    g.CANAL_VALOR = (float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
-                      if g.CANAL_COMB.get() else None)
-    g.R_INT = (float(re.findall(r'\d+\.?\d*', g.RI_ENTRY.get().replace(',', '.'))[0])
-               if g.RI_ENTRY.get() else None)
-    g.DED_ESPEC = (float(re.findall(r'\d+\.?\d*',g.DED_ESPEC_ENTRY.get().replace(',', '.'))[0])
-                   if g.DED_ESPEC_ENTRY.get() else None)
-
-    print(f'{g.CANAL_VALOR} {g.ESP_VALOR} {g.DED_VALOR}')
-
 def atualizar_combobox(tipo):
     """
     Atualiza os valores dos comboboxes ou labels com base no tipo especificado.
@@ -154,15 +139,22 @@ def calcular_fatork():
     Atualiza o label correspondente com o valor calculado.
     '''
     if g.DED_ESPEC:
-        g.DED_VALOR = g.DED_ESPEC
+        deducao = g.DED_ESPEC
+    else:
+        deducao = g.DED_VALOR
 
     if not g.R_INT or not g.ESP_VALOR or not g.DED_VALOR or g.DED_VALOR == 'N/A':
         return
 
-    g.FATOR_K = (4 * (g.ESP_VALOR - (g.DED_VALOR / 2) + g.R_INT) -
-                 (pi * g.R_INT)) / (pi * g.ESP_VALOR)
+    espessura = float(g.ESP_COMB.get())
+    raio_interno = float(g.RI_ENTRY.get())
+
+    g.FATOR_K = (4 * (espessura - (deducao / 2) + raio_interno) -
+                 (pi * raio_interno)) / (pi * espessura)
 
     g.FATOR_K = min(g.FATOR_K, 0.5)
+
+    print(f"Fator K calculado: {g.FATOR_K:.2f}")
 
     g.K_LBL.config(text=f"{g.FATOR_K:.2f}", fg="blue"
                    if g.DED_VALOR == g.DED_ESPEC else "black")
@@ -436,13 +428,12 @@ def todas_funcoes(w):
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
-    carregar_variaveis_globais()
     atualizar_combobox('espessura')
     atualizar_combobox('canal')
     atualizar_combobox('dedução')
     atualizar_toneladas_m()
     calcular_fatork()
-    calcular_offset()
+    #calcular_offset()
     aba_minima_externa()
     z_minimo_externo()
     calcular_dobra(w)
