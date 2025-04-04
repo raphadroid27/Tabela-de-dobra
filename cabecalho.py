@@ -106,6 +106,6 @@ def cabecalho(root):
     g.OBS_LBL = tk.Label(main_frame, text="Observações:", relief="sunken", anchor='w')
     g.OBS_LBL.grid(row=6, column=0, columnspan=4, sticky='wen', padx=2, pady=5)
 
-    atualizar_material()
+    atualizar_combobox('material')
 
     return frame_cabecalho
