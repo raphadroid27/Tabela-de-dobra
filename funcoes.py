@@ -33,50 +33,74 @@ def carregar_variaveis_globais():
 
     print(f'{g.CANAL_VALOR} {g.ESP_VALOR} {g.DED_VALOR}')
 
-def atualizar_material():
-    '''
-    Atualiza o combobox de materiais com os valores do banco de dados.
-    '''
-    if g.MAT_COMB and g.MAT_COMB.winfo_exists():  # Verifica se o combobox existe
-        g.MAT_COMB.configure(values=[m.nome for m in session.query(Material)
-                                     .order_by(Material.id).all()])
+def atualizar_combobox(tipo):
+    """
+    Atualiza os valores dos comboboxes ou labels com base no tipo especificado.
 
-def atualizar_espessura():
-    '''
-    Atualiza o combobox de espessuras com os valores do banco de dados.
-    '''
-    material_nome = g.MAT_COMB.get()
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
-    if material_obj:
-        espessuras_valores = [str(e.valor) for e in session.query(Espessura)
-                              .join(Deducao)
-                              .filter(Deducao.material_id == material_obj.id)
-                              .order_by(Espessura.valor).all()]
-        g.ESP_COMB.configure(values=espessuras_valores)  # Use configure para atualizar os valores
+    Args:
+        tipo (str): O tipo de atualização a ser realizada. Pode ser:
+            - 'material': Atualiza o combobox de materiais.
+            - 'espessura': Atualiza o combobox de espessuras.
+            - 'canal': Atualiza o combobox de canais.
+            - 'dedução': Atualiza dedução e observações.
+    """
+    if tipo == 'material':
+        if g.MAT_COMB and g.MAT_COMB.winfo_exists():
+            materiais = [m.nome for m in session.query(Material).order_by(Material.id)]
+            g.MAT_COMB.configure(values=materiais)
 
-def atualizar_canal():
-    '''
-    Atualiza o combobox de canais com os valores do banco de dados.
-    '''
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
-    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
+    elif tipo == 'espessura':
+        material_nome = g.MAT_COMB.get()
+        material_obj = session.query(Material).filter_by(nome=material_nome).first()
+        if material_obj:
+            espessuras = session.query(Espessura).join(Deducao).filter(
+                Deducao.material_id == material_obj.id
+            ).order_by(Espessura.valor)
+            g.ESP_COMB.configure(values=[str(e.valor) for e in espessuras])
 
-    # Inicializar canais_valores como uma lista vazia
-    canais_valores = []
+    elif tipo == 'canal':
+        espessura_valor = g.ESP_COMB.get()
+        material_nome = g.MAT_COMB.get()
+        espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
+        material_obj = session.query(Material).filter_by(nome=material_nome).first()
 
-    if espessura_obj:
-        canais_valores = sorted(
-            [str(c.valor) for c in session.query(Canal).join(Deducao)
-             .filter(Deducao.espessura_id == espessura_obj.id)
-             .filter(Deducao.material_id == material_obj.id)
-             .order_by(Canal.valor).all()],
-            key=lambda x: (float(re.findall(r'\d+\.?\d*', x)[0])
-            if re.search(r'\d+\.?\d*', x) else float('inf'))
-        )
+        if espessura_obj and material_obj:
+            canais = session.query(Canal).join(Deducao).filter(
+                Deducao.espessura_id == espessura_obj.id,
+                Deducao.material_id == material_obj.id
+            ).order_by(Canal.valor)
+            canais_valores = sorted(
+                [str(c.valor) for c in canais],
+                key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
+            )
+            g.CANAL_COMB.configure(values=canais_valores)
 
-    g.CANAL_COMB.configure(values=canais_valores)
+    elif tipo == 'dedução':
+        espessura_valor = g.ESP_COMB.get()
+        material_nome = g.MAT_COMB.get()
+        canal_valor = g.CANAL_COMB.get()
+
+        espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
+        material_obj = session.query(Material).filter_by(nome=material_nome).first()
+        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+
+        if espessura_obj and material_obj and canal_obj:
+            deducao_obj = session.query(Deducao).filter(
+                Deducao.espessura_id == espessura_obj.id,
+                Deducao.material_id == material_obj.id,
+                Deducao.canal_id == canal_obj.id
+            ).first()
+
+            if deducao_obj:
+                g.DED_LBL.config(text=deducao_obj.valor, fg="black")
+                observacao = deducao_obj.observacao or 'Observações não encontradas'
+                g.OBS_LBL.config(text=f'Observações: {observacao}')
+            else:
+                g.DED_LBL.config(text='N/A', fg="red")
+                g.OBS_LBL.config(text='Observações não encontradas')
+
+            g.DED_VALOR = deducao_obj.valor if deducao_obj else None
+            g.LARG_CANAL = canal_obj.largura if deducao_obj else None
 
 def canal_tooltip():
     '''
@@ -97,36 +121,6 @@ def canal_tooltip():
                        f'Obs: {canal_obs}\n'
                        f'Comprimento total: {canal_comprimento_total}',
                        delay=0)
-
-def atualizar_deducao_e_obs():
-    '''
-    Atualiza o combobox de deduções com os valores do banco de dados e exibe as observações.
-    '''
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
-    canal_valor = g.CANAL_COMB.get()
-
-    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
-    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-
-    if espessura_obj and material_obj and canal_obj:
-        deducao_obj = session.query(Deducao).filter(
-            Deducao.espessura_id == espessura_obj.id,
-            Deducao.material_id == material_obj.id,
-            Deducao.canal_id == canal_obj.id
-        ).first()
-
-        if deducao_obj:
-            g.DED_LBL.config(text=deducao_obj.valor, fg="black")
-            g.OBS_LBL.config(text=f'Observações: {deducao_obj.observacao}'
-                             if deducao_obj.observacao else 'Observações não encontradas')
-        else:
-            g.DED_LBL.config(text='N/A', fg="red")
-            g.OBS_LBL.config(text='Observações não encontradas')
-
-        g.DED_VALOR = deducao_obj.valor if deducao_obj else None
-        g.LARG_CANAL = canal_obj.largura if deducao_obj else None
 
 def atualizar_toneladas_m():
     '''
@@ -311,19 +305,19 @@ def copiar(tipo, numero=None, w=None):
     configuracoes = {
         'dedução': {
             'label': g.DED_LBL,
-            'funcao_calculo': lambda: (atualizar_deducao_e_obs(), 
+            'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
                                        calcular_fatork(),
                                        calcular_offset())
         },
         'fator_k': {
             'label': g.K_LBL,
-            'funcao_calculo': lambda: (atualizar_deducao_e_obs(), 
+            'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
                                        calcular_fatork(),
                                        calcular_offset())
         },
         'offset': {
             'label': g.OFFSET_LBL,
-            'funcao_calculo': lambda: (atualizar_deducao_e_obs(), 
+            'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
                                        calcular_fatork(),
                                        calcular_offset())
         },
@@ -443,9 +437,9 @@ def todas_funcoes(w):
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
     carregar_variaveis_globais()
-    atualizar_espessura()
-    atualizar_canal()
-    atualizar_deducao_e_obs()
+    atualizar_combobox('espessura')
+    atualizar_combobox('canal')
+    atualizar_combobox('dedução')
     atualizar_toneladas_m()
     calcular_fatork()
     calcular_offset()
@@ -847,10 +841,10 @@ def editar(tipo):
         entry.delete(0, tk.END)
 
     # Atualizar as listas e comboboxes
-    atualizar_material()
-    atualizar_espessura()
-    atualizar_canal()
-    atualizar_deducao_e_obs()
+    atualizar_combobox('material')
+    atualizar_combobox('espessura')
+    atualizar_combobox('canal')
+    atualizar_combobox('dedução')
     atualizar_combobox_deducao()
     for tipo_item in configuracoes:
         listar(tipo_item)
@@ -908,7 +902,7 @@ def excluir(tipo):
     obj_id = item['values'][0]
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
     if obj is None:
-        # messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
+        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
         return
 
     deducao_objs = (
@@ -978,8 +972,6 @@ def preencher_campos(tipo):
                 entry.insert(0, getattr(obj, campo))
             else:
                 entry.insert(0, '')
-    else:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
 
 def atualizar_combobox_deducao():
     '''
