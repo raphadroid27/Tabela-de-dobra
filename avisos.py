@@ -16,8 +16,9 @@ def avisos(root):
         ttk.Frame: O frame contendo os avisos.
     """
     avisos_textos = [
-        "1. Verifique se o material e a espessura estão corretos.",
-        "2. Verifique se o canal está correto."
+        "1. Xadrez → Laser sempre corta com a face xadrez para Baixo ↓.",
+        "2. Corrugado → Laser sempre corta com a face do corrugado para Cima ↑.",
+        "3. Ferramenta 'bigode': fazer alívio de dobra em abas maiores que 20mm."
     ]
 
     frame_avisos = ttk.Frame(root)
