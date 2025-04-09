@@ -2,7 +2,6 @@
 Funções auxiliares para o aplicativo de cálculo de dobras.
 '''
 import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox, simpledialog
 from math import pi
 import re
@@ -94,7 +93,7 @@ def atualizar_combobox(tipo):
             if deducao_obj:
                 g.DED_LBL.config(text=deducao_obj.valor, fg="black")
                 observacao = deducao_obj.observacao or 'Observações não encontradas'
-                g.OBS_LBL.config(text=f'{observacao}')
+                g.OBS_LBL.config(text=f'Observações: {observacao}')
             else:
                 g.DED_LBL.config(text='N/A', fg="red")
                 g.OBS_LBL.config(text='Observações não encontradas')
@@ -207,47 +206,12 @@ def aba_minima_externa():
     Calcula a aba mínima externa com base no valor do canal e na espessura.
     Atualiza o label correspondente com o valor calculado.
     '''
-    aba_minima_valor = 0  # Valor padrão caso a condição não seja satisfeita
+    if  g.CANAL_COMB.get() != "":
+        canal_valor = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
+        espessura = float(g.ESP_COMB.get())
 
-    try:
-        if g.CANAL_COMB.get() != "":
-            canal_valor = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
-            espessura = float(g.ESP_COMB.get())
-
-            aba_minima_valor = canal_valor / 2 + espessura + 2
-            g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
-    except (ValueError, AttributeError) as e:
-        print(f"Erro ao calcular aba mínima externa: {e}")
-        g.ABA_EXT_LBL.config(text="N/A", fg="red")
-
-    return aba_minima_valor
-
-def verificar_aba_minima(dobra, i, w):
-    '''
-    Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
-    '''
-    # Verificar se a dobra é menor que a aba mínima
-    aba_minima = aba_minima_externa()
-
-    # Obter o widget dinamicamente
-    entry_widget = getattr(g, f'aba{i}_entry_{w}')
-
-    # Verificar se o campo está vazio
-    if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
-        entry_widget.config(fg="black", bg="white")
-        print(f"Valor vazio na aba {i}, coluna {w}.")
-    else:
-        try:
-            # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
-            if float(dobra) < aba_minima:
-                entry_widget.config(fg="white", bg="red")
-                tp.ToolTip(entry_widget, "Aba mínima externa não atendida.")
-            else:
-                entry_widget.config(fg="black", bg="white")
-        except ValueError:
-            # Tratar erros de conversão
-            entry_widget.config(fg="black", bg="white")
-            print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
+        aba_minima_valor = canal_valor / 2 + espessura + 2
+        g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
 
 def z_minimo_externo():
     '''
@@ -277,16 +241,14 @@ def z_minimo_externo():
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo do Z mínimo externo.")
 
-def restaurar_valores_dobra(w):
+def restaurar_dobras(w):
     '''
-    Restaura os valores das dobras e os campos de cabeçalho
-    a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
+    Restaura os valores das dobras a partir de g.DOBRAS_VALORES.
     '''
-    # Verificar se g.DOBRAS_VALORES foi inicializada
+     # Verificar se g.DOBRAS_VALORES foi inicializada
     if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
         return
 
-    # Restaurar os valores das dobras
     for i in range(1, g.N):
         for col in range(1, w + 1):
             if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
@@ -297,47 +259,7 @@ def restaurar_valores_dobra(w):
                     entry.delete(0, tk.END)
                     entry.insert(0, valor)
 
-def salvar_valores_cabecalho():
-    """
-    Salva os valores atuais dos widgets no cabeçalho em g.CABECALHO_VALORES.
-    """
-    if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
-        g.CABECALHO_VALORES = {}
-
-    g.CABECALHO_VALORES = {
-        'MAT_COMB': g.MAT_COMB.get() if g.MAT_COMB else '',
-        'ESP_COMB': g.ESP_COMB.get() if g.ESP_COMB else '',
-        'CANAL_COMB': g.CANAL_COMB.get() if g.CANAL_COMB else '',
-        'COMPR_ENTRY': g.COMPR_ENTRY.get() if g.COMPR_ENTRY else '',
-        'RI_ENTRY': g.RI_ENTRY.get() if g.RI_ENTRY else '',
-        'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.get() if g.DED_ESPEC_ENTRY else '',
-    }
-    print("Valores salvos:", g.CABECALHO_VALORES)
-
-def restaurar_valores_cabecalho():
-    """
-    Restaura os valores dos widgets no cabeçalho
-    com base nos valores armazenados em g.CABECALHO_VALORES.
-    """
-    # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
-    if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
-        g.CABECALHO_VALORES = {}
-
-    # Restaura os valores nos widgets
-    for widget_name, valor in g.CABECALHO_VALORES.items():
-        widget = getattr(g, widget_name, None)
-        if widget and isinstance(widget, (tk.Entry, ttk.Combobox)):
-            try:
-                if isinstance(widget, tk.Entry):
-                    widget.delete(0, tk.END)
-                    widget.insert(0, valor)
-                elif isinstance(widget, ttk.Combobox):
-                    widget.set(valor)
-            except Exception as e:
-                print(f"Erro ao restaurar valor para {widget_name}: {e}")
-                raise
-
-    print("Valores restaurados:", g.CABECALHO_VALORES)
+    calcular_dobra(w)
 
 def calcular_dobra(w):
     '''
@@ -364,8 +286,7 @@ def calcular_dobra(w):
     if deducao_espec != "":
         deducao_valor = deducao_espec
 
-    if not deducao_valor:
-        return
+    print(f'Dedução: {deducao_valor}')
 
     # Função auxiliar para calcular medidas
     def calcular_medida(deducao_valor, i, w):
@@ -414,7 +335,6 @@ def calcular_dobra(w):
     for i in range(1, g.N):
         for col in range(1, w + 1):
             calcular_medida(deducao_valor, i, col)
-            verificar_aba_minima(g.DOBRAS_VALORES[i - 1][col - 1], i, col)
 
 def copiar(tipo, numero=None, w=None):
     '''
@@ -473,58 +393,46 @@ def copiar(tipo, numero=None, w=None):
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
-def limpar_dobras():
-    """
+def limpar_dobras(w):
+    '''
     Limpa os valores das dobras e atualiza os labels correspondentes.
-    """
-    def limpar_widgets(widgets, metodo, valor=""):
-        """
-        Limpa ou redefine widgets com base no método fornecido.
-
-        Args:
-            widgets (list): Lista de widgets a serem limpos.
-            metodo (str): Método a ser chamado no widget (ex.: 'delete', 'config').
-            valor (str): Valor a ser usado no método (se aplicável).
-        """
-        for widget in widgets:
-            if widget:
-                if metodo == "delete":
-                    getattr(widget, metodo)(0, tk.END)
-                else:
-                    widget.config(text=valor)
-
-    # Obter widgets dinamicamente
-    def obter_widgets(prefixo):
+    '''
+    def obter_atributos(prefixo):
         return [
-            getattr(g, f"{prefixo}{i}_label_{col}", None)
+            getattr(g, f'{prefixo}{i}_label_{col}', None)
             for i in range(1, g.N)
-            for col in g.VALORES_W
+            for col in range(1, w + 1)
         ]
 
-    # Limpar entradas e labels
-    dobras = [getattr(g, f"aba{i}_entry_{col}", None) for i in range(1, g.N) for col in g.VALORES_W]
-    medidas = obter_widgets("medidadobra")
-    metades = obter_widgets("metadedobra")
-    blanks = [getattr(g, f"medida_blank_label_{col}", None) for col in g.VALORES_W]
-    metades_blanks = [getattr(g, f"metade_blank_label_{col}", None) for col in g.VALORES_W]
+    dobras = [getattr(g, f'aba{i}_entry_{col}', None)
+              for i in range(1, g.N)
+              for col in range(1, w + 1)]
+    medidas = obter_atributos('medidadobra')
+    metades = obter_atributos('metadedobra')
 
-    # Limpar widgets
-    limpar_widgets(dobras, "delete")
-    limpar_widgets(medidas + metades + blanks + metades_blanks, "config", "")
-
-    # Limpar dedução específica
-    if g.DED_ESPEC_ENTRY:
-        g.DED_ESPEC_ENTRY.delete(0, tk.END)
-
-    # Resetar valores globais
     g.DOBRAS_VALORES = []
 
-    # Alterar a cor de fundo das entradas de dobras para branco
-    for i in range(1, g.N):
-        for col in g.VALORES_W:
-            entry = getattr(g, f'aba{i}_entry_{col}', None)
-            if entry:
-                entry.config(bg="white")
+    for dobra in dobras:
+        if dobra:
+            dobra.delete(0, tk.END)
+
+    for medida in medidas:
+        if medida:
+            medida.config(text="")
+
+    for metade in metades:
+        if metade:
+            metade.config(text="")
+
+    g.DED_ESPEC_ENTRY.delete(0, tk.END)
+
+    label = getattr(g, f'medida_blank_label_{w}', None)
+    if label:
+        label.config(text="")
+
+    label = getattr(g, f'metade_blank_label_{w}', None)
+    if label:
+        label.config(text="")
 
 def limpar_tudo():
     '''
@@ -548,7 +456,7 @@ def limpar_tudo():
         g.K_LBL: "",
         g.DED_LBL: "",
         g.OFFSET_LBL: "",
-        g.OBS_LBL: "",
+        g.OBS_LBL: "Observações:",
         g.FORCA_LBL: "",
         g.ABA_EXT_LBL: "",
         g.Z_EXT_LBL: ""
@@ -556,10 +464,11 @@ def limpar_tudo():
     for etiqueta, texto in etiquetas.items():
         etiqueta.config(text=texto)
 
-    limpar_dobras()
-    todas_funcoes()
+    for w in g.VALORES_W:
+        limpar_dobras(w)
+        todas_funcoes(w)
 
-def todas_funcoes():
+def todas_funcoes(w):
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
@@ -570,8 +479,7 @@ def todas_funcoes():
     calcular_k_offset()
     aba_minima_externa()
     z_minimo_externo()
-    for w in g.VALORES_W:
-        calcular_dobra(w)
+    calcular_dobra(w)
 
     # Atualizar tooltips
     canal_tooltip()
@@ -581,98 +489,8 @@ def obter_configuracoes():
     '''
     Retorna um dicionário com as configurações de cada tipo de item.
     '''
-    def valores_deducao(d):
-        '''
-        Retorna os valores de um objeto Deducao como uma tupla.
-        Os valores retornados são:
-        - ID da dedução
-        - Nome do material
-        - Valor da espessura
-        - Valor do canal
-        - Valor da dedução
-        - Observação da dedução
-        - Força da dedução
-        '''
-        return (
-            d.id,
-            d.material.nome,
-            d.espessura.valor,
-            d.canal.valor,
-            d.valor,
-            d.observacao,
-            d.forca,
-        )
-
-    def valores_material(m):
-        '''
-        Retorna os valores de um objeto Material como uma tupla.
-        Os valores retornados são:
-        - ID do material
-        - Nome do material
-        - Densidade do material
-        - Escoamento do material
-        - Elasticidade do material
-        '''
-        return (
-            m.id,
-            m.nome,
-            m.densidade,
-            m.escoamento,
-            m.elasticidade,
-        )
-
-    def valores_espessura(e):
-        '''
-        Retorna os valores de um objeto Espessura como uma tupla.
-        Os valores retornados são:
-        - ID da espessura
-        - Valor da espessura
-        '''
-        return (
-            e.id,
-            e.valor,
-        )
-
-    def valores_canal(c):
-        '''
-        Retorna os valores de um objeto Canal como uma tupla.
-        Os valores retornados são:
-        - ID do canal
-        - Valor do canal
-        - Largura do canal
-        - Altura do canal
-        - Comprimento total do canal
-        - Observação do canal
-        '''
-        return (
-            c.id,
-            c.valor,
-            c.largura,
-            c.altura,
-            c.comprimento_total,
-            c.observacao,
-        )
-
-    def valores_usuario(u):
-        '''
-        Retorna os valores de um objeto Usuario como uma tupla.
-        Os valores retornados são:
-        - ID do usuário
-        - Nome do usuário
-        - Papel do usuário (admin ou viewer)
-        '''
-        return (
-            u.id,
-            u.nome,
-            u.role,
-        )
-
     return {
-        'principal': {
-            'form': g.PRINC_FORM,
-        },
         'dedução': {
-            'form': g.DEDUC_FORM,
             'lista': g.LIST_DED,
             'modelo': Deducao,
             'campos': {
@@ -681,7 +499,7 @@ def obter_configuracoes():
                 'forca': g.DED_FORCA_ENTRY
             },
             'item_id': Deducao.id,
-            'valores': valores_deducao,
+            'valores': g.valores_deducao,
             'ordem': Deducao.valor,
             'entries': {
                 'material_combo': g.DED_MATER_COMB,
@@ -690,7 +508,6 @@ def obter_configuracoes():
             }
         },
         'material': {
-            'form': g.MATER_FORM,
             'lista': g.LIST_MAT,
             'modelo': Material,
             'campos': {
@@ -700,25 +517,23 @@ def obter_configuracoes():
                 'elasticidade': g.MAT_ELAS_ENTRY
             },
             'item_id': Material.id,  # Corrigido de Deducao.material_id
-            'valores': valores_material,
+            'valores': g.valores_material,
             'ordem': Material.id,
             'entry': g.MAT_NOME_ENTRY,
             'busca': g.MAT_BUSCA_ENTRY,
             'campo_busca': Material.nome
         },
         'espessura': {
-            'form': g.ESPES_FORM,
             'lista': g.LIST_ESP,
             'modelo': Espessura,
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
-            'valores': valores_espessura,
+            'valores': g.valores_espessura,
             'ordem': Espessura.valor,
             'entry': g.ESP_VALOR_ENTRY,
             'busca': g.ESP_BUSCA_ENTRY,
             'campo_busca': Espessura.valor  # Corrigido de espessura.valor
         },
         'canal': {
-            'form': g.CANAL_FORM,
             'lista': g.LIST_CANAL,
             'modelo': Canal,  # Corrigido de canal
             'campos': {
@@ -729,19 +544,18 @@ def obter_configuracoes():
                 'observacao': g.CANAL_OBSER_ENTRY
             },
             'item_id': Canal.id,  # Corrigido de deducao.canal_id
-            'valores': valores_canal,  # Assuming valores_canal is defined in this file
+            'valores': g.valores_canal,
             'ordem': Canal.valor,  # Corrigido de canal.valor
             'entry': g.CANAL_VALOR_ENTRY,
             'busca': g.CANAL_BUSCA_ENTRY,
             'campo_busca': Canal.valor  # Corrigido de canal.valor
         },
         'usuario': {
-            'form': g.USUAR_FORM,
             'lista': g.LIST_USUARIO,
             'modelo': Usuario,  # Corrigido de usuario
-            'valores': valores_usuario,
+            'valores': g.valores_usuario,
             'ordem': Usuario.nome,  # Corrigido de usuario.nome
-            'busca': g.USUARIO_BUSCA_ENTRY,
+            'entry': g.USUARIO_BUSCA_ENTRY,
             'campo_busca': Usuario.nome  # Corrigido de usuario.nome
         }
     }
@@ -862,8 +676,7 @@ def adicionar_deducao():
 
     if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
         messagebox.showerror("Erro",
-                             "Material, espessura, canal e valor da dedução são obrigatórios.",
-                             parent=g.DEDUC_FORM)
+                             "Material, espessura, canal e valor da dedução são obrigatórios.")
         return
 
     nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
@@ -902,15 +715,13 @@ def adicionar_espessura():
     espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         messagebox.showwarning("Atenção!",
-                               "A espessura deve conter apenas números ou números decimais.",
-                               parent=g.ESPES_FORM)
+                               "A espessura deve conter apenas números ou números decimais.")
         g.ESP_VALOR_ENTRY.delete(0, tk.END)
         return
 
     espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
     if espessura_existente:
-        messagebox.showerror("Erro", "Espessura já existe no banco de dados.",
-                             parent=g.ESPES_FORM)
+        messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
         return
 
     nova_espessura = Espessura(valor=espessura_valor)
@@ -926,12 +737,12 @@ def adicionar_material():
     elasticidade_material = g.MAT_ELAS_ENTRY.get()
 
     if not nome_material:
-        messagebox.showerror("Erro", "O campo Material é obrigatório.", parent=g.MATER_FORM)
+        messagebox.showerror("Erro", "O campo Material é obrigatório.")
         return
 
     material_existente = session.query(Material).filter_by(nome=nome_material).first()
     if material_existente:
-        messagebox.showerror("Erro", "Material já existe no banco de dados.", parent=g.MATER_FORM)
+        messagebox.showerror("Erro", "Material já existe no banco de dados.")
         return
 
     novo_material = Material(
@@ -988,12 +799,7 @@ def salvar_no_banco(obj, tipo, detalhes):
     session.add(obj)
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
-
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
-    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",
-                        parent=config['form'])
+    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!") #add parent
 
 def editar(tipo):
     '''
@@ -1004,7 +810,7 @@ def editar(tipo):
     - material
     - canal
     '''
-    if not tem_permissao(tipo, 'editor'):  # Permitir que editores realizem esta ação
+    if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
         return
 
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
@@ -1084,7 +890,7 @@ def excluir(tipo):
     - material
     - canal
     '''
-    if not tem_permissao(tipo,'editor'):  # Permitir que editores realizem esta ação
+    if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
         return
 
     configuracoes = obter_configuracoes()
@@ -1095,8 +901,7 @@ def excluir(tipo):
 
     aviso = messagebox.askyesno("Atenção!",
                                 f"Ao excluir um(a) {tipo} todas as deduções relacionadas "
-                                f"serão excluídas também, 'deseja continuar?",
-                                parent=config['form'])
+                                f"serão excluídas também, 'deseja continuar?")
     if not aviso:
         return
 
@@ -1105,9 +910,7 @@ def excluir(tipo):
     obj_id = item['values'][0]
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro",
-                             f"{tipo.capitalize()} não encontrado(a).",
-                             parent=config['form'])
+        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
         return
 
     deducao_objs = (
@@ -1129,9 +932,7 @@ def excluir(tipo):
                   obj_id,
                   f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
     config['lista'].delete(selected_item)
-    messagebox.showinfo("Sucesso",
-                         f"{tipo.capitalize()} excluído(a) com sucesso!",
-                         parent=config['form'])
+    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
 
     limpar_campos(tipo)
     listar(tipo)
@@ -1208,11 +1009,20 @@ def novo_usuario():
     # Criar o novo usuário
     usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.ADMIN_VAR)
     session.add(usuario)
-
-    # Usar tratativa_erro para tratar erros e confirmar a operação
-    tratativa_erro()  # Chamar a função para tratar erros antes de continuar
-    messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
-    g.AUTEN_FORM.destroy()
+    try:
+        session.commit()
+        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
+        g.AUTEN_FORM.destroy()
+    except IntegrityError as e:
+        session.rollback()
+        print(f"Erro de integridade no banco de dados: {e}")
+    except OperationalError as e:
+        session.rollback()
+        print(f"Erro operacional no banco de dados: {e}")
+    except Exception as e:
+        session.rollback()
+        print(f"Erro inesperado: {e}")
+        raise  # Relança a exceção para depuração
 
     habilitar_janelas()
 
@@ -1234,7 +1044,19 @@ def login():
                                                 parent=g.AUTEN_FORM)
             if nova_senha:
                 usuario_obj.senha = hashlib.sha256(nova_senha.encode()).hexdigest()
-                tratativa_erro()
+                try:
+                    session.commit()
+                    print("Operação realizada com sucesso!")
+                except IntegrityError as e:
+                    session.rollback()
+                    print(f"Erro de integridade no banco de dados: {e}")
+                except OperationalError as e:
+                    session.rollback()
+                    print(f"Erro operacional no banco de dados: {e}")
+                except Exception as e:
+                    session.rollback()
+                    print(f"Erro inesperado: {e}")
+                    raise
                 messagebox.showinfo("Sucesso",
                                     "Senha alterada com sucesso. Faça login novamente.",
                                     parent=g.AUTEN_FORM)
@@ -1255,25 +1077,25 @@ def logado(tipo):
     '''
     Verifica se o usuário está logado antes de permitir ações em formulários específicos.
     '''
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
+    configuracoes = {
+        'dedução': g.DEDUC_FORM,
+        'espessura': g.ESPES_FORM,
+        'material': g.MATER_FORM,
+        'canal': g.CANAL_FORM
+    }
 
     if g.USUARIO_ID is None:
-        messagebox.showerror("Erro", "Login requerido.", parent=config['form'])
+        messagebox.showerror("Erro", "Login requerido.", parent=configuracoes[tipo])
         return False
     return True
 
-def tem_permissao(tipo, role_requerida):
+def tem_permissao(role_requerida):
     '''
     Verifica se o usuário tem permissão para realizar uma ação específica.
     '''
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
     usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
     if not usuario_obj:
-        messagebox.showerror("Erro", "Você não tem permissão para acessar esta função.",
-                             parent=config['form'])
+        messagebox.showerror("Erro", "Você não tem permissão para acessar esta função.")
         return False
     # Permitir hierarquia de permissões
     roles_hierarquia = ["viewer", "editor", "admin"]
@@ -1318,7 +1140,7 @@ def excluir_usuario():
     '''
     Exclui o usuário selecionado na lista de usuários.
     '''
-    if not tem_permissao('usuario', 'admin'):
+    if not tem_permissao("admin"):
         return
 
     if g.LIST_USUARIO is None:
@@ -1399,17 +1221,6 @@ def no_topo(form):
 
     on_top_valor = g.NO_TOPO_VAR.get() == 1
     set_topmost(form, on_top_valor)
-
-def transparente(form):
-    '''
-    Define se a janela deve ser transparente ou não.
-    '''
-    def set_transparent(window, transparent):
-        if window and window.winfo_exists():
-            window.attributes("-alpha", 0.5 if transparent else 1.0)
-
-    transparent_valor = g.TRANSP_VAR.get() == 1
-    set_transparent(form, transparent_valor)
 
 def posicionar_janela(form, posicao=None):
     '''
