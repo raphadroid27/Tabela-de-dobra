@@ -20,21 +20,23 @@ session = session()
 
 def atualizar_combobox(tipo):
     """
-    Atualiza os valores dos comboboxes ou labels com base no tipo especificado.
+    Atualiza os valores de comboboxes com base no tipo especificado.
 
     Args:
-        tipo (str): O tipo de atualização a ser realizada. Pode ser:
-            - 'material': Atualiza o combobox de materiais.
-            - 'espessura': Atualiza o combobox de espessuras.
-            - 'canal': Atualiza o combobox de canais.
-            - 'dedução': Atualiza dedução e observações.
+        tipo (str): O tipo de combobox a ser atualizado.
     """
-    if tipo == 'material':
+    def atualizar_material():
         if g.MAT_COMB and g.MAT_COMB.winfo_exists():
             materiais = [m.nome for m in session.query(Material).order_by(Material.id)]
             g.MAT_COMB.configure(values=materiais)
 
-    elif tipo == 'espessura':
+        # Verifica se o combobox de dedução de material existe e atualiza seus valores
+        if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
+            g.DED_MATER_COMB.configure(values=[m.nome for m in session
+                                               .query(Material)
+                                               .order_by(Material.id).all()])
+
+    def atualizar_espessura():
         material_nome = g.MAT_COMB.get()
         material_obj = session.query(Material).filter_by(nome=material_nome).first()
         if material_obj:
@@ -43,7 +45,12 @@ def atualizar_combobox(tipo):
             ).order_by(Espessura.valor)
             g.ESP_COMB.configure(values=[str(e.valor) for e in espessuras])
 
-    elif tipo == 'canal':
+        # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
+        if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
+            g.DED_ESPES_COMB.configure(values=sorted([e.valor for e in session
+                                                      .query(Espessura).all()]))
+
+    def atualizar_canal():
         espessura_valor = g.ESP_COMB.get()
         material_nome = g.MAT_COMB.get()
         espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
@@ -60,7 +67,14 @@ def atualizar_combobox(tipo):
             )
             g.CANAL_COMB.configure(values=canais_valores)
 
-    elif tipo == 'dedução':
+        # Verifica se o combobox de dedução de canal existe e atualiza seus valores
+        if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
+            g.DED_CANAL_COMB.configure(values=sorted(
+                [c.valor for c in session.query(Canal).all()],
+                key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
+            ))
+
+    def atualizar_deducao():
         espessura_valor = g.ESP_COMB.get()
         material_nome = g.MAT_COMB.get()
         canal_valor = g.CANAL_COMB.get()
@@ -85,7 +99,20 @@ def atualizar_combobox(tipo):
                 g.OBS_LBL.config(text='Observações não encontradas')
 
             g.DED_VALOR = deducao_obj.valor if deducao_obj else None
-            g.LARG_CANAL = canal_obj.largura if deducao_obj else None
+
+
+    # Mapeamento de tipos para funções
+    acoes = {
+        'material': atualizar_material,
+        'espessura': atualizar_espessura,
+        'canal': atualizar_canal,
+        'dedução': atualizar_deducao
+
+    }
+
+    # Executa a ação correspondente ao tipo
+    if tipo in acoes:
+        acoes[tipo]()
 
 def canal_tooltip():
     '''
@@ -133,50 +160,57 @@ def atualizar_toneladas_m():
         elif comprimento >= comprimento_total:
             g.COMPR_ENTRY.config(fg="red")
 
-def calcular_fatork():
+def calcular_k_offset():
     '''
     Calcula o fator K com base nos valores de espessura, dedução e raio interno.
     Atualiza o label correspondente com o valor calculado.
     '''
-    if g.DED_ESPEC:
-        deducao = g.DED_ESPEC
-    else:
-        deducao = g.DED_VALOR
+    try:
+        # Obtém os valores diretamente e verifica se são válidos
+        espessura = float(g.ESP_COMB.get() or 0)
+        raio_interno = float(g.RI_ENTRY.get() or 0)
+        deducao_espec = float(g.DED_ESPEC_ENTRY.get() or 0)
+        deducao_valor = float(g.DED_LBL.cget('text') or 0)
 
-    if not g.R_INT or not g.ESP_VALOR or not g.DED_VALOR or g.DED_VALOR == 'N/A':
-        return
+        # Usa a dedução específica, se fornecida
+        if g.DED_ESPEC_ENTRY.get():
+            deducao_valor = deducao_espec
 
-    espessura = float(g.ESP_COMB.get())
-    raio_interno = float(g.RI_ENTRY.get())
+        # Valida se os valores necessários são maiores que zero
+        if not raio_interno or not espessura or not deducao_valor:
+            return
 
-    g.FATOR_K = (4 * (espessura - (deducao / 2) + raio_interno) -
-                 (pi * raio_interno)) / (pi * espessura)
+        # Calcula o fator K
+        fator_k = (4 * (espessura - (deducao_valor / 2) + raio_interno) -
+                     (pi * raio_interno)) / (pi * espessura)
 
-    g.FATOR_K = min(g.FATOR_K, 0.5)
+        # Limita o fator K a 0.5
+        fator_k = min(fator_k, 0.5)
 
-    print(f"Fator K calculado: {g.FATOR_K:.2f}")
+        #Calcula o offset
+        offset = fator_k * espessura
 
-    g.K_LBL.config(text=f"{g.FATOR_K:.2f}", fg="blue"
-                   if g.DED_VALOR == g.DED_ESPEC else "black")
+        # Atualiza o label com o valor calculado
+        g.K_LBL.config(text=f"{fator_k:.2f}", fg="blue"
+                       if deducao_valor == deducao_espec else "black")
 
-def calcular_offset():
-    '''
-    Calcula o offset com base no fator K e na espessura.
-    '''
-    if not g.FATOR_K or not g.ESP_VALOR:
-        print('Fator K não informado')
-        return
+        g.OFFSET_LBL.config(text=f"{offset:.2f}", fg="blue"
+                            if deducao_valor == deducao_espec else "black")
 
-    offset = g.FATOR_K * g.ESP_VALOR
-    g.OFFSET_LBL.config(text=f"{offset:.2f}", fg="blue" if g.DED_VALOR == g.DED_ESPEC else "black")
+    except ValueError:
+        # Trata erros de conversão
+        print("Erro: Valores inválidos fornecidos para o cálculo do fator K.")
 
 def aba_minima_externa():
     '''
     Calcula a aba mínima externa com base no valor do canal e na espessura.
     Atualiza o label correspondente com o valor calculado.
     '''
-    if g.CANAL_VALOR:
-        aba_minima_valor = g.CANAL_VALOR / 2 + g.ESP_VALOR + 2
+    if  g.CANAL_COMB.get() != "":
+        canal_valor = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
+        espessura = float(g.ESP_COMB.get())
+
+        aba_minima_valor = canal_valor / 2 + espessura + 2
         g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
 
 def z_minimo_externo():
@@ -184,13 +218,28 @@ def z_minimo_externo():
     Calcula o valor mínimo externo com base na espessura, dedução e largura do canal.
     Atualiza o label correspondente com o valor calculado.
     '''
-    if g.MAT_COMB.get() != "" and g.ESP_COMB.get() != "" and g.CANAL_COMB.get() != "":
-        if not g.LARG_CANAL:
-            g.Z_EXT_LBL.config(text="N/A", fg="red")
-            return
-        if g.CANAL_VALOR and g.DED_VALOR:
-            valor_z_min_ext = g.ESP_VALOR + (g.DED_VALOR / 2) + (g.LARG_CANAL / 2) + 2
-            g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', fg="black")
+    try:
+        # Obtém os valores diretamente e verifica se são válidos
+        material = g.MAT_COMB.get()
+        espessura = float(g.ESP_COMB.get())
+        canal_valor = g.CANAL_COMB.get()
+        deducao_valor = float(g.DED_LBL.cget('text'))
+
+        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+
+        if material != "" and espessura != "" and canal_valor != "":
+            if not canal_obj.largura:
+                g.Z_EXT_LBL.config(text="N/A", fg="red")
+                return
+
+            if canal_valor and deducao_valor:
+                canal_valor = float(re.findall(r'\d+\.?\d*', canal_valor)[0])
+                valor_z_min_ext = espessura + (deducao_valor / 2) + (canal_obj.largura / 2) + 2
+                g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', fg="black")
+
+    except ValueError:
+        # Trata erros de conversão
+        print("Erro: Valores inválidos fornecidos para o cálculo do Z mínimo externo.")
 
 def restaurar_dobras(w):
     '''
@@ -225,21 +274,19 @@ def calcular_dobra(w):
         for i in range(1, g.N)
     ]
 
+    deducao_valor = g.DED_LBL.cget('text')
+    deducao_espec = g.DED_ESPEC_ENTRY.get()
+
     # Exibir a matriz de valores para depuração
     print("Matriz de dobras (g.dobras_get):")
     for linha in g.DOBRAS_VALORES:
         print(linha)
 
     # Determinar o valor da dedução
-    if g.DED_LBL.cget('text') == "" or g.DED_LBL.cget('text') == 'N/A':
-        if g.DED_ESPEC_ENTRY.get() == "":
-            return
+    if deducao_espec != "":
+        deducao_valor = deducao_espec
 
-        deducao_valor = g.DED_ESPEC
-    else:
-        deducao_valor = g.DED_VALOR
-        if g.DED_ESPEC_ENTRY.get() != "":
-            deducao_valor = g.DED_ESPEC
+    print(f'Dedução: {deducao_valor}')
 
     # Função auxiliar para calcular medidas
     def calcular_medida(deducao_valor, i, w):
@@ -250,12 +297,12 @@ def calcular_dobra(w):
             getattr(g, f'metadedobra{i}_label_{w}').config(text="")
         else:
             if i in (1, g.N - 1):
-                medidadobra = float(dobra) - deducao_valor / 2
+                medidadobra = float(dobra) - float(deducao_valor) / 2
             else:
                 if g.DOBRAS_VALORES[i][w - 1] == "":
-                    medidadobra = float(dobra) - deducao_valor / 2
+                    medidadobra = float(dobra) - float(deducao_valor) / 2
                 else:
-                    medidadobra = float(dobra) - deducao_valor
+                    medidadobra = float(dobra) - float(deducao_valor)
 
             metade_dobra = medidadobra / 2
 
@@ -298,20 +345,17 @@ def copiar(tipo, numero=None, w=None):
         'dedução': {
             'label': g.DED_LBL,
             'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
-                                       calcular_fatork(),
-                                       calcular_offset())
+                                       calcular_k_offset())
         },
         'fator_k': {
             'label': g.K_LBL,
             'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
-                                       calcular_fatork(),
-                                       calcular_offset())
+                                       calcular_k_offset())
         },
         'offset': {
             'label': g.OFFSET_LBL,
             'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
-                                       calcular_fatork(),
-                                       calcular_offset())
+                                       calcular_k_offset())
         },
         'medida_dobra': {
             'label': lambda numero: getattr(g, f'medidadobra{numero}_label_{w}', None),
@@ -432,8 +476,7 @@ def todas_funcoes(w):
     atualizar_combobox('canal')
     atualizar_combobox('dedução')
     atualizar_toneladas_m()
-    calcular_fatork()
-    #calcular_offset()
+    calcular_k_offset()
     aba_minima_externa()
     z_minimo_externo()
     calcular_dobra(w)
@@ -619,6 +662,7 @@ def adicionar(tipo):
 
     limpar_campos(tipo)
     listar(tipo)
+    atualizar_combobox(tipo)
 
 def adicionar_deducao():
     '''
@@ -753,20 +797,9 @@ def salvar_no_banco(obj, tipo, detalhes):
     Salva um objeto no banco de dados e registra o log.
     '''
     session.add(obj)
-    try:
-        session.commit()
-        registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, detalhes)
-        messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!")
-    except IntegrityError as e:
-        session.rollback()
-        print(f"Erro de integridade no banco de dados: {e}")
-    except OperationalError as e:
-        session.rollback()
-        print(f"Erro operacional no banco de dados: {e}")
-    except Exception as e:
-        session.rollback()
-        print(f"Erro inesperado: {e}")
-        raise
+    tratativa_erro()
+    registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
+    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!") #add parent
 
 def editar(tipo):
     '''
@@ -807,19 +840,7 @@ def editar(tipo):
                 alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
                 setattr(obj, campo, valor_novo)
 
-        try:
-            session.commit()
-            print("Operação realizada com sucesso!")
-        except IntegrityError as e:
-            session.rollback()
-            print(f"Erro de integridade no banco de dados: {e}")
-        except OperationalError as e:
-            session.rollback()
-            print(f"Erro operacional no banco de dados: {e}")
-        except Exception as e:
-            session.rollback()
-            print(f"Erro inesperado: {e}")
-            raise
+        tratativa_erro()
         detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
         # Registrar a edição com detalhes
         registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
@@ -832,14 +853,10 @@ def editar(tipo):
         entry.delete(0, tk.END)
 
     # Atualizar as listas e comboboxes
-    atualizar_combobox('material')
-    atualizar_combobox('espessura')
-    atualizar_combobox('canal')
-    atualizar_combobox('dedução')
-    atualizar_combobox_deducao()
     for tipo_item in configuracoes:
         listar(tipo_item)
         buscar(tipo_item)
+        atualizar_combobox(tipo_item)
 
 def item_selecionado(tipo):
     '''
@@ -907,6 +924,23 @@ def excluir(tipo):
         session.delete(d)
 
     session.delete(obj)
+    tratativa_erro()
+    # Registrar a exclusão
+    registrar_log(g.USUARIO_NOME,
+                  "excluir",
+                  tipo,
+                  obj_id,
+                  f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
+    config['lista'].delete(selected_item)
+    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
+
+    limpar_campos(tipo)
+    listar(tipo)
+
+def tratativa_erro():
+    '''
+    Trata erros de integridade e operacionais no banco de dados.
+    '''
     try:
         session.commit()
         print("Operação realizada com sucesso!")
@@ -920,17 +954,6 @@ def excluir(tipo):
         session.rollback()
         print(f"Erro inesperado: {e}")
         raise
-    # Registrar a exclusão
-    registrar_log(g.USUARIO_NOME,
-                  "excluir",
-                  tipo,
-                  obj_id,
-                  f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
-    config['lista'].delete(selected_item)
-    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
-
-    limpar_campos(tipo)
-    listar(tipo)
 
 def limpar_campos(tipo):
     '''
@@ -963,24 +986,6 @@ def preencher_campos(tipo):
                 entry.insert(0, getattr(obj, campo))
             else:
                 entry.insert(0, '')
-
-def atualizar_combobox_deducao():
-    '''
-    Atualiza os comboboxes de material, espessura e canal na aba de dedução.
-    '''
-    if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
-        g.DED_MATER_COMB.configure(values=[m.nome for m in session
-                                           .query(Material)
-                                           .order_by(Material.id).all()])
-
-    if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
-        g.DED_ESPES_COMB.configure(values=sorted([e.valor for e in session.query(Espessura).all()]))
-
-    if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
-        g.DED_CANAL_COMB.configure(values=sorted(
-            [c.valor for c in session.query(Canal).all()],
-            key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
-        ))
 
 # Manipulação de usuarios
 def novo_usuario():
@@ -1126,19 +1131,7 @@ def resetar_senha():
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
     if usuario_obj:
         usuario_obj.senha = novo_password
-        try:
-            session.commit()
-            print("Operação realizada com sucesso!")
-        except IntegrityError as e:
-            session.rollback()
-            print(f"Erro de integridade no banco de dados: {e}")
-        except OperationalError as e:
-            session.rollback()
-            print(f"Erro operacional no banco de dados: {e}")
-        except Exception as e:
-            session.rollback()
-            print(f"Erro inesperado: {e}")
-            raise
+        tratativa_erro()
         tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.", parent=g.USUAR_FORM)
     else:
         tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.USUAR_FORM)
@@ -1174,19 +1167,7 @@ def excluir_usuario():
         return
 
     session.delete(obj)
-    try:
-        session.commit()
-        print("Operação realizada com sucesso!")
-    except IntegrityError as e:
-        session.rollback()
-        print(f"Erro de integridade no banco de dados: {e}")
-    except OperationalError as e:
-        session.rollback()
-        print(f"Erro operacional no banco de dados: {e}")
-    except Exception as e:
-        session.rollback()
-        print(f"Erro inesperado: {e}")
-        raise
+    tratativa_erro()
     g.LIST_USUARIO.delete(selected_item)
     messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!", parent=g.USUAR_FORM)
 
@@ -1219,19 +1200,7 @@ def tornar_editor():
             return
 
         usuario_obj.role = "editor"
-        try:
-            session.commit()
-            print("Operação realizada com sucesso!")
-        except IntegrityError as e:
-            session.rollback()
-            print(f"Erro de integridade no banco de dados: {e}")
-        except OperationalError as e:
-            session.rollback()
-            print(f"Erro operacional no banco de dados: {e}")
-        except Exception as e:
-            session.rollback()
-            print(f"Erro inesperado: {e}")
-            raise
+        tratativa_erro()
         tk.messagebox.showinfo("Sucesso",
                                "Usuário promovido a editor com sucesso.",
                                parent=g.USUAR_FORM)
@@ -1341,27 +1310,4 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
         detalhes=detalhes
     )
     session.add(log)
-    try:
-        session.commit()
-        print("Operação realizada com sucesso!")
-    except IntegrityError as e:
-        session.rollback()
-        print(f"Erro de integridade no banco de dados: {e}")
-    except OperationalError as e:
-        session.rollback()
-        print(f"Erro operacional no banco de dados: {e}")
-    except Exception as e:
-        session.rollback()
-        print(f"Erro inesperado: {e}")
-        raise
-
-# def atualizar_interface(configuracoes=None, tipo=None):
-#     '''
-#     Atualiza as listas e comboboxes na interface.
-#     '''
-#     if tipo:
-#         listar(tipo)
-#     elif configuracoes:
-#         for tipo_item in configuracoes:
-#             listar(tipo_item)
-#             buscar(tipo_item)
+    tratativa_erro()

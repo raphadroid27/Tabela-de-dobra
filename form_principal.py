@@ -26,10 +26,10 @@ engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
-DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")  
-CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Tabela de Dobra") 
+DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
+CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Tabela de Dobra")
 os.makedirs(CONFIG_DIR, exist_ok=True)
-CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json") 
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 def verificar_admin_existente():
     """
@@ -145,7 +145,7 @@ def main():
 
     frame_superior.columnconfigure(0, weight=1)
     frame_superior.columnconfigure(1, weight=1)
-    
+
     def carregar_cabecalho(var):
         """
         Atualiza o cabeçalho no frame_superior com base no valor de var.
@@ -156,7 +156,7 @@ def main():
                        2 para cabeçalho com avisos.
         """
         # Remove widgets existentes
-    
+
         # Adiciona o cabeçalho principal
         cabecalho(frame_superior).grid(row=0, column=0, sticky='we', padx=2, pady=2)
 
@@ -169,7 +169,7 @@ def main():
 
     frame_teste = tk.Frame(g.PRINC_FORM)
     frame_teste.pack(fill='both', expand=True, padx=10)
-    
+
     def carregar_form_dobra():
         # Limpar widgets antigos
         for widget in frame_teste.winfo_children():
@@ -194,7 +194,7 @@ def main():
     g.EXP_H = tk.IntVar()
 
     def expandir_v():
-        largura_atual = g.PRINC_FORM.winfo_width() 
+        largura_atual = g.PRINC_FORM.winfo_width()
         if g.EXP_V.get() == 1:
             g.PRINC_FORM.geometry(f"{largura_atual}x500")
             for w in g.VALORES_W:
