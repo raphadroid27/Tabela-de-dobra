@@ -1,9 +1,7 @@
 """
 Módulo responsável por criar o frame de avisos na interface gráfica.
 """
-
 import tkinter as tk
-from tkinter import ttk
 
 def avisos(root):
     """
@@ -21,11 +19,10 @@ def avisos(root):
         "3. Ferramenta 'bigode': fazer alívio de dobra em abas maiores que 20mm."
     ]
 
-    frame_avisos = ttk.Frame(root)
-    frame_avisos.grid(row=0, column=0, sticky='nsew', padx=10)
+    frame_avisos = tk.Frame(root)
 
     for aviso in avisos_textos:
-        aviso_label = tk.Label(frame_avisos, text=aviso)
+        aviso_label = tk.Label(frame_avisos, text=aviso, anchor='w', font=('Arial', 10), wraplength=300, justify='left')
         aviso_label.pack(anchor='w', padx=5, pady=2)
 
     return frame_avisos
