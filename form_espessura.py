@@ -1,12 +1,11 @@
 '''
 # Formulário de Espessura
-# Este módulo contém a implementação do formulário de espessura, que permite
-# adicionar, editar e excluir espessuras de materiais. O formulário é
-# construído usando a biblioteca tkinter e utiliza o módulo globals para
-# armazenar variáveis globais e o módulo funcoes para realizar operações
-# relacionadas ao banco de dados.
+# Este módulo implementa a interface gráfica para gerenciar espessuras de materiais.
+# Ele permite adicionar, editar e excluir registros de espessuras, utilizando a
+# biblioteca tkinter para a construção da interface. As variáveis globais são
+# gerenciadas pelo módulo `globals`, enquanto as operações de banco de dados
+# são realizadas pelo módulo `funcoes`.
 '''
-
 import tkinter as tk
 from tkinter import ttk
 import globals as g
@@ -15,9 +14,10 @@ from funcoes import (no_topo, posicionar_janela, buscar,
 
 
 def main(root):
-    '''
-    Função principal que inicializa a janela de espessura.
-    '''
+    """
+    Inicializa a janela de gerenciamento de espessuras.
+    Configura a interface gráfica para adicionar, editar e excluir espessuras.
+    """
     if g.ESPES_FORM:
         g.ESPES_FORM.destroy()
 

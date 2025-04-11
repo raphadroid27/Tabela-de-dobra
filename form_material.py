@@ -105,7 +105,11 @@ def main(root):
         g.LIST_MAT.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
         frame_edicoes.config(text='Editar Material')
 
-        tk.Button(main_frame, text="Excluir", command = lambda: excluir('material'), bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        tk.Button(main_frame,
+                  text="Excluir",
+                  command = lambda: excluir('material'),
+                  bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+
         tk.Button(frame_edicoes,
                   text="Atualizar",
                   command = lambda: editar('material'),

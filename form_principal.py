@@ -1,7 +1,11 @@
 """
-Este módulo implementa a interface principal do aplicativo Tabela de Dobra.
+# Formulário Principal do Aplicativo de Cálculo de Dobra
+# Este módulo implementa a interface principal do aplicativo, permitindo a
+# gestão de deduções, materiais, espessuras e canais. Ele utiliza a biblioteca
+# tkinter para a interface gráfica, o módulo globals para variáveis globais,
+# e outros módulos auxiliares para operações relacionadas ao banco de dados
+# e funcionalidades específicas.
 """
-
 import tkinter as tk
 import json
 import os

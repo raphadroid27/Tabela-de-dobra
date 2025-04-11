@@ -1,6 +1,7 @@
-'''
-Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
-'''
+"""
+Este módulo é responsável por criar o cabeçalho da interface gráfica, incluindo
+os campos de entrada, rótulos e comboboxes necessários para a interação do usuário.
+"""
 import tkinter as tk
 from tkinter import ttk
 import tooltip as tp

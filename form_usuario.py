@@ -1,15 +1,12 @@
 '''
-Módulo para criar a janela de edição/exclusão de usuários.
-Este módulo contém a função principal que cria a interface gráfica
-para editar e excluir usuários do sistema.
-Ele também inclui funções para buscar, limpar a busca,
-listar usuários, resetar senhas, excluir usuários e tornar usuários editores.
+# Formulário de Gerenciamento de Usuários
+# Este módulo implementa uma interface gráfica para gerenciar usuários do sistema.
+# As funcionalidades incluem redefinir senhas, alterar permissões e excluir usuários.
+# A interface é construída com a biblioteca tkinter, utilizando o módulo globals
+# para variáveis globais e o módulo funcoes para operações relacionadas ao banco de dados.
 '''
-
 import tkinter as tk
 from tkinter import ttk
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 from funcoes import (tem_permissao,
                      no_topo, posicionar_janela,
                      buscar, limpar_busca, listar,
@@ -18,15 +15,11 @@ from funcoes import (tem_permissao,
                      tornar_editor)
 import globals as g
 
-# Configuração do banco de dados
-engine = create_engine('sqlite:///tabela_de_dobra.db')
-Session = sessionmaker(bind=engine)
-session = Session()
-
 def main(root_app):
-    '''
+    """
     Função principal para gerenciar usuários.
-    '''
+    Inicializa a interface gráfica para edição, exclusão e gerenciamento de permissões.
+    """
     # Verificar se o usuário é administrador
     if not tem_permissao('admin'):
         return
