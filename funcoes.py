@@ -244,7 +244,8 @@ def z_minimo_externo():
 
 def restaurar_valores_dobra(w):
     '''
-    Restaura os valores das dobras e os campos de cabeçalho a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
+    Restaura os valores das dobras e os campos de cabeçalho
+    a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
     '''
     # Verificar se g.DOBRAS_VALORES foi inicializada
     if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
@@ -280,7 +281,8 @@ def salvar_valores_cabecalho():
 
 def restaurar_valores_cabecalho():
     """
-    Restaura os valores dos widgets no cabeçalho com base nos valores armazenados em g.CABECALHO_VALORES.
+    Restaura os valores dos widgets no cabeçalho
+    com base nos valores armazenados em g.CABECALHO_VALORES.
     """
     # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
     if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
@@ -298,6 +300,7 @@ def restaurar_valores_cabecalho():
                     widget.set(valor)
             except Exception as e:
                 print(f"Erro ao restaurar valor para {widget_name}: {e}")
+                raise
 
     print("Valores restaurados:", g.CABECALHO_VALORES)
 
@@ -478,7 +481,7 @@ def limpar_dobras():
 
     # Resetar valores globais
     g.DOBRAS_VALORES = []
-    
+
 def limpar_tudo():
     '''
     Limpa todos os campos e labels do aplicativo.
@@ -509,9 +512,7 @@ def limpar_tudo():
     for etiqueta, texto in etiquetas.items():
         etiqueta.config(text=texto)
 
-    for w in g.VALORES_W:
-        limpar_dobras()
-
+    limpar_dobras()
     todas_funcoes()
 
 def todas_funcoes():
@@ -854,11 +855,12 @@ def salvar_no_banco(obj, tipo, detalhes):
     session.add(obj)
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
-    
+
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",parent = config['form']) #add parent
+    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",
+                        parent=config['form'])
 
 def editar(tipo):
     '''
@@ -970,7 +972,9 @@ def excluir(tipo):
     obj_id = item['values'][0]
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).", parent=config['form'])
+        messagebox.showerror("Erro",
+                             f"{tipo.capitalize()} não encontrado(a).",
+                             parent=config['form'])
         return
 
     deducao_objs = (
@@ -992,7 +996,9 @@ def excluir(tipo):
                   obj_id,
                   f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
     config['lista'].delete(selected_item)
-    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!", parent=config['form'])
+    messagebox.showinfo("Sucesso",
+                         f"{tipo.capitalize()} excluído(a) com sucesso!",
+                         parent=config['form'])
 
     limpar_campos(tipo)
     listar(tipo)

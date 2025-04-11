@@ -3,17 +3,19 @@ Este módulo implementa a interface principal do aplicativo Tabela de Dobra.
 """
 
 import tkinter as tk
-from models import Usuario
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 import json
 import os
-from dobra_90 import dobras, entradas_dobras
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from models import Usuario
+from dobra_90 import dobras
 from cabecalho import cabecalho
 from avisos import avisos
 import form_espessura
 import globals as g
-from funcoes import *
+from funcoes import (todas_funcoes, salvar_valores_cabecalho,
+                      restaurar_valores_dobra, restaurar_valores_cabecalho,
+                      logout, no_topo)
 import form_deducao
 import form_material
 import form_canal
@@ -106,19 +108,24 @@ def carregar_interface(var, frame_superior):
 
     for w in g.VALORES_W:
         dobras(frame_superior, w).grid(row=1, column=w - 1, sticky='we', ipadx=2, ipady=2)
-    
-    botoes.criar_botoes(frame_superior).grid(row=2, column=0, sticky='wens', ipadx=2, ipady=2, columnspan=2)
+
+    botoes.criar_botoes(frame_superior).grid(row=2,
+                                             column=0,
+                                             sticky='wens',
+                                             ipadx=2,
+                                             ipady=2,
+                                             columnspan=2)
 
     for w in g.VALORES_W:
         restaurar_valores_dobra(w)
+
     restaurar_valores_cabecalho()
     todas_funcoes()
 
-def main():
+def configurar_janela_principal(config):
     """
-    Função principal que inicializa a interface gráfica do aplicativo.
+    Configura a janela principal do aplicativo.
     """
-    config = carregar_configuracao()
     g.PRINC_FORM = tk.Tk()
     g.PRINC_FORM.title("Cálculo de Dobra")
     g.PRINC_FORM.geometry('340x400')
@@ -129,7 +136,6 @@ def main():
 
     def on_closing():
         geometry = g.PRINC_FORM.geometry()
-        # Extrair apenas a posição da string de geometria
         position = geometry.split('+')[1:]
         config['geometry'] = f"+{position[0]}+{position[1]}"
         salvar_configuracao(config)
@@ -137,68 +143,108 @@ def main():
 
     g.PRINC_FORM.protocol("WM_DELETE_WINDOW", on_closing)
 
-    # Criando o menu superior
+def configurar_menu():
+    """
+    Configura o menu superior da janela principal.
+    """
     menu_bar = tk.Menu(g.PRINC_FORM)
     g.PRINC_FORM.config(menu=menu_bar)
 
-    # Adicionando menus
+    # Menu Arquivo
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao, 'EDIT_DED', g.PRINC_FORM))
-    file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material, 'EDIT_MAT', g.PRINC_FORM))
-    file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
-    file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
-    file_menu.add_separator()
-    file_menu.add_command(label="Sair", command=on_closing)
+    file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao,
+                                                                           'EDIT_DED',
+                                                                           g.PRINC_FORM))
 
+    file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material,
+                                                                            'EDIT_MAT',
+                                                                            g.PRINC_FORM))
+
+    file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura,
+                                                                           'EDIT_ESP',
+                                                                           g.PRINC_FORM))
+
+    file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal,
+                                                                       'EDIT_CANAL',
+                                                                       g.PRINC_FORM))
+    file_menu.add_separator()
+    file_menu.add_command(label="Sair", command=g.PRINC_FORM.destroy)
+
+    # Menu Editar
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao, 'EDIT_DED', g.PRINC_FORM))
-    edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material, 'EDIT_MAT', g.PRINC_FORM))
-    edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
-    edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao,
+                                                                           'EDIT_DED',
+                                                                           g.PRINC_FORM))
 
+    edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material,
+                                                                           'EDIT_MAT',
+                                                                           g.PRINC_FORM))
+
+    edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura,
+                                                                           'EDIT_ESP',
+                                                                           g.PRINC_FORM))
+
+    edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal,
+                                                                       'EDIT_CANAL',
+                                                                       g.PRINC_FORM))
+
+    # Menu Opções
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
     g.NO_TOPO_VAR = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="No topo",
-                                variable=g.NO_TOPO_VAR,
+    opcoes_menu.add_checkbutton(label="No topo", variable=g.NO_TOPO_VAR,
                                 command=lambda: no_topo(g.PRINC_FORM))
 
+    # Menu Usuário
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
-    usuario_menu.add_command(label="Login",
-                             command=lambda: form_true(form_aut, "LOGIN", g.AUTEN_FORM))
+    usuario_menu.add_command(label="Login", command=lambda: form_true(form_aut,
+                                                                      "LOGIN",
+                                                                      g.AUTEN_FORM))
 
-    usuario_menu.add_command(label="Novo Usuário",
-                             command=lambda: form_false(form_aut, "LOGIN", g.AUTEN_FORM))
+    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_false(form_aut,
+                                                                           "LOGIN",
+                                                                           g.AUTEN_FORM))
 
     usuario_menu.add_command(label="Gerenciar Usuários",
                              command=lambda: form_usuario.main(g.PRINC_FORM))
-
     usuario_menu.add_separator()
     usuario_menu.add_command(label="Sair", command=logout)
 
+    # Menu Ajuda
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
     help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(g.PRINC_FORM))
 
-    # Criando frames
+
+def configurar_frames():
+    """
+    Configura os frames principais da janela.
+    """
     frame_superior = tk.LabelFrame(g.PRINC_FORM)
-    frame_superior.pack(fill='both', expand=True, padx=10,pady=10)
+    frame_superior.pack(fill='both', expand=True, padx=10, pady=10)
 
     frame_superior.columnconfigure(0, weight=1)
     frame_superior.columnconfigure(1, weight=1)
     frame_superior.rowconfigure(0, weight=1)
     frame_superior.rowconfigure(1, weight=1)
 
-    # Chamada inicial
     g.VALORES_W = [1]
     g.EXP_V = tk.IntVar()
     g.EXP_H = tk.IntVar()
     carregar_interface(1, frame_superior)
 
-    # Exemplo de uso para g.comprimento_entry
+
+def main():
+    """
+    Função principal que inicializa a interface gráfica do aplicativo.
+    """
+    config = carregar_configuracao()
+    configurar_janela_principal(config)
+    configurar_menu()
+    configurar_frames()
     verificar_admin_existente()
     g.PRINC_FORM.mainloop()
 
