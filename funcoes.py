@@ -2,6 +2,7 @@
 Funções auxiliares para o aplicativo de cálculo de dobras.
 '''
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox, simpledialog
 from math import pi
 import re
@@ -93,7 +94,7 @@ def atualizar_combobox(tipo):
             if deducao_obj:
                 g.DED_LBL.config(text=deducao_obj.valor, fg="black")
                 observacao = deducao_obj.observacao or 'Observações não encontradas'
-                g.OBS_LBL.config(text=f'Observações: {observacao}')
+                g.OBS_LBL.config(text=f'{observacao}')
             else:
                 g.DED_LBL.config(text='N/A', fg="red")
                 g.OBS_LBL.config(text='Observações não encontradas')
@@ -241,14 +242,15 @@ def z_minimo_externo():
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo do Z mínimo externo.")
 
-def restaurar_dobras(w):
+def restaurar_valores_dobra(w):
     '''
-    Restaura os valores das dobras a partir de g.DOBRAS_VALORES.
+    Restaura os valores das dobras e os campos de cabeçalho a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
     '''
-     # Verificar se g.DOBRAS_VALORES foi inicializada
+    # Verificar se g.DOBRAS_VALORES foi inicializada
     if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
         return
 
+    # Restaurar os valores das dobras
     for i in range(1, g.N):
         for col in range(1, w + 1):
             if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
@@ -259,7 +261,45 @@ def restaurar_dobras(w):
                     entry.delete(0, tk.END)
                     entry.insert(0, valor)
 
-    calcular_dobra(w)
+def salvar_valores_cabecalho():
+    """
+    Salva os valores atuais dos widgets no cabeçalho em g.CABECALHO_VALORES.
+    """
+    if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
+        g.CABECALHO_VALORES = {}
+
+    g.CABECALHO_VALORES = {
+        'MAT_COMB': g.MAT_COMB.get() if g.MAT_COMB else '',
+        'ESP_COMB': g.ESP_COMB.get() if g.ESP_COMB else '',
+        'CANAL_COMB': g.CANAL_COMB.get() if g.CANAL_COMB else '',
+        'COMPR_ENTRY': g.COMPR_ENTRY.get() if g.COMPR_ENTRY else '',
+        'RI_ENTRY': g.RI_ENTRY.get() if g.RI_ENTRY else '',
+        'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.get() if g.DED_ESPEC_ENTRY else '',
+    }
+    print("Valores salvos:", g.CABECALHO_VALORES)
+
+def restaurar_valores_cabecalho():
+    """
+    Restaura os valores dos widgets no cabeçalho com base nos valores armazenados em g.CABECALHO_VALORES.
+    """
+    # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
+    if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
+        g.CABECALHO_VALORES = {}
+
+    # Restaura os valores nos widgets
+    for widget_name, valor in g.CABECALHO_VALORES.items():
+        widget = getattr(g, widget_name, None)
+        if widget and isinstance(widget, (tk.Entry, ttk.Combobox)):
+            try:
+                if isinstance(widget, tk.Entry):
+                    widget.delete(0, tk.END)
+                    widget.insert(0, valor)
+                elif isinstance(widget, ttk.Combobox):
+                    widget.set(valor)
+            except Exception as e:
+                print(f"Erro ao restaurar valor para {widget_name}: {e}")
+
+    print("Valores restaurados:", g.CABECALHO_VALORES)
 
 def calcular_dobra(w):
     '''
@@ -393,47 +433,52 @@ def copiar(tipo, numero=None, w=None):
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
-def limpar_dobras(w):
-    '''
+def limpar_dobras():
+    """
     Limpa os valores das dobras e atualiza os labels correspondentes.
-    '''
-    def obter_atributos(prefixo):
+    """
+    def limpar_widgets(widgets, metodo, valor=""):
+        """
+        Limpa ou redefine widgets com base no método fornecido.
+
+        Args:
+            widgets (list): Lista de widgets a serem limpos.
+            metodo (str): Método a ser chamado no widget (ex.: 'delete', 'config').
+            valor (str): Valor a ser usado no método (se aplicável).
+        """
+        for widget in widgets:
+            if widget:
+                if metodo == "delete":
+                    getattr(widget, metodo)(0, tk.END)
+                else:
+                    widget.config(text=valor)
+
+    # Obter widgets dinamicamente
+    def obter_widgets(prefixo):
         return [
-            getattr(g, f'{prefixo}{i}_label_{col}', None)
+            getattr(g, f"{prefixo}{i}_label_{col}", None)
             for i in range(1, g.N)
-            for col in range(1, w + 1)
+            for col in g.VALORES_W
         ]
 
-    dobras = [getattr(g, f'aba{i}_entry_{col}', None)
-              for i in range(1, g.N)
-              for col in range(1, w + 1)]
-    medidas = obter_atributos('medidadobra')
-    metades = obter_atributos('metadedobra')
+    # Limpar entradas e labels
+    dobras = [getattr(g, f"aba{i}_entry_{col}", None) for i in range(1, g.N) for col in g.VALORES_W]
+    medidas = obter_widgets("medidadobra")
+    metades = obter_widgets("metadedobra")
+    blanks = [getattr(g, f"medida_blank_label_{col}", None) for col in g.VALORES_W]
+    metades_blanks = [getattr(g, f"metade_blank_label_{col}", None) for col in g.VALORES_W]
 
+    # Limpar widgets
+    limpar_widgets(dobras, "delete")
+    limpar_widgets(medidas + metades + blanks + metades_blanks, "config", "")
+
+    # Limpar dedução específica
+    if g.DED_ESPEC_ENTRY:
+        g.DED_ESPEC_ENTRY.delete(0, tk.END)
+
+    # Resetar valores globais
     g.DOBRAS_VALORES = []
-
-    for dobra in dobras:
-        if dobra:
-            dobra.delete(0, tk.END)
-
-    for medida in medidas:
-        if medida:
-            medida.config(text="")
-
-    for metade in metades:
-        if metade:
-            metade.config(text="")
-
-    g.DED_ESPEC_ENTRY.delete(0, tk.END)
-
-    label = getattr(g, f'medida_blank_label_{w}', None)
-    if label:
-        label.config(text="")
-
-    label = getattr(g, f'metade_blank_label_{w}', None)
-    if label:
-        label.config(text="")
-
+    
 def limpar_tudo():
     '''
     Limpa todos os campos e labels do aplicativo.
@@ -456,7 +501,7 @@ def limpar_tudo():
         g.K_LBL: "",
         g.DED_LBL: "",
         g.OFFSET_LBL: "",
-        g.OBS_LBL: "Observações:",
+        g.OBS_LBL: "",
         g.FORCA_LBL: "",
         g.ABA_EXT_LBL: "",
         g.Z_EXT_LBL: ""
@@ -465,10 +510,11 @@ def limpar_tudo():
         etiqueta.config(text=texto)
 
     for w in g.VALORES_W:
-        limpar_dobras(w)
-        todas_funcoes(w)
+        limpar_dobras()
 
-def todas_funcoes(w):
+    todas_funcoes()
+
+def todas_funcoes():
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
@@ -479,7 +525,8 @@ def todas_funcoes(w):
     calcular_k_offset()
     aba_minima_externa()
     z_minimo_externo()
-    calcular_dobra(w)
+    for w in g.VALORES_W:
+        calcular_dobra(w)
 
     # Atualizar tooltips
     canal_tooltip()
@@ -491,6 +538,7 @@ def obter_configuracoes():
     '''
     return {
         'dedução': {
+            'form': g.DEDUC_FORM,
             'lista': g.LIST_DED,
             'modelo': Deducao,
             'campos': {
@@ -508,6 +556,7 @@ def obter_configuracoes():
             }
         },
         'material': {
+            'form': g.MATER_FORM,
             'lista': g.LIST_MAT,
             'modelo': Material,
             'campos': {
@@ -524,6 +573,7 @@ def obter_configuracoes():
             'campo_busca': Material.nome
         },
         'espessura': {
+            'form': g.ESPES_FORM,
             'lista': g.LIST_ESP,
             'modelo': Espessura,
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
@@ -534,6 +584,7 @@ def obter_configuracoes():
             'campo_busca': Espessura.valor  # Corrigido de espessura.valor
         },
         'canal': {
+            'form': g.CANAL_FORM,
             'lista': g.LIST_CANAL,
             'modelo': Canal,  # Corrigido de canal
             'campos': {
@@ -551,6 +602,7 @@ def obter_configuracoes():
             'campo_busca': Canal.valor  # Corrigido de canal.valor
         },
         'usuario': {
+            'form': g.USUAR_FORM,
             'lista': g.LIST_USUARIO,
             'modelo': Usuario,  # Corrigido de usuario
             'valores': g.valores_usuario,
@@ -676,7 +728,8 @@ def adicionar_deducao():
 
     if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
         messagebox.showerror("Erro",
-                             "Material, espessura, canal e valor da dedução são obrigatórios.")
+                             "Material, espessura, canal e valor da dedução são obrigatórios.",
+                             parent=g.DEDUC_FORM)
         return
 
     nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
@@ -715,13 +768,15 @@ def adicionar_espessura():
     espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         messagebox.showwarning("Atenção!",
-                               "A espessura deve conter apenas números ou números decimais.")
+                               "A espessura deve conter apenas números ou números decimais.",
+                               parent=g.ESPES_FORM)
         g.ESP_VALOR_ENTRY.delete(0, tk.END)
         return
 
     espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
     if espessura_existente:
-        messagebox.showerror("Erro", "Espessura já existe no banco de dados.")
+        messagebox.showerror("Erro", "Espessura já existe no banco de dados.",
+                             parent=g.ESPES_FORM)
         return
 
     nova_espessura = Espessura(valor=espessura_valor)
@@ -737,12 +792,12 @@ def adicionar_material():
     elasticidade_material = g.MAT_ELAS_ENTRY.get()
 
     if not nome_material:
-        messagebox.showerror("Erro", "O campo Material é obrigatório.")
+        messagebox.showerror("Erro", "O campo Material é obrigatório.", parent=g.MATER_FORM)
         return
 
     material_existente = session.query(Material).filter_by(nome=nome_material).first()
     if material_existente:
-        messagebox.showerror("Erro", "Material já existe no banco de dados.")
+        messagebox.showerror("Erro", "Material já existe no banco de dados.", parent=g.MATER_FORM)
         return
 
     novo_material = Material(
@@ -799,7 +854,11 @@ def salvar_no_banco(obj, tipo, detalhes):
     session.add(obj)
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
-    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!") #add parent
+    
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
+    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",parent = config['form']) #add parent
 
 def editar(tipo):
     '''
@@ -901,7 +960,8 @@ def excluir(tipo):
 
     aviso = messagebox.askyesno("Atenção!",
                                 f"Ao excluir um(a) {tipo} todas as deduções relacionadas "
-                                f"serão excluídas também, 'deseja continuar?")
+                                f"serão excluídas também, 'deseja continuar?",
+                                parent=config['form'])
     if not aviso:
         return
 
@@ -910,7 +970,7 @@ def excluir(tipo):
     obj_id = item['values'][0]
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
+        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).", parent=config['form'])
         return
 
     deducao_objs = (
@@ -932,7 +992,7 @@ def excluir(tipo):
                   obj_id,
                   f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
     config['lista'].delete(selected_item)
-    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!")
+    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!", parent=config['form'])
 
     limpar_campos(tipo)
     listar(tipo)
@@ -1009,20 +1069,11 @@ def novo_usuario():
     # Criar o novo usuário
     usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.ADMIN_VAR)
     session.add(usuario)
-    try:
-        session.commit()
-        messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
-        g.AUTEN_FORM.destroy()
-    except IntegrityError as e:
-        session.rollback()
-        print(f"Erro de integridade no banco de dados: {e}")
-    except OperationalError as e:
-        session.rollback()
-        print(f"Erro operacional no banco de dados: {e}")
-    except Exception as e:
-        session.rollback()
-        print(f"Erro inesperado: {e}")
-        raise  # Relança a exceção para depuração
+
+    # Usar tratativa_erro para tratar erros e confirmar a operação
+    tratativa_erro()  # Chamar a função para tratar erros antes de continuar
+    messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
+    g.AUTEN_FORM.destroy()
 
     habilitar_janelas()
 
@@ -1044,19 +1095,7 @@ def login():
                                                 parent=g.AUTEN_FORM)
             if nova_senha:
                 usuario_obj.senha = hashlib.sha256(nova_senha.encode()).hexdigest()
-                try:
-                    session.commit()
-                    print("Operação realizada com sucesso!")
-                except IntegrityError as e:
-                    session.rollback()
-                    print(f"Erro de integridade no banco de dados: {e}")
-                except OperationalError as e:
-                    session.rollback()
-                    print(f"Erro operacional no banco de dados: {e}")
-                except Exception as e:
-                    session.rollback()
-                    print(f"Erro inesperado: {e}")
-                    raise
+                tratativa_erro()
                 messagebox.showinfo("Sucesso",
                                     "Senha alterada com sucesso. Faça login novamente.",
                                     parent=g.AUTEN_FORM)
@@ -1077,15 +1116,11 @@ def logado(tipo):
     '''
     Verifica se o usuário está logado antes de permitir ações em formulários específicos.
     '''
-    configuracoes = {
-        'dedução': g.DEDUC_FORM,
-        'espessura': g.ESPES_FORM,
-        'material': g.MATER_FORM,
-        'canal': g.CANAL_FORM
-    }
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
 
     if g.USUARIO_ID is None:
-        messagebox.showerror("Erro", "Login requerido.", parent=configuracoes[tipo])
+        messagebox.showerror("Erro", "Login requerido.", parent=config['form'])
         return False
     return True
 
