@@ -5,7 +5,7 @@ import tkinter as tk
 import globals as g
 from funcoes import calcular_dobra, copiar, focus_next_entry, focus_previous_entry
 
-LARGURA = 10
+LARGURA = 12
 
 def dobras(frame, w):
     '''
@@ -14,7 +14,7 @@ def dobras(frame, w):
     '''
     g.FRAME_DOBRA = tk.Frame(frame)
 
-    for i in range(0, 4):
+    for i in range(4):
         g.FRAME_DOBRA.columnconfigure(i, weight=1)
 
     entradas_dobras(g.N, w)
@@ -46,12 +46,16 @@ def entradas_dobras(valor, w):
         entry.bind("<Down>", lambda event, i=i: focus_next_entry(i, w))
         entry.bind("<Up>", lambda event, i=i: focus_previous_entry(i, w))
 
-        setattr(g, f'medidadobra{i}_label_{w}', tk.Label(g.FRAME_DOBRA, relief="sunken", width=LARGURA))
+        setattr(g, f'medidadobra{i}_label_{w}', tk.Label(g.FRAME_DOBRA,
+                                                         relief="sunken",
+                                                         width=LARGURA))
         label = getattr(g, f'medidadobra{i}_label_{w}')
         label.grid(row=i, column=2, sticky='we', padx=2)
         label.bind("<Button-1>", lambda event, i=i: copiar('medida_dobra', i, w))
 
-        setattr(g, f'metadedobra{i}_label_{w}', tk.Label(g.FRAME_DOBRA, relief="sunken", width=LARGURA))
+        setattr(g, f'metadedobra{i}_label_{w}', tk.Label(g.FRAME_DOBRA,
+                                                         relief="sunken",
+                                                         width=LARGURA))
         label = getattr(g, f'metadedobra{i}_label_{w}')
         label.grid(row=i, column=3, sticky='we', padx=2)
         label.bind("<Button-1>", lambda event, i=i: copiar('metade_dobra', i, w))
