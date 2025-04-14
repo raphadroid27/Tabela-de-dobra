@@ -80,7 +80,6 @@ def cabecalho(root):
     criar_label(frame_cabecalho, "Canal:", (0, 2))
     criar_widget(frame_cabecalho, 'combobox', 'CANAL_COMB', (1, 2), justify="center")
     g.CANAL_COMB.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
-
     tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
 
     # Comprimento
@@ -99,16 +98,19 @@ def cabecalho(root):
     criar_label(frame_cabecalho, "Fator K:", (2, 1))
     criar_widget(frame_cabecalho, 'label', 'K_LBL', (3, 1))
     g.K_LBL.bind("<Button-1>", func=lambda event: copiar('fator_k'))
+    tp.ToolTip(g.K_LBL, "Clique para copiar o fator K.")
 
     # Dedução
     criar_label(frame_cabecalho, "Dedução:", (2, 2))
     criar_widget(frame_cabecalho, 'label', 'DED_LBL', (3, 2))
     g.DED_LBL.bind("<Button-1>", func=lambda event: copiar('dedução'))
+    tp.ToolTip(g.DED_LBL, "Clique para copiar a dedução.")
 
     # Offset
     criar_label(frame_cabecalho, "Offset:", (2, 3))
     criar_widget(frame_cabecalho, 'label', 'OFFSET_LBL', (3, 3))
     g.OFFSET_LBL.bind("<Button-1>", func=lambda event: copiar('offset'))
+    tp.ToolTip(g.OFFSET_LBL, "Clique para copiar o offset.")
 
     # Dedução específica
     criar_label(frame_cabecalho, "Ded. Espec.:", (4, 0))
@@ -119,14 +121,17 @@ def cabecalho(root):
     # Aba mínima
     criar_label(frame_cabecalho, "Aba Mín.:", (4, 1))
     criar_widget(frame_cabecalho, 'label', 'ABA_EXT_LBL', (5, 1))
+    tp.ToolTip(g.ABA_EXT_LBL, "Aba mínima externa.")
 
     # Z90°
     criar_label(frame_cabecalho, "Ext. Z90°:", (4, 2))
     criar_widget(frame_cabecalho, 'label', 'Z_EXT_LBL', (5, 2))
+    tp.ToolTip(g.Z_EXT_LBL, "Medida externa mínima para Z90°.")
 
     # tom/m
     criar_label(frame_cabecalho, "Ton/m:", (4, 3))
     criar_widget(frame_cabecalho, 'label', 'FORCA_LBL', (5, 3))
+    tp.ToolTip(g.FORCA_LBL, "Toneladas por metro.")
 
     # Observações
     criar_label(frame_cabecalho, "Observações:", (6, 0)).grid(columnspan=4)

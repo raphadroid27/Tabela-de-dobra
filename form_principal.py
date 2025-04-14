@@ -74,7 +74,6 @@ def form_true(form, editar_attr, root):
     setattr(g, editar_attr, True)
     form.main(root)
 
-
 def form_false(form, editar_attr, root):
     """
     Fecha o formulário de edição de um item específico (dedução, material, espessura ou canal).
@@ -206,11 +205,11 @@ def configurar_menu():
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
     usuario_menu.add_command(label="Login", command=lambda: form_true(form_aut,
                                                                       "LOGIN",
-                                                                      g.AUTEN_FORM))
+                                                                      g.PRINC_FORM))
 
     usuario_menu.add_command(label="Novo Usuário", command=lambda: form_false(form_aut,
                                                                            "LOGIN",
-                                                                           g.AUTEN_FORM))
+                                                                           g.PRINC_FORM))
 
     usuario_menu.add_command(label="Gerenciar Usuários",
                              command=lambda: form_usuario.main(g.PRINC_FORM))

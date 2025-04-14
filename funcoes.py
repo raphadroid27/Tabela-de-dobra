@@ -222,6 +222,33 @@ def aba_minima_externa():
 
     return aba_minima_valor
 
+def verificar_aba_minima(dobra, i, w):
+    '''
+    Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
+    '''
+    # Verificar se a dobra é menor que a aba mínima
+    aba_minima = aba_minima_externa()
+
+    # Obter o widget dinamicamente
+    entry_widget = getattr(g, f'aba{i}_entry_{w}')
+
+    # Verificar se o campo está vazio
+    if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
+        entry_widget.config(fg="black", bg="white")
+        print(f"Valor vazio na aba {i}, coluna {w}.")
+    else:
+        try:
+            # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
+            if float(dobra) < aba_minima:
+                entry_widget.config(fg="white", bg="red")
+                tp.ToolTip(entry_widget, "Aba mínima externa não atendida.")
+            else:
+                entry_widget.config(fg="black", bg="white")
+        except ValueError:
+            # Tratar erros de conversão
+            entry_widget.config(fg="black", bg="white")
+            print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
+
 def z_minimo_externo():
     '''
     Calcula o valor mínimo externo com base na espessura, dedução e largura do canal.
@@ -389,32 +416,6 @@ def calcular_dobra(w):
             calcular_medida(deducao_valor, i, col)
             verificar_aba_minima(g.DOBRAS_VALORES[i - 1][col - 1], i, col)
 
-def verificar_aba_minima(dobra, i, w):
-    '''
-    Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
-    '''
-    # Verificar se a dobra é menor que a aba mínima
-    aba_minima = aba_minima_externa()
-
-    # Obter o widget dinamicamente
-    entry_widget = getattr(g, f'aba{i}_entry_{w}')
-
-    # Verificar se o campo está vazio
-    if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
-        entry_widget.config(fg="black", bg="white")
-        print(f"Valor vazio na aba {i}, coluna {w}.")
-    else:
-        try:
-            # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
-            if float(dobra) < aba_minima:
-                entry_widget.config(fg="white", bg="red")
-            else:
-                entry_widget.config(fg="black", bg="white")
-        except ValueError:
-            # Tratar erros de conversão
-            entry_widget.config(fg="black", bg="white")
-            print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
-
 def copiar(tipo, numero=None, w=None):
     '''
     Copia o valor do label correspondente ao tipo e 
@@ -580,6 +581,92 @@ def obter_configuracoes():
     '''
     Retorna um dicionário com as configurações de cada tipo de item.
     '''
+    def valores_deducao(d):
+        '''
+        Retorna os valores de um objeto Deducao como uma tupla.
+        Os valores retornados são:
+        - ID da dedução
+        - Nome do material
+        - Valor da espessura
+        - Valor do canal
+        - Valor da dedução
+        - Observação da dedução
+        - Força da dedução
+        '''
+        return (
+            d.id,
+            d.material.nome,
+            d.espessura.valor,
+            d.canal.valor,
+            d.valor,
+            d.observacao,
+            d.forca,
+        )
+
+    def valores_material(m):
+        '''
+        Retorna os valores de um objeto Material como uma tupla.
+        Os valores retornados são:
+        - ID do material
+        - Nome do material
+        - Densidade do material
+        - Escoamento do material
+        - Elasticidade do material
+        '''
+        return (
+            m.id,
+            m.nome,
+            m.densidade,
+            m.escoamento,
+            m.elasticidade,
+        )
+
+    def valores_espessura(e):
+        '''
+        Retorna os valores de um objeto Espessura como uma tupla.
+        Os valores retornados são:
+        - ID da espessura
+        - Valor da espessura
+        '''
+        return (
+            e.id,
+            e.valor,
+        )
+
+    def valores_canal(c):
+        '''
+        Retorna os valores de um objeto Canal como uma tupla.
+        Os valores retornados são:
+        - ID do canal
+        - Valor do canal
+        - Largura do canal
+        - Altura do canal
+        - Comprimento total do canal
+        - Observação do canal
+        '''
+        return (
+            c.id,
+            c.valor,
+            c.largura,
+            c.altura,
+            c.comprimento_total,
+            c.observacao,
+        )
+
+    def valores_usuario(u):
+        '''
+        Retorna os valores de um objeto Usuario como uma tupla.
+        Os valores retornados são:
+        - ID do usuário
+        - Nome do usuário
+        - Papel do usuário (admin ou viewer)
+        '''
+        return (
+            u.id,
+            u.nome,
+            u.role,
+        )
+
     return {
         'principal': {
             'form': g.PRINC_FORM,
@@ -594,7 +681,7 @@ def obter_configuracoes():
                 'forca': g.DED_FORCA_ENTRY
             },
             'item_id': Deducao.id,
-            'valores': g.valores_deducao,
+            'valores': valores_deducao,
             'ordem': Deducao.valor,
             'entries': {
                 'material_combo': g.DED_MATER_COMB,
@@ -613,7 +700,7 @@ def obter_configuracoes():
                 'elasticidade': g.MAT_ELAS_ENTRY
             },
             'item_id': Material.id,  # Corrigido de Deducao.material_id
-            'valores': g.valores_material,
+            'valores': valores_material,
             'ordem': Material.id,
             'entry': g.MAT_NOME_ENTRY,
             'busca': g.MAT_BUSCA_ENTRY,
@@ -624,7 +711,7 @@ def obter_configuracoes():
             'lista': g.LIST_ESP,
             'modelo': Espessura,
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
-            'valores': g.valores_espessura,
+            'valores': valores_espessura,
             'ordem': Espessura.valor,
             'entry': g.ESP_VALOR_ENTRY,
             'busca': g.ESP_BUSCA_ENTRY,
@@ -642,7 +729,7 @@ def obter_configuracoes():
                 'observacao': g.CANAL_OBSER_ENTRY
             },
             'item_id': Canal.id,  # Corrigido de deducao.canal_id
-            'valores': g.valores_canal,
+            'valores': valores_canal,  # Assuming valores_canal is defined in this file
             'ordem': Canal.valor,  # Corrigido de canal.valor
             'entry': g.CANAL_VALOR_ENTRY,
             'busca': g.CANAL_BUSCA_ENTRY,
@@ -652,9 +739,9 @@ def obter_configuracoes():
             'form': g.USUAR_FORM,
             'lista': g.LIST_USUARIO,
             'modelo': Usuario,  # Corrigido de usuario
-            'valores': g.valores_usuario,
+            'valores': valores_usuario,
             'ordem': Usuario.nome,  # Corrigido de usuario.nome
-            'entry': g.USUARIO_BUSCA_ENTRY,
+            'busca': g.USUARIO_BUSCA_ENTRY,
             'campo_busca': Usuario.nome  # Corrigido de usuario.nome
         }
     }
@@ -1312,6 +1399,17 @@ def no_topo(form):
 
     on_top_valor = g.NO_TOPO_VAR.get() == 1
     set_topmost(form, on_top_valor)
+
+def transparente(form):
+    '''
+    Define se a janela deve ser transparente ou não.
+    '''
+    def set_transparent(window, transparent):
+        if window and window.winfo_exists():
+            window.attributes("-alpha", 0.5 if transparent else 1.0)
+
+    transparent_valor = g.TRANSP_VAR.get() == 1
+    set_transparent(form, transparent_valor)
 
 def posicionar_janela(form, posicao=None):
     '''

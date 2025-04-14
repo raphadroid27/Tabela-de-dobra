@@ -10,6 +10,7 @@ from dobra_90 import entradas_dobras
 from funcoes import limpar_dobras, limpar_tudo
 import globals as g
 from form_principal import carregar_interface
+import tooltip as tp
 
 def criar_botoes(root):
     """
@@ -90,5 +91,10 @@ def criar_botoes(root):
               command=limpar_tudo,
               width=15,
               bg='red').grid(row=1, column=1, sticky='we', padx=2)
+
+    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=0)[0], text="Expande a interface verticalmente")
+    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=1)[0], text="Expande a interface horizontalmente")
+    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=0)[0], text="Limpa as dobras")
+    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=1)[0], text="Limpa todos os valores")
 
     return frame_botoes

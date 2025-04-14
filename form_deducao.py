@@ -16,7 +16,7 @@ def main(root):
     Função principal que inicializa e configura o formulário de deduções.
     """
     # Verificar se a janela já está aberta
-    if g.DEDUC_FORM is not None:
+    if g.DEDUC_FORM:
         g.DEDUC_FORM.destroy()
 
     g.DEDUC_FORM = tk.Toplevel(root)
