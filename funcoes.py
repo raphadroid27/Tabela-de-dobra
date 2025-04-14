@@ -538,6 +538,9 @@ def obter_configuracoes():
     Retorna um dicionário com as configurações de cada tipo de item.
     '''
     return {
+        'principal': {
+            'form': g.PRINC_FORM,
+        },
         'dedução': {
             'form': g.DEDUC_FORM,
             'lista': g.LIST_DED,
@@ -871,7 +874,7 @@ def editar(tipo):
     - material
     - canal
     '''
-    if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
+    if not tem_permissao(tipo, 'editor'):  # Permitir que editores realizem esta ação
         return
 
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
@@ -951,7 +954,7 @@ def excluir(tipo):
     - material
     - canal
     '''
-    if not tem_permissao('editor'):  # Permitir que editores realizem esta ação
+    if not tem_permissao(tipo,'editor'):  # Permitir que editores realizem esta ação
         return
 
     configuracoes = obter_configuracoes()
@@ -1130,13 +1133,17 @@ def logado(tipo):
         return False
     return True
 
-def tem_permissao(role_requerida):
+def tem_permissao(tipo, role_requerida):
     '''
     Verifica se o usuário tem permissão para realizar uma ação específica.
     '''
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
     usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
     if not usuario_obj:
-        messagebox.showerror("Erro", "Você não tem permissão para acessar esta função.")
+        messagebox.showerror("Erro", "Você não tem permissão para acessar esta função.",
+                             parent=config['form'])
         return False
     # Permitir hierarquia de permissões
     roles_hierarquia = ["viewer", "editor", "admin"]
@@ -1181,7 +1188,7 @@ def excluir_usuario():
     '''
     Exclui o usuário selecionado na lista de usuários.
     '''
-    if not tem_permissao("admin"):
+    if not tem_permissao('usuario', 'admin'):
         return
 
     if g.LIST_USUARIO is None:
