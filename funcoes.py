@@ -207,12 +207,20 @@ def aba_minima_externa():
     Calcula a aba mínima externa com base no valor do canal e na espessura.
     Atualiza o label correspondente com o valor calculado.
     '''
-    if  g.CANAL_COMB.get() != "":
-        canal_valor = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
-        espessura = float(g.ESP_COMB.get())
+    aba_minima_valor = 0  # Valor padrão caso a condição não seja satisfeita
 
-        aba_minima_valor = canal_valor / 2 + espessura + 2
-        g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
+    try:
+        if g.CANAL_COMB.get() != "":
+            canal_valor = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
+            espessura = float(g.ESP_COMB.get())
+
+            aba_minima_valor = canal_valor / 2 + espessura + 2
+            g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
+    except (ValueError, AttributeError) as e:
+        print(f"Erro ao calcular aba mínima externa: {e}")
+        g.ABA_EXT_LBL.config(text="N/A", fg="red")
+
+    return aba_minima_valor
 
 def z_minimo_externo():
     '''
@@ -244,7 +252,8 @@ def z_minimo_externo():
 
 def restaurar_valores_dobra(w):
     '''
-    Restaura os valores das dobras e os campos de cabeçalho a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
+    Restaura os valores das dobras e os campos de cabeçalho
+    a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
     '''
     # Verificar se g.DOBRAS_VALORES foi inicializada
     if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
@@ -280,7 +289,8 @@ def salvar_valores_cabecalho():
 
 def restaurar_valores_cabecalho():
     """
-    Restaura os valores dos widgets no cabeçalho com base nos valores armazenados em g.CABECALHO_VALORES.
+    Restaura os valores dos widgets no cabeçalho
+    com base nos valores armazenados em g.CABECALHO_VALORES.
     """
     # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
     if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
@@ -298,6 +308,7 @@ def restaurar_valores_cabecalho():
                     widget.set(valor)
             except Exception as e:
                 print(f"Erro ao restaurar valor para {widget_name}: {e}")
+                raise
 
     print("Valores restaurados:", g.CABECALHO_VALORES)
 
@@ -326,7 +337,8 @@ def calcular_dobra(w):
     if deducao_espec != "":
         deducao_valor = deducao_espec
 
-    print(f'Dedução: {deducao_valor}')
+    if not deducao_valor:
+        return
 
     # Função auxiliar para calcular medidas
     def calcular_medida(deducao_valor, i, w):
@@ -375,6 +387,33 @@ def calcular_dobra(w):
     for i in range(1, g.N):
         for col in range(1, w + 1):
             calcular_medida(deducao_valor, i, col)
+            verificar_aba_minima(g.DOBRAS_VALORES[i - 1][col - 1], i, col)
+
+def verificar_aba_minima(dobra, i, w):
+    '''
+    Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
+    '''
+    # Verificar se a dobra é menor que a aba mínima
+    aba_minima = aba_minima_externa()
+
+    # Obter o widget dinamicamente
+    entry_widget = getattr(g, f'aba{i}_entry_{w}')
+
+    # Verificar se o campo está vazio
+    if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
+        entry_widget.config(fg="black", bg="white")
+        print(f"Valor vazio na aba {i}, coluna {w}.")
+    else:
+        try:
+            # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
+            if float(dobra) < aba_minima:
+                entry_widget.config(fg="white", bg="red")
+            else:
+                entry_widget.config(fg="black", bg="white")
+        except ValueError:
+            # Tratar erros de conversão
+            entry_widget.config(fg="black", bg="white")
+            print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
 
 def copiar(tipo, numero=None, w=None):
     '''
@@ -478,7 +517,14 @@ def limpar_dobras():
 
     # Resetar valores globais
     g.DOBRAS_VALORES = []
-    
+
+    # Alterar a cor de fundo das entradas de dobras para branco
+    for i in range(1, g.N):
+        for col in g.VALORES_W:
+            entry = getattr(g, f'aba{i}_entry_{col}', None)
+            if entry:
+                entry.config(bg="white")
+
 def limpar_tudo():
     '''
     Limpa todos os campos e labels do aplicativo.
@@ -509,9 +555,7 @@ def limpar_tudo():
     for etiqueta, texto in etiquetas.items():
         etiqueta.config(text=texto)
 
-    for w in g.VALORES_W:
-        limpar_dobras()
-
+    limpar_dobras()
     todas_funcoes()
 
 def todas_funcoes():
@@ -857,11 +901,12 @@ def salvar_no_banco(obj, tipo, detalhes):
     session.add(obj)
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
-    
+
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",parent = config['form']) #add parent
+    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",
+                        parent=config['form'])
 
 def editar(tipo):
     '''
@@ -973,7 +1018,9 @@ def excluir(tipo):
     obj_id = item['values'][0]
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).", parent=config['form'])
+        messagebox.showerror("Erro",
+                             f"{tipo.capitalize()} não encontrado(a).",
+                             parent=config['form'])
         return
 
     deducao_objs = (
@@ -995,7 +1042,9 @@ def excluir(tipo):
                   obj_id,
                   f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
     config['lista'].delete(selected_item)
-    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} excluído(a) com sucesso!", parent=config['form'])
+    messagebox.showinfo("Sucesso",
+                         f"{tipo.capitalize()} excluído(a) com sucesso!",
+                         parent=config['form'])
 
     limpar_campos(tipo)
     listar(tipo)
