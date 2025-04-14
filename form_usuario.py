@@ -28,7 +28,7 @@ def main(root_app):
     Função principal para gerenciar usuários.
     '''
     # Verificar se o usuário é administrador
-    if not tem_permissao('admin'):
+    if not tem_permissao('principal', 'admin'):
         return
 
     if g.USUAR_FORM is not None:
