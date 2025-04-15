@@ -38,6 +38,7 @@ def main(root):
     main_frame.rowconfigure(2,weight=0)
     main_frame.rowconfigure(3,weight=0)
 
+    # Criação do frame de busca
     frame_busca = tk.LabelFrame(main_frame, text='Buscar Materiais', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
@@ -52,7 +53,8 @@ def main(root):
 
     tk.Button(frame_busca,
               text="Limpar",
-              command=lambda: limpar_busca('material')).grid(row=0, column=2, padx=5, pady=5)
+              command=lambda: limpar_busca('material')
+              ).grid(row=0, column=2, padx=5, pady=5)
 
     columns = ("Id", "Nome", "Densidade", "Escoamento", "Elasticidade")
     g.LIST_MAT = ttk.Treeview(main_frame, columns=columns, show="headings")

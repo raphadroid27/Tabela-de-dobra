@@ -7,6 +7,7 @@
 # e funcionalidades específicas.
 """
 import tkinter as tk
+from tkinter import ttk
 import json
 import os
 from sqlalchemy.orm import sessionmaker
@@ -27,6 +28,7 @@ import form_sobre
 import form_aut
 import form_usuario
 import botoes
+from styles import configurar_estilos
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -226,7 +228,8 @@ def configurar_frames():
     """
     Configura os frames principais da janela.
     """
-    frame_superior = tk.LabelFrame(g.PRINC_FORM)
+
+    frame_superior = ttk.Frame(g.PRINC_FORM)
     frame_superior.pack(fill='both', expand=True, padx=10, pady=10)
 
     frame_superior.columnconfigure(0, weight=1)
@@ -249,6 +252,7 @@ def main():
     configurar_menu()
     configurar_frames()
     verificar_admin_existente()
+    configurar_estilos()
     g.PRINC_FORM.mainloop()
 
 if __name__ == "__main__":

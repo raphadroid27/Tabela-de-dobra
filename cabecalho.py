@@ -7,6 +7,7 @@ from tkinter import ttk
 import tooltip as tp
 import globals as g
 from funcoes import atualizar_combobox, todas_funcoes, copiar, atualizar_toneladas_m
+from styles import configurar_estilos
 
 LARGURA = 9 # Largura padrão para os widgets
 
@@ -21,9 +22,9 @@ def criar_label(frame, texto, linha_coluna, **kwargs):
         **kwargs: Argumentos adicionais para o widget Label.
     """
     linha, coluna = linha_coluna
-    label = tk.Label(frame, width=LARGURA,
+    label = ttk.Label(frame, width=LARGURA,
              text=texto,
-             anchor='w',
+             style="Titulo.TLabel",
              **kwargs)
     label.grid(row=linha, column=coluna, sticky='w')
     return label
@@ -41,13 +42,15 @@ def criar_widget(frame, tipo, var_global, linha_coluna, **kwargs):
         largura (int): Largura do widget.
         **kwargs: Argumentos adicionais para o widget.
     """
+    configurar_estilos()
+
     linha, coluna = linha_coluna
     if tipo == 'entry':
-        setattr(g, var_global, tk.Entry(frame, width=LARGURA, **kwargs))
+        setattr(g, var_global, ttk.Entry(frame, width=LARGURA, justify='center', **kwargs))
     elif tipo == 'label':
-        setattr(g, var_global, tk.Label(frame, width=LARGURA, relief="sunken", **kwargs))
+        setattr(g, var_global, ttk.Label(frame, width=LARGURA, style="Campo.TLabel", anchor='center', **kwargs))
     elif tipo == 'combobox':
-        setattr(g, var_global, ttk.Combobox(frame, width=LARGURA, **kwargs))
+        setattr(g, var_global, ttk.Combobox(frame, width=LARGURA, justify='center', **kwargs))
     widget = getattr(g, var_global)
     widget.grid(row=linha, column=coluna, padx=2, sticky='we')
     return widget
@@ -56,7 +59,7 @@ def cabecalho(root):
     """
     Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
     """
-    frame_cabecalho = tk.Frame(root)
+    frame_cabecalho = ttk.Frame(root)
 
     for i in range(4):
         frame_cabecalho.columnconfigure(i, weight=1)
@@ -66,31 +69,31 @@ def cabecalho(root):
 
     # Material
     criar_label(frame_cabecalho, "Material:", (0, 0))
-    criar_widget(frame_cabecalho, 'combobox', 'MAT_COMB', (1, 0), justify="center")
+    criar_widget(frame_cabecalho, 'combobox', 'MAT_COMB', (1, 0))
     g.MAT_COMB.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
     tp.ToolTip(g.MAT_COMB, "Selecione o material")
 
     # Espessura
     criar_label(frame_cabecalho, "Espessura:", (0, 1))
-    criar_widget(frame_cabecalho, 'combobox', 'ESP_COMB', (1, 1), justify="center")
+    criar_widget(frame_cabecalho, 'combobox', 'ESP_COMB', (1, 1))
     g.ESP_COMB.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
     tp.ToolTip(g.ESP_COMB, "Selecione a espessura da peça.")
 
     # Canal
     criar_label(frame_cabecalho, "Canal:", (0, 2))
-    criar_widget(frame_cabecalho, 'combobox', 'CANAL_COMB', (1, 2), justify="center")
+    criar_widget(frame_cabecalho, 'combobox', 'CANAL_COMB', (1, 2))
     g.CANAL_COMB.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
     tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
 
     # Comprimento
     criar_label(frame_cabecalho, "Compr:", (0, 3))
-    criar_widget(frame_cabecalho, 'entry', 'COMPR_ENTRY', (1, 3), justify="center")
+    criar_widget(frame_cabecalho, 'entry', 'COMPR_ENTRY', (1, 3))
     g.COMPR_ENTRY.bind("<KeyRelease>", func=lambda event: atualizar_toneladas_m())
     tp.ToolTip(g.COMPR_ENTRY, "Digite o comprimento da peça em milímetros.")
 
     # Raio interno
     criar_label(frame_cabecalho, "Raio Int.:", (2, 0))
-    criar_widget(frame_cabecalho, 'entry', 'RI_ENTRY', (3, 0), justify="center")
+    criar_widget(frame_cabecalho, 'entry', 'RI_ENTRY', (3, 0))
     g.RI_ENTRY.bind("<KeyRelease>", func=lambda event: todas_funcoes())
     tp.ToolTip(g.RI_ENTRY, "Digite o raio interno da peça em milímetros.")
 
@@ -114,7 +117,7 @@ def cabecalho(root):
 
     # Dedução específica
     criar_label(frame_cabecalho, "Ded. Espec.:", (4, 0))
-    criar_widget(frame_cabecalho, 'entry', 'DED_ESPEC_ENTRY', (5, 0), fg="blue", justify="center")
+    criar_widget(frame_cabecalho, 'entry', 'DED_ESPEC_ENTRY', (5, 0))
     g.DED_ESPEC_ENTRY.bind("<KeyRelease>", func=lambda event: todas_funcoes())
     tp.ToolTip(g.DED_ESPEC_ENTRY, "Digite a dedução específica da peça em milímetros.")
 
@@ -134,8 +137,8 @@ def cabecalho(root):
     tp.ToolTip(g.FORCA_LBL, "Toneladas por metro.")
 
     # Observações
-    criar_label(frame_cabecalho, "Observações:", (6, 0)).grid(columnspan=4)
-    criar_widget(frame_cabecalho, 'label', 'OBS_LBL', (7, 0), anchor='w').grid(columnspan=4)
+    criar_label(frame_cabecalho, "Observações:", (6, 0)).grid(columnspan=4, sticky="we")
+    criar_widget(frame_cabecalho, 'label', 'OBS_LBL', (7, 0)).grid(columnspan=4)
 
     atualizar_combobox('material')
 

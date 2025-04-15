@@ -92,11 +92,11 @@ def atualizar_combobox(tipo):
             ).first()
 
             if deducao_obj:
-                g.DED_LBL.config(text=deducao_obj.valor, fg="black")
+                g.DED_LBL.config(text=deducao_obj.valor, foreground="black")
                 observacao = deducao_obj.observacao or 'Observações não encontradas'
                 g.OBS_LBL.config(text=f'{observacao}')
             else:
-                g.DED_LBL.config(text='N/A', fg="red")
+                g.DED_LBL.config(text='N/A', foreground="red")
                 g.OBS_LBL.config(text='Observações não encontradas')
 
             g.DED_VALOR = deducao_obj.valor if deducao_obj else None
@@ -146,9 +146,9 @@ def atualizar_toneladas_m():
         if deducao_obj and deducao_obj.forca is not None:
             toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
             if comprimento else deducao_obj.forca)
-            g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', fg="black")
+            g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', foreground="black")
         else:
-            g.FORCA_LBL.config(text='N/A', fg="red")
+            g.FORCA_LBL.config(text='N/A', foreground="red")
 
     # Verificar se o comprimento é menor que o comprimento total do canal
     canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
@@ -157,9 +157,9 @@ def atualizar_toneladas_m():
 
     if canal_obj and comprimento and comprimento_total:
         if comprimento < comprimento_total:
-            g.COMPR_ENTRY.config(fg="black")
+            g.COMPR_ENTRY.config(foreground="black")
         elif comprimento >= comprimento_total:
-            g.COMPR_ENTRY.config(fg="red")
+            g.COMPR_ENTRY.config(foreground="red")
 
 def calcular_k_offset():
     '''
@@ -192,10 +192,10 @@ def calcular_k_offset():
         offset = fator_k * espessura
 
         # Atualiza o label com o valor calculado
-        g.K_LBL.config(text=f"{fator_k:.2f}", fg="blue"
+        g.K_LBL.config(text=f"{fator_k:.2f}", foreground="blue"
                        if deducao_valor == deducao_espec else "black")
 
-        g.OFFSET_LBL.config(text=f"{offset:.2f}", fg="blue"
+        g.OFFSET_LBL.config(text=f"{offset:.2f}", foreground="blue"
                             if deducao_valor == deducao_espec else "black")
 
     except ValueError:
@@ -218,7 +218,7 @@ def aba_minima_externa():
             g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
     except (ValueError, AttributeError) as e:
         print(f"Erro ao calcular aba mínima externa: {e}")
-        g.ABA_EXT_LBL.config(text="N/A", fg="red")
+        g.ABA_EXT_LBL.config(text="N/A", foreground="red")
 
     return aba_minima_valor
 
@@ -234,19 +234,19 @@ def verificar_aba_minima(dobra, i, w):
 
     # Verificar se o campo está vazio
     if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
-        entry_widget.config(fg="black", bg="white")
+        entry_widget.config(foreground="black", background="white")
         print(f"Valor vazio na aba {i}, coluna {w}.")
     else:
         try:
             # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
             if float(dobra) < aba_minima:
-                entry_widget.config(fg="white", bg="red")
+                entry_widget.config(foreground="white", background="red")
                 tp.ToolTip(entry_widget, "Aba mínima externa não atendida.")
             else:
-                entry_widget.config(fg="black", bg="white")
+                entry_widget.config(foreground="black", background="white")
         except ValueError:
             # Tratar erros de conversão
-            entry_widget.config(fg="black", bg="white")
+            entry_widget.config(foreground="black", background="white")
             print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
 
 def z_minimo_externo():
@@ -265,13 +265,13 @@ def z_minimo_externo():
 
         if material != "" and espessura != "" and canal_valor != "":
             if not canal_obj.largura:
-                g.Z_EXT_LBL.config(text="N/A", fg="red")
+                g.Z_EXT_LBL.config(text="N/A", foreground="red")
                 return
 
             if canal_valor and deducao_valor:
                 canal_valor = float(re.findall(r'\d+\.?\d*', canal_valor)[0])
                 valor_z_min_ext = espessura + (deducao_valor / 2) + (canal_obj.largura / 2) + 2
-                g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', fg="black")
+                g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', foreground="black")
 
     except ValueError:
         # Trata erros de conversão
@@ -386,8 +386,8 @@ def calcular_dobra(w):
             metade_dobra = medidadobra / 2
 
             # Atualizar os widgets com os valores calculados
-            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
-            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
+            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', foreground="black")
+            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', foreground="black")
 
         blank = sum(
         float(getattr(g, f'medidadobra{i}_label_{w}').cget('text').replace(' Copiado!', ''))
@@ -400,13 +400,13 @@ def calcular_dobra(w):
         # Atualizar os widgets com os valores calculados
         label = getattr(g, f'medida_blank_label_{w}')
         if blank:
-            label.config(text=f"{blank:.2f}", fg="black")
+            label.config(text=f"{blank:.2f}", foreground="black")
         else:
             label.config(text="")
 
         label = getattr(g, f'metade_blank_label_{w}')
         if metade_blank:
-            label.config(text=f"{metade_blank:.2f}", fg="black")
+            label.config(text=f"{metade_blank:.2f}", foreground="black")
         else:
             label.config(text="")
 
@@ -469,7 +469,7 @@ def copiar(tipo, numero=None, w=None):
         config['funcao_calculo']()
         pyperclip.copy(label.cget('text'))
         print(f'Valor copiado {label.cget("text")}')
-        label.config(text=f'{label.cget("text")} Copiado!', fg="green")
+        label.config(text=f'{label.cget("text")} Copiado!', foreground="green")
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
@@ -524,7 +524,7 @@ def limpar_dobras():
         for col in g.VALORES_W:
             entry = getattr(g, f'aba{i}_entry_{col}', None)
             if entry:
-                entry.config(bg="white")
+                entry.config(background="white")
 
 def limpar_tudo():
     '''

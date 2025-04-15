@@ -12,6 +12,7 @@ from funcoes import (no_topo, posicionar_janela, buscar, limpar_busca, preencher
                      listar, adicionar, editar, excluir, atualizar_combobox)
 from styles import configurar_estilos
 
+
 def main(root):
     """
     Função principal que inicializa e configura o formulário de deduções.
@@ -45,25 +46,20 @@ def main(root):
     for i in range(4):
         frame_busca.columnconfigure(i, weight=1)
 
-    ttk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
-    g.DED_MATER_COMB = ttk.Combobox(frame_busca)
-    g.DED_MATER_COMB.grid(row=1, column=0, padx=5, sticky="ew")
-    g.DED_MATER_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
-
-    ttk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
-    g.DED_ESPES_COMB = ttk.Combobox(frame_busca)
-    g.DED_ESPES_COMB.grid(row=1, column=1, padx=5, sticky="ew")
-    g.DED_ESPES_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
-
-    ttk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
-    g.DED_CANAL_COMB = ttk.Combobox(frame_busca)
-    g.DED_CANAL_COMB.grid(row=1, column=2, padx=5, sticky="ew")
-    g.DED_CANAL_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
+    campos = [("Material", 0, "MATER"), ("Espessura", 1, "ESPES"), ("Canal", 2, "CANAL")]
+    for texto, coluna, var in campos:
+        ttk.Label(frame_busca, text=f"{texto}:", style="Titulo.TLabel").grid(row=0, column=coluna, padx=2, sticky='sw')
+        combobox = ttk.Combobox(frame_busca)
+        combobox.grid(row=1, column=coluna, padx=5, sticky="ew")
+        combobox.bind("<<ComboboxSelected>>", lambda event, t='dedução': buscar(t))
+        setattr(g, f"DED_{var.upper()}_COMB", combobox)
 
     ttk.Button(frame_busca,
               text="Limpar",
               width=10,
-              command = lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
+              style="TButton",
+              command = lambda: limpar_busca('dedução')
+              ).grid(row=1, column=3, padx=5, pady=5, sticky="e")
 
     columns = ("Id","Material", "Espessura","Canal", "Dedução", "Observação", "Força")
     g.LIST_DED = ttk.Treeview(main_frame, columns=columns, show="headings")
@@ -108,7 +104,7 @@ def main(root):
         ttk.Button(frame_edicoes,
                   text="Atualizar",
                   width=10,
-                  style="Editar.TButton",
+                  style="Atualizar.TButton",
                   command = lambda: editar('dedução')).grid(row=1,
                                                             column=3,
                                                             padx=5,
@@ -117,6 +113,7 @@ def main(root):
         ttk.Button(main_frame,
                   text="Excluir",
                   width=10,
+                  style="Excluir.TButton",
                   command = lambda: excluir('dedução')).grid(row=2,
                                                              column=0,
                                                              padx=5,

@@ -24,22 +24,28 @@ def main(root):
 
     main_frame = ttk.Frame(g.CANAL_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
+
     main_frame.columnconfigure(0, weight=1)
     for i in range(4):
         main_frame.rowconfigure(i, weight=1 if i == 1 else 0)
 
-    # Frame de busca
-    frame_busca = ttk.LabelFrame(main_frame, text='Buscar Canais', padding=5)
+    # Criação do frame de busca
+    frame_busca = ttk.Labelframe(main_frame, text='Buscar Canais')
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-    frame_busca.columnconfigure(0, weight=0)
-    frame_busca.columnconfigure(1, weight=1)
-    frame_busca.columnconfigure(2, weight=0)
 
-    ttk.Label(frame_busca, text="Valor:", style="TLabel").grid(row=0, column=0)
+    for i in range(3):
+        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
+
+    ttk.Label(frame_busca, text="Valor:", style="Titulo.TLabel").grid(row=0, column=0)
     g.CANAL_BUSCA_ENTRY = ttk.Entry(frame_busca, style="TEntry")
     g.CANAL_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
     g.CANAL_BUSCA_ENTRY.bind("<Return>", lambda event: buscar('canal'))
-    ttk.Button(frame_busca, text="Limpar", command=lambda: limpar_busca('canal'), style="Limpar.TButton").grid(row=0, column=2, padx=5, pady=5)
+    
+    ttk.Button(frame_busca,
+               text="Limpar",
+               style="TButton",
+               command=lambda: limpar_busca('canal')
+               ).grid(row=0, column=2, padx=5, pady=5)
 
     # Treeview de canais
     columns = ("Id", "Canal", "Largura", "Altura", "Compr.", "Obs.")
@@ -87,7 +93,7 @@ def main(root):
         frame_edicoes.config(text='Editar Canal')
 
         ttk.Button(main_frame, text="Excluir", style="Excluir.TButton", command=lambda: excluir('canal')).grid(row=2, column=0, padx=5, pady=5, sticky="e")
-        ttk.Button(frame_edicoes, text="Atualizar", style="Editar.TButton", command=lambda: editar('canal')).grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
+        ttk.Button(frame_edicoes, text="Atualizar", style="Atualizar.TButton", command=lambda: editar('canal')).grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
     else:
         g.CANAL_FORM.title("Novo Canal")
         frame_edicoes.config(text='Novo Canal')
