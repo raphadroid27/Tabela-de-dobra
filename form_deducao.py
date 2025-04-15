@@ -10,6 +10,7 @@ from tkinter import ttk
 import globals as g
 from funcoes import (no_topo, posicionar_janela, buscar, limpar_busca, preencher_campos,
                      listar, adicionar, editar, excluir, atualizar_combobox)
+from styles import configurar_estilos
 
 def main(root):
     """
@@ -26,7 +27,10 @@ def main(root):
     no_topo(g.DEDUC_FORM)
     posicionar_janela(g.DEDUC_FORM, None)
 
-    main_frame = tk.Frame(g.DEDUC_FORM)
+    # Configurar estilos
+    configurar_estilos()
+
+    main_frame = ttk.Frame(g.DEDUC_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
     main_frame.columnconfigure(0, weight=1)
@@ -35,28 +39,28 @@ def main(root):
         main_frame.rowconfigure(i, weight=0)
     main_frame.rowconfigure(1, weight=1)
 
-    frame_busca = tk.LabelFrame(main_frame, text='Buscar Deduções', pady=5)
+    frame_busca = ttk.LabelFrame(main_frame, text='Buscar Deduções')
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
     for i in range(4):
         frame_busca.columnconfigure(i, weight=1)
 
-    tk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
+    ttk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
     g.DED_MATER_COMB = ttk.Combobox(frame_busca)
     g.DED_MATER_COMB.grid(row=1, column=0, padx=5, sticky="ew")
     g.DED_MATER_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
-    tk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
+    ttk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
     g.DED_ESPES_COMB = ttk.Combobox(frame_busca)
     g.DED_ESPES_COMB.grid(row=1, column=1, padx=5, sticky="ew")
     g.DED_ESPES_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
-    tk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
+    ttk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
     g.DED_CANAL_COMB = ttk.Combobox(frame_busca)
     g.DED_CANAL_COMB.grid(row=1, column=2, padx=5, sticky="ew")
     g.DED_CANAL_COMB.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
 
-    tk.Button(frame_busca,
+    ttk.Button(frame_busca,
               text="Limpar",
               width=10,
               command = lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
@@ -78,22 +82,22 @@ def main(root):
 
     listar('dedução')
 
-    frame_edicoes = tk.LabelFrame(main_frame, pady=5)
+    frame_edicoes = ttk.LabelFrame(main_frame)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
 
     for i in range(4):
         frame_edicoes.columnconfigure(i, weight=1)
 
-    tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, padx=2, sticky='sw')
-    g.DED_VALOR_ENTRY = tk.Entry(frame_edicoes)
+    ttk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, padx=2, sticky='sw')
+    g.DED_VALOR_ENTRY = ttk.Entry(frame_edicoes)
     g.DED_VALOR_ENTRY.grid(row=1, column=0, padx=5, sticky="ew")
 
-    tk.Label(frame_edicoes, text="Observação:").grid(row=0, column=1,padx=2, sticky='sw')
-    g.DED_OBSER_ENTRY = tk.Entry(frame_edicoes)
+    ttk.Label(frame_edicoes, text="Observação:").grid(row=0, column=1,padx=2, sticky='sw')
+    g.DED_OBSER_ENTRY = ttk.Entry(frame_edicoes)
     g.DED_OBSER_ENTRY.grid(row=1, column=1, padx=5, sticky="ew")
 
-    tk.Label(frame_edicoes, text="Força:").grid(row=0, padx=2, column=2, sticky='sw')
-    g.DED_FORCA_ENTRY = tk.Entry(frame_edicoes)
+    ttk.Label(frame_edicoes, text="Força:").grid(row=0, padx=2, column=2, sticky='sw')
+    g.DED_FORCA_ENTRY = ttk.Entry(frame_edicoes)
     g.DED_FORCA_ENTRY.grid(row=1, column=2, padx=5, sticky="ew")
 
     if g.EDIT_DED is True:
@@ -101,18 +105,17 @@ def main(root):
         g.LIST_DED.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução'))
         frame_edicoes.config(text='Editar Dedução')
 
-        tk.Button(frame_edicoes,
+        ttk.Button(frame_edicoes,
                   text="Atualizar",
-                  bg="green",
                   width=10,
+                  style="Editar.TButton",
                   command = lambda: editar('dedução')).grid(row=1,
                                                             column=3,
                                                             padx=5,
                                                             pady=5,
                                                             sticky="eW")
-        tk.Button(main_frame,
+        ttk.Button(main_frame,
                   text="Excluir",
-                  bg="red",
                   width=10,
                   command = lambda: excluir('dedução')).grid(row=2,
                                                              column=0,
@@ -122,9 +125,8 @@ def main(root):
     else:
         g.DEDUC_FORM.title("Adicionar Dedução")
         frame_edicoes.config(text='Nova Dedução')
-        tk.Button(frame_edicoes,
+        ttk.Button(frame_edicoes,
                   text="Adicionar",
-                  bg="cyan",
                   width=10,
                   command = lambda: adicionar('dedução')).grid(row=1,
                                                                column=3,
