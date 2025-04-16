@@ -689,6 +689,7 @@ def obter_configuracoes():
         'material': {
             'form': g.MATER_FORM,
             'lista': g.LIST_MAT,
+            'colunas': ['ID', 'Nome', 'Densidade', 'Escoamento', 'Elasticidade'],
             'modelo': Material,
             'campos': {
                 'nome': g.MAT_NOME_ENTRY,
@@ -706,6 +707,7 @@ def obter_configuracoes():
         'espessura': {
             'form': g.ESPES_FORM,
             'lista': g.LIST_ESP,
+            'colunas': ['ID', 'Valor'],
             'modelo': Espessura,
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
             'valores': valores_espessura,
@@ -717,7 +719,8 @@ def obter_configuracoes():
         'canal': {
             'form': g.CANAL_FORM,
             'lista': g.LIST_CANAL,
-            'modelo': Canal,  # Corrigido de canal
+            'colunas': ['ID', 'Valor', 'Largura', 'Altura', 'Comprimento Total', 'Observação'],
+            'modelo': Canal,
             'campos': {
                 'valor': g.CANAL_VALOR_ENTRY,
                 'largura': g.CANAL_LARGU_ENTRY,
@@ -747,6 +750,7 @@ def listar(tipo):
     '''
     Lista os itens do banco de dados na interface gráfica.
     '''
+
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -766,6 +770,7 @@ def listar(tipo):
             if item.material is None or item.espessura is None or item.canal is None:
                 continue
         config['lista'].insert("", "end", values=config['valores'](item))
+        print(f"Item listado: {config['valores'](item)}")
 
 def buscar(tipo):
     '''
