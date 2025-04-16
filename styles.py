@@ -36,6 +36,7 @@ def configurar_estilos():
         style.configure("TLabelframe", background="#2e2e2e", foreground="#ffffff")
         style.configure("TEntry", background="#3c3c3c", foreground="#ffffff", fieldbackground="#3c3c3c")
         style.configure("TButton", background="#444444", foreground="#ffffff")
+        style.configure("TCheckbutton", background="#2e2e2e", foreground="#ffffff")
         style.configure("Treeview", background="#3c3c3c", foreground="#ffffff", fieldbackground="#3c3c3c")
         style.configure("Treeview.Heading", background="#444444", foreground="#ffffff")
     else:
@@ -49,6 +50,7 @@ def configurar_estilos():
         style.configure("TLabelframe", background="#f0f0f0", foreground="#000000")
         style.configure("TEntry", background="#ffffff", foreground="#000000", fieldbackground="#ffffff")
         style.configure("TButton", background="#e0e0e0", foreground="#000000")
+        style.configure("TCheckbutton", background="#f0f0f0", foreground="#000000")
         style.configure("Treeview", background="#f0f0f0", foreground="#000000", fieldbackground="#f0f0f0")
         style.configure("Treeview.Heading", background="#e0e0e0", foreground="#000000")
 
@@ -61,6 +63,8 @@ def configurar_estilos():
                     font=("Arial", 10),
                     relief="sunken"
                     )
+    
+
     
     style.configure("TEntry",
                     font=("Arial", 10),

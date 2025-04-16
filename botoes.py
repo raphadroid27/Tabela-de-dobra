@@ -6,11 +6,13 @@ serão utilizados para manipular as dobras e a interface de forma
 interativa.
 '''
 import tkinter as tk
+from tkinter import ttk
 from dobra_90 import entradas_dobras
 from funcoes import limpar_dobras, limpar_tudo
 import globals as g
 from form_principal import carregar_interface
 import tooltip as tp
+from styles import configurar_estilos
 
 def criar_botoes(root):
     """
@@ -20,12 +22,14 @@ def criar_botoes(root):
         frame_inferior (tk.Frame): Frame onde os botões serão adicionados.
         frame_superior (tk.Frame): Frame superior para manipulação de interface.
     """
-    frame_botoes = tk.Frame(root)
+    frame_botoes = ttk.Frame(root)
 
     frame_botoes.columnconfigure(0, weight=1)
     frame_botoes.columnconfigure(1, weight=1)
     frame_botoes.rowconfigure(0, weight=1)
     frame_botoes.rowconfigure(1, weight=1)
+
+    configurar_estilos()
 
     def expandir_v():
         largura_atual = g.PRINC_FORM.winfo_width()
@@ -60,37 +64,31 @@ def criar_botoes(root):
         if g.EXP_H.get() == 1:
             carregar_interface(2, root)
 
-    tk.Checkbutton(
+    ttk.Checkbutton(
         frame_botoes,
         text="Expandir Vertical",
         variable=g.EXP_V,
-        width=1,
-        height=1,
         command=expandir_v
     ).grid(row=0, column=0, sticky='we')
 
-    tk.Checkbutton(
+    ttk.Checkbutton(
         frame_botoes,
         text="Expandir Horizontal",
         variable=g.EXP_H,
-        width=1,
-        height=1,
         command=expandir_h
     ).grid(row=0, column=1, sticky='we')
 
     # Botão para limpar valores de dobras
-    tk.Button(frame_botoes,
+    ttk.Button(frame_botoes,
               text="Limpar Dobras",
-              command=limpar_dobras,
-              width=15,
-              bg='yellow').grid(row=1, column=0, sticky='we', padx=2)
+              command=limpar_dobras
+              ).grid(row=1, column=0, sticky='we', padx=2)
 
     # Botão para limpar todos os valores
-    tk.Button(frame_botoes,
+    ttk.Button(frame_botoes,
               text="Limpar Tudo",
-              command=limpar_tudo,
-              width=15,
-              bg='red').grid(row=1, column=1, sticky='we', padx=2)
+              command=limpar_tudo
+              ).grid(row=1, column=1, sticky='we', padx=2)
 
     tp.ToolTip(frame_botoes.grid_slaves(row=0, column=0)[0], text="Expande a interface verticalmente")
     tp.ToolTip(frame_botoes.grid_slaves(row=0, column=1)[0], text="Expande a interface horizontalmente")

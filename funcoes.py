@@ -237,17 +237,14 @@ def verificar_aba_minima(dobra, i, w):
         entry_widget.config(foreground=g.FOREGROUND_COLOR, background="white")
         print(f"Valor vazio na aba {i}, coluna {w}.")
     else:
-        try:
-            # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
-            if float(dobra) < aba_minima:
-                entry_widget.config(foreground="white", background="red")
-                tp.ToolTip(entry_widget, "Aba mínima externa não atendida.")
-            else:
-                entry_widget.config(foreground=g.FOREGROUND_COLOR, background="white")
-        except ValueError:
-            # Tratar erros de conversão
-            entry_widget.config(foreground=g.FOREGROUND_COLOR, background="white")
-            print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
+      
+        # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
+        if float(dobra) < aba_minima:
+            entry_widget.config(foreground="red")
+            tp.ToolTip(entry_widget, "Aba mínima externa não atendida.")
+        else:
+            entry_widget.config(foreground=g.FOREGROUND_COLOR)
+            tp.ToolTip(entry_widget, "Insira o valor da dobra.")
 
 def z_minimo_externo():
     '''
@@ -849,6 +846,7 @@ def adicionar(tipo):
     limpar_campos(tipo)
     listar(tipo)
     atualizar_combobox(tipo)
+    buscar(tipo)
 
 def adicionar_deducao():
     '''

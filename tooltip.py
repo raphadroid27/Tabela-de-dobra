@@ -18,12 +18,14 @@ class ToolTip:
         # Associar eventos ao widget
         self.widget.bind("<Enter>", self.schedule_show)
         self.widget.bind("<Leave>", self.hide_tooltip)
+        self.widget.bind("<ButtonPress>", self.hide_tooltip)
 
     def schedule_show(self, event=None):
         '''
-        Agendar a exibição do tooltip após um atraso.
+        Agendar a exibição do tooltip após um atraso, evitando múltiplos agendamentos.
         '''
-        self.id = self.widget.after(self.delay, self.show_tooltip)
+        if self.id is None:
+            self.id = self.widget.after(self.delay, self.show_tooltip)
 
     def show_tooltip(self, event=None):
         '''
@@ -31,6 +33,7 @@ class ToolTip:
         '''
         if self.tooltip_window is not None:
             return
+        # Obter posição do mouse
         x = self.widget.winfo_rootx() + 20
         y = self.widget.winfo_rooty() + 22
         self.tooltip_window = tk.Toplevel(self.widget)
