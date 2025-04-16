@@ -92,7 +92,7 @@ def atualizar_combobox(tipo):
             ).first()
 
             if deducao_obj:
-                g.DED_LBL.config(text=deducao_obj.valor, foreground="black")
+                g.DED_LBL.config(text=deducao_obj.valor, foreground=g.FOREGROUND_COLOR)
                 observacao = deducao_obj.observacao or 'Observações não encontradas'
                 g.OBS_LBL.config(text=f'{observacao}')
             else:
@@ -143,12 +143,12 @@ def atualizar_toneladas_m():
     deducao_obj = session.query(Deducao).filter_by(valor=g.DED_VALOR).first()
 
     if g.MAT_COMB.get() != "" and g.ESP_COMB.get() != "" and g.CANAL_COMB.get() != "":
-        if deducao_obj and deducao_obj.forca is not None:
+        if not deducao_obj or deducao_obj.forca is None:
+            g.FORCA_LBL.config(text='N/A', foreground="red")
+        else:
             toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
             if comprimento else deducao_obj.forca)
-            g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', foreground="black")
-        else:
-            g.FORCA_LBL.config(text='N/A', foreground="red")
+            g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', foreground=g.FOREGROUND_COLOR)
 
     # Verificar se o comprimento é menor que o comprimento total do canal
     canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
@@ -157,7 +157,7 @@ def atualizar_toneladas_m():
 
     if canal_obj and comprimento and comprimento_total:
         if comprimento < comprimento_total:
-            g.COMPR_ENTRY.config(foreground="black")
+            g.COMPR_ENTRY.config(foreground=g.FOREGROUND_COLOR)
         elif comprimento >= comprimento_total:
             g.COMPR_ENTRY.config(foreground="red")
 
@@ -234,7 +234,7 @@ def verificar_aba_minima(dobra, i, w):
 
     # Verificar se o campo está vazio
     if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
-        entry_widget.config(foreground="black", background="white")
+        entry_widget.config(foreground=g.FOREGROUND_COLOR, background="white")
         print(f"Valor vazio na aba {i}, coluna {w}.")
     else:
         try:
@@ -243,10 +243,10 @@ def verificar_aba_minima(dobra, i, w):
                 entry_widget.config(foreground="white", background="red")
                 tp.ToolTip(entry_widget, "Aba mínima externa não atendida.")
             else:
-                entry_widget.config(foreground="black", background="white")
+                entry_widget.config(foreground=g.FOREGROUND_COLOR, background="white")
         except ValueError:
             # Tratar erros de conversão
-            entry_widget.config(foreground="black", background="white")
+            entry_widget.config(foreground=g.FOREGROUND_COLOR, background="white")
             print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
 
 def z_minimo_externo():
@@ -271,7 +271,7 @@ def z_minimo_externo():
             if canal_valor and deducao_valor:
                 canal_valor = float(re.findall(r'\d+\.?\d*', canal_valor)[0])
                 valor_z_min_ext = espessura + (deducao_valor / 2) + (canal_obj.largura / 2) + 2
-                g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', foreground="black")
+                g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', foreground=g.FOREGROUND_COLOR)
 
     except ValueError:
         # Trata erros de conversão
@@ -386,8 +386,8 @@ def calcular_dobra(w):
             metade_dobra = medidadobra / 2
 
             # Atualizar os widgets com os valores calculados
-            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', foreground="black")
-            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', foreground="black")
+            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', foreground=g.FOREGROUND_COLOR)
+            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', foreground=g.FOREGROUND_COLOR)
 
         blank = sum(
         float(getattr(g, f'medidadobra{i}_label_{w}').cget('text').replace(' Copiado!', ''))
@@ -400,13 +400,13 @@ def calcular_dobra(w):
         # Atualizar os widgets com os valores calculados
         label = getattr(g, f'medida_blank_label_{w}')
         if blank:
-            label.config(text=f"{blank:.2f}", foreground="black")
+            label.config(text=f"{blank:.2f}", foreground=g.FOREGROUND_COLOR)
         else:
             label.config(text="")
 
         label = getattr(g, f'metade_blank_label_{w}')
         if metade_blank:
-            label.config(text=f"{metade_blank:.2f}", foreground="black")
+            label.config(text=f"{metade_blank:.2f}", foreground=g.FOREGROUND_COLOR)
         else:
             label.config(text="")
 

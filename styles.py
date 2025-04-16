@@ -23,14 +23,15 @@ def configurar_estilos():
     style.theme_use('clam')
 
     # Detectar tema do sistema operacional
-    tema_escuro = darkdetect.isDark() == True
+    tema_escuro = darkdetect.isDark() == False
 
     if tema_escuro:
         # Configurações para tema escuro
         g.PRINC_FORM.configure(background="#2e2e2e")  # Adicionando configuração de fundo
-        style.configure("TLabel", background="#2e2e2e", foreground="#ffffff")
-        style.configure("Titulo.TLabel", background="#2e2e2e", foreground="#ffffff")
-        style.configure("Campo.TLabel", background="#2e2e2e", foreground="#ffffff")
+        g.FOREGROUND_COLOR = "#ffffff"  # Definindo a cor de primeiro plano para o tema escuro
+        style.configure("TLabel", background="#2e2e2e", foreground=g.FOREGROUND_COLOR)  # Usando a cor de primeiro plano
+        style.configure("Titulo.TLabel", background="#2e2e2e", foreground=g.FOREGROUND_COLOR)  # Usando a cor de primeiro plano
+        style.configure("Campo.TLabel", background="#2e2e2e", foreground=g.FOREGROUND_COLOR)  # Usando a cor de primeiro plano
         style.configure("TFrame", background="#2e2e2e")
         style.configure("TLabelframe", background="#2e2e2e", foreground="#ffffff")
         style.configure("TEntry", background="#3c3c3c", foreground="#ffffff", fieldbackground="#3c3c3c")
@@ -40,9 +41,10 @@ def configurar_estilos():
     else:
         # Configurações para tema claro
         g.PRINC_FORM.configure(background="#f0f0f0")  # Adicionando configuração de fundo
-        style.configure("TLabel", background="#f0f0f0", foreground="#000000")
-        style.configure("Titulo.TLabel", background="#f0f0f0", foreground="#000000")
-        style.configure("Campo.TLabel", background="#f0f0f0", foreground="#000000")
+        g.FOREGROUND_COLOR = "#000000"  # Definindo a cor de primeiro plano para o tema claro
+        style.configure("TLabel", background="#f0f0f0", foreground=g.FOREGROUND_COLOR)  # Usando a cor de primeiro plano
+        style.configure("Titulo.TLabel", background="#f0f0f0", foreground=g.FOREGROUND_COLOR)  # Usando a cor de primeiro plano
+        style.configure("Campo.TLabel", background="#f0f0f0", foreground=g.FOREGROUND_COLOR)  # Usando a cor de primeiro plano
         style.configure("TFrame", background="#f0f0f0")
         style.configure("TLabelframe", background="#f0f0f0", foreground="#000000")
         style.configure("TEntry", background="#ffffff", foreground="#000000", fieldbackground="#ffffff")
