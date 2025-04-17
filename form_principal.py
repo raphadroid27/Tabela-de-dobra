@@ -16,19 +16,16 @@ from models import Usuario
 from dobra_90 import dobras
 from cabecalho import cabecalho
 from avisos import avisos
-import form_espessura
 import globals as g
 from funcoes import (todas_funcoes, salvar_valores_cabecalho,
                       restaurar_valores_dobra, restaurar_valores_cabecalho,
                       logout, no_topo)
-import form_deducao
-import form_material
-import form_canal
 import form_sobre
 import form_aut
-import form_usuario
+#import form_usuario
 import botoes
 from styles import configurar_estilos
+from form_generico import form_gen
 
 # Configuração do banco de dados
 engine = create_engine('sqlite:///tabela_de_dobra.db')
@@ -158,42 +155,26 @@ def configurar_menu():
     # Menu Arquivo
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
-    file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao,
-                                                                           'EDIT_DED',
-                                                                           g.PRINC_FORM))
+    file_menu.add_command(label="Nova Dedução", command=lambda: form_gen('adicionar','dedução', g.PRINC_FORM))
 
-    file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material,
-                                                                            'EDIT_MAT',
-                                                                            g.PRINC_FORM))
+    file_menu.add_command(label="Novo Material", command=lambda: form_gen('adicionar','material', g.PRINC_FORM))
 
-    file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura,
-                                                                           'EDIT_ESP',
-                                                                           g.PRINC_FORM))
+    file_menu.add_command(label="Nova Espessura", command=lambda: form_gen('adicionar','espessura', g.PRINC_FORM))
 
-    file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal,
-                                                                       'EDIT_CANAL',
-                                                                       g.PRINC_FORM))
+    file_menu.add_command(label="Novo Canal", command=lambda: form_gen('adicionar','canal', g.PRINC_FORM))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=g.PRINC_FORM.destroy)
 
     # Menu Editar
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao,
-                                                                           'EDIT_DED',
-                                                                           g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Dedução", command=lambda: form_gen('editar','dedução', g.PRINC_FORM))
 
-    edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material,
-                                                                           'EDIT_MAT',
-                                                                           g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Material", command=lambda: form_gen('editar','material', g.PRINC_FORM))
 
-    edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura,
-                                                                           'EDIT_ESP',
-                                                                           g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Espessura", command=lambda: form_gen('editar','espessura', g.PRINC_FORM))
 
-    edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal,
-                                                                       'EDIT_CANAL',
-                                                                       g.PRINC_FORM))
+    edit_menu.add_command(label="Editar Canal", command=lambda: form_gen('editar','canal', g.PRINC_FORM))
 
     # Menu Opções
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)

@@ -13,6 +13,7 @@ EXP_H = None
 USUARIO_ID = None
 USUARIO_NOME = None
 FOREGROUND_COLOR = None
+CONFIGURACOES = {}
 
 # head.py widgets
 MAT_COMB = None
