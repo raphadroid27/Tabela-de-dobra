@@ -63,8 +63,8 @@ def main(root):
 
     columns = ("Id","Valor")
     g.LIST_ESP = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_ESP["displaycolumns"] = "Valor"
     for col in columns:
-        g.LIST_ESP["displaycolumns"] = "Valor"
         g.LIST_ESP.heading(col, text=col)
         g.LIST_ESP.column(col, anchor="center")
 
@@ -95,8 +95,6 @@ def main(root):
                   text="Adicionar",
                   command = lambda: adicionar('espessura'),
                   bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
-
-    g.ESPES_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)

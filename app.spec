@@ -19,7 +19,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Tabela de Dobra',
+    name='Cálculo de Dobra',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

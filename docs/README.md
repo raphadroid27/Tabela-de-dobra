@@ -1,7 +1,7 @@
 # Tabela-de-dobra
 
 ## Descrição
-Este projeto tem como objetivo fornecer uma tabela de dobra para auxiliar em cálculos ou processos relacionados a dobraduras. Ele pode ser utilizado em contextos industriais, educacionais ou pessoais.
+Este projeto tem como objetivo fornecer uma ferramenta para cálculos de dobra, auxiliando em processos relacionados a dobraduras. Ele pode ser utilizado em contextos industriais, educacionais ou pessoais.
 
 ## Funcionalidades
 - Exibição de tabelas de dobra.

@@ -61,8 +61,8 @@ def main(root):
 
     columns = ("Id","Canal", "Largura", "Altura", "Compr.", "Obs.")
     g.LIST_CANAL = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_CANAL["displaycolumns"] = ("Canal", "Largura", "Altura", "Compr.", "Obs.")
     for col in columns:
-        g.LIST_CANAL["displaycolumns"] = ("Canal", "Largura", "Altura", "Compr.", "Obs.")
         g.LIST_CANAL.heading(col, text=col)
         g.LIST_CANAL.column(col, anchor="center", width=20)
 
@@ -126,8 +126,6 @@ def main(root):
                   text="Adicionar",
                   command=lambda:adicionar('canal'),
                   bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew",rowspan=5)
-
-    g.CANAL_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)
