@@ -32,7 +32,7 @@ def main(root):
     no_topo(g.SOBRE_FORM)
     posicionar_janela(g.SOBRE_FORM, 'centro')
 
-    label_titulo = tk.Label(g.SOBRE_FORM, text="Tabela de Dobra", font=("Arial", 16, "bold"))
+    label_titulo = tk.Label(g.SOBRE_FORM, text="Cálculo de Dobra", font=("Arial", 16, "bold"))
     label_titulo.pack(pady=10)
 
     label_versao = tk.Label(g.SOBRE_FORM, text="Versão: 0.1.0-beta", font=("Arial", 12))
@@ -57,8 +57,6 @@ def main(root):
 
     link_github.pack(pady=5)
     link_github.bind("<Button-1>", lambda e: abrir_github())
-
-    g.SOBRE_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)

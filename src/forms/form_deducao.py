@@ -70,12 +70,12 @@ def main(root):
 
     columns = ("Id","Material", "Espessura","Canal", "Dedução", "Observação", "Força")
     g.LIST_DED = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_DED["displaycolumns"] = ("Material",
+                                "Espessura",
+                                "Canal", "Dedução",
+                                "Observação",
+                                "Força")
     for col in columns:
-        g.LIST_DED["displaycolumns"] = ("Material",
-                                        "Espessura",
-                                        "Canal", "Dedução",
-                                        "Observação",
-                                        "Força")
         g.LIST_DED.heading(col, text=col)
         g.LIST_DED.column(col, anchor="center", width=60)
         g.LIST_DED.column("Material", width=80)
@@ -142,8 +142,6 @@ def main(root):
     tipos = ['material', 'espessura', 'canal']
     for tipo in tipos:
         atualizar_combobox(tipo)
-
-    g.DEDUC_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)

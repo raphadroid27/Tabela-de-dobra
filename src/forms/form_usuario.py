@@ -65,8 +65,8 @@ def main(root):
 
     columns = ("Id","Nome", "Permissões")
     g.LIST_USUARIO = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_USUARIO["displaycolumns"] = ("Nome", "Permissões")
     for col in columns:
-        g.LIST_USUARIO["displaycolumns"] = ("Nome", "Permissões")
         g.LIST_USUARIO.heading(col, text=col)
         g.LIST_USUARIO.column(col, anchor="center", width=20)
 
@@ -91,8 +91,6 @@ def main(root):
               width=10).grid(row=2, column=2, padx=5, pady=5, sticky="e")
 
     listar('usuario')
-
-    g.USUAR_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)

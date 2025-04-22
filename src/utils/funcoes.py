@@ -1125,7 +1125,7 @@ def novo_usuario():
         return
 
     # Criar o novo usuário
-    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.ADMIN_VAR)
+    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.ADMIN_VAR.get())
     session.add(usuario)
 
     # Usar tratativa_erro para tratar erros e confirmar a operação
