@@ -62,8 +62,8 @@ def main(root):
 
     columns = ("Id", "Nome", "Densidade", "Escoamento", "Elasticidade")
     g.LIST_MAT = ttk.Treeview(main_frame, columns=columns, show="headings")
+    g.LIST_MAT["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
     for col in columns:
-        g.LIST_MAT["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
         g.LIST_MAT.heading(col, text=col)
         g.LIST_MAT.column(col, anchor="center", width=20)
 
@@ -127,8 +127,6 @@ def main(root):
                   text="Adicionar",
                   command= lambda: adicionar('material'),
                   bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
-
-    g.MATER_FORM.mainloop()
 
 if __name__ == "__main__":
     main(None)

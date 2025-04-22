@@ -52,7 +52,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
-CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Tabela de Dobra")
+CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 

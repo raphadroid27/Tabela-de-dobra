@@ -64,27 +64,33 @@ def main(root):
 
     admin_existente = session.query(Usuario).filter(Usuario.role == 'admin').first()
 
+    g.ADMIN_VAR = tk.StringVar()
+
     if g.LOGIN:
         g.AUTEN_FORM.title("Login")
         tk.Button(main_frame,
-                  text="Login",
-                  command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
+                text="Login",
+                command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
     else:
         if not admin_existente:
             g.AUTEN_FORM.geometry("200x150")
             tk.Label(main_frame, text="Admin:").grid(row=2, column=0, padx=5, pady=5)
-            g.ADMIN_VAR = 'admin'
-            admin_checkbox = tk.Checkbutton(main_frame, variable=g.ADMIN_VAR)
+            # Definir o valor inicial e os valores on/off
+            g.ADMIN_VAR.set('viewer') # Valor padrão quando desmarcado
+            admin_checkbox = tk.Checkbutton(main_frame,
+                                            variable=g.ADMIN_VAR,
+                                            onvalue='admin',
+                                            offvalue='viewer')
             admin_checkbox.grid(row=2, column=1, padx=5, pady=5)
         else:
-            g.ADMIN_VAR = 'viewer'
+            # Se já existe admin, o novo usuário não pode ser admin
+            g.ADMIN_VAR.set('viewer')
 
         g.AUTEN_FORM.title("Novo Usuário")
         tk.Button(main_frame,
-                  text="Salvar",
-                  command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
-
-    g.AUTEN_FORM.mainloop()
+                text="Salvar",
+                # Na função novo_usuario, use g.ADMIN_VAR.get() para obter o valor
+                command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
 
 if __name__ == "__main__":
     main(None)
