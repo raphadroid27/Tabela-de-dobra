@@ -39,17 +39,14 @@ def main(root):
 
     main_frame.columnconfigure(0,weight=1)
 
-    main_frame.rowconfigure(0,weight=0)
-    main_frame.rowconfigure(1,weight=1)
-    main_frame.rowconfigure(2,weight=0)
-    main_frame.rowconfigure(3,weight=0)
+    for i in range(4):
+        main_frame.rowconfigure(i, weight=0 if i != 1 else 1)
 
     frame_busca = tk.LabelFrame(main_frame, text='Buscar Materiais', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
-    frame_busca.columnconfigure(0, weight=0)
-    frame_busca.columnconfigure(1, weight=1)
-    frame_busca.columnconfigure(2, weight=0)
+    for i in range(3):
+        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
 
     tk.Label(frame_busca, text="Nome:").grid(row=0,column=0)
     g.MAT_BUSCA_ENTRY=tk.Entry(frame_busca)
@@ -74,9 +71,8 @@ def main(root):
     frame_edicoes = tk.LabelFrame(main_frame, pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5,pady=5, sticky="ew")
 
-    frame_edicoes.columnconfigure(0, weight=1)
-    frame_edicoes.columnconfigure(1, weight=1)
-    frame_edicoes.columnconfigure(2, weight=0)
+    for i in range(3):
+        frame_edicoes.columnconfigure(i, weight=1 if i < 2 else 0)
 
     for i in range(4):
         frame_edicoes.rowconfigure(i, weight=1)

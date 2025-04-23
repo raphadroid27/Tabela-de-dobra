@@ -1,8 +1,17 @@
+'''
+Classe para criar uma Entry com placeholder no tkinter.
+Essa classe é uma extensão da Entry padrão do tkinter,
+adicionando a funcionalidade de placeholder.
+'''
+
 import tkinter as tk
 
 class PlaceholderEntry:
+    """Classe para criar uma Entry com placeholder no tkinter."""
     def __init__(self, master, placeholder, placeholder_color="grey", text_color="black", **kwargs):
-        """kwargs permite passar outros argumentos padrão do tkinter Entry (como width e justify)."""
+        """
+        kwargs permite passar outros argumentos padrão do tkinter Entry (como width e justify).
+        """
         self.entry = tk.Entry(master, fg=placeholder_color, **kwargs)
         self.placeholder = placeholder
         self.placeholder_color = placeholder_color
@@ -14,13 +23,13 @@ class PlaceholderEntry:
         self.entry.bind("<FocusIn>", self._remove_placeholder)
         self.entry.bind("<FocusOut>", self._add_placeholder)
 
-    def _remove_placeholder(self, event):
+    def _remove_placeholder(self, _event):
         """Remove o placeholder quando o usuário clica na Entry."""
         if self.entry.get() == self.placeholder:
             self.entry.delete(0, tk.END)
             self.entry.config(fg=self.text_color)
 
-    def _add_placeholder(self, event):
+    def _add_placeholder(self, _event):
         """Adiciona o placeholder novamente se a Entry estiver vazia."""
         if not self.entry.get():
             self.entry.insert(0, self.placeholder)
