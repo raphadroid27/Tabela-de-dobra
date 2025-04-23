@@ -92,9 +92,13 @@ def criar_botoes(root):
               width=15,
               bg='red').grid(row=1, column=1, sticky='we', padx=2)
 
-    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=0)[0], text="Expande a interface verticalmente")
-    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=1)[0], text="Expande a interface horizontalmente")
-    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=0)[0], text="Limpa as dobras")
-    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=1)[0], text="Limpa todos os valores")
+    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=0)[0],
+               text="Expande a interface verticalmente")
+    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=1)[0],
+               text="Expande a interface horizontalmente")
+    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=0)[0],
+               text="Limpa as dobras")
+    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=1)[0],
+               text="Limpa todos os valores")
 
     return frame_botoes
