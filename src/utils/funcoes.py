@@ -105,6 +105,9 @@ def atualizar_combobox(tipo):
 
             g.DED_VALOR = deducao_obj.valor if deducao_obj else None
 
+        for tipo in ['material', 'espessura', 'canal']:
+            atualizar_combobox(tipo)
+
 
     # Mapeamento de tipos para funções
     acoes = {

@@ -86,14 +86,16 @@ def salvar_configuracao(config):
 
 def form_true(form, editar_attr, root):
     """
-    Abre o formulário de edição de um item específico (dedução, material, espessura ou canal).
+    Abre o formulário de edição de um item específico
+    (dedução, material, espessura ou canal).
     """
     setattr(g, editar_attr, True)
     form.main(root)
 
 def form_false(form, editar_attr, root):
     """
-    Fecha o formulário de edição de um item específico (dedução, material, espessura ou canal).
+    Fecha o formulário de edição de um item específico
+    (dedução, material, espessura ou canal).
     """
     setattr(g, editar_attr, False)
     form.main(root)
@@ -161,7 +163,7 @@ def configurar_janela_principal(config):
         icon_path = os.path.join(base_path, 'assets', 'icone.ico')
     else:
         # Executando como script Python normal
-        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'assets', 'icone.ico'))
+        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icone.ico')
 
     g.PRINC_FORM.iconbitmap(icon_path)
 
