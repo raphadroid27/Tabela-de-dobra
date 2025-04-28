@@ -23,7 +23,7 @@ engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def atualizar_combobox(tipo):
+def atualizar_widgets(tipo):
     """
     Atualiza os valores de comboboxes com base no tipo especificado.
 
@@ -106,7 +106,7 @@ def atualizar_combobox(tipo):
             g.DED_VALOR = deducao_obj.valor if deducao_obj else None
 
         for tipo in ['material', 'espessura', 'canal']:
-            atualizar_combobox(tipo)
+            atualizar_widgets(tipo)
 
 
     # Mapeamento de tipos para funções
@@ -332,7 +332,7 @@ def calcular_dobra(w):
         for i in range(1, g.N)
     ]
 
-    deducao_valor = g.DED_LBL.cget('text')
+    deducao_valor = str(g.DED_LBL.cget('text')).replace(' Copiado!', '')
     deducao_espec = g.DED_ESPEC_ENTRY.get()
 
     # Exibir a matriz de valores para depuração
@@ -430,17 +430,17 @@ def copiar(tipo, numero=None, w=None):
     configuracoes = {
         'dedução': {
             'label': g.DED_LBL,
-            'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
+            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
                                        calcular_k_offset())
         },
         'fator_k': {
             'label': g.K_LBL,
-            'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
+            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
                                        calcular_k_offset())
         },
         'offset': {
             'label': g.OFFSET_LBL,
-            'funcao_calculo': lambda: (atualizar_combobox('dedução'), 
+            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
                                        calcular_k_offset())
         },
         'medida_dobra': {
@@ -569,9 +569,9 @@ def todas_funcoes():
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
-    atualizar_combobox('espessura')
-    atualizar_combobox('canal')
-    atualizar_combobox('dedução')
+    for tipo in ['espessura', 'canal', 'dedução']:
+        atualizar_widgets(tipo)
+
     atualizar_toneladas_m()
     calcular_k_offset()
     aba_minima_externa()
@@ -768,7 +768,7 @@ def adicionar(tipo):
 
     limpar_campos(tipo)
     listar(tipo)
-    atualizar_combobox(tipo)
+    atualizar_widgets(tipo)
     buscar(tipo)
 
 def adicionar_deducao():
@@ -971,7 +971,7 @@ def editar(tipo):
     for tipo_item in configuracoes:
         listar(tipo_item)
         buscar(tipo_item)
-        atualizar_combobox(tipo_item)
+        atualizar_widgets(tipo_item)
 
 def item_selecionado(tipo):
     '''
@@ -1056,7 +1056,7 @@ def excluir(tipo):
 
     limpar_campos(tipo)
     listar(tipo)
-    atualizar_combobox(tipo)
+    atualizar_widgets(tipo)
 
 def tratativa_erro():
     '''
