@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from src.config import globals as g
 from src.utils.funcoes import (no_topo, posicionar_janela, buscar, limpar_busca, preencher_campos,
-                                listar, adicionar, editar, excluir, atualizar_combobox)
+                                listar, adicionar, editar, excluir, atualizar_widgets)
 
 def main(root):
     """
@@ -141,7 +141,7 @@ def main(root):
 
     tipos = ['material', 'espessura', 'canal']
     for tipo in tipos:
-        atualizar_combobox(tipo)
+        atualizar_widgets(tipo)
 
 if __name__ == "__main__":
     main(None)
