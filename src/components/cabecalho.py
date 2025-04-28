@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 from src.utils import tooltip as tp
 from src.config import globals as g
-from src.utils.funcoes import atualizar_combobox, todas_funcoes, copiar, atualizar_toneladas_m
+from src.utils.funcoes import atualizar_widgets, todas_funcoes, copiar, atualizar_toneladas_m
 
 LARGURA = 9  # Largura padrão para os widgets
 
@@ -131,6 +131,6 @@ def cabecalho(root):
     criar_label(frame_cabecalho, "Observações:", (6, 0)).grid(columnspan=4)
     criar_widget(frame_cabecalho, 'label', 'OBS_LBL', (7, 0), anchor='w').grid(columnspan=4)
 
-    atualizar_combobox('material')
+    atualizar_widgets('material')
 
     return frame_cabecalho
