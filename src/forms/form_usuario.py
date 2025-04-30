@@ -19,7 +19,7 @@ def main(root):
     Inicializa a interface gráfica para edição, exclusão e gerenciamento de permissões.
     """
     # Verificar se o usuário é administrador
-    if not tem_permissao('admin'):
+    if not tem_permissao('usuario', 'admin'):
         return
 
     if g.USUAR_FORM is not None:
