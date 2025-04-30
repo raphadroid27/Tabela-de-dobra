@@ -129,7 +129,7 @@ def cabecalho(root):
 
     # Observações
     criar_label(frame_cabecalho, "Observações:", (6, 0)).grid(columnspan=4)
-    criar_widget(frame_cabecalho, 'label', 'OBS_LBL', (7, 0), anchor='w').grid(columnspan=4)
+    criar_widget(frame_cabecalho, 'label', 'OBS_LBL', (7, 0)).grid(columnspan=4)
 
     atualizar_widgets('material')
 
