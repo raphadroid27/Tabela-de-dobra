@@ -601,7 +601,13 @@ def obter_configuracoes():
                 'forca': g.DED_FORCA_ENTRY
             },
             'item_id': Deducao.id,
-            'valores': g.valores_deducao,
+            'valores': lambda d: (d.id,
+                                d.material.nome,
+                                d.espessura.valor,
+                                d.canal.valor,
+                                d.valor,
+                                d.observacao,
+                                d.forca),
             'ordem': Deducao.valor,
             'entries': {
                 'material_combo': g.DED_MATER_COMB,
@@ -620,7 +626,7 @@ def obter_configuracoes():
                 'elasticidade': g.MAT_ELAS_ENTRY
             },
             'item_id': Material.id,  # Corrigido de Deducao.material_id
-            'valores': g.valores_material,
+            'valores': lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade),
             'ordem': Material.id,
             'entry': g.MAT_NOME_ENTRY,
             'busca': g.MAT_BUSCA_ENTRY,
@@ -631,7 +637,7 @@ def obter_configuracoes():
             'lista': g.LIST_ESP,
             'modelo': Espessura,
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
-            'valores': g.valores_espessura,
+            'valores': lambda e: (e.id, e.valor),
             'ordem': Espessura.valor,
             'entry': g.ESP_VALOR_ENTRY,
             'busca': g.ESP_BUSCA_ENTRY,
@@ -649,7 +655,7 @@ def obter_configuracoes():
                 'observacao': g.CANAL_OBSER_ENTRY
             },
             'item_id': Canal.id,  # Corrigido de deducao.canal_id
-            'valores': g.valores_canal,
+            'valores': lambda c: (c.id, c.valor, c.largura, c.altura, c.comprimento_total, c.observacao),
             'ordem': Canal.valor,  # Corrigido de canal.valor
             'entry': g.CANAL_VALOR_ENTRY,
             'busca': g.CANAL_BUSCA_ENTRY,
@@ -659,7 +665,7 @@ def obter_configuracoes():
             'form': g.USUAR_FORM,
             'lista': g.LIST_USUARIO,
             'modelo': Usuario,  # Corrigido de usuario
-            'valores': g.valores_usuario,
+            'valores': lambda u: (u.id, u.nome, u.role),
             'ordem': Usuario.nome,  # Corrigido de usuario.nome
             'entry': g.USUARIO_BUSCA_ENTRY,
             'campo_busca': Usuario.nome  # Corrigido de usuario.nome
