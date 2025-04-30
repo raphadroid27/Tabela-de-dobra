@@ -10,6 +10,7 @@
 import os
 import tkinter as tk
 import webbrowser
+from src import __version__
 from src.config import globals as g
 from src.utils.funcoes import no_topo, posicionar_janela
 
@@ -36,6 +37,7 @@ def main(root):
     label_titulo.pack(pady=10)
 
     label_versao = tk.Label(g.SOBRE_FORM, text="Versão: 0.1.0-beta", font=("Arial", 12))
+    label_versao = tk.Label(g.SOBRE_FORM, text=f"Versão: {__version__}", font=("Arial", 12))
     label_versao.pack(pady=5)
 
     label_autor = tk.Label(g.SOBRE_FORM, text="Autor: raphadroid27", font=("Arial", 12))
