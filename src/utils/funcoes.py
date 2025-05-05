@@ -973,11 +973,10 @@ def editar(tipo):
     for entry in config['campos'].values():
         entry.delete(0, tk.END)
 
-    # Atualizar as listas e comboboxes
-    for tipo_item in configuracoes:
-        listar(tipo_item)
-        buscar(tipo_item)
-        atualizar_widgets(tipo_item)
+    limpar_campos(tipo)
+    listar(tipo)
+    atualizar_widgets(tipo)
+    buscar(tipo)
 
 def item_selecionado(tipo):
     '''
