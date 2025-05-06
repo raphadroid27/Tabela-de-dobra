@@ -2,6 +2,12 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.0.3 (06/05/2025)
+
+- Ajusta a conversão de dedução específica para aceitar vírgulas como separador decimal
+
+- Corrige a conversão do raio interno para aceitar vírgulas como separador decimal
+
 ## 1.0.2 (05/05/2025)
 
 - Centraliza a lógica de obtenção do caminho do ícone em uma função dedicada
