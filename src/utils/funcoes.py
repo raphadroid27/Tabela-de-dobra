@@ -177,7 +177,7 @@ def calcular_k_offset():
     try:
         # Obtém os valores diretamente e verifica se são válidos
         espessura = float(g.ESP_COMB.get() or 0)
-        raio_interno = float(g.RI_ENTRY.get() or 0)
+        raio_interno = float(g.RI_ENTRY.get().replace(',', '.') or 0)
         deducao_espec = float(g.DED_ESPEC_ENTRY.get() or 0)
         deducao_valor = float(g.DED_LBL.cget('text') or 0)
 
