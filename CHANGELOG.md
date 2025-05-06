@@ -2,12 +2,17 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.0.2 (05/05/2025)
+
+- Centraliza a lógica de obtenção do caminho do ícone em uma função dedicada
+
+- Refatora a função editar para que atualize a lista de exibição automaticamente após a alteração de um item
+
 ## 1.0.1 (30/04/2025)
 
-- corrige: ajusta verificação de permissão no formulário de gerenciamento de usuários
-- refatora: atualiza a função obter_configuracoes para usar lambdas e melhorar a legibilidade dos valores
-- refatora build da aplicação e atualiza dependências
-- corrige: modifica cabecalho.py para centralizar o conteúdo da label observações
+- ajusta verificação de permissão no formulário de gerenciamento de usuários
+- atualiza a função obter_configuracoes para usar lambdas e melhorar a legibilidade dos valores
+- modifica cabecalho.py para centralizar o conteúdo da label observações
 
 ## v1.0.0 - Otimizações Finais (28/04/2025)
 
