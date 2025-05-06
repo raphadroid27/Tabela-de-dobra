@@ -5,12 +5,12 @@
 # A interface é construída com a biblioteca tkinter, utilizando o módulo globals
 # para variáveis globais e o módulo funcoes para operações relacionadas ao banco de dados.
 '''
-import os
 import tkinter as tk
 from tkinter import ttk
 from src.utils.funcoes import (tem_permissao, no_topo, posicionar_janela,
                                buscar, limpar_busca, listar, resetar_senha,
-                               excluir_usuario, tornar_editor)
+                               excluir_usuario, tornar_editor,
+                               obter_caminho_icone)
 from src.config import globals as g
 
 def main(root):
@@ -31,10 +31,8 @@ def main(root):
     g.USUAR_FORM.resizable(False, False)
 
     # Define o ícone
-    icon_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'icone.ico')
-    )
-    g.USUAR_FORM.iconbitmap(icon_path)
+    icone_path = obter_caminho_icone()
+    g.USUAR_FORM.iconbitmap(icone_path)
 
     no_topo(g.USUAR_FORM)
     posicionar_janela(g.USUAR_FORM, 'centro')
