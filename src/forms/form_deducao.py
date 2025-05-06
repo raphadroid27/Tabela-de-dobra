@@ -5,12 +5,11 @@
 # gráfica, o módulo globals para variáveis globais e o módulo funcoes para
 # operações relacionadas ao banco de dados.
 """
-import os
 import tkinter as tk
 from tkinter import ttk
 from src.config import globals as g
 from src.utils.funcoes import (no_topo, posicionar_janela, buscar, limpar_busca, preencher_campos,
-                                listar, adicionar, editar, excluir, atualizar_widgets)
+                                listar, adicionar, editar, excluir, atualizar_widgets, obter_caminho_icone)
 
 def main(root):
     """
@@ -21,14 +20,12 @@ def main(root):
         g.DEDUC_FORM.destroy()
 
     g.DEDUC_FORM = tk.Toplevel(root)
-    g.DEDUC_FORM.resizable(False, False)
     g.DEDUC_FORM.geometry("500x420")
+    g.DEDUC_FORM.resizable(False, False)
 
     # Define o ícone
-    icon_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'icone.ico')
-    )
-    g.DEDUC_FORM.iconbitmap(icon_path)
+    icone_path = obter_caminho_icone()
+    g.DEDUC_FORM.iconbitmap(icone_path)
 
     no_topo(g.DEDUC_FORM)
     posicionar_janela(g.DEDUC_FORM, None)

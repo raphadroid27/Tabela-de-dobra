@@ -7,12 +7,11 @@
 # e configurada para permanecer no topo das outras janelas.
 # O link para o GitHub abre o navegador padrão ao ser clicado.
 '''
-import os
 import tkinter as tk
 import webbrowser
 from src import __version__
 from src.config import globals as g
-from src.utils.funcoes import no_topo, posicionar_janela
+from src.utils.funcoes import no_topo, posicionar_janela, obter_caminho_icone
 
 def main(root):
     '''
@@ -25,10 +24,8 @@ def main(root):
     g.SOBRE_FORM.attributes("-topmost", True)
 
     # Define o ícone
-    icon_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'icone.ico')
-    )
-    g.SOBRE_FORM.iconbitmap(icon_path)
+    icone_path = obter_caminho_icone()
+    g.SOBRE_FORM.iconbitmap(icone_path)
 
     no_topo(g.SOBRE_FORM)
     posicionar_janela(g.SOBRE_FORM, 'centro')

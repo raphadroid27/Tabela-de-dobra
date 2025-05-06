@@ -41,6 +41,7 @@ from src.utils.funcoes import (  # Movido para o topo
     restaurar_valores_cabecalho,
     logout,
     no_topo,
+    obter_caminho_icone
 )
 # pylint: enable=wrong-import-position
 
@@ -156,16 +157,8 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.resizable(False, False)
     g.PRINC_FORM.update_idletasks()
 
-        # Define o ícone corretamente para ambiente normal e empacotado
-    if getattr(sys, 'frozen', False):
-        # Executando como executável (PyInstaller)
-        base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-        icon_path = os.path.join(base_path, 'assets', 'icone.ico')
-    else:
-        # Executando como script Python normal
-        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icone.ico')
-
-    g.PRINC_FORM.iconbitmap(icon_path)
+    icone_path = obter_caminho_icone()
+    g.PRINC_FORM.iconbitmap(icone_path)
 
     def on_closing():
         geometry = g.PRINC_FORM.geometry()

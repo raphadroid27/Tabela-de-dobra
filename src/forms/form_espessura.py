@@ -6,12 +6,11 @@
 # gerenciadas pelo módulo `globals`, enquanto as operações de banco de dados
 # são realizadas pelo módulo `funcoes`.
 '''
-import os
 import tkinter as tk
 from tkinter import ttk
 from src.config import globals as g
 from src.utils.funcoes import (no_topo, posicionar_janela, buscar,
-                     limpar_busca, listar, adicionar, excluir)
+                     limpar_busca, listar, adicionar, excluir, obter_caminho_icone)
 
 
 def main(root):
@@ -27,10 +26,8 @@ def main(root):
     g.ESPES_FORM.resizable(False, False)
 
     # Define o ícone
-    icon_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'icone.ico')
-    )
-    g.ESPES_FORM.iconbitmap(icon_path)
+    icone_path = obter_caminho_icone()
+    g.ESPES_FORM.iconbitmap(icone_path)
 
     no_topo(g.ESPES_FORM)
     posicionar_janela(g.ESPES_FORM,None)

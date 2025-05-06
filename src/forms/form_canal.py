@@ -5,11 +5,11 @@
 # gráfica, o módulo globals para variáveis globais e o módulo funcoes para
 # operações relacionadas ao banco de dados.
 '''
-import os
 import tkinter as tk
 from tkinter import ttk
 from src.utils.funcoes import (no_topo, posicionar_janela, buscar, limpar_busca,
-                                listar, preencher_campos, excluir, editar, adicionar)
+                                listar, preencher_campos, excluir, editar, adicionar,
+                                obter_caminho_icone)
 from src.config import globals as g
 
 def main(root):
@@ -21,15 +21,12 @@ def main(root):
         g.CANAL_FORM.destroy()
 
     g.CANAL_FORM = tk.Toplevel(root)
-    g.CANAL_FORM.resizable(False, False)
     g.CANAL_FORM.geometry("340x420")
+    g.CANAL_FORM.resizable(False, False)
 
     # Define o ícone
-    icon_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'icone.ico')
-    )
-    g.CANAL_FORM.iconbitmap(icon_path)
-
+    icone_path = obter_caminho_icone()
+    g.CANAL_FORM.iconbitmap(icone_path)
 
     no_topo(g.CANAL_FORM)
     posicionar_janela(g.CANAL_FORM,None)
