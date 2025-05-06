@@ -6,11 +6,10 @@
 # armazenar variáveis globais e o módulo funcoes para realizar operações
 # relacionadas ao banco de dados.
 '''
-import os
 import tkinter as tk
 from tkinter import ttk
 from src.utils.funcoes import (no_topo, posicionar_janela, buscar, limpar_busca, listar,
-                                preencher_campos, excluir, editar, adicionar)
+                                preencher_campos, excluir, editar, adicionar, obter_caminho_icone)
 import src.config.globals as g
 
 def main(root):
@@ -22,14 +21,12 @@ def main(root):
         g.MATER_FORM.destroy()
 
     g.MATER_FORM = tk.Toplevel(root)
-    g.MATER_FORM.resizable(False, False)
     g.MATER_FORM.geometry("340x420")
+    g.MATER_FORM.resizable(False, False)
 
     # Define o ícone
-    icon_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'icone.ico')
-    )
-    g.MATER_FORM.iconbitmap(icon_path)
+    icone_path = obter_caminho_icone()
+    g.MATER_FORM.iconbitmap(icone_path)
 
     no_topo(g.MATER_FORM)
     posicionar_janela(g.MATER_FORM, None)
