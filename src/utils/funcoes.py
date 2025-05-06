@@ -178,7 +178,7 @@ def calcular_k_offset():
         # Obtém os valores diretamente e verifica se são válidos
         espessura = float(g.ESP_COMB.get() or 0)
         raio_interno = float(g.RI_ENTRY.get().replace(',', '.') or 0)
-        deducao_espec = float(g.DED_ESPEC_ENTRY.get() or 0)
+        deducao_espec = float(g.DED_ESPEC_ENTRY.get().replace(',', '.') or 0)
         deducao_valor = float(g.DED_LBL.cget('text') or 0)
 
         # Usa a dedução específica, se fornecida
@@ -334,7 +334,7 @@ def calcular_dobra(w):
     ]
 
     deducao_valor = str(g.DED_LBL.cget('text')).replace(' Copiado!', '')
-    deducao_espec = g.DED_ESPEC_ENTRY.get()
+    deducao_espec = g.DED_ESPEC_ENTRY.get().replace(',', '.')
 
     # Exibir a matriz de valores para depuração
     print("Matriz de dobras (g.dobras_get):")
