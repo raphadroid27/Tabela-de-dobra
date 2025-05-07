@@ -127,7 +127,7 @@ def update_version_info(version):
 def generate_changelog(version):
     """Gera ou atualiza o arquivo CHANGELOG.md com as alterações da nova versão."""
     commits = get_commit_messages_since_last_tag()
-    changelog_path = "CHANGELOG.md"
+    changelog_path = os.path.join("docs", "CHANGELOG.md")
     today = datetime.datetime.now().strftime("%d/%m/%Y")
     
     # Cabeçalho da nova versão
