@@ -22,7 +22,13 @@ def avisos(root):
     frame_avisos = tk.Frame(root)
 
     for aviso in avisos_textos:
-        aviso_label = tk.Label(frame_avisos, text=aviso, anchor='w', font=('Arial', 10), wraplength=300, justify='left')
+        aviso_label = tk.Label(frame_avisos,
+                               text=aviso,
+                               anchor='w',
+                               font=('Arial', 10),
+                               wraplength=300,
+                               justify='left'
+                               )
         aviso_label.pack(anchor='w', padx=5, pady=2)
 
     return frame_avisos
