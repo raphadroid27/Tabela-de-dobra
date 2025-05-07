@@ -371,9 +371,9 @@ def calcular_dobra(w):
             getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
 
         blank = sum(
-        float(getattr(g, f'medidadobra{i}_label_{w}').cget('text').replace(' Copiado!', ''))
-        for i in range(1, g.N)
-        if getattr(g, f'medidadobra{i}_label_{w}').cget('text')
+        float(getattr(g, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
+        for row in range(1, g.N)
+        if getattr(g, f'medidadobra{row}_label_{w}').cget('text')
     )
 
         metade_blank = blank / 2
@@ -533,6 +533,11 @@ def limpar_dobras():
             if entry:
                 entry.config(bg="white")
 
+    # Verifique se o atributo existe antes de usá-lo
+    aba1_entry = getattr(g, "aba1_entry_1", None)
+    if aba1_entry:
+        aba1_entry.focus_set()
+
 def limpar_tudo():
     '''
     Limpa todos os campos e labels do aplicativo.
@@ -565,6 +570,8 @@ def limpar_tudo():
 
     limpar_dobras()
     todas_funcoes()
+
+    g.MAT_COMB.focus_set()  # Foca no combobox de material
 
 def todas_funcoes():
     '''
@@ -656,7 +663,12 @@ def obter_configuracoes():
                 'observacao': g.CANAL_OBSER_ENTRY
             },
             'item_id': Canal.id,  # Corrigido de deducao.canal_id
-            'valores': lambda c: (c.id, c.valor, c.largura, c.altura, c.comprimento_total, c.observacao),
+            'valores': lambda c: (c.id,
+                                  c.valor,
+                                  c.largura,
+                                  c.altura,
+                                  c.comprimento_total,
+                                  c.observacao),
             'ordem': Canal.valor,  # Corrigido de canal.valor
             'entry': g.CANAL_VALOR_ENTRY,
             'busca': g.CANAL_BUSCA_ENTRY,
@@ -1424,7 +1436,7 @@ def obter_caminho_icone():
     considerando o modo de execução (normal ou empacotado).
     """
     if getattr(sys, 'frozen', False):  # Verifica se está empacotado
-        base_path = sys._MEIPASS  # Diretório temporário do executável
+        base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
     else:
         base_path = os.path.abspath(".")  # Diretório atual no modo normal
 
