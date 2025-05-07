@@ -5,7 +5,11 @@ import tkinter as tk
 from tkinter import ttk
 from src.utils.classes import tooltip as tp
 from src.config import globals as g
-from src.utils.funcoes import atualizar_widgets, todas_funcoes, copiar, atualizar_toneladas_m
+from src.utils.interface import (atualizar_widgets,
+                                 atualizar_toneladas_m,
+                                 copiar
+                                 )
+from src.utils.interface import todas_funcoes
 
 LARGURA = 9  # Largura padrão para os widgets
 

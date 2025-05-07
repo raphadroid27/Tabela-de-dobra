@@ -7,7 +7,7 @@ interativa.
 '''
 import tkinter as tk
 from src.components.dobra_90 import entradas_dobras
-from src.utils.funcoes import limpar_dobras, limpar_tudo
+from src.utils.interface import limpar_dobras, limpar_tudo
 import src.config.globals as g
 from src.app import carregar_interface
 import src.utils.classes.tooltip as tp

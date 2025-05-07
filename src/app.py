@@ -32,17 +32,16 @@ from src.forms import (
     form_usuario,
 )
 from src.components.cabecalho import cabecalho
-from src.components.avisos import avisos  # Movido para o topo
-from src.config import globals as g  # Movido para o topo
-from src.utils.funcoes import (  # Movido para o topo
-    todas_funcoes,
-    salvar_valores_cabecalho,
-    restaurar_valores_dobra,
-    restaurar_valores_cabecalho,
-    logout,
-    no_topo,
-    obter_caminho_icone
-)
+from src.components.avisos import avisos
+from src.config import globals as g
+from src.utils.janelas import no_topo
+from src.utils.interface import (salvar_valores_cabecalho,
+                                 restaurar_valores_cabecalho,
+                                 restaurar_valores_dobra,
+                                 todas_funcoes
+                                 )
+from src.utils.utilitarios import obter_caminho_icone
+from src.utils.usuarios import logout
 # pylint: enable=wrong-import-position
 
 # Configuração do banco de dados

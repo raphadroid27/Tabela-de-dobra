@@ -8,10 +8,15 @@
 '''
 import tkinter as tk
 from tkinter import ttk
-from src.config import globals as g
-from src.utils.funcoes import (no_topo, posicionar_janela, buscar,
-                     limpar_busca, listar, adicionar, excluir, obter_caminho_icone)
 
+from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.interface import (listar, limpar_busca)
+from src.utils.utilitarios import obter_caminho_icone
+from src.utils.operacoes_crud import (buscar,
+                                      excluir,
+                                      adicionar
+                                      )
+from src.config import globals as g
 
 def main(root):
     '''
