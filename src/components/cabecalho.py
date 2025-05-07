@@ -3,14 +3,14 @@ Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos c
 '''
 import tkinter as tk
 from tkinter import ttk
-from src.utils import tooltip as tp
+from src.utils.classes import tooltip as tp
 from src.config import globals as g
 from src.utils.funcoes import atualizar_widgets, todas_funcoes, copiar, atualizar_toneladas_m
 
 LARGURA = 9  # Largura padrão para os widgets
 
 def criar_label(frame, texto, linha_coluna, **kwargs):
-    """
+    '''
     Cria um rótulo (Label) no frame especificado.
 
     Args:
@@ -18,7 +18,7 @@ def criar_label(frame, texto, linha_coluna, **kwargs):
         texto (str): Texto do rótulo.
         linha_coluna (tuple): Tupla contendo a linha e a coluna onde o rótulo será posicionado.
         **kwargs: Argumentos adicionais para o widget Label.
-    """
+    '''
     linha, coluna = linha_coluna
     label = tk.Label(frame, width=LARGURA,
              text=texto,
@@ -28,7 +28,7 @@ def criar_label(frame, texto, linha_coluna, **kwargs):
     return label
 
 def criar_widget(frame, tipo, var_global, linha_coluna, **kwargs):
-    """
+    '''
     Cria um widget (Entry, Label ou Combobox) no frame especificado
     e o armazena em uma variável global.
 
@@ -39,7 +39,7 @@ def criar_widget(frame, tipo, var_global, linha_coluna, **kwargs):
         linha_coluna (tuple): Tupla contendo a linha e a coluna onde o widget será posicionado.
         largura (int): Largura do widget.
         **kwargs: Argumentos adicionais para o widget.
-    """
+    '''
     linha, coluna = linha_coluna
     if tipo == 'entry':
         setattr(g, var_global, tk.Entry(frame, width=LARGURA, **kwargs))
@@ -52,9 +52,9 @@ def criar_widget(frame, tipo, var_global, linha_coluna, **kwargs):
     return widget
 
 def cabecalho(root):
-    """
+    '''
     Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
-    """
+    '''
     frame_cabecalho = tk.Frame(root)
 
     for i in range(4):

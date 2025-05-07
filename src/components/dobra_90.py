@@ -4,7 +4,7 @@ Este módulo contém funções para criar e gerenciar o frame de dobras
 import tkinter as tk
 from src.config import globals as g
 from src.utils.funcoes import calcular_dobra, copiar, focus_next_entry, focus_previous_entry
-from src.utils import tooltip as tp
+from src.utils.classes import tooltip as tp
 
 LARGURA = 12
 

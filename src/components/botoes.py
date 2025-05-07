@@ -10,16 +10,16 @@ from src.components.dobra_90 import entradas_dobras
 from src.utils.funcoes import limpar_dobras, limpar_tudo
 import src.config.globals as g
 from src.app import carregar_interface
-import src.utils.tooltip as tp
+import src.utils.classes.tooltip as tp
 
 def criar_botoes(root):
-    """
+    '''
     Cria os botões e checkbuttons no frame inferior.
 
     Args:
         frame_inferior (tk.Frame): Frame onde os botões serão adicionados.
         frame_superior (tk.Frame): Frame superior para manipulação de interface.
-    """
+    '''
     frame_botoes = tk.Frame(root)
 
     frame_botoes.columnconfigure(0, weight=1)
