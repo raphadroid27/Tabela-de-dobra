@@ -7,10 +7,15 @@
 '''
 import tkinter as tk
 from tkinter import ttk
-from src.utils.funcoes import (tem_permissao, no_topo, posicionar_janela,
-                               buscar, limpar_busca, listar, resetar_senha,
-                               excluir_usuario, tornar_editor,
-                               obter_caminho_icone)
+from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.interface import (listar, limpar_busca)
+from src.utils.utilitarios import obter_caminho_icone
+from src.utils.operacoes_crud import buscar
+from src.utils.usuarios import (tem_permissao,
+                                 tornar_editor,
+                                 resetar_senha,
+                                 excluir_usuario
+                                 )
 from src.config import globals as g
 
 def main(root):
