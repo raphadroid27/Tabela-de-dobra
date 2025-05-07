@@ -11,9 +11,11 @@ import re
 import pyperclip
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.banco_dados import session, obter_configuracoes
-from src.utils.calculos import calcular_dobra, calcular_k_offset
-from src.utils.operacoes_crud import listar
-from src.utils.utilitarios import todas_funcoes
+from src.utils.calculos import (calcular_dobra,
+                                calcular_k_offset,
+                                aba_minima_externa,
+                                z_minimo_externo
+                                )
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
@@ -407,3 +409,44 @@ def focus_previous_entry(current_index, w):
         previous_entry = getattr(g, f'aba{previous_index}_entry_{w}', None)
         if previous_entry:
             previous_entry.focus()
+
+def listar(tipo):
+    '''
+    Lista os itens do banco de dados na interface gráfica.
+    '''
+    configuracoes = obter_configuracoes()
+    config = configuracoes[tipo]
+
+    if config['lista'] is None or not config['lista'].winfo_exists():
+        return
+
+    for item in config['lista'].get_children():
+        config['lista'].delete(item)
+
+    itens = session.query(config['modelo']).order_by(config['ordem']).all()
+
+    if tipo == 'canal':
+        itens = sorted(itens, key=lambda x: float(re.findall(r'\d+\.?\d*', x.valor)[0]))
+
+    for item in itens:
+        if tipo == 'dedução':
+            if item.material is None or item.espessura is None or item.canal is None:
+                continue
+        config['lista'].insert("", "end", values=config['valores'](item))
+
+def todas_funcoes():
+    '''
+    Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
+    '''
+    for tipo in ['espessura', 'canal', 'dedução']:
+        atualizar_widgets(tipo)
+
+    atualizar_toneladas_m()
+    calcular_k_offset()
+    aba_minima_externa()
+    z_minimo_externo()
+    for w in g.VALORES_W:
+        calcular_dobra(w)
+
+    # Atualizar tooltips
+    canal_tooltip()
