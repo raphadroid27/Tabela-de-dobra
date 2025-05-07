@@ -48,6 +48,7 @@ def entradas_dobras(valor, w):
         # Adicionar navegação com teclas direcionais
         entry.bind("<Down>", lambda event, i=i: focus_next_entry(i, w))
         entry.bind("<Up>", lambda event, i=i: focus_previous_entry(i, w))
+        entry.bind("<Return>", lambda event, i=i: focus_next_entry(i, w))
 
         setattr(g, f'medidadobra{i}_label_{w}', tk.Label(g.FRAME_DOBRA,
                                                          relief="sunken",
