@@ -13,10 +13,10 @@ from src.utils.funcoes import (no_topo, posicionar_janela, buscar, limpar_busca,
 from src.config import globals as g
 
 def main(root):
-    """
+    '''
     Inicializa e exibe o formulário de gerenciamento de canais.
     Configura a interface gráfica para adicionar, editar e excluir canais.
-    """
+    '''
     if g.CANAL_FORM:
         g.CANAL_FORM.destroy()
 

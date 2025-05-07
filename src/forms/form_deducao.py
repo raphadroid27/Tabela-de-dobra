@@ -1,10 +1,10 @@
-"""
+'''
 # Formulário de Dedução
 # Este módulo implementa o formulário de dedução, permitindo a adição, edição
 # e exclusão de deduções. Ele utiliza a biblioteca tkinter para a interface
 # gráfica, o módulo globals para variáveis globais e o módulo funcoes para
 # operações relacionadas ao banco de dados.
-"""
+'''
 import tkinter as tk
 from tkinter import ttk
 from src.config import globals as g
@@ -12,9 +12,9 @@ from src.utils.funcoes import (no_topo, posicionar_janela, buscar, limpar_busca,
                                 listar, adicionar, editar, excluir, atualizar_widgets, obter_caminho_icone)
 
 def main(root):
-    """
+    '''
     Função principal que inicializa e configura o formulário de deduções.
-    """
+    '''
     # Verificar se a janela já está aberta
     if g.DEDUC_FORM:
         g.DEDUC_FORM.destroy()
