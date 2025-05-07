@@ -11,7 +11,7 @@ from src.utils.banco_dados import (session,
                                    obter_configuracoes
                                    )
 from src.utils.janelas import habilitar_janelas
-from src.utils.operacoes_crud import listar
+from src.utils.interface import listar
 
 def novo_usuario():
     '''

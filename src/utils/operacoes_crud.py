@@ -15,7 +15,7 @@ from src.utils.banco_dados import (session,
 from src.utils.usuarios import logado, tem_permissao
 from src.config import globals as g
 from src.models.models import Espessura, Material, Canal, Deducao
-from src.utils.interface import atualizar_widgets
+from src.utils.interface import atualizar_widgets, listar
 
 def adicionar(tipo):
     '''
@@ -319,29 +319,6 @@ def limpar_campos(tipo):
     for entry in config['campos'].values():
         entry.delete(0, tk.END)
 
-def listar(tipo):
-    '''
-    Lista os itens do banco de dados na interface gráfica.
-    '''
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
-    if config['lista'] is None or not config['lista'].winfo_exists():
-        return
-
-    for item in config['lista'].get_children():
-        config['lista'].delete(item)
-
-    itens = session.query(config['modelo']).order_by(config['ordem']).all()
-
-    if tipo == 'canal':
-        itens = sorted(itens, key=lambda x: float(re.findall(r'\d+\.?\d*', x.valor)[0]))
-
-    for item in itens:
-        if tipo == 'dedução':
-            if item.material is None or item.espessura is None or item.canal is None:
-                continue
-        config['lista'].insert("", "end", values=config['valores'](item))
 
 def item_selecionado(tipo):
     '''
