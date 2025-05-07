@@ -8,7 +8,7 @@ def listar_commits(branch="main", arquivo_saida=None,
                   mostrar_modificacoes="stat", limite=None, 
                   formato="completo", author=None, desde=None, ate=None,
                   linhas_contexto=3):
-    """
+    '''
     Lista os commits de um branch específico e salva em um arquivo.
     
     Args:
@@ -21,7 +21,7 @@ def listar_commits(branch="main", arquivo_saida=None,
         desde (str): Data inicial para filtrar commits (formato YYYY-MM-DD)
         ate (str): Data final para filtrar commits (formato YYYY-MM-DD)
         linhas_contexto (int): Número de linhas de contexto ao mostrar diffs (padrão: 3)
-    """
+    '''
     try:
         # Define o nome do arquivo de saída padrão
         if arquivo_saida is None:
