@@ -14,10 +14,10 @@ from src.utils.funcoes import (no_topo, posicionar_janela, buscar,
 
 
 def main(root):
-    """
+    '''
     Inicializa a janela de gerenciamento de espessuras.
     Configura a interface gráfica para adicionar, editar e excluir espessuras.
-    """
+    '''
     if g.ESPES_FORM:
         g.ESPES_FORM.destroy()
 

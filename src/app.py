@@ -1,11 +1,11 @@
-"""
+'''
 # Formulário Principal do Aplicativo de Cálculo de Dobra
 # Este módulo implementa a interface principal do aplicativo, permitindo a
 # gestão de deduções, materiais, espessuras e canais. Ele utiliza a biblioteca
 # tkinter para a interface gráfica, o módulo globals para variáveis globais,
 # e outros módulos auxiliares para operações relacionadas ao banco de dados
 # e funcionalidades específicas.
-"""
+'''
 
 import os
 import sys
@@ -58,19 +58,19 @@ os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 def verificar_admin_existente():
-    """
+    '''
     Verifica se existe um administrador cadastrado no banco de dados.
     Caso contrário, abre a tela de autenticação para criar um.
-    """
+    '''
     admin_existente = session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
         form_aut.main(g.PRINC_FORM)
 
 
 def carregar_configuracao():
-    """
+    '''
     Carrega a configuração do aplicativo a partir de um arquivo JSON.
-    """
+    '''
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -78,31 +78,31 @@ def carregar_configuracao():
 
 
 def salvar_configuracao(config):
-    """
+    '''
     Salva a configuração do aplicativo em um arquivo JSON.
-    """
+    '''
     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(config, f)
 
 
 def form_true(form, editar_attr, root):
-    """
+    '''
     Abre o formulário de edição de um item específico
     (dedução, material, espessura ou canal).
-    """
+    '''
     setattr(g, editar_attr, True)
     form.main(root)
 
 def form_false(form, editar_attr, root):
-    """
+    '''
     Fecha o formulário de edição de um item específico
     (dedução, material, espessura ou canal).
-    """
+    '''
     setattr(g, editar_attr, False)
     form.main(root)
 
 def carregar_interface(var, frame_superior):
-    """
+    '''
     Atualiza o cabeçalho e recria os widgets no frame de dobras com base no valor de var.
 
     Args:
@@ -110,7 +110,7 @@ def carregar_interface(var, frame_superior):
                    1 para apenas o cabeçalho principal.
                    2 para cabeçalho com avisos.
         frame_superior (tk.Frame): Frame onde os widgets serão adicionados.
-    """
+    '''
     # Salvar os valores dos widgets do cabeçalho
     # Isso deve ser feito antes de recriar os widgets
     salvar_valores_cabecalho()
@@ -146,9 +146,9 @@ def carregar_interface(var, frame_superior):
     todas_funcoes()
 
 def configurar_janela_principal(config):
-    """
+    '''
     Configura a janela principal do aplicativo.
-    """
+    '''
     g.PRINC_FORM = tk.Tk()
     g.PRINC_FORM.title("Cálculo de Dobra")
     g.PRINC_FORM.geometry('340x400')
@@ -170,9 +170,9 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.protocol("WM_DELETE_WINDOW", on_closing)
 
 def configurar_menu():
-    """
+    '''
     Configura o menu superior da janela principal.
-    """
+    '''
     menu_bar = tk.Menu(g.PRINC_FORM)
     g.PRINC_FORM.config(menu=menu_bar)
 
@@ -246,9 +246,9 @@ def configurar_menu():
 
 
 def configurar_frames():
-    """
+    '''
     Configura os frames principais da janela.
-    """
+    '''
     frame_superior = tk.LabelFrame(g.PRINC_FORM)
     frame_superior.pack(fill='both', expand=True, padx=10, pady=10)
 
@@ -264,9 +264,9 @@ def configurar_frames():
 
 
 def main():
-    """
+    '''
     Função principal que inicializa a interface gráfica do aplicativo.
-    """
+    '''
     config = carregar_configuracao()
     configurar_janela_principal(config)
     configurar_menu()

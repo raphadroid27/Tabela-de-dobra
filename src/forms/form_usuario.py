@@ -14,10 +14,10 @@ from src.utils.funcoes import (tem_permissao, no_topo, posicionar_janela,
 from src.config import globals as g
 
 def main(root):
-    """
+    '''
     Função principal para gerenciar usuários.
     Inicializa a interface gráfica para edição, exclusão e gerenciamento de permissões.
-    """
+    '''
     # Verificar se o usuário é administrador
     if not tem_permissao('usuario', 'admin'):
         return
