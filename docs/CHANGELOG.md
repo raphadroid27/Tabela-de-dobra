@@ -2,16 +2,23 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.0.4 (07/05/2025)
+
+- atualiza o caminho do arquivo CHANGELOG.md para a pasta de documentação
+- permite navegação com a tecla Enter nas entradas de dobras
+- altera 'i' para 'row' no cálculo do blank
+- define foco pós-limpeza de campos
+- ajusta obtenção de ícone do aplicativo
+- transfere arquivos de licença e changelog para documentação do projeto
+
 ## 1.0.3 (06/05/2025)
 
 - Ajusta a conversão de dedução específica para aceitar vírgulas como separador decimal
-
 - Corrige a conversão do raio interno para aceitar vírgulas como separador decimal
 
 ## 1.0.2 (05/05/2025)
 
 - Centraliza a lógica de obtenção do caminho do ícone em uma função dedicada
-
 - Refatora a função editar para que atualize a lista de exibição automaticamente após a alteração de um item
 
 ## 1.0.1 (30/04/2025)
