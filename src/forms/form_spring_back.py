@@ -1,13 +1,13 @@
-import os
+'''
+Formulário para o cálculo de Spring Back
+'''
 import tkinter as tk
 from tkinter import ttk
+from src.models.models import Material
+from src.utils.banco_dados import session
 from src.config import globals as g
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from src.models.material import Material  # Adjust the import path to match the actual location of Material
 
 # Configuração do banco de dados
-
 
 spring_back_form = tk.Tk()
 spring_back_form.title("Cálculo de Spring Back")
