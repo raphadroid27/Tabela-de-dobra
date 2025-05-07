@@ -10,9 +10,13 @@ import os
 import tkinter as tk
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from src.config import globals as g
 from src.models import Usuario
-from src.utils.funcoes import (desabilitar_janelas, habilitar_janelas, login, novo_usuario, posicionar_janela)
+from src.utils.usuarios import login, novo_usuario
+from src.utils.janelas import (desabilitar_janelas,
+                              habilitar_janelas,
+                              posicionar_janela
+                              )
+from src.config import globals as g
 
 # Configuração do banco de dados
 DATABASE_DIR = os.path.abspath("database")

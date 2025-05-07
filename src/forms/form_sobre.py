@@ -11,7 +11,8 @@ import tkinter as tk
 import webbrowser
 from src import __version__
 from src.config import globals as g
-from src.utils.funcoes import no_topo, posicionar_janela, obter_caminho_icone
+from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.utilitarios import obter_caminho_icone
 
 def main(root):
     '''
