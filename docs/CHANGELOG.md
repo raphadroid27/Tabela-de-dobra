@@ -60,7 +60,6 @@ Histórico de mudanças do aplicativo Cálculo de Dobras
 
 ## v0.4.0 - Refatoração e UX (02/04/2025)
 
-- Extensas correções de código baseadas em padrões Pylint
 - Adicionado sistema completo de tooltips para melhorar usabilidade
 - Implementada classe Tooltip para exibir informações ao passar o mouse
 - Criada função PlaceholderEntry para gerenciar textos temporários
@@ -83,7 +82,6 @@ Histórico de mudanças do aplicativo Cálculo de Dobras
 ## v0.2.0 - Interface e Formulários (13/02/2025)
 
 - Implementado formulário "Sobre" com informações do aplicativo
-- Adicionada versão "0.1.0-beta" no formulário "Sobre"
 - Melhorada ordenação de espessuras por valor numérico
 - Adicionadas funcionalidades de busca em tempo real
 - Implementadas operações CRUD para espessuras, materiais e canais
