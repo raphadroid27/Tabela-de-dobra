@@ -19,7 +19,7 @@ import json
 import tkinter as tk
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.models.models import Usuario
+from src.models import Usuario
 from src.components.dobra_90 import dobras
 from src.components import botoes
 from src.forms import (
