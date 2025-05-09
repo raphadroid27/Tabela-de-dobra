@@ -14,7 +14,8 @@ from src.utils.banco_dados import session, obter_configuracoes
 from src.utils.calculos import (calcular_dobra,
                                 calcular_k_offset,
                                 aba_minima_externa,
-                                z_minimo_externo
+                                z_minimo_externo,
+                                razao_ri_espessura
                                 )
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
@@ -447,6 +448,8 @@ def todas_funcoes():
     z_minimo_externo()
     for w in g.VALORES_W:
         calcular_dobra(w)
+
+    razao_ri_espessura()
 
     # Atualizar tooltips
     canal_tooltip()
