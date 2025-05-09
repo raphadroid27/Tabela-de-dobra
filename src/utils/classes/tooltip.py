@@ -20,14 +20,14 @@ class ToolTip:
         self.widget.bind("<Leave>", self.hide_tooltip)
         self.widget.bind("<ButtonPress>", self.hide_tooltip)
 
-    def schedule_show(self, event=None):
+    def schedule_show(self, event=None): # pylint: disable=unused-argument
         '''
         Agendar a exibição do tooltip após um atraso, evitando múltiplos agendamentos.
         '''
         if self.id is None:
             self.id = self.widget.after(self.delay, self.show_tooltip)
 
-    def show_tooltip(self, event=None):
+    def show_tooltip(self, event=None): # pylint: disable=unused-argument
         '''
         Exibir o tooltip na posição do mouse.
         '''
@@ -50,7 +50,7 @@ class ToolTip:
         )
         label.pack()
 
-    def hide_tooltip(self, event=None):
+    def hide_tooltip(self, event=None): # pylint: disable=unused-argument
         '''
         Ocultar o tooltip e cancelar o agendamento, se necessário.
         '''

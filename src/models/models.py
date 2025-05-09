@@ -28,7 +28,7 @@ class Usuario(Base):
     senha = Column(String, nullable=False)
     role = Column(String, default="viewer")
 
-class Espessura(Base):
+class Espessura(Base): # pylint: disable=too-few-public-methods
     '''
     Representa a tabela de espessuras no banco de dados.
     Contém o valor da espessura em milímetros.
@@ -37,7 +37,7 @@ class Espessura(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     valor = Column(Float, nullable=False)
 
-class Material(Base):  # Ajustado para PascalCase
+class Material(Base): # pylint: disable=too-few-public-methods
     '''
     Representa a tabela de materiais no banco de dados.
     Contém informações como nome, densidade, limite de escoamento e módulo de elasticidade.
@@ -49,7 +49,7 @@ class Material(Base):  # Ajustado para PascalCase
     escoamento = Column(Float)
     elasticidade = Column(Float)
 
-class Canal(Base):  # Ajustado para PascalCase
+class Canal(Base): # pylint: disable=too-few-public-methods
     '''
     Representa a tabela de canais no banco de dados.
     Contém informações sobre as dimensões do canal e observações adicionais.
@@ -62,7 +62,7 @@ class Canal(Base):  # Ajustado para PascalCase
     comprimento_total = Column(Float)
     observacao = Column(String)
 
-class Deducao(Base):
+class Deducao(Base): # pylint: disable=too-few-public-methods
     '''
     Representa a tabela de deduções no banco de dados.
     Relaciona canais, espessuras e materiais, armazenando o valor da dedução,
@@ -88,7 +88,7 @@ class Deducao(Base):
                          name='_canal_espessura_material_uc'),
     )
 
-class Log(Base):
+class Log(Base): # pylint: disable=too-few-public-methods
     '''
     Representa a tabela de logs no banco de dados.
     Armazena informações sobre ações realizadas no sistema, incluindo o nome do usuário,
