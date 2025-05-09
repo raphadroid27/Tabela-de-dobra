@@ -30,6 +30,7 @@ from src.forms import (
     form_sobre,
     form_aut,
     form_usuario,
+    form_razao_rie
 )
 from src.components.cabecalho import cabecalho
 from src.components.avisos import avisos
@@ -221,6 +222,12 @@ def configurar_menu():
     g.NO_TOPO_VAR = tk.IntVar()
     opcoes_menu.add_checkbutton(label="No topo", variable=g.NO_TOPO_VAR,
                                 command=lambda: no_topo(g.PRINC_FORM))
+
+
+    # Menu ferramentas
+    ferramentas_menu = tk.Menu(menu_bar, tearoff=0)
+    menu_bar.add_cascade(label="Ferramentas", menu=ferramentas_menu)
+    ferramentas_menu.add_command(label="Razão Raio/Espessura", command=lambda: form_razao_rie.main(g.PRINC_FORM))
 
     # Menu Usuário
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
