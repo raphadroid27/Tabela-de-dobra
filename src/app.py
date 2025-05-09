@@ -227,7 +227,8 @@ def configurar_menu():
     # Menu ferramentas
     ferramentas_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ferramentas", menu=ferramentas_menu)
-    ferramentas_menu.add_command(label="Razão Raio/Espessura", command=lambda: form_razao_rie.main(g.PRINC_FORM))
+    ferramentas_menu.add_command(label="Razão Raio/Espessura",
+                                 command=lambda: form_razao_rie.main(g.PRINC_FORM))
 
     # Menu Usuário
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
