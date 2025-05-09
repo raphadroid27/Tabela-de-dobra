@@ -198,3 +198,29 @@ def verificar_aba_minima(dobra, i, w):
             # Tratar erros de conversão
             entry_widget.config(fg="black", bg="white")
             print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
+
+def razao_ri_espessura():
+    '''
+    Calcula a razão entre o raio interno e a espessura, atualizando o label correspondente.
+    '''
+    if not g.RAZAO_RIE_LBL or not g.RAZAO_RIE_LBL.winfo_exists():
+        return
+
+    try:
+        # Obtém os valores diretamente e verifica se são válidos
+        espessura = float(g.ESP_COMB.get() or 0)
+        raio_interno = float(g.RI_ENTRY.get().replace(',', '.') or 0)
+
+        # Valida se os valores necessários são maiores que zero
+        if not raio_interno or not espessura:
+            return
+
+        # Calcula a razão
+        razao = raio_interno / espessura
+
+        # Atualiza o label com o valor calculado
+        g.RAZAO_RIE_LBL.config(text=f"{razao:.2f}")
+
+    except ValueError:
+        # Trata erros de conversão
+        print("Erro: Valores inválidos fornecidos para o cálculo da razão.")
