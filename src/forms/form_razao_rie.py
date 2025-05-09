@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
+from src.utils.calculos import razao_ri_espessura
 from src.config import globals as g
 
 def main(root):
@@ -13,7 +14,8 @@ def main(root):
     Configura a interface gráfica para exibir os valores e fatores K correspondentes.
     '''
     form = tk.Toplevel(root)
-    form.geometry("340x420")
+    form.title("Raio Interno / Espessura")
+    form.geometry("240x280")
     form.resizable(False, False)
 
     # Define o ícone
@@ -26,22 +28,29 @@ def main(root):
     main_frame = tk.Frame(form)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
-    tk.Label(main_frame, text='Raio interno / espessura: ').pack(side=tk.LEFT)
-    g.RAZAO_RIE_LBL = tk.Label(main_frame, text="",relief="sunken",width=20)
-    g.RAZAO_RIE_LBL.pack(side=tk.LEFT)
+    main_frame.grid_rowconfigure(0, weight=0)
+    main_frame.grid_rowconfigure(1, weight=1)
+    main_frame.grid_columnconfigure(0, weight=1)
+    main_frame.grid_columnconfigure(1, weight=1)
+
+    tk.Label(main_frame, text='Raio int/esp: ').grid(row=0, column=0, sticky='w')
+    g.RAZAO_RIE_LBL = tk.Label(main_frame, text="",relief="sunken", width=20)
+    g.RAZAO_RIE_LBL.grid(row=0, column=1, sticky='e', padx=5, pady=5)
 
     def create_table(main_frame, data):
         tree = ttk.Treeview(main_frame, columns=('Raio/Esp', 'Fator K'), show='headings')
         tree.heading('Raio/Esp', text='Raio/Esp')
         tree.heading('Fator K', text='Fator K')
-        tree.column('Raio/Esp', width=100)
-        tree.column('Fator K', width=100)
+        tree.column('Raio/Esp', width=100, anchor='center')
+        tree.column('Fator K', width=100, anchor='center')
+
 
         for raio, fator_k in data.items():
             tree.insert('', 'end', values=(raio, fator_k))
 
-        tree.pack(fill='both', expand=True)
+        tree.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
 
+    razao_ri_espessura()
     create_table(main_frame, g.RAIO_K)
 
 if __name__ == "__main__":
