@@ -13,19 +13,22 @@ def main(root):
     Inicializa e exibe o formulário de cálculo de razão raio interno / espessura.
     Configura a interface gráfica para exibir os valores e fatores K correspondentes.
     '''
-    form = tk.Toplevel(root)
-    form.title("Raio Interno / Espessura")
-    form.geometry("240x280")
-    form.resizable(False, False)
+    if g.RIE_FORM:
+        g.RIE_FORM.destroy()
+
+    g.RIE_FORM = tk.Toplevel(root)
+    g.RIE_FORM.title("Raio Interno / Espessura")
+    g.RIE_FORM.geometry("240x280")
+    g.RIE_FORM.resizable(False, False)
 
     # Define o ícone
     icone_path = obter_caminho_icone()
-    form.iconbitmap(icone_path)
+    g.RIE_FORM.iconbitmap(icone_path)
 
-    no_topo(form)
-    posicionar_janela(form,None)
+    no_topo(g.RIE_FORM)
+    posicionar_janela(g.RIE_FORM,None)
 
-    main_frame = tk.Frame(form)
+    main_frame = tk.Frame(g.RIE_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
     main_frame.grid_rowconfigure(0, weight=0)

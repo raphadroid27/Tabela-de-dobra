@@ -119,3 +119,4 @@ ESPES_FORM = None
 SOBRE_FORM = None
 AUTEN_FORM = None
 USUAR_FORM = None
+RIE_FORM = None
