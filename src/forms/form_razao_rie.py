@@ -33,25 +33,37 @@ def main(root):
 
     main_frame.grid_rowconfigure(0, weight=0)
     main_frame.grid_rowconfigure(1, weight=1)
-    main_frame.grid_columnconfigure(0, weight=1)
+    main_frame.grid_columnconfigure(0, weight=0)
     main_frame.grid_columnconfigure(1, weight=1)
 
-    tk.Label(main_frame, text='Raio int/esp: ').grid(row=0, column=0, sticky='w')
+    tk.Label(main_frame, text='Razão Raio Interno / Espessura: ').grid(row=0, column=0, sticky='w')
     g.RAZAO_RIE_LBL = tk.Label(main_frame, text="",relief="sunken", width=20)
     g.RAZAO_RIE_LBL.grid(row=0, column=1, sticky='e', padx=5, pady=5)
 
     def create_table(main_frame, data):
-        tree = ttk.Treeview(main_frame, columns=('Raio/Esp', 'Fator K'), show='headings')
+        # Frame para a tabela e barra de rolagem
+        table_frame = tk.Frame(main_frame)
+        table_frame.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
+
+        # Configuração da barra de rolagem vertical
+        scrollbar = tk.Scrollbar(table_frame, orient='vertical')
+        scrollbar.pack(side='right', fill='y')
+
+        # Configuração da tabela
+        tree = ttk.Treeview(table_frame, columns=('Raio/Esp', 'Fator K'), show='headings', yscrollcommand=scrollbar.set)
         tree.heading('Raio/Esp', text='Raio/Esp')
         tree.heading('Fator K', text='Fator K')
         tree.column('Raio/Esp', width=100, anchor='center')
         tree.column('Fator K', width=100, anchor='center')
 
+        # Vincula a barra de rolagem à tabela
+        scrollbar.config(command=tree.yview)
 
+        # Inserção dos dados na tabela
         for raio, fator_k in data.items():
             tree.insert('', 'end', values=(raio, fator_k))
 
-        tree.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
+        tree.pack(fill='both', expand=True)
 
     avisolabel = tk.Message(
         main_frame,
