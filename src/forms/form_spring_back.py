@@ -2,21 +2,34 @@
 Formulário para o cálculo de Spring Back
 '''
 import tkinter as tk
-from tkinter import ttk
-from src.models.models import Material
-from src.utils.banco_dados import session
+from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.utilitarios import obter_caminho_icone
 from src.config import globals as g
 
 # Configuração do banco de dados
 
-spring_back_form = tk.Tk()
-spring_back_form.title("Cálculo de Spring Back")
+def main(root):
+    '''
+    Inicializa e exibe o formulário de cálculo de razão raio interno / espessura.
+    Configura a interface gráfica para exibir os valores e fatores K correspondentes.
+    '''
+    if g.SPRING_BACK_FORM:
+        g.SPRING_BACK_FORM.destroy()
 
-frame = tk.Frame(spring_back_form)
-frame.pack(pady=5, padx=5, fill='both', expand=True)
+    g.SPRING_BACK_FORM = tk.Toplevel(root)
+    g.SPRING_BACK_FORM.title("Spring Back")
+    g.SPRING_BACK_FORM.geometry("340x420")
+    g.SPRING_BACK_FORM.resizable(False, False)
 
-tk.Label(frame, text = "Material:").grid(row=0, column=0)
-g.MAT_COMB = ttk.Combobox(frame, values = [session.query(Material)])
-g.MAT_COMB.grid(row=1, column=0)
+    # Define o ícone
+    icone_path = obter_caminho_icone()
+    g.SPRING_BACK_FORM.iconbitmap(icone_path)
 
-spring_back_form.mainloop()
+    no_topo(g.SPRING_BACK_FORM)
+    posicionar_janela(g.SPRING_BACK_FORM,None)
+
+    main_frame = tk.Frame(g.SPRING_BACK_FORM)
+    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
+
+if __name__ == "__main__":
+    main(None)

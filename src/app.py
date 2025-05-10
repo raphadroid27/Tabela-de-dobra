@@ -30,7 +30,8 @@ from src.forms import (
     form_sobre,
     form_aut,
     form_usuario,
-    form_razao_rie
+    form_razao_rie,
+    form_spring_back
 )
 from src.components.cabecalho import cabecalho
 from src.components.avisos import avisos
@@ -229,6 +230,9 @@ def configurar_menu():
     menu_bar.add_cascade(label="Ferramentas", menu=ferramentas_menu)
     ferramentas_menu.add_command(label="Razão Raio/Espessura",
                                  command=lambda: form_razao_rie.main(g.PRINC_FORM))
+    
+    ferramentas_menu.add_command(label="Spring Back",
+                                    command=lambda: form_spring_back.main(g.PRINC_FORM))
 
     # Menu Usuário
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
