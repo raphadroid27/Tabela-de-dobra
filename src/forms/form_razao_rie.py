@@ -53,6 +53,16 @@ def main(root):
 
         tree.grid(row=1, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
 
+    avisolabel = tk.Message(
+        main_frame,
+        text='Atenção: Os valores apresentados na tabela são teóricos. Utilize-os apenas na ausência de dados mais precisos.',
+        width=220,
+        justify='left',
+        fg='red',
+        font=('Arial', 10, 'bold')
+    )
+    avisolabel.grid(row=2, column=0, columnspan=2, sticky='w', padx=5, pady=5)
+
     razao_ri_espessura()
     create_table(main_frame, g.RAIO_K)
 
