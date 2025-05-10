@@ -218,8 +218,10 @@ def razao_ri_espessura():
         # Calcula a razão
         razao = raio_interno / espessura
 
+        razao = min(razao, 10)
+
         # Atualiza o label com o valor calculado
-        g.RAZAO_RIE_LBL.config(text=f"{razao:.2f}")
+        g.RAZAO_RIE_LBL.config(text=f"{razao:.1f}")
 
     except ValueError:
         # Trata erros de conversão
