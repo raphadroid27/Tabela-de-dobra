@@ -374,6 +374,9 @@ def limpar_tudo():
 
     limpar_dobras()
     todas_funcoes()
+    
+    if g.RAZAO_RIE_LBL and g.RAZAO_RIE_LBL.winfo_exists():
+        g.RAZAO_RIE_LBL.config(text="")
 
     g.MAT_COMB.focus_set()  # Foca no combobox de material
 
