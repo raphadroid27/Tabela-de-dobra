@@ -50,7 +50,11 @@ def main(root):
         scrollbar.pack(side='right', fill='y')
 
         # Configuração da tabela
-        tree = ttk.Treeview(table_frame, columns=('Raio/Esp', 'Fator K'), show='headings', yscrollcommand=scrollbar.set)
+        tree = ttk.Treeview(table_frame,
+                            columns=('Raio/Esp', 'Fator K'),
+                            show='headings',
+                            yscrollcommand=scrollbar.set
+                            )
         tree.heading('Raio/Esp', text='Raio/Esp')
         tree.heading('Fator K', text='Fator K')
         tree.column('Raio/Esp', width=100, anchor='center')
@@ -67,7 +71,8 @@ def main(root):
 
     avisolabel = tk.Message(
         main_frame,
-        text='Atenção: Os valores apresentados na tabela são teóricos. Utilize-os apenas na ausência de dados mais precisos.',
+        text='Atenção: Os valores apresentados na tabela são teóricos. '
+             'Utilize-os apenas na ausência de dados mais precisos.',
         width=220,
         justify='left',
         fg='red',
