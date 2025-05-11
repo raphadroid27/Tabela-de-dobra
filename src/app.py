@@ -230,7 +230,7 @@ def configurar_menu():
     menu_bar.add_cascade(label="Ferramentas", menu=ferramentas_menu)
     ferramentas_menu.add_command(label="Razão Raio/Espessura",
                                  command=lambda: form_razao_rie.main(g.PRINC_FORM))
-    
+
     ferramentas_menu.add_command(label="Spring Back",
                                     command=lambda: form_spring_back.main(g.PRINC_FORM))
 
