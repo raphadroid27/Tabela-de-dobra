@@ -2,6 +2,13 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.1.0 (13/05/2025)
+
+- Criado menu 'Ferramentas' e adicionado o atalho 'Razão Raio/Espessura'.
+- Adicionado formulário para cálculo da razão entre raio interno e espessura, com barra de rolagem na tabela de resultados e aviso sobre uso de valores teóricos.
+- Incluída limpeza automática do valor no formulário de cálculo da razão entre raio interno e espessura ao limpar campos.
+- Realizados ajustes de desempenho e organização interna do código (sem impacto direto no uso).
+
 ## 1.0.4 (07/05/2025)
 
 - atualiza o caminho do arquivo CHANGELOG.md para a pasta de documentação
