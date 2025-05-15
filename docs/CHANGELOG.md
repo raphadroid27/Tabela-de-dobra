@@ -2,6 +2,10 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.1.1 (15/05/2025)
+
+- ordena a lista de materiais pelo nome e ajusta a listagem de itens no formulário de materiais
+
 ## 1.1.0 (13/05/2025)
 
 - Criado menu 'Ferramentas' e adicionado o atalho 'Razão Raio/Espessura'.
