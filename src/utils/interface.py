@@ -29,14 +29,14 @@ def atualizar_widgets(tipo):
     '''
     def atualizar_material():
         if g.MAT_COMB and g.MAT_COMB.winfo_exists():
-            materiais = [m.nome for m in session.query(Material).order_by(Material.id)]
+            materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
             g.MAT_COMB.configure(values=materiais)
 
         # Verifica se o combobox de dedução de material existe e atualiza seus valores
         if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
             g.DED_MATER_COMB.configure(values=[m.nome for m in session
                                                .query(Material)
-                                               .order_by(Material.id).all()])
+                                               .order_by(Material.nome).all()])
 
     def atualizar_espessura():
         material_nome = g.MAT_COMB.get()
@@ -374,7 +374,7 @@ def limpar_tudo():
 
     limpar_dobras()
     todas_funcoes()
-    
+
     if g.RAZAO_RIE_LBL and g.RAZAO_RIE_LBL.winfo_exists():
         g.RAZAO_RIE_LBL.config(text="")
 
@@ -428,6 +428,9 @@ def listar(tipo):
         config['lista'].delete(item)
 
     itens = session.query(config['modelo']).order_by(config['ordem']).all()
+
+    if tipo == 'material':
+        itens = sorted(itens, key=lambda x: x.nome)
 
     if tipo == 'canal':
         itens = sorted(itens, key=lambda x: float(re.findall(r'\d+\.?\d*', x.valor)[0]))
