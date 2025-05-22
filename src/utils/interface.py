@@ -71,10 +71,7 @@ def atualizar_widgets(tipo):
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
         if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
-            g.DED_CANAL_COMB.configure(values=sorted(
-                [c.valor for c in session.query(Canal).all()],
-                key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
-            ))
+            g.DED_CANAL_COMB.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
 
     def atualizar_deducao():
         espessura_valor = g.ESP_COMB.get()
@@ -431,9 +428,6 @@ def listar(tipo):
 
     if tipo == 'material':
         itens = sorted(itens, key=lambda x: x.nome)
-
-    if tipo == 'canal':
-        itens = sorted(itens, key=lambda x: float(re.findall(r'\d+\.?\d*', x.valor)[0]))
 
     for item in itens:
         if tipo == 'dedução':
