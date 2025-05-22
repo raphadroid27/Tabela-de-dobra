@@ -351,7 +351,7 @@ def buscar(tipo):
     config = configuracoes[tipo]
 
     try:
-        config = configuracoes[tipo]
+        config = configuracoes.get(tipo)
     except KeyError:
         messagebox.showerror("Erro", f"Tipo '{tipo}' não encontrado nas configurações.")
         return
@@ -380,7 +380,10 @@ def buscar(tipo):
         canal_valor = config['entries']['canal_combo'].get()
         itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
     else:
-        item = config['busca'].get().replace(',', '.') if config['busca'] else ""
+        item = config['busca'].get().replace(',', '.') if config.get('busca') else ""
+        if not item:
+            listar(tipo)
+            return
         itens = session.query(config['modelo']).filter(config['campo_busca'].like(f"{item}%"))
 
     for item in config['lista'].get_children():
