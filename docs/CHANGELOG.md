@@ -2,9 +2,16 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.1.2 (23/05/2025)
+
+- Melhorada a formatação do changelog para maior legibilidade.
+- Scripts de adição de dados (carbono, H14 e inox) reorganizados e renomeados com prefixo 'add'.
+- Melhorada a busca nas configurações com validação de itens vazios.
+- Simplificada a atualização de valores no combobox de dedução de canal.
+
 ## 1.1.1 (15/05/2025)
 
-- ordena a lista de materiais pelo nome e ajusta a listagem de itens no formulário de materiais
+- Ordena a lista de materiais pelo nome e ajusta a listagem de itens no formulário de materiais
 
 ## 1.1.0 (13/05/2025)
 
