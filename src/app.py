@@ -17,8 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # pylint: disable=wrong-import-position
 import json
 import tkinter as tk
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from src.utils.banco_dados import session
 from src.models import Usuario
 from src.components.dobra_90 import dobras
 from src.components import botoes
@@ -44,13 +43,6 @@ from src.utils.interface import (salvar_valores_cabecalho,
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
 # pylint: enable=wrong-import-position
-
-# Configuração do banco de dados
-DATABASE_DIR = os.path.abspath("database")
-os.makedirs(DATABASE_DIR, exist_ok=True)
-engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
-Session = sessionmaker(bind=engine)
-session = Session()
 
 DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
 CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
