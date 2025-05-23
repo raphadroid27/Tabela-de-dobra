@@ -114,8 +114,10 @@ def configurar_botoes(main_frame, frame_edicoes):
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
     '''
     if g.EDIT_CANAL:
-        g.CANAL_FORM.title("Editar/Excluir Canal")
-        g.LIST_CANAL.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal'))
+        if g.CANAL_FORM:
+            g.CANAL_FORM.title("Editar/Excluir Canal")
+        if g.LIST_CANAL:
+            g.LIST_CANAL.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal'))
         frame_edicoes.config(text='Editar Canal')
 
         tk.Button(main_frame, text="Excluir",
@@ -127,7 +129,8 @@ def configurar_botoes(main_frame, frame_edicoes):
                   command=lambda: editar('canal'),
                   bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
     else:
-        g.CANAL_FORM.title("Novo Canal")
+        if g.CANAL_FORM:
+            g.CANAL_FORM.title("Novo Canal")
         frame_edicoes.config(text='Novo Canal')
         tk.Button(frame_edicoes,
                   text="Adicionar",

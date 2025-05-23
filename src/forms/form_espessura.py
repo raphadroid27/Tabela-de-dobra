@@ -94,14 +94,17 @@ def configurar_botoes(main_frame):
     '''
     Configura os botões de ação (Excluir).
     '''
-    if g.EDIT_ESP:
-        g.ESPES_FORM.title("Editar/Excluir Espessura")
-        tk.Button(main_frame,
-                  text="Excluir",
-                  command=lambda: excluir('espessura'),
-                  bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+    if g.ESPES_FORM is not None:
+        if g.EDIT_ESP:
+            g.ESPES_FORM.title("Editar/Excluir Espessura")
+            tk.Button(main_frame,
+                      text="Excluir",
+                      command=lambda: excluir('espessura'),
+                      bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        else:
+            g.ESPES_FORM.title("Adicionar Espessura")
     else:
-        g.ESPES_FORM.title("Adicionar Espessura")
+        print("Erro: g.ESPES_FORM não foi inicializado.")
 
 def main(root):
     '''
