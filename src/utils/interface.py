@@ -141,12 +141,24 @@ def atualizar_toneladas_m():
     Atualiza o valor de toneladas por metro com base no comprimento e na dedução selecionada.
     '''
     comprimento = g.COMPR_ENTRY.get()
-    deducao_obj = session.query(Deducao).filter_by(valor=g.DED_VALOR).first()
+    espessura_valor = g.ESP_COMB.get()
+    material_nome = g.MAT_COMB.get()
+    canal_valor = g.CANAL_COMB.get()
 
-    if g.MAT_COMB.get() != "" and g.ESP_COMB.get() != "" and g.CANAL_COMB.get() != "":
+    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
+    material_obj = session.query(Material).filter_by(nome=material_nome).first()
+    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+
+    if espessura_obj and material_obj and canal_obj:
+        deducao_obj = session.query(Deducao).filter(
+            Deducao.espessura_id == espessura_obj.id,
+            Deducao.material_id == material_obj.id,
+            Deducao.canal_id == canal_obj.id
+        ).first()
+
         if deducao_obj and deducao_obj.forca is not None:
             toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
-            if comprimento else deducao_obj.forca)
+                           if comprimento else deducao_obj.forca)
             g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
             g.FORCA_LBL.config(text='N/A', fg="red")
