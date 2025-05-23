@@ -17,7 +17,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-class Usuario(Base):
+class Usuario(Base): # pylint: disable=too-few-public-methods
     '''
     Representa a tabela de usuários no banco de dados.
     Contém informações sobre o nome, senha e o papel do usuário no sistema.

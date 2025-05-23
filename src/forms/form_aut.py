@@ -6,10 +6,8 @@
 # com a biblioteca tkinter, utilizando o módulo globals para variáveis globais e o
 # módulo funcoes para operações auxiliares. O banco de dados é gerenciado com SQLAlchemy.
 '''
-import os
 import tkinter as tk
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from src.utils.banco_dados import session
 from src.models import Usuario
 from src.utils.usuarios import login, novo_usuario
 from src.utils.janelas import (desabilitar_janelas,
@@ -17,13 +15,6 @@ from src.utils.janelas import (desabilitar_janelas,
                               posicionar_janela
                               )
 from src.config import globals as g
-
-# Configuração do banco de dados
-DATABASE_DIR = os.path.abspath("database")
-os.makedirs(DATABASE_DIR, exist_ok=True)
-engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
-Session = sessionmaker(bind=engine)
-session = Session()
 
 def main(root):
     '''
