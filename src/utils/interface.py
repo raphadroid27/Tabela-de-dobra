@@ -463,3 +463,31 @@ def todas_funcoes():
 
     # Atualizar tooltips
     canal_tooltip()
+
+def configurar_main_frame(parent, rows=4):
+    '''
+    Configura o frame principal com colunas e linhas padrão.
+    '''
+    main_frame = tk.Frame(parent)
+    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
+
+    main_frame.columnconfigure(0, weight=1)
+    for i in range(rows):
+        main_frame.rowconfigure(i, weight=1 if i == 1 else 0)
+
+    return main_frame
+
+def configurar_frame_edicoes(parent, text, columns=3, rows=4):
+    '''
+    Cria um frame de edições com configuração padrão.
+    '''
+    frame_edicoes = tk.LabelFrame(parent, text=text, pady=5)
+    frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+
+    for i in range(columns):
+        frame_edicoes.columnconfigure(i, weight=1 if i < columns - 1 else 0)
+
+    for i in range(rows):
+        frame_edicoes.rowconfigure(i, weight=1)
+
+    return frame_edicoes
