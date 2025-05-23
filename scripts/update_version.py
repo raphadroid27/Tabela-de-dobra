@@ -243,14 +243,25 @@ def main():
         print("Atualização de versão cancelada.")
         return
 
-    # Atualiza o arquivo __init__.py
+    # Atualiza o arquivo __init__.py sem apagar o conteúdo existente
     init_file_path = "src/__init__.py"
     Path("src").mkdir(exist_ok=True)  # Cria o diretório src se não existir
 
     try:
+        with open(init_file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        with open(init_file_path, "w", encoding="utf-8") as f:
+            for line in lines:
+                if line.startswith("__version__"):
+                    f.write(f'__version__ = "{version}"\n')
+                else:
+                    f.write(line)
+        print(f"Arquivo __init__.py atualizado com a versão: {version}")
+    except FileNotFoundError:
         with open(init_file_path, "w", encoding="utf-8") as f:
             f.write(f'__version__ = "{version}"\n')
-        print(f"Arquivo __init__.py atualizado com a versão: {version}")
+        print(f"Arquivo __init__.py criado com a versão: {version}")
     except ValueError as e:
         print(f"Erro ao atualizar o arquivo __init__.py: {e}")
 
