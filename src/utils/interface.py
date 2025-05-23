@@ -97,8 +97,6 @@ def atualizar_widgets(tipo):
                 g.DED_LBL.config(text='N/A', fg="red")
                 g.OBS_LBL.config(text='Observações não encontradas')
 
-            g.DED_VALOR = deducao_obj.valor if deducao_obj else None
-
         for tipo in ['material', 'espessura', 'canal']:
             atualizar_widgets(tipo)
 
