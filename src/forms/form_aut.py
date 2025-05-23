@@ -34,7 +34,10 @@ def main(root):
     g.AUTEN_FORM.attributes("-topmost", True)
     g.AUTEN_FORM.focus()
     desabilitar_janelas()
-    g.AUTEN_FORM.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(), g.AUTEN_FORM.destroy()])
+    g.AUTEN_FORM.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(),
+                                                       g.AUTEN_FORM.destroy()
+                                                       if g.AUTEN_FORM
+                                                       else None])
 
     posicionar_janela(g.AUTEN_FORM, 'centro')
 
