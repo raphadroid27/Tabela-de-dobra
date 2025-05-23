@@ -1,12 +1,24 @@
+"""
+Script para adicionar dados de espessura, canal e dedução do material H14
+ao banco de dados.
+O script conecta-se ao banco de dados SQLite, verifica se os dados já existem
+e, se não existirem, os adiciona.
+"""
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from models import Espessura, Material, Canal, Deducao
+from src.models import Espessura, Material, Canal, Deducao
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
 def adicionar_dados_h14():
+    """
+    Adiciona os dados do material H14 no banco de dados.
+
+    Cria registros de espessura, canal e dedução associados ao material H14,
+    caso ainda não existam no banco de dados.
+    """
     dados = [
         {"espessura": 1.0, "canal": "10", "deducao": 1.7, "obs": ""},
         {"espessura": 1.5, "canal": "10", "deducao": 3.2, "obs": "R=0,8"},

@@ -1,12 +1,24 @@
+"""
+Script para adicionar dados de espessura, canal e dedução do material CARBONO
+ao banco de dados.
+O script conecta-se ao banco de dados SQLite, verifica se os dados já existem
+e, se não existirem, os adiciona.
+"""
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from models import Espessura, Material, Canal, Deducao
+from src.models import Espessura, Material, Canal, Deducao
 
 engine = create_engine('sqlite:///tabela_de_dobra.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
 def adicionar_dados_carbono():
+    """
+    Adiciona os dados do material CARBONO no banco de dados.
+
+    Cria registros de espessura, canal e dedução associados ao material CARBONO,
+    caso ainda não existam no banco de dados.
+    """
     dados = [
         {"espessura": 0.5, "canal": "6", "deducao": 1.2, "forca": 2.0, "obs": ""},
         {"espessura": 0.5, "canal": "10", "deducao": 1.0, "forca": None, "obs": ""},
@@ -26,7 +38,6 @@ def adicionar_dados_carbono():
         {"espessura": 2.0, "canal": "R=10", "deducao": 7.0, "forca": None, "obs": "Raio peça = 10"},
         {"espessura": 2.7, "canal": "10", "deducao": 4.3, "forca": None, "obs": ""},
         {"espessura": 2.7, "canal": "16", "deducao": 5.0, "forca": 27.0, "obs": "Canal ideal"},
-        {"espessura": 2.75, "canal": "16", "deducao": 4.5, "forca": 27.0, "obs": "Galvanizado Rittal"},
         {"espessura": 2.7, "canal": "25", "deducao": 6.0, "forca": 14.0, "obs": ""},
         {"espessura": 3.2, "canal": "10", "deducao": 4.6, "forca": None, "obs": "Máx=200"},
         {"espessura": 3.2, "canal": "16", "deducao": 5.3, "forca": 43.0, "obs": ""},
@@ -47,7 +58,8 @@ def adicionar_dados_carbono():
         {"espessura": 6.4, "canal": "35", "deducao": 10.7, "forca": 85.0, "obs": ""},
         {"espessura": 6.4, "canal": "50", "deducao": 11.7, "forca": 45.0, "obs": "Canal ideal"},
         {"espessura": 7.9, "canal": "35", "deducao": 13.0, "forca": None, "obs": ""},
-        {"espessura": 7.9, "canal": "50", "deducao": 14.0, "forca": 88.0, "obs": "Furo Ø8 , dist. tang. e L.D 13 , não repuxa"},
+        {"espessura": 7.9, "canal": "50", "deducao": 14.0, "forca": 88.0,
+         "obs": "Furo Ø8 , dist. tang. e L.D 13 , não repuxa"},
         {"espessura": 7.9, "canal": "55", "deducao": 14.5, "forca": None, "obs": ""},
         {"espessura": 7.9, "canal": "80", "deducao": 15.4, "forca": 46.0, "obs": "Canal ideal"},
         {"espessura": 9.5, "canal": "35", "deducao": 14.8, "forca": None, "obs": "Máx=500"},
