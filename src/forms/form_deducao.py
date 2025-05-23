@@ -121,43 +121,57 @@ def configurar_botoes(main_frame, frame_edicoes):
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
     '''
     if g.EDIT_DED:
-        g.DEDUC_FORM.title("Editar/Excluir Dedução")
-        g.LIST_DED.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução'))
+        if g.DEDUC_FORM:
+            g.DEDUC_FORM.title("Editar/Excluir Dedução")
+        if g.LIST_DED:
+            g.LIST_DED.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução'))
         frame_edicoes.config(text='Editar Dedução')
 
-        tk.Button(frame_edicoes,
-                  text="Atualizar",
-                  bg="green",
-                  width=10,
-                  command=lambda: editar('dedução')).grid(row=1,
-                                                          column=3,
-                                                          padx=5,
-                                                          pady=5,
-                                                          sticky="eW"
-                                                          )
-        tk.Button(main_frame,
-                  text="Excluir",
-                  bg="red",
-                  width=10,
-                  command=lambda: excluir('dedução')).grid(row=2,
-                                                           column=0,
-                                                           padx=5,
-                                                           pady=5,
-                                                           sticky="e"
-                                                           )
+        tk.Button(
+            frame_edicoes,
+            text="Atualizar",
+            bg="green",
+            width=10,
+            command=lambda: editar('dedução')
+        ).grid(
+            row=1,
+            column=3,
+            padx=5,
+            pady=5,
+            sticky="eW"
+        )
+
+        tk.Button(
+            main_frame,
+            text="Excluir",
+            bg="red",
+            width=10,
+            command=lambda: excluir('dedução')
+        ).grid(
+            row=2,
+            column=0,
+            padx=5,
+            pady=5,
+            sticky="e"
+        )
     else:
-        g.DEDUC_FORM.title("Adicionar Dedução")
+        if g.DEDUC_FORM:
+            g.DEDUC_FORM.title("Adicionar Dedução")
         frame_edicoes.config(text='Nova Dedução')
-        tk.Button(frame_edicoes,
-                  text="Adicionar",
-                  bg="cyan",
-                  width=10,
-                  command=lambda: adicionar('dedução')).grid(row=1,
-                                                             column=3,
-                                                             padx=5,
-                                                             pady=5,
-                                                             sticky="eW"
-                                                             )
+
+        tk.Button(
+            frame_edicoes,
+            text="Adicionar",
+            bg="cyan",
+            width=10,
+            command=lambda: adicionar('dedução')
+        ).grid(
+            row=1,
+            column=3,
+            padx=5,
+            pady=5,
+            sticky="eW"
+        )
 
 def atualizar_comboboxes():
     '''

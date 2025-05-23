@@ -117,27 +117,33 @@ def configurar_botoes(main_frame, frame_edicoes):
     '''
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
     '''
-    if g.EDIT_MAT:
-        g.MATER_FORM.title("Editar/Excluir Material")
-        g.LIST_MAT.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
-        frame_edicoes.config(text='Editar Material')
+    if g.MATER_FORM is not None:
+        if g.EDIT_MAT:
+            g.MATER_FORM.title("Editar/Excluir Material")
+            if g.LIST_MAT is not None:
+                g.LIST_MAT.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
+            else:
+                print("Erro: g.LIST_MAT não foi inicializado.")
+            frame_edicoes.config(text='Editar Material')
 
-        tk.Button(main_frame,
-                  text="Excluir",
-                  command=lambda: excluir('material'),
-                  bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+            tk.Button(main_frame,
+                      text="Excluir",
+                      command=lambda: excluir('material'),
+                      bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
-        tk.Button(frame_edicoes,
-                  text="Atualizar",
-                  command=lambda: editar('material'),
-                  bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+            tk.Button(frame_edicoes,
+                      text="Atualizar",
+                      command=lambda: editar('material'),
+                      bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+        else:
+            g.MATER_FORM.title("Adicionar Material")
+            frame_edicoes.config(text='Novo Material')
+            tk.Button(frame_edicoes,
+                      text="Adicionar",
+                      command=lambda: adicionar('material'),
+                      bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
     else:
-        g.MATER_FORM.title("Adicionar Material")
-        frame_edicoes.config(text='Novo Material')
-        tk.Button(frame_edicoes,
-                  text="Adicionar",
-                  command=lambda: adicionar('material'),
-                  bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+        print("Erro: g.MATER_FORM não foi inicializado.")
 
 def main(root):
     '''
