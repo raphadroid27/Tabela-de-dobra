@@ -2,7 +2,6 @@
 Este módulo define variáveis globais para uso em diferentes partes da aplicação.
 '''
 #variáveis globais
-DED_VALOR = None
 NO_TOPO_VAR = None
 TRANSP_VAR = None
 DOBRAS_VALORES = None
