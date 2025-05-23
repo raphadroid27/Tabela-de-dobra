@@ -171,7 +171,10 @@ def generate_changelog(version):
             # Verifica se já tem a descrição
             if "Histórico de mudanças do aplicativo Cálculo de Dobras" in existing_content:
                 # Adiciona a nova versão após o cabeçalho com descrição
-                replacement = f'# Changelog\n\nHistórico de mudanças do aplicativo Cálculo de Dobras\n\n{new_version_content}'
+                replacement = (
+                    f'# Changelog\n\n'
+                    f'Histórico de mudanças do aplicativo Cálculo de Dobras\n\n'
+                    f'{new_version_content}')
                 replacement = replacement.replace('\\', r'\\')
                 updated_content = re.sub(
                     r'# Changelog\n\nHistórico de mudanças do aplicativo Cálculo de Dobras\n\n',
