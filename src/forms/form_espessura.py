@@ -10,7 +10,11 @@ import tkinter as tk
 from tkinter import ttk
 
 from src.utils.janelas import (no_topo, posicionar_janela)
-from src.utils.interface import (listar, limpar_busca)
+from src.utils.interface import (listar,
+                                 limpar_busca,
+                                 configurar_main_frame,
+                                configurar_frame_edicoes
+                                 )
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import (buscar,
                                       excluir,
@@ -18,10 +22,9 @@ from src.utils.operacoes_crud import (buscar,
                                       )
 from src.config import globals as g
 
-def main(root):
+def configurar_janela(root):
     '''
-    Inicializa a janela de gerenciamento de espessuras.
-    Configura a interface gráfica para adicionar, editar e excluir espessuras.
+    Configura a janela principal do formulário de espessuras.
     '''
     if g.ESPES_FORM:
         g.ESPES_FORM.destroy()
@@ -30,40 +33,36 @@ def main(root):
     g.ESPES_FORM.geometry("240x280")
     g.ESPES_FORM.resizable(False, False)
 
-    # Define o ícone
     icone_path = obter_caminho_icone()
     g.ESPES_FORM.iconbitmap(icone_path)
 
     no_topo(g.ESPES_FORM)
-    posicionar_janela(g.ESPES_FORM,None)
+    posicionar_janela(g.ESPES_FORM, None)
 
-    main_frame = tk.Frame(g.ESPES_FORM)
-    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
-
-    main_frame.columnconfigure(0,weight=1)
-
-    main_frame.rowconfigure(0,weight=0)
-    main_frame.rowconfigure(1,weight=1)
-    main_frame.rowconfigure(2,weight=0)
-    main_frame.rowconfigure(3,weight=0)
-
+def criar_frame_busca(main_frame):
+    '''
+    Cria o frame de busca.
+    '''
     frame_busca = tk.LabelFrame(main_frame, text='Buscar Espessuras', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
-    frame_busca.columnconfigure(0, weight=0)
-    frame_busca.columnconfigure(1, weight=1)
-    frame_busca.columnconfigure(2, weight=0)
+    for i in range(3):
+        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
 
-    tk.Label(frame_busca, text="Valor:").grid(row=0,column=0)
-    g.ESP_BUSCA_ENTRY=tk.Entry(frame_busca)
+    tk.Label(frame_busca, text="Valor:").grid(row=0, column=0)
+    g.ESP_BUSCA_ENTRY = tk.Entry(frame_busca)
     g.ESP_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
     g.ESP_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('espessura'))
 
     tk.Button(frame_busca,
               text="Limpar",
-              command = lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
+              command=lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
-    columns = ("Id","Valor")
+def criar_lista_espessuras(main_frame):
+    '''
+    Cria a lista de espessuras.
+    '''
+    columns = ("Id", "Valor")
     g.LIST_ESP = ttk.Treeview(main_frame, columns=columns, show="headings")
     g.LIST_ESP["displaycolumns"] = "Valor"
     for col in columns:
@@ -71,32 +70,50 @@ def main(root):
         g.LIST_ESP.column(col, anchor="center")
 
     g.LIST_ESP.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-
     listar('espessura')
 
+def criar_frame_edicoes(main_frame):
+    '''
+    Cria o frame de edições.
+    '''
+    frame_edicoes = configurar_frame_edicoes(main_frame,
+                                             text='Adicionar Espessura'
+                                             if not g.EDIT_ESP
+                                             else 'Editar Espessura'
+                                             )
+
+    tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, sticky="w", padx=5)
+    g.ESP_VALOR_ENTRY = tk.Entry(frame_edicoes)
+    g.ESP_VALOR_ENTRY.grid(row=0, column=1, sticky="ew")
+    tk.Button(frame_edicoes,
+              text="Adicionar",
+              command=lambda: adicionar('espessura'),
+              bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+
+def configurar_botoes(main_frame):
+    '''
+    Configura os botões de ação (Excluir).
+    '''
     if g.EDIT_ESP:
         g.ESPES_FORM.title("Editar/Excluir Espessura")
         tk.Button(main_frame,
                   text="Excluir",
-                  command=lambda:excluir('espessura'),
+                  command=lambda: excluir('espessura'),
                   bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
     else:
         g.ESPES_FORM.title("Adicionar Espessura")
 
-        frame_edicoes = tk.LabelFrame(main_frame, text='Nova Espessura', pady=5)
-        frame_edicoes.grid(row=3, column=0, padx=5,pady=5, sticky="ew")
-
-        frame_edicoes.columnconfigure(0, weight=1)
-        frame_edicoes.columnconfigure(1, weight=2)
-        frame_edicoes.columnconfigure(2, weight=0)
-
-        tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, sticky="w", padx=5)
-        g.ESP_VALOR_ENTRY = tk.Entry(frame_edicoes)
-        g.ESP_VALOR_ENTRY.grid(row=0, column=1, sticky="ew")
-        tk.Button(frame_edicoes,
-                  text="Adicionar",
-                  command = lambda: adicionar('espessura'),
-                  bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+def main(root):
+    '''
+    Inicializa e exibe o formulário de gerenciamento de espessuras.
+    '''
+    configurar_janela(root)
+    main_frame = configurar_main_frame(g.ESPES_FORM)
+    criar_frame_busca(main_frame)
+    criar_lista_espessuras(main_frame)
+    if not g.EDIT_ESP:
+        criar_frame_edicoes(main_frame)
+    configurar_botoes(main_frame)
 
 if __name__ == "__main__":
     main(None)
