@@ -69,54 +69,101 @@ def cabecalho(root):
 
     # Material
     criar_label(frame_cabecalho, "Material:", (0, 0))
-    criar_widget(frame_cabecalho, 'combobox', 'MAT_COMB', (1, 0), justify="center")
-    g.MAT_COMB.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
+    criar_widget(frame_cabecalho, 'combobox',
+                 'MAT_COMB',
+                 (1, 0),
+                 justify="center"
+                 ).bind("<<ComboboxSelected>>",
+                        func=lambda event: todas_funcoes()
+                        )
     tp.ToolTip(g.MAT_COMB, "Selecione o material")
 
     # Espessura
     criar_label(frame_cabecalho, "Espessura:", (0, 1))
-    criar_widget(frame_cabecalho, 'combobox', 'ESP_COMB', (1, 1), justify="center")
-    g.ESP_COMB.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
+    criar_widget(frame_cabecalho,
+                 'combobox',
+                 'ESP_COMB',
+                 (1, 1),
+                 justify="center"
+                 ).bind("<<ComboboxSelected>>",
+                                        func=lambda event: todas_funcoes()
+                                        )
     tp.ToolTip(g.ESP_COMB, "Selecione a espessura da peça.")
 
     # Canal
     criar_label(frame_cabecalho, "Canal:", (0, 2))
-    criar_widget(frame_cabecalho, 'combobox', 'CANAL_COMB', (1, 2), justify="center")
-    g.CANAL_COMB.bind("<<ComboboxSelected>>", func=lambda event: todas_funcoes())
-
+    criar_widget(frame_cabecalho,
+                 'combobox',
+                 'CANAL_COMB',
+                 (1, 2),
+                 justify="center"
+                 ).bind("<<ComboboxSelected>>",
+                        func=lambda event: todas_funcoes()
+                        )
     tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
 
     # Comprimento
     criar_label(frame_cabecalho, "Compr:", (0, 3))
-    criar_widget(frame_cabecalho, 'entry', 'COMPR_ENTRY', (1, 3), justify="center")
-    g.COMPR_ENTRY.bind("<KeyRelease>", func=lambda event: atualizar_toneladas_m())
+    criar_widget(frame_cabecalho,
+                 'entry',
+                 'COMPR_ENTRY',
+                 (1, 3),
+                 justify="center"
+                 ).bind("<KeyRelease>",
+                        func=lambda event: atualizar_toneladas_m()
+                        )
     tp.ToolTip(g.COMPR_ENTRY, "Digite o comprimento da peça em milímetros.")
 
     # Raio interno
     criar_label(frame_cabecalho, "Raio Int.:", (2, 0))
-    criar_widget(frame_cabecalho, 'entry', 'RI_ENTRY', (3, 0), justify="center")
-    g.RI_ENTRY.bind("<KeyRelease>", func=lambda event: todas_funcoes())
+    criar_widget(frame_cabecalho,
+                 'entry',
+                 'RI_ENTRY',
+                 (3, 0),
+                 justify="center"
+                 ).bind("<KeyRelease>", func=lambda event: todas_funcoes())
     tp.ToolTip(g.RI_ENTRY, "Digite o raio interno da peça em milímetros.")
 
     # Fator K
     criar_label(frame_cabecalho, "Fator K:", (2, 1))
-    criar_widget(frame_cabecalho, 'label', 'K_LBL', (3, 1))
-    g.K_LBL.bind("<Button-1>", func=lambda event: copiar('fator_k'))
+    criar_widget(frame_cabecalho,
+                 'label',
+                 'K_LBL',
+                 (3, 1)
+                 ).bind("<Button-1>",
+                        func=lambda event: copiar('fator_k')
+                        )
 
     # Dedução
     criar_label(frame_cabecalho, "Dedução:", (2, 2))
-    criar_widget(frame_cabecalho, 'label', 'DED_LBL', (3, 2))
-    g.DED_LBL.bind("<Button-1>", func=lambda event: copiar('dedução'))
+    criar_widget(frame_cabecalho,
+                 'label',
+                 'DED_LBL',
+                 (3, 2)
+                 ).bind("<Button-1>",
+                         func=lambda event: copiar('dedução')
+                         )
 
     # Offset
     criar_label(frame_cabecalho, "Offset:", (2, 3))
-    criar_widget(frame_cabecalho, 'label', 'OFFSET_LBL', (3, 3))
-    g.OFFSET_LBL.bind("<Button-1>", func=lambda event: copiar('offset'))
+    criar_widget(frame_cabecalho,
+                 'label',
+                 'OFFSET_LBL',
+                 (3, 3)
+                 ).bind("<Button-1>",
+                        func=lambda event: copiar('offset')
+                        )
 
     # Dedução específica
     criar_label(frame_cabecalho, "Ded. Espec.:", (4, 0))
-    criar_widget(frame_cabecalho, 'entry', 'DED_ESPEC_ENTRY', (5, 0), fg="blue", justify="center")
-    g.DED_ESPEC_ENTRY.bind("<KeyRelease>", func=lambda event: todas_funcoes())
+    criar_widget(frame_cabecalho,
+                 'entry',
+                 'DED_ESPEC_ENTRY',
+                 (5, 0), fg="blue",
+                 justify="center"
+                 ).bind("<KeyRelease>",
+                        func=lambda event: todas_funcoes()
+                        )
     tp.ToolTip(g.DED_ESPEC_ENTRY, "Digite a dedução específica da peça em milímetros.")
 
     # Aba mínima
