@@ -2,6 +2,16 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.1.3 (27/05/2025)
+
+- Melhorada a clareza e funcionalidade dos eventos nos widgets do cabeçalho.
+- Corrigida a consulta de materiais para garantir nomes corretos.
+- Ajustada a lógica de fechamento da janela de autenticação para evitar erros.
+- Otimizada a inicialização e configuração de formulários e listas.
+- Corrigido o cálculo de toneladas por metro considerando espessura, material e canal.
+- Melhorada a legibilidade e organização do código em diversos módulos.
+- Atualizado o script de versão para preservar conteúdos existentes.
+
 ## 1.1.2 (23/05/2025)
 
 - Melhorada a formatação do changelog para maior legibilidade.
