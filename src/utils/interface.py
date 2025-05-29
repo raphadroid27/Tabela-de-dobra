@@ -20,7 +20,7 @@ from src.utils.calculos import (calcular_dobra,
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
-def atualizar_widgets(tipo):
+def atualizar_widgets(cabecalho_ui, tipo):
     '''
     Atualiza os valores de comboboxes com base no tipo especificado.
 
@@ -28,9 +28,9 @@ def atualizar_widgets(tipo):
         tipo (str): O tipo de combobox a ser atualizado.
     '''
     def atualizar_material():
-        if g.MAT_COMB and g.MAT_COMB.winfo_exists():
+        if cabecalho_ui.material_widget and cabecalho_ui.material_widget.winfo_exists():
             materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
-            g.MAT_COMB.configure(values=materiais)
+            cabecalho_ui.material_widget.configure(values=materiais)
 
         # Verifica se o combobox de dedução de material existe e atualiza seus valores
         if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
@@ -39,13 +39,13 @@ def atualizar_widgets(tipo):
                                                .order_by(Material.nome).all()])
 
     def atualizar_espessura():
-        material_nome = g.MAT_COMB.get()
+        material_nome = cabecalho_ui.material_widget.get()
         material_obj = session.query(Material).filter_by(nome=material_nome).first()
         if material_obj:
             espessuras = session.query(Espessura).join(Deducao).filter(
                 Deducao.material_id == material_obj.id
             ).order_by(Espessura.valor)
-            g.ESP_COMB.configure(values=[str(e.valor) for e in espessuras])
+            cabecalho_ui.espessura_widget.configure(values=[str(e.valor) for e in espessuras])
 
         # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
         if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
@@ -445,12 +445,12 @@ def listar(tipo):
                 continue
         config['lista'].insert("", "end", values=config['valores'](item))
 
-def todas_funcoes():
+def todas_funcoes(cabecalho_ui):
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
     for tipo in ['espessura', 'canal', 'dedução']:
-        atualizar_widgets(tipo)
+        atualizar_widgets(cabecalho_ui, tipo)
 
     atualizar_toneladas_m()
     calcular_k_offset()
