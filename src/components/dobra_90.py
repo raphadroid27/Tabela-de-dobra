@@ -18,7 +18,7 @@ class DobraUI:
     e atualizar os valores das dobras com base no número de abas (n).
     """
 
-    def __init__(self, frame, w):
+    def __init__(self, cabecalho_ui, frame, w):
         '''
         Cria o frame para as dobras, com base no valor de n.
         O frame é criado apenas uma vez, e os widgets são atualizados
@@ -30,9 +30,9 @@ class DobraUI:
         for i in range(4):
             self.frame.columnconfigure(i, weight=1)
 
-        self.entradas_dobras(self.n, w)
+        self.entradas_dobras(cabecalho_ui, self.n, w)
 
-    def entradas_dobras(self, valor, w):
+    def entradas_dobras(self, cabecalho_ui, valor, w):
         '''
         Cria os widgets para as dobras, com base no valor de n.
         '''
@@ -53,7 +53,7 @@ class DobraUI:
             setattr(self, f'aba{i}_entry_{w}', tk.Entry(self.frame, width=LARGURA, justify="center"))
             entry = getattr(self, f'aba{i}_entry_{w}')
             entry.grid(row=i, column=1, sticky='we', padx=2)
-            entry.bind("<KeyRelease>", lambda event: calcular_dobra(w))
+            entry.bind("<KeyRelease>", lambda event: calcular_dobra(cabecalho_ui, self, w))
             tp.ToolTip(entry, "Insira o valor da dobra.")
 
             # Adicionar navegação com teclas direcionais
