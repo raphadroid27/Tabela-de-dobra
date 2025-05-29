@@ -50,89 +50,89 @@ class CabecalhoUI:
 
         # Canal
         self.criar_label(self.frame, "Canal:", (0, 2))
-        canal_widget = self.criar_widget(self.frame,
+        self.canal_widget = self.criar_widget(self.frame,
                                          'combobox',
                                          (1, 2),
                                          justify="center")
-        canal_widget.bind("<<ComboboxSelected>>",
+        self.canal_widget.bind("<<ComboboxSelected>>",
                           func=lambda event: todas_funcoes(self))
-        tp.ToolTip(canal_widget, "Selecione o canal de dobra.")
+        tp.ToolTip(self.canal_widget, "Selecione o canal de dobra.")
 
         # Comprimento
         self.criar_label(self.frame, "Compr:", (0, 3))
-        comprimento_widget = self.criar_widget(self.frame,
+        self.comprimento_widget = self.criar_widget(self.frame,
                                                'entry',
                                                (1, 3),
                                                justify="center")
-        comprimento_widget.bind("<KeyRelease>",
+        self.comprimento_widget.bind("<KeyRelease>",
                                 func=lambda event: atualizar_toneladas_m())
-        tp.ToolTip(comprimento_widget, "Digite o comprimento da peça em milímetros.")
+        tp.ToolTip(self.comprimento_widget, "Digite o comprimento da peça em milímetros.")
 
         # Raio interno
         self.criar_label(self.frame, "Raio Int.:", (2, 0))
-        raio_interno_widget = self.criar_widget(self.frame,
+        self.raio_interno_widget = self.criar_widget(self.frame,
                                                 'entry',
                                                 (3, 0),
                                                 justify="center")
-        raio_interno_widget.bind("<KeyRelease>", func=lambda event: todas_funcoes(self))
-        tp.ToolTip(raio_interno_widget, "Digite o raio interno da peça em milímetros.")
+        self.raio_interno_widget.bind("<KeyRelease>", func=lambda event: todas_funcoes(self))
+        tp.ToolTip(self.raio_interno_widget, "Digite o raio interno da peça em milímetros.")
 
         # Fator K
         self.criar_label(self.frame, "Fator K:", (2, 1))
-        fator_k_widget = self.criar_widget(self.frame,
+        self.fator_k_widget = self.criar_widget(self.frame,
                                            'label',
                                            (3, 1))
-        fator_k_widget.bind("<Button-1>",
+        self.fator_k_widget.bind("<Button-1>",
                             func=lambda event: copiar('fator_k'))
-        tp.ToolTip(fator_k_widget, "Clique para copiar o fator K.")
+        tp.ToolTip(self.fator_k_widget, "Clique para copiar o fator K.")
 
         # Dedução
         self.criar_label(self.frame, "Dedução:", (2, 2))
-        deducao_widget = self.criar_widget(self.frame,
+        self.deducao_widget = self.criar_widget(self.frame,
                                            'label',
                                            (3, 2))
-        deducao_widget.bind("<Button-1>",
+        self.deducao_widget.bind("<Button-1>",
                             func=lambda event: copiar('dedução'))
-        tp.ToolTip(deducao_widget, "Clique para copiar a dedução.")
+        tp.ToolTip(self.deducao_widget, "Clique para copiar a dedução.")
 
         # Offset
         self.criar_label(self.frame, "Offset:", (2, 3))
-        offset_widget = self.criar_widget(self.frame,
+        self.offset_widget = self.criar_widget(self.frame,
                                           'label',
                                           (3, 3))
-        offset_widget.bind("<Button-1>",
+        self.offset_widget.bind("<Button-1>",
                            func=lambda event: copiar('offset'))
-        tp.ToolTip(offset_widget, "Clique para copiar o offset.")
+        tp.ToolTip(self.offset_widget, "Clique para copiar o offset.")
 
         # Dedução específica
         self.criar_label(self.frame, "Ded. Espec.:", (4, 0))
-        deducao_especifica_widget = self.criar_widget(self.frame,
+        self.deducao_especifica_widget = self.criar_widget(self.frame,
                                                       'entry',
                                                       (5, 0), fg="blue",
                                                       justify="center")
-        deducao_especifica_widget.bind("<KeyRelease>",
-                                       func=lambda event: todas_funcoes())
-        tp.ToolTip(deducao_especifica_widget, "Digite a dedução específica da peça em milímetros.")
+        self.deducao_especifica_widget.bind("<KeyRelease>",
+                                       func=lambda event: todas_funcoes(self))
+        tp.ToolTip(self.deducao_especifica_widget, "Digite a dedução específica da peça em milímetros.")
 
         # Aba mínima
         self.criar_label(self.frame, "Aba Mín.:", (4, 1))
-        aba_minima_widget = self.criar_widget(self.frame, 'label', (5, 1))
-        aba_minima_widget.grid()
+        self.aba_minima_widget = self.criar_widget(self.frame, 'label', (5, 1))
+        self.aba_minima_widget.grid()
 
         # Z90°
         self.criar_label(self.frame, "Ext. Z90°:", (4, 2))
-        z90_widget = self.criar_widget(self.frame, 'label', (5, 2))
-        z90_widget.grid()
+        self.z90_widget = self.criar_widget(self.frame, 'label', (5, 2))
+        self.z90_widget.grid()
 
         # tom/m
         self.criar_label(self.frame, "Ton/m:", (4, 3))
-        ton_m_widget = self.criar_widget(self.frame, 'label', (5, 3))
-        ton_m_widget.grid()
+        self.ton_m_widget = self.criar_widget(self.frame, 'label', (5, 3))
+        self.ton_m_widget.grid()
 
         # Observações
         self.criar_label(self.frame, "Observações:", (6, 0)).grid(columnspan=4)
-        observacoes_widget = self.criar_widget(self.frame, 'label', (7, 0))
-        observacoes_widget.grid(columnspan=4)
+        self.observacoes_widget = self.criar_widget(self.frame, 'label', (7, 0))
+        self.observacoes_widget.grid(columnspan=4)
 
         atualizar_widgets(self, 'material')
 
