@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import tkinter as tk
 from src.components.cabecalho import CabecalhoUI
-from src.components.dobra_90 import dobras
+from src.components.dobra_90 import DobraUI
 from src.components import botoes
 
 def carregar_interface(frame_superior):
@@ -20,6 +20,7 @@ def carregar_interface(frame_superior):
     Args:
         frame_superior (tk.Frame): Frame onde os widgets serão adicionados.
     '''
+
     # Limpar widgets antigos no frame superior
     for widget in frame_superior.winfo_children():
         widget.destroy()
@@ -29,10 +30,11 @@ def carregar_interface(frame_superior):
     cabecalho_ui.frame.grid(row=0, column=0, sticky='wens', ipadx=2, ipady=2)
 
     # Adicionar widgets de dobras
-    dobras(frame_superior, 1).grid(row=1, column=0, sticky='we', ipadx=2, ipady=2)
+    dobras_ui = DobraUI(cabecalho_ui, frame_superior, w=1)  # Adicione o argumento 'w'
+    dobras_ui.frame.grid(row=1, column=0, sticky='wens', ipadx=2, ipady=2)
 
     # Adicionar botões
-    botoes.criar_botoes(frame_superior).grid(row=2, column=0, sticky='wens', ipadx=2, ipady=2)
+    botoes.criar_botoes(self=None, root=frame_superior).grid(row=2, column=0, sticky='wens', ipadx=2, ipady=2)
 
 def configurar_frames(app):
     '''

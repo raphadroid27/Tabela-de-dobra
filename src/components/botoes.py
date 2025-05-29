@@ -6,13 +6,12 @@ serão utilizados para manipular as dobras e a interface de forma
 interativa.
 '''
 import tkinter as tk
-from src.components.dobra_90 import entradas_dobras
 from src.utils.interface import limpar_dobras, limpar_tudo
 import src.config.globals as g
 from src.app_teste import carregar_interface
 import src.utils.classes.tooltip as tp
 
-def criar_botoes(root):
+def criar_botoes(self, root):
     '''
     Cria os botões e checkbuttons no frame inferior.
 
@@ -33,12 +32,12 @@ def criar_botoes(root):
         if g.EXP_V.get() == 1:
             g.PRINC_FORM.geometry(f"{largura_atual}x500")
             for w in g.VALORES_W:
-                entradas_dobras(11, w)
+                self.entradas_dobras(11, w)
             carregar_interface(1, root)
         else:
             g.PRINC_FORM.geometry(f"{largura_atual}x400")
             for w in g.VALORES_W:
-                entradas_dobras(6, w)
+                self.entradas_dobras(6, w)
             carregar_interface(1, root)
 
         # Verificar se avisos devem aparecer
