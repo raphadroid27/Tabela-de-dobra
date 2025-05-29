@@ -11,93 +11,102 @@ import src.config.globals as g
 from src.app_teste import carregar_interface
 import src.utils.classes.tooltip as tp
 
-def criar_botoes(self, root):
+class BotoesUI:
     '''
-    Cria os botões e checkbuttons no frame inferior.
-
-    Args:
-        frame_inferior (tk.Frame): Frame onde os botões serão adicionados.
-        frame_superior (tk.Frame): Frame superior para manipulação de interface.
+    Classe para criar os botões e checkbuttons na interface gráfica.
+    Esta classe contém métodos para criar os botões e checkbuttons
+    que serão exibidos na parte inferior da interface gráfica.
+    Os botões serão utilizados para manipular as dobras e a interface
+    de forma interativa.
     '''
-    frame_botoes = tk.Frame(root)
 
-    frame_botoes.columnconfigure(0, weight=1)
-    frame_botoes.columnconfigure(1, weight=1)
-    frame_botoes.rowconfigure(0, weight=1)
-    frame_botoes.rowconfigure(1, weight=1)
+    def __init__(self, root):
+        '''
+        Cria os botões e checkbuttons no frame inferior.
 
-    def expandir_v():
-        largura_atual = g.PRINC_FORM.winfo_width()
+        Args:
+            frame_inferior (tk.Frame): Frame onde os botões serão adicionados.
+            frame_superior (tk.Frame): Frame superior para manipulação de interface.
+        '''
+        self.frame = tk.Frame(root)
 
-        if g.EXP_V.get() == 1:
-            g.PRINC_FORM.geometry(f"{largura_atual}x500")
-            for w in g.VALORES_W:
-                self.entradas_dobras(11, w)
-            carregar_interface(1, root)
-        else:
-            g.PRINC_FORM.geometry(f"{largura_atual}x400")
-            for w in g.VALORES_W:
-                self.entradas_dobras(6, w)
-            carregar_interface(1, root)
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.columnconfigure(1, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(1, weight=1)
 
-        # Verificar se avisos devem aparecer
-        if g.EXP_H.get() == 1:
-            carregar_interface(2, root)
+        def expandir_v(self):
+            largura_atual = g.PRINC_FORM.winfo_width()
 
-    def expandir_h():
-        altura_atual = g.PRINC_FORM.winfo_height()
-        if g.EXP_H.get() == 1:
-            g.PRINC_FORM.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
-            g.VALORES_W = [1, 2]
-            carregar_interface(2, root)
-        else:
-            g.PRINC_FORM.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
-            g.VALORES_W = [1]
-            carregar_interface(1, root)
+            if self.expandir_v.get() == 1:
+                g.PRINC_FORM.geometry(f"{largura_atual}x500")
+                for w in self.valores_w:
+                    self.entradas_dobras(11, w)
+                carregar_interface(1, root)
+            else:
+                g.PRINC_FORM.geometry(f"{largura_atual}x400")
+                for w in self.valores_w:
+                    self.entradas_dobras(6, w)
+                carregar_interface(1, root)
 
-        # Verificar se avisos devem aparecer
-        if g.EXP_H.get() == 1:
-            carregar_interface(2, root)
+            # Verificar se avisos devem aparecer
+            if g.EXP_H.get() == 1:
+                carregar_interface(2, root)
 
-    tk.Checkbutton(
-        frame_botoes,
-        text="Expandir Vertical",
-        variable=g.EXP_V,
-        width=1,
-        height=1,
-        command=expandir_v
-    ).grid(row=0, column=0, sticky='we')
+        def expandir_h(self):
+            altura_atual = g.PRINC_FORM.winfo_height()
+            if g.EXP_H.get() == 1:
+                g.PRINC_FORM.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
+                self.valores_w = [1, 2]
+                carregar_interface(2, root)
+            else:
+                g.PRINC_FORM.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
+                self.valores_w = [1]
+                carregar_interface(1, root)
 
-    tk.Checkbutton(
-        frame_botoes,
-        text="Expandir Horizontal",
-        variable=g.EXP_H,
-        width=1,
-        height=1,
-        command=expandir_h
-    ).grid(row=0, column=1, sticky='we')
+            # Verificar se avisos devem aparecer
+            if g.EXP_H.get() == 1:
+                carregar_interface(2, root)
 
-    # Botão para limpar valores de dobras
-    tk.Button(frame_botoes,
-              text="Limpar Dobras",
-              command=limpar_dobras,
-              width=15,
-              bg='yellow').grid(row=1, column=0, sticky='we', padx=2)
+        tk.Checkbutton(
+            self.frame,
+            text="Expandir Vertical",
+            variable=self.expandir_v,
+            width=1,
+            height=1,
+            command=expandir_v
+        ).grid(row=0, column=0, sticky='we')
 
-    # Botão para limpar todos os valores
-    tk.Button(frame_botoes,
-              text="Limpar Tudo",
-              command=limpar_tudo,
-              width=15,
-              bg='red').grid(row=1, column=1, sticky='we', padx=2)
+        tk.Checkbutton(
+            self.frame,
+            text="Expandir Horizontal",
+            variable=g.EXP_H,
+            width=1,
+            height=1,
+            command=expandir_h
+        ).grid(row=0, column=1, sticky='we')
 
-    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=0)[0],
-               text="Expande a interface verticalmente")
-    tp.ToolTip(frame_botoes.grid_slaves(row=0, column=1)[0],
-               text="Expande a interface horizontalmente")
-    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=0)[0],
-               text="Limpa as dobras")
-    tp.ToolTip(frame_botoes.grid_slaves(row=1, column=1)[0],
-               text="Limpa todos os valores")
+        # Botão para limpar valores de dobras
+        tk.Button(self.frame,
+                text="Limpar Dobras",
+                command=limpar_dobras,
+                width=15,
+                bg='yellow').grid(row=1, column=0, sticky='we', padx=2)
 
-    return frame_botoes
+        # Botão para limpar todos os valores
+        tk.Button(self.frame,
+                text="Limpar Tudo",
+                command=limpar_tudo,
+                width=15,
+                bg='red').grid(row=1, column=1, sticky='we', padx=2)
+
+        tp.ToolTip(self.frame.grid_slaves(row=0, column=0)[0],
+                text="Expande a interface verticalmente")
+        tp.ToolTip(self.frame.grid_slaves(row=0, column=1)[0],
+                text="Expande a interface horizontalmente")
+        tp.ToolTip(self.frame.grid_slaves(row=1, column=0)[0],
+                text="Limpa as dobras")
+        tp.ToolTip(self.frame.grid_slaves(row=1, column=1)[0],
+                text="Limpa todos os valores")
+
+        return self.frame

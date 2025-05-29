@@ -13,7 +13,7 @@ from src.components.cabecalho import CabecalhoUI
 from src.components.dobra_90 import DobraUI
 from src.components import botoes
 
-def carregar_interface(frame_superior):
+def carregar_interface(frame_superior, dobras_ui):
     '''
     Atualiza o cabeçalho e recria os widgets no frame de dobras.
 
@@ -26,7 +26,7 @@ def carregar_interface(frame_superior):
         widget.destroy()
 
     # Adicionar o cabeçalho principal
-    cabecalho_ui = CabecalhoUI(frame_superior)
+    cabecalho_ui = CabecalhoUI(frame_superior, dobras_ui)
     cabecalho_ui.frame.grid(row=0, column=0, sticky='wens', ipadx=2, ipady=2)
 
     # Adicionar widgets de dobras
@@ -36,7 +36,7 @@ def carregar_interface(frame_superior):
     # Adicionar botões
     botoes.criar_botoes(self=None, root=frame_superior).grid(row=2, column=0, sticky='wens', ipadx=2, ipady=2)
 
-def configurar_frames(app):
+def configurar_frames(app, dobras_ui):
     '''
     Configura os frames principais da janela.
     '''
@@ -47,7 +47,7 @@ def configurar_frames(app):
     frame_superior.rowconfigure(0, weight=1)
     frame_superior.rowconfigure(1, weight=1)
 
-    carregar_interface(frame_superior)
+    carregar_interface(frame_superior, dobras_ui)
 
 def main():
     '''
@@ -57,7 +57,20 @@ def main():
     app.title("Cálculo de Dobra")
     app.geometry('340x400')
     app.resizable(False, False)
-    configurar_frames(app)
+
+    # Inicializar valores globais necessários
+    if not hasattr(g, 'VALORES_W'):
+        g.VALORES_W = [1]  # Definir apenas uma coluna para teste
+    if not hasattr(g, 'N'):
+        g.N = 6  # Número de abas padrão
+
+    # Criar uma instância de DobraUI
+    frame_superior = tk.LabelFrame(app)
+    dobras_ui = DobraUI(None, frame_superior, w=1)  # Passe None para cabecalho_ui temporariamente
+
+    # Passar dobras_ui como argumento
+    configurar_frames(app, dobras_ui)
+
     app.mainloop()
 
 if __name__ == "__main__":
