@@ -234,7 +234,7 @@ def restaurar_valores_cabecalho():
 
     print("Valores restaurados:", g.CABECALHO_VALORES)
 
-def copiar(tipo, numero=None, w=None):
+def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     '''
     Copia o valor do label correspondente ao tipo e 
     número especificados para a área de transferência.
@@ -257,19 +257,19 @@ def copiar(tipo, numero=None, w=None):
         },
         'medida_dobra': {
             'label': lambda numero: getattr(g, f'medidadobra{numero}_label_{w}', None),
-            'funcao_calculo': lambda: calcular_dobra(w)
+            'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         },
         'metade_dobra': {
             'label': lambda numero: getattr(g, f'metadedobra{numero}_label_{w}', None),
-            'funcao_calculo': lambda: calcular_dobra(w)
+            'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         },
         'blank': {
             'label': getattr(g, f'medida_blank_label_{w}', None),
-            'funcao_calculo': lambda: calcular_dobra(w)
+            'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         },
         'metade_blank': {
             'label': getattr(g, f'metade_blank_label_{w}', None),
-            'funcao_calculo': lambda: calcular_dobra(w)
+            'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         }
     }
 
@@ -445,7 +445,7 @@ def listar(tipo):
                 continue
         config['lista'].insert("", "end", values=config['valores'](item))
 
-def todas_funcoes(cabecalho_ui):
+def todas_funcoes(cabecalho_ui, dobras_ui):
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
@@ -457,7 +457,7 @@ def todas_funcoes(cabecalho_ui):
     aba_minima_externa(cabecalho_ui)
     z_minimo_externo(cabecalho_ui)
     for w in g.VALORES_W:
-        calcular_dobra(w)
+        calcular_dobra(cabecalho_ui, dobras_ui, w)
 
     razao_ri_espessura(cabecalho_ui)
 
