@@ -25,8 +25,8 @@ def carregar_interface(frame_superior):
         widget.destroy()
 
     # Adicionar o cabeçalho principal
-    cabecalho_ui = CabecalhoUI()
-    cabecalho_ui.cabecalho(frame_superior).grid(row=0, column=0, sticky='wens', ipadx=2, ipady=2)
+    cabecalho_ui = CabecalhoUI(frame_superior)
+    cabecalho_ui.frame.grid(row=0, column=0, sticky='wens', ipadx=2, ipady=2)
 
     # Adicionar widgets de dobras
     dobras(frame_superior, 1).grid(row=1, column=0, sticky='we', ipadx=2, ipady=2)
