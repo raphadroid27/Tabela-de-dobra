@@ -96,21 +96,21 @@ def z_minimo_externo(cabecalho_ui):
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo do Z mínimo externo.")
 
-def calcular_dobra(w):
+def calcular_dobra(cabecalho_ui, dobras_ui, w):
     '''
     Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
     '''
     # Criar uma lista de listas para armazenar os valores de linha i e coluna w
     g.DOBRAS_VALORES = [
         [
-            getattr(g, f'aba{i}_entry_{col}').get() or ''  # Substitui valores vazios por '0'
+            getattr(dobras_ui, f'aba{i}_entry_{col}').get() or ''  # Substitui valores vazios por '0'
             for col in range(1, w + 1)
         ]
         for i in range(1, g.N)
     ]
 
-    deducao_valor = str(g.DED_LBL.cget('text')).replace(' Copiado!', '')
-    deducao_espec = g.DED_ESPEC_ENTRY.get().replace(',', '.')
+    deducao_valor = str(cabecalho_ui.deducao_widget.cget('text')).replace(' Copiado!', '')
+    deducao_espec = cabecalho_ui.deducao_especifica_widget.get().replace(',', '.')
 
     # Exibir a matriz de valores para depuração
     print("Matriz de dobras (g.dobras_get):")
@@ -129,8 +129,8 @@ def calcular_dobra(w):
         dobra = g.DOBRAS_VALORES[i - 1][w - 1].replace(',', '.')
 
         if dobra == "":
-            getattr(g, f'medidadobra{i}_label_{w}').config(text="")
-            getattr(g, f'metadedobra{i}_label_{w}').config(text="")
+            getattr(dobras_ui, f'medidadobra{i}_label_{w}').config(text="")
+            getattr(dobras_ui, f'metadedobra{i}_label_{w}').config(text="")
         else:
             if i in (1, g.N - 1):
                 medidadobra = float(dobra) - float(deducao_valor) / 2
@@ -143,25 +143,25 @@ def calcular_dobra(w):
             metade_dobra = medidadobra / 2
 
             # Atualizar os widgets com os valores calculados
-            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
-            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
+            getattr(dobras_ui, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
+            getattr(dobras_ui, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
 
         blank = sum(
-        float(getattr(g, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
-        for row in range(1, g.N)
-        if getattr(g, f'medidadobra{row}_label_{w}').cget('text')
-    )
+            float(getattr(dobras_ui, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
+            for row in range(1, g.N)
+            if getattr(dobras_ui, f'medidadobra{row}_label_{w}').cget('text')
+        )
 
         metade_blank = blank / 2
 
         # Atualizar os widgets com os valores calculados
-        label = getattr(g, f'medida_blank_label_{w}')
+        label = getattr(dobras_ui, f'medida_blank_label_{w}')
         if blank:
             label.config(text=f"{blank:.2f}", fg="black")
         else:
             label.config(text="")
 
-        label = getattr(g, f'metade_blank_label_{w}')
+        label = getattr(dobras_ui, f'metade_blank_label_{w}')
         if metade_blank:
             label.config(text=f"{metade_blank:.2f}", fg="black")
         else:
@@ -171,17 +171,17 @@ def calcular_dobra(w):
     for i in range(1, g.N):
         for col in range(1, w + 1):
             calcular_medida(deducao_valor, i, col)
-            verificar_aba_minima(g.DOBRAS_VALORES[i - 1][col - 1], i, col)
+            verificar_aba_minima(cabecalho_ui, dobras_ui, g.DOBRAS_VALORES[i - 1][col - 1], i, col)
 
-def verificar_aba_minima(dobra, i, w):
+def verificar_aba_minima(cabecalho_ui, dobras_ui, dobra, i, w):
     '''
     Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
     '''
     # Verificar se a dobra é menor que a aba mínima
-    aba_minima = aba_minima_externa()
+    aba_minima = aba_minima_externa(cabecalho_ui)
 
     # Obter o widget dinamicamente
-    entry_widget = getattr(g, f'aba{i}_entry_{w}')
+    entry_widget = getattr(dobras_ui, f'aba{i}_entry_{w}')
 
     # Verificar se o campo está vazio
     if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
