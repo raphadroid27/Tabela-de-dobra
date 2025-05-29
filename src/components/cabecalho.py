@@ -17,11 +17,12 @@ class CabecalhoUI:
     Classe para criar o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
     Esta classe contém métodos para criar rótulos e widgets de entrada, além de configurar o cabeçalho da interface.
     '''
-    def __init__(self, root):
+    def __init__(self, root, dobras_ui):
         '''
         Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
         '''
         self.frame = tk.Frame(root)
+        self.dobras_ui = dobras_ui
 
         for i in range(4):
             self.frame.columnconfigure(i, weight=1)
@@ -35,7 +36,7 @@ class CabecalhoUI:
                                                  (1, 0),
                                                  justify="center")
         self.material_widget.bind("<<ComboboxSelected>>",
-                                  func=lambda event: todas_funcoes(self))
+                                  func=lambda event: todas_funcoes(self, self.dobras_ui))
         tp.ToolTip(self.material_widget, "Selecione o material")
 
         # Espessura
@@ -45,7 +46,7 @@ class CabecalhoUI:
                                              (1, 1),
                                              justify="center")
         self.espessura_widget.bind("<<ComboboxSelected>>",
-                              func=lambda event: todas_funcoes(self))
+                              func=lambda event: todas_funcoes(self, self.dobras_ui))
         tp.ToolTip(self.espessura_widget, "Selecione a espessura da peça.")
 
         # Canal
@@ -55,7 +56,7 @@ class CabecalhoUI:
                                          (1, 2),
                                          justify="center")
         self.canal_widget.bind("<<ComboboxSelected>>",
-                          func=lambda event: todas_funcoes(self))
+                          func=lambda event: todas_funcoes(self, self.dobras_ui))
         tp.ToolTip(self.canal_widget, "Selecione o canal de dobra.")
 
         # Comprimento
@@ -111,7 +112,7 @@ class CabecalhoUI:
                                                       (5, 0), fg="blue",
                                                       justify="center")
         self.deducao_especifica_widget.bind("<KeyRelease>",
-                                       func=lambda event: todas_funcoes(self))
+                                       func=lambda event: todas_funcoes(self, self.dobras_ui))
         tp.ToolTip(self.deducao_especifica_widget, "Digite a dedução específica da peça em milímetros.")
 
         # Aba mínima
