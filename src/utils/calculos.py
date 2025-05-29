@@ -7,20 +7,20 @@ from src.config import globals as g
 from src.models.models import Canal
 from src.utils.banco_dados import session
 
-def calcular_k_offset():
+def calcular_k_offset(cabecalho_ui):
     '''
     Calcula o fator K com base nos valores de espessura, dedução e raio interno.
     Atualiza o label correspondente com o valor calculado.
     '''
     try:
         # Obtém os valores diretamente e verifica se são válidos
-        espessura = float(g.ESP_COMB.get() or 0)
-        raio_interno = float(g.RI_ENTRY.get().replace(',', '.') or 0)
-        deducao_espec = float(g.DED_ESPEC_ENTRY.get().replace(',', '.') or 0)
-        deducao_valor = float(g.DED_LBL.cget('text') or 0)
+        espessura = float(cabecalho_ui.espessura_widget.get() or 0)
+        raio_interno = float(cabecalho_ui.raio_interno_widget.get().replace(',', '.') or 0)
+        deducao_espec = float(cabecalho_ui.deducao_especifica_widget.get().replace(',', '.') or 0)
+        deducao_valor = float(cabecalho_ui.deducao_widget.cget('text') or 0)
 
         # Usa a dedução específica, se fornecida
-        if g.DED_ESPEC_ENTRY.get():
+        if cabecalho_ui.deducao_especifica_widget.get():
             deducao_valor = deducao_espec
 
         # Valida se os valores necessários são maiores que zero
@@ -38,17 +38,17 @@ def calcular_k_offset():
         offset = fator_k * espessura
 
         # Atualiza o label com o valor calculado
-        g.K_LBL.config(text=f"{fator_k:.2f}", fg="blue"
+        cabecalho_ui.fator_k_widget.config(text=f"{fator_k:.2f}", fg="blue"
                        if deducao_valor == deducao_espec else "black")
 
-        g.OFFSET_LBL.config(text=f"{offset:.2f}", fg="blue"
+        cabecalho_ui.offset_widget.config(text=f"{offset:.2f}", fg="blue"
                             if deducao_valor == deducao_espec else "black")
 
     except ValueError:
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo do fator K.")
 
-def aba_minima_externa():
+def aba_minima_externa(cabecalho_ui):
     '''
     Calcula a aba mínima externa com base no valor do canal e na espessura.
     Atualiza o label correspondente com o valor calculado.
@@ -56,41 +56,41 @@ def aba_minima_externa():
     aba_minima_valor = 0  # Valor padrão caso a condição não seja satisfeita
 
     try:
-        if g.CANAL_COMB.get() != "":
-            canal_valor = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
-            espessura = float(g.ESP_COMB.get())
+        if cabecalho_ui.canal_widget.get() != "":
+            canal_valor = float(re.findall(r'\d+\.?\d*', cabecalho_ui.canal_widget.get())[0])
+            espessura = float(cabecalho_ui.espessura_widget.get())
 
             aba_minima_valor = canal_valor / 2 + espessura + 2
-            g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
+            cabecalho_ui.aba_minima_widget.config(text=f"{aba_minima_valor:.0f}")
     except (ValueError, AttributeError) as e:
         print(f"Erro ao calcular aba mínima externa: {e}")
-        g.ABA_EXT_LBL.config(text="N/A", fg="red")
+        cabecalho_ui.aba_minima_widget.config(text="N/A", fg="red")
 
     return aba_minima_valor
 
-def z_minimo_externo():
+def z_minimo_externo(cabecalho_ui):
     '''
     Calcula o valor mínimo externo com base na espessura, dedução e largura do canal.
     Atualiza o label correspondente com o valor calculado.
     '''
     try:
         # Obtém os valores diretamente e verifica se são válidos
-        material = g.MAT_COMB.get()
-        espessura = float(g.ESP_COMB.get())
-        canal_valor = g.CANAL_COMB.get()
-        deducao_valor = float(g.DED_LBL.cget('text'))
+        material = cabecalho_ui.material_widget.get()
+        espessura = float(cabecalho_ui.espessura_widget.get())
+        canal_valor = cabecalho_ui.canal_widget.get()
+        deducao_valor = float(cabecalho_ui.deducao_widget.cget('text'))
 
         canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
         if material != "" and espessura != "" and canal_valor != "":
             if not canal_obj.largura:
-                g.Z_EXT_LBL.config(text="N/A", fg="red")
+                cabecalho_ui.z90_widget.config(text="N/A", fg="red")
                 return
 
             if canal_valor and deducao_valor:
                 canal_valor = float(re.findall(r'\d+\.?\d*', canal_valor)[0])
                 valor_z_min_ext = espessura + (deducao_valor / 2) + (canal_obj.largura / 2) + 2
-                g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', fg="black")
+                cabecalho_ui.z90_widget.config(text=f'{valor_z_min_ext:.0f}', fg="black")
 
     except ValueError:
         # Trata erros de conversão
@@ -199,7 +199,7 @@ def verificar_aba_minima(dobra, i, w):
             entry_widget.config(fg="black", bg="white")
             print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
 
-def razao_ri_espessura():
+def razao_ri_espessura(cabecalho_ui):
     '''
     Calcula a razão entre o raio interno e a espessura, atualizando o label correspondente.
     '''
@@ -208,8 +208,8 @@ def razao_ri_espessura():
 
     try:
         # Obtém os valores diretamente e verifica se são válidos
-        espessura = float(g.ESP_COMB.get() or 0)
-        raio_interno = float(g.RI_ENTRY.get().replace(',', '.') or 0)
+        espessura = float(cabecalho_ui.espessura_widget.get() or 0)
+        raio_interno = float(cabecalho_ui.raio_interno_widget.get().replace(',', '.') or 0)
 
         # Valida se os valores necessários são maiores que zero
         if not raio_interno or not espessura:
