@@ -53,8 +53,8 @@ def atualizar_widgets(cabecalho_ui, tipo):
                                                       .query(Espessura).all()]))
 
     def atualizar_canal():
-        espessura_valor = g.ESP_COMB.get()
-        material_nome = g.MAT_COMB.get()
+        espessura_valor = cabecalho_ui.espessura_widget.get()
+        material_nome = cabecalho_ui.material_widget.get()
         espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
         material_obj = session.query(Material).filter_by(nome=material_nome).first()
 
@@ -67,16 +67,16 @@ def atualizar_widgets(cabecalho_ui, tipo):
                 [str(c.valor) for c in canais],
                 key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
             )
-            g.CANAL_COMB.configure(values=canais_valores)
+            cabecalho_ui.canal_widget.configure(values=canais_valores)
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
         if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
             g.DED_CANAL_COMB.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
 
     def atualizar_deducao():
-        espessura_valor = g.ESP_COMB.get()
-        material_nome = g.MAT_COMB.get()
-        canal_valor = g.CANAL_COMB.get()
+        espessura_valor = cabecalho_ui.espessura_widget.get()
+        material_nome = cabecalho_ui.material_widget.get()
+        canal_valor = cabecalho_ui.canal_widget.get()
 
         espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
         material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -90,15 +90,15 @@ def atualizar_widgets(cabecalho_ui, tipo):
             ).first()
 
             if deducao_obj:
-                g.DED_LBL.config(text=deducao_obj.valor, fg="black")
+                cabecalho_ui.deducao_widget.config(text=deducao_obj.valor, fg="black")
                 observacao = deducao_obj.observacao or 'Observações não encontradas'
-                g.OBS_LBL.config(text=f'{observacao}')
+                cabecalho_ui.observacoes_widget.config(text=f'{observacao}')
             else:
-                g.DED_LBL.config(text='N/A', fg="red")
-                g.OBS_LBL.config(text='Observações não encontradas')
+                cabecalho_ui.deducao_widget.config(text='N/A', fg="red")
+                cabecalho_ui.observacoes_widget.config(text='Observações não encontradas')
 
         for tipo in ['material', 'espessura', 'canal']:
-            atualizar_widgets(tipo)
+            atualizar_widgets(cabecalho_ui, tipo)
 
 
     # Mapeamento de tipos para funções
@@ -114,34 +114,34 @@ def atualizar_widgets(cabecalho_ui, tipo):
     if tipo in acoes:
         acoes[tipo]()
 
-def canal_tooltip():
+def canal_tooltip(cabecalho_ui):
     '''
     Atualiza o tooltip do combobox de canais com as
     observações e comprimento total do canal selecionado.
     '''
-    if g.CANAL_COMB.get() == "":
-        g.CANAL_COMB.set("")
-        tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
+    if cabecalho_ui.canal_widget.get() == "":
+        cabecalho_ui.canal_widget.set("")
+        tp.ToolTip(cabecalho_ui.canal_widget, "Selecione o canal de dobra.")
     else:
-        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
+        canal_obj = session.query(Canal).filter_by(valor=cabecalho_ui.canal_widget.get()).first()
         if canal_obj:
             canal_obs = canal_obj.observacao if canal_obj.observacao else "N/A."
             canal_comprimento_total = (canal_obj.comprimento_total
                                        if canal_obj.comprimento_total else "N/A.")
 
-            tp.ToolTip(g.CANAL_COMB,
+            tp.ToolTip(cabecalho_ui.canal_widget,
                        f'Obs: {canal_obs}\n'
                        f'Comprimento total: {canal_comprimento_total}',
                        delay=0)
 
-def atualizar_toneladas_m():
+def atualizar_toneladas_m(cabecalho_ui):
     '''
     Atualiza o valor de toneladas por metro com base no comprimento e na dedução selecionada.
     '''
-    comprimento = g.COMPR_ENTRY.get()
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
-    canal_valor = g.CANAL_COMB.get()
+    comprimento = cabecalho_ui.comprimento_widget.get()
+    espessura_valor = cabecalho_ui.espessura_widget.get()
+    material_nome = cabecalho_ui.material_widget.get()
+    canal_valor = cabecalho_ui.canal_widget.get()
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -157,20 +157,20 @@ def atualizar_toneladas_m():
         if deducao_obj and deducao_obj.forca is not None:
             toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
                            if comprimento else deducao_obj.forca)
-            g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', fg="black")
+            cabecalho_ui.ton_m_widget.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
-            g.FORCA_LBL.config(text='N/A', fg="red")
+            cabecalho_ui.ton_m_widget.config(text='N/A', fg="red")
 
     # Verificar se o comprimento é menor que o comprimento total do canal
-    canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
+    canal_obj = session.query(Canal).filter_by(valor=cabecalho_ui.canal_widget.get()).first()
     comprimento_total = canal_obj.comprimento_total if canal_obj else None
     comprimento = float(comprimento) if comprimento else None
 
     if canal_obj and comprimento and comprimento_total:
         if comprimento < comprimento_total:
-            g.COMPR_ENTRY.config(fg="black")
+            cabecalho_ui.comprimento_widget.config(fg="black")
         elif comprimento >= comprimento_total:
-            g.COMPR_ENTRY.config(fg="red")
+            cabecalho_ui.comprimento_widget.config(fg="red")
 
 def restaurar_valores_dobra(w):
     '''
@@ -452,17 +452,17 @@ def todas_funcoes(cabecalho_ui):
     for tipo in ['espessura', 'canal', 'dedução']:
         atualizar_widgets(cabecalho_ui, tipo)
 
-    atualizar_toneladas_m()
-    calcular_k_offset()
-    aba_minima_externa()
-    z_minimo_externo()
+    atualizar_toneladas_m(cabecalho_ui)
+    calcular_k_offset(cabecalho_ui)
+    aba_minima_externa(cabecalho_ui)
+    z_minimo_externo(cabecalho_ui)
     for w in g.VALORES_W:
         calcular_dobra(w)
 
-    razao_ri_espessura()
+    razao_ri_espessura(cabecalho_ui)
 
     # Atualizar tooltips
-    canal_tooltip()
+    canal_tooltip(cabecalho_ui)
 
 def configurar_main_frame(parent, rows=4):
     '''
