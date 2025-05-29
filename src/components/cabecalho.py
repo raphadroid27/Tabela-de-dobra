@@ -65,7 +65,7 @@ class CabecalhoUI:
                                                (1, 3),
                                                justify="center")
         self.comprimento_widget.bind("<KeyRelease>",
-                                func=lambda event: atualizar_toneladas_m())
+                                func=lambda event: atualizar_toneladas_m(self))
         tp.ToolTip(self.comprimento_widget, "Digite o comprimento da peça em milímetros.")
 
         # Raio interno
