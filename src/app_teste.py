@@ -13,60 +13,65 @@ from src.components.cabecalho import CabecalhoUI
 from src.components.dobra_90 import DobraUI
 from src.components.botoes import BotoesUI
 
-def carregar_interface(frame_superior, dobras_ui):
+class AppUI:
     '''
-    Atualiza o cabeçalho e recria os widgets no frame de dobras.
-
-    Args:
-        frame_superior (tk.Frame): Frame onde os widgets serão adicionados.
+    Classe principal da interface gráfica do aplicativo.
     '''
+    def __init__(self):
+        '''
+        Função principal que inicializa a interface gráfica do aplicativo.
+        '''
+        self.janela_principal = tk.Tk()
+        self.janela_principal.title("Cálculo de Dobra")
+        self.janela_principal.geometry('340x400')
+        self.janela_principal.resizable(False, False)
 
-    # Limpar widgets antigos no frame superior
-    for widget in frame_superior.winfo_children():
-        widget.destroy()
+        # Configurar a interface
+        self.configurar_frames()
 
-    # Adicionar o cabeçalho principal
-    cabecalho_ui = CabecalhoUI(frame_superior, dobras_ui)
-    cabecalho_ui.frame.grid(row=0, column=0, sticky='wens', ipadx=2, ipady=2)
+        # Iniciar o loop principal
+        self.janela_principal.mainloop()
 
-    # Adicionar widgets de dobras
-    dobras_ui = DobraUI(cabecalho_ui, frame_superior, w=1)  # Adicione o argumento 'w'
-    dobras_ui.frame.grid(row=1, column=0, sticky='wens', ipadx=2, ipady=2)
+    def configurar_frames(self):
+        '''
+        Configura os frames principais da janela.
+        '''
+        self.frame = tk.LabelFrame(self.janela_principal)
+        self.frame.pack(fill='both', expand=True, padx=10, pady=10)
 
-    # Adicionar botões
-    botoes_ui = BotoesUI(frame_superior)
-    botoes_ui.frame.grid(row=2, column=0, sticky='wens', ipadx=2, ipady=2)
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.rowconfigure(1, weight=1)
+        self.frame.rowconfigure(2, weight=1)
 
-def configurar_frames(app, dobras_ui):
-    '''
-    Configura os frames principais da janela.
-    '''
-    frame_superior = tk.LabelFrame(app)
-    frame_superior.pack(fill='both', expand=True, padx=10, pady=10)
+        # Carregar os componentes da interface
+        self.carregar_interface()
 
-    frame_superior.columnconfigure(0, weight=1)
-    frame_superior.rowconfigure(0, weight=1)
-    frame_superior.rowconfigure(1, weight=1)
+    def carregar_interface(self):
+        '''
+        Atualiza o cabeçalho e recria os widgets no frame de dobras.
+        '''
+        # Limpar widgets antigos no frame superior
+        for widget in self.frame.winfo_children():
+            widget.destroy()
 
-    carregar_interface(frame_superior, dobras_ui)
+        # Criar instância de DobraUI temporária para passar ao cabeçalho
+        dobras_ui_temp = None
 
-def main():
-    '''
-    Função principal que inicializa a interface gráfica do aplicativo.
-    '''
-    app = tk.Tk()
-    app.title("Cálculo de Dobra")
-    app.geometry('340x400')
-    app.resizable(False, False)
+        # Adicionar o cabeçalho principal
+        cabecalho_ui = CabecalhoUI(self.frame, dobras_ui_temp)
+        cabecalho_ui.frame.grid(row=0, column=0, sticky='ewns', ipadx=2, ipady=2)
 
-    # Criar uma instância de DobraUI
-    frame_superior = tk.LabelFrame(app)
-    dobras_ui = DobraUI(None, frame_superior, w=1)  # Passe None para cabecalho_ui temporariamente
+        # Adicionar widgets de dobras
+        dobras_ui = DobraUI(cabecalho_ui, self.frame, w=1)
+        dobras_ui.frame.grid(row=1, column=0, sticky='ewns', ipadx=2, ipady=2)
 
-    # Passar dobras_ui como argumento
-    configurar_frames(app, dobras_ui)
+        # Atualizar a referência no cabeçalho
+        cabecalho_ui.dobras_ui = dobras_ui
 
-    app.mainloop()
+        # Adicionar botões
+        botoes_ui = BotoesUI(self.frame, self)
+        botoes_ui.frame.grid(row=2, column=0, sticky='ewns', ipadx=2, ipady=2)
 
 if __name__ == "__main__":
-    main()
+    app = AppUI()
