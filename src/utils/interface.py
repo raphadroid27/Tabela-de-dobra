@@ -174,8 +174,8 @@ def atualizar_toneladas_m(cabecalho_ui):
 
 def restaurar_valores_dobra(dobras_ui, w):
     '''
-    Restaura os valores das dobras e os campos de cabeçalho
-    a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
+    Restaura os valores das dobras para a coluna específica w
+    a partir de g.DOBRAS_VALORES.
     '''
     # Verificar se g.DOBRAS_VALORES foi inicializada
     if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
@@ -183,18 +183,21 @@ def restaurar_valores_dobra(dobras_ui, w):
         return
 
     try:
-        # Restaurar os valores das dobras
+        # Restaurar os valores das dobras apenas para a coluna w
         for i in range(1, dobras_ui.n):
-            for col in range(1, w + 1):
-                if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
-                    valor = g.DOBRAS_VALORES[i - 1][col - 1]
-                    entry = getattr(dobras_ui, f'aba{i}_entry_{col}', None)
-                    if entry and hasattr(entry, 'winfo_exists') and entry.winfo_exists():
-                        entry.delete(0, tk.END)
-                        entry.insert(0, valor)
-                        print(f"Valor restaurado para aba{i}_entry_{col}: {valor}")
-                    else:
-                        print(f"Widget aba{i}_entry_{col} não existe ou foi destruído")
+            # Verificar se existem dados para esta linha e coluna
+            if (i - 1 < len(g.DOBRAS_VALORES) and 
+                w - 1 < len(g.DOBRAS_VALORES[i - 1])):
+                valor = g.DOBRAS_VALORES[i - 1][w - 1]
+                entry = getattr(dobras_ui, f'aba{i}_entry_{w}', None)
+                if entry and hasattr(entry, 'winfo_exists') and entry.winfo_exists():
+                    entry.delete(0, tk.END)
+                    entry.insert(0, valor)
+                    print(f"Valor restaurado para aba{i}_entry_{w}: {valor}")
+                else:
+                    print(f"Widget aba{i}_entry_{w} não existe ou foi destruído")
+            else:
+                print(f"Não há dados salvos para aba{i}_entry_{w}")
     except Exception as e:
         print(f"Erro ao restaurar valores das dobras: {e}")
 
@@ -530,31 +533,31 @@ def configurar_frame_edicoes(parent, text, columns=3, rows=4):
 
 def salvar_valores_dobra(dobras_ui, w):
     '''
-    Salva os valores atuais das dobras em g.DOBRAS_VALORES.
+    Salva os valores atuais das dobras da coluna específica w em g.DOBRAS_VALORES.
     '''
     try:
         if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
             g.DOBRAS_VALORES = []
 
-        # Garantir que g.DOBRAS_VALORES tenha o tamanho necessário
+        # Garantir que g.DOBRAS_VALORES tenha o tamanho necessário para as linhas
         while len(g.DOBRAS_VALORES) < dobras_ui.n - 1:
             g.DOBRAS_VALORES.append([])
 
-        # Salvar os valores das dobras
+        # Salvar os valores das dobras apenas para a coluna w
         for i in range(1, dobras_ui.n):
-            # Garantir que cada linha tenha o tamanho necessário
+            # Garantir que cada linha tenha o tamanho necessário para conter até a coluna w
             while len(g.DOBRAS_VALORES[i - 1]) < w:
                 g.DOBRAS_VALORES[i - 1].append("")
 
-            for col in range(1, w + 1):
-                entry = getattr(g, f'aba{i}_entry_{col}', None)
-                if entry and hasattr(entry, 'winfo_exists') and entry.winfo_exists():
-                    valor = entry.get()
-                    g.DOBRAS_VALORES[i - 1][col - 1] = valor
-                    print(f"Valor salvo para aba{i}_entry_{col}: {valor}")
-                else:
-                    g.DOBRAS_VALORES[i - 1][col - 1] = ""
+            # Salvar apenas a coluna específica w
+            entry = getattr(dobras_ui, f'aba{i}_entry_{w}', None)
+            if entry and hasattr(entry, 'winfo_exists') and entry.winfo_exists():
+                valor = entry.get()
+                g.DOBRAS_VALORES[i - 1][w - 1] = valor
+                print(f"Valor salvo para aba{i}_entry_{w}: {valor}")
+            else:
+                g.DOBRAS_VALORES[i - 1][w - 1] = ""
 
-        print("Valores de dobras salvos:", g.DOBRAS_VALORES)
+        print(f"Valores de dobras salvos para coluna {w}:", g.DOBRAS_VALORES)
     except Exception as e:
         print(f"Erro ao salvar valores das dobras: {e}")
