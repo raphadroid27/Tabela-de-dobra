@@ -172,7 +172,7 @@ def atualizar_toneladas_m(cabecalho_ui):
         elif comprimento >= comprimento_total:
             cabecalho_ui.comprimento_widget.config(fg="red")
 
-def restaurar_valores_dobra(w):
+def restaurar_valores_dobra(dobras_ui, w):
     '''
     Restaura os valores das dobras e os campos de cabeçalho
     a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
@@ -182,7 +182,7 @@ def restaurar_valores_dobra(w):
         return
 
     # Restaurar os valores das dobras
-    for i in range(1, g.N):
+    for i in range(1, dobras_ui.n):
         for col in range(1, w + 1):
             if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
                 valor = g.DOBRAS_VALORES[i - 1][col - 1]
@@ -192,7 +192,7 @@ def restaurar_valores_dobra(w):
                     entry.delete(0, tk.END)
                     entry.insert(0, valor)
 
-def salvar_valores_cabecalho():
+def salvar_valores_cabecalho(cabecalho_ui):
     '''
     Salva os valores atuais dos widgets no cabeçalho em g.CABECALHO_VALORES.
     '''
@@ -200,12 +200,12 @@ def salvar_valores_cabecalho():
         g.CABECALHO_VALORES = {}
 
     g.CABECALHO_VALORES = {
-        'MAT_COMB': g.MAT_COMB.get() if g.MAT_COMB else '',
-        'ESP_COMB': g.ESP_COMB.get() if g.ESP_COMB else '',
-        'CANAL_COMB': g.CANAL_COMB.get() if g.CANAL_COMB else '',
-        'COMPR_ENTRY': g.COMPR_ENTRY.get() if g.COMPR_ENTRY else '',
-        'RI_ENTRY': g.RI_ENTRY.get() if g.RI_ENTRY else '',
-        'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.get() if g.DED_ESPEC_ENTRY else '',
+        'material_widget': cabecalho_ui.material_widget.get() if cabecalho_ui.material_widget else '',
+        'espessura_widget': cabecalho_ui.espessura_widget.get() if cabecalho_ui.espessura_widget else '',
+        'canal_widget': cabecalho_ui.canal_widget.get() if cabecalho_ui.canal_widget else '',
+        'comprimento_widget': cabecalho_ui.comprimento_widget.get() if cabecalho_ui.comprimento_widget else '',
+        'raio_interno_widget': cabecalho_ui.raio_interno_widget.get() if cabecalho_ui.raio_interno_widget else '',
+        'deducao_especifica_widget': cabecalho_ui.deducao_especifica_widget.get() if cabecalho_ui.deducao_especifica_widget else '',
     }
     print("Valores salvos:", g.CABECALHO_VALORES)
 
@@ -291,7 +291,7 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
-def limpar_dobras():
+def limpar_dobras(dobras_ui):
     '''
     Limpa os valores das dobras e atualiza os labels correspondentes.
     '''
@@ -315,12 +315,12 @@ def limpar_dobras():
     def obter_widgets(prefixo):
         return [
             getattr(g, f"{prefixo}{i}_label_{col}", None)
-            for i in range(1, g.N)
+            for i in range(1, dobras_ui.n)
             for col in g.VALORES_W
         ]
 
     # Limpar entradas e labels
-    dobras = [getattr(g, f"aba{i}_entry_{col}", None) for i in range(1, g.N) for col in g.VALORES_W]
+    dobras = [getattr(g, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in g.VALORES_W]
     medidas = obter_widgets("medidadobra")
     metades = obter_widgets("metadedobra")
     blanks = [getattr(g, f"medida_blank_label_{col}", None) for col in g.VALORES_W]
@@ -338,7 +338,7 @@ def limpar_dobras():
     g.DOBRAS_VALORES = []
 
     # Alterar a cor de fundo das entradas de dobras para branco
-    for i in range(1, g.N):
+    for i in range(1, dobras_ui.n):
         for col in g.VALORES_W:
             entry = getattr(g, f'aba{i}_entry_{col}', None)
             if entry:
@@ -401,23 +401,23 @@ def limpar_busca(tipo):
 
     listar(tipo)
 
-def focus_next_entry(current_index, w):
+def focus_next_entry(current_index, w, dobras_ui):
     '''
     Move o foco para o próximo campo de entrada na aba atual.
     '''
     next_index = current_index + 1
-    if next_index < g.N:
-        next_entry = getattr(g, f'aba{next_index}_entry_{w}', None)
+    if next_index < dobras_ui.n:
+        next_entry = getattr(dobras_ui, f'aba{next_index}_entry_{w}', None)
         if next_entry:
             next_entry.focus()
 
-def focus_previous_entry(current_index, w):
+def focus_previous_entry(current_index, w, dobras_ui):
     '''
     Move o foco para o campo de entrada anterior na aba atual.
     '''
     previous_index = current_index - 1
     if previous_index > 0:
-        previous_entry = getattr(g, f'aba{previous_index}_entry_{w}', None)
+        previous_entry = getattr(dobras_ui, f'aba{previous_index}_entry_{w}', None)
         if previous_entry:
             previous_entry.focus()
 
