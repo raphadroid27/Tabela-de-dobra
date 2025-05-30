@@ -5,13 +5,13 @@ import tkinter as tk
 from src.utils.interface import limpar_dobras, limpar_tudo
 import src.utils.classes.tooltip as tp
 
-def criar_botoes(parent, app):
+def criar_botoes(parent, app_instance):
     '''
     Cria os botões e checkbuttons no frame inferior.
     
     Args:
         parent (tk.Frame): Frame onde os botões serão adicionados.
-        app (AppUI): Referência para a aplicação principal.
+        app_instance (AppUI): Referência para a aplicação principal.
     
     Returns:
         tk.Frame: Frame contendo os botões
@@ -22,15 +22,14 @@ def criar_botoes(parent, app):
     for i in range(2):
         frame.columnconfigure(i, weight=1)
         frame.rowconfigure(i, weight=1)
-    
-    # Checkbutton para expandir verticalmente
+      # Checkbutton para expandir verticalmente
     chk_v = tk.Checkbutton(
         frame,
         text="Expandir Vertical",
-        variable=app.expandir_v,
+        variable=app_instance.expandir_v,
         width=1,
         height=1,
-        command=lambda: expandir_v_handler(app)
+        command=lambda: expandir_v_handler(app_instance)
     )
     chk_v.grid(row=0, column=0, sticky='we')
     
@@ -38,17 +37,16 @@ def criar_botoes(parent, app):
     chk_h = tk.Checkbutton(
         frame,
         text="Expandir Horizontal",
-        variable=app.expandir_h,
+        variable=app_instance.expandir_h,
         width=1,
         height=1,
-        command=lambda: expandir_h_handler(app)
+        command=lambda: expandir_h_handler(app_instance)
     )
-    chk_h.grid(row=0, column=1, sticky='we')
-      # Botão para limpar valores de dobras
+    chk_h.grid(row=0, column=1, sticky='we')      # Botão para limpar valores de dobras
     btn_limpar_dobras = tk.Button(
         frame,
         text="Limpar Dobras",
-        command=lambda: limpar_dobras_todas_colunas(app) if hasattr(app, 'cabecalho_ui') else None,
+        command=lambda: limpar_dobras_todas_colunas(app_instance) if hasattr(app_instance, 'cabecalho_ui') else None,
         width=15,
         bg='yellow'
     )
@@ -58,7 +56,7 @@ def criar_botoes(parent, app):
     btn_limpar_tudo = tk.Button(
         frame,
         text="Limpar Tudo",
-        command=lambda: limpar_tudo_todas_colunas(app) if hasattr(app, 'cabecalho_ui') else None,
+        command=lambda: limpar_tudo_todas_colunas(app_instance) if hasattr(app_instance, 'cabecalho_ui') else None,
         width=15,
         bg='red'
     )
@@ -72,58 +70,58 @@ def criar_botoes(parent, app):
     
     return frame
 
-def expandir_h_handler(app):
+def expandir_h_handler(app_instance):
     '''
     Manipula a expansão horizontal da interface.
     '''
     try:
-        altura_atual = app.janela_principal.winfo_height()
+        altura_atual = app_instance.janela_principal.winfo_height()
         
-        if app.expandir_h.get() == 1:
+        if app_instance.expandir_h.get() == 1:
             # Expandir horizontalmente - adicionar segunda coluna
-            app.janela_principal.geometry(f'680x{altura_atual}')
-            app.valores_w = [1, 2]
+            app_instance.janela_principal.geometry(f'680x{altura_atual}')
+            app_instance.valores_w = [1, 2]
         else:
             # Contrair horizontalmente - uma coluna apenas
-            app.janela_principal.geometry(f'340x{altura_atual}')
-            app.valores_w = [1]
+            app_instance.janela_principal.geometry(f'340x{altura_atual}')
+            app_instance.valores_w = [1]
         
         # Recarregar interface
         import src.app as app_module
-        app_module.carregar_interface(app)
+        app_module.carregar_interface(app_instance)
         
     except ValueError as e:
         print(f"Erro ao expandir horizontalmente: {e}")
 
-def expandir_v_handler(app):
+def expandir_v_handler(app_instance):
     '''
     Manipula a expansão vertical da interface.
     '''
     try:
-        largura_atual = app.janela_principal.winfo_width()
+        largura_atual = app_instance.janela_principal.winfo_width()
 
-        if app.expandir_v.get() == 1:
+        if app_instance.expandir_v.get() == 1:
             # Expandir verticalmente - 11 linhas de dobra
-            app.janela_principal.geometry(f"{largura_atual}x500")
+            app_instance.janela_principal.geometry(f"{largura_atual}x500")
         else:
             # Contrair verticalmente - 6 linhas de dobra
-            app.janela_principal.geometry(f"{largura_atual}x400")
+            app_instance.janela_principal.geometry(f"{largura_atual}x400")
           # Recarregar interface
         import src.app as app_module
-        app_module.carregar_interface(app)
+        app_module.carregar_interface(app_instance)
         
     except ValueError as e:
         print(f"Erro ao expandir verticalmente: {e}")
 
-def limpar_dobras_todas_colunas(app):
+def limpar_dobras_todas_colunas(app_instance):
     '''
     Limpa dobras em todas as colunas disponíveis.
     '''
-    if hasattr(app, 'cabecalho_ui') and hasattr(app, 'dobras_ui') and app.dobras_ui:
+    if hasattr(app_instance, 'cabecalho_ui') and hasattr(app_instance, 'dobras_ui') and app_instance.dobras_ui:
         # Limpar entradas de todas as colunas
-        for w in app.valores_w:
-            if w in app.dobras_ui:
-                dobras_ui = app.dobras_ui[w]
+        for w in app_instance.valores_w:
+            if w in app_instance.dobras_ui:
+                dobras_ui = app_instance.dobras_ui[w]
                 
                 # Limpar entradas de dobras para esta coluna específica
                 for i in range(1, dobras_ui.n):
@@ -144,28 +142,27 @@ def limpar_dobras_todas_colunas(app):
                     label = getattr(dobras_ui, f'{suffix}_{w}', None)
                     if label:
                         label.config(text="")
-        
-        # Limpar dedução específica
-        if hasattr(app.cabecalho_ui, 'deducao_especifica_widget') and app.cabecalho_ui.deducao_especifica_widget:
-            app.cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
+          # Limpar dedução específica
+        if hasattr(app_instance.cabecalho_ui, 'deducao_especifica_widget') and app_instance.cabecalho_ui.deducao_especifica_widget:
+            app_instance.cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
         
         # Resetar valores globais
         import src.config.globals as g
         g.DOBRAS_VALORES = []
         
         # Focar no primeiro campo
-        if 1 in app.dobras_ui:
-            aba1_entry = getattr(app.dobras_ui[1], "aba1_entry_1", None)
+        if 1 in app_instance.dobras_ui:
+            aba1_entry = getattr(app_instance.dobras_ui[1], "aba1_entry_1", None)
             if aba1_entry:
                 aba1_entry.focus_set()
 
-def limpar_tudo_todas_colunas(app):
+def limpar_tudo_todas_colunas(app_instance):
     '''
     Limpa tudo em todas as colunas disponíveis.
     '''
-    if hasattr(app, 'cabecalho_ui') and hasattr(app, 'dobras_ui') and app.dobras_ui:
+    if hasattr(app_instance, 'cabecalho_ui') and hasattr(app_instance, 'dobras_ui') and app_instance.dobras_ui:
         # Limpar campos do cabeçalho
-        cabecalho_ui = app.cabecalho_ui
+        cabecalho_ui = app_instance.cabecalho_ui
         if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:
             cabecalho_ui.material_widget.set('')
         if hasattr(cabecalho_ui, 'espessura_widget') and cabecalho_ui.espessura_widget:
@@ -199,15 +196,14 @@ def limpar_tudo_todas_colunas(app):
                 widget = getattr(cabecalho_ui, widget_name)
                 if widget:
                     widget.config(text=texto)
-        
-        # Limpar dobras
-        limpar_dobras_todas_colunas(app)
+          # Limpar dobras
+        limpar_dobras_todas_colunas(app_instance)
         
         # Executar todas as funções para cada coluna
         from src.utils.interface import todas_funcoes
-        for w in app.valores_w:
-            if w in app.dobras_ui:
-                todas_funcoes(app.cabecalho_ui, app.dobras_ui[w])
+        for w in app_instance.valores_w:
+            if w in app_instance.dobras_ui:
+                todas_funcoes(app_instance.cabecalho_ui, app_instance.dobras_ui[w])
 
         # Focar no combobox de material
         if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:

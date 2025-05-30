@@ -310,7 +310,7 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
-def limpar_dobras(cabecalho_ui, dobras_ui, app):
+def limpar_dobras(cabecalho_ui, dobras_ui, app_instance):
     '''
     Limpa os valores das dobras e atualiza os labels correspondentes.
     '''
@@ -331,19 +331,16 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app):
                     widget.config(text=valor)
 
     # Obter widgets dinamicamente
-    def obter_widgets(prefixo):
-        return [
+    def obter_widgets(prefixo):        return [
             getattr(dobras_ui, f"{prefixo}{i}_label_{col}", None)
             for i in range(1, dobras_ui.n)
-            for col in app.valores_w
-        ]
-
-    # Limpar entradas e labels
-    dobras = [getattr(dobras_ui, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in app.valores_w]
+            for col in app_instance.valores_w
+        ]    # Limpar entradas e labels
+    dobras = [getattr(dobras_ui, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in app_instance.valores_w]
     medidas = obter_widgets("medidadobra")
     metades = obter_widgets("metadedobra")
-    blanks = [getattr(dobras_ui, f"medida_blank_label_{col}", None) for col in app.valores_w]
-    metades_blanks = [getattr(dobras_ui, f"metade_blank_label_{col}", None) for col in app.valores_w]
+    blanks = [getattr(dobras_ui, f"medida_blank_label_{col}", None) for col in app_instance.valores_w]
+    metades_blanks = [getattr(dobras_ui, f"metade_blank_label_{col}", None) for col in app_instance.valores_w]
 
     # Limpar widgets
     limpar_widgets(dobras, "delete")
@@ -354,11 +351,9 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app):
         cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
 
     # Resetar valores globais
-    g.DOBRAS_VALORES = []
-
-    # Alterar a cor de fundo das entradas de dobras para branco
+    g.DOBRAS_VALORES = []    # Alterar a cor de fundo das entradas de dobras para branco
     for i in range(1, dobras_ui.n):
-        for col in app.valores_w:
+        for col in app_instance.valores_w:
             entry = getattr(dobras_ui, f'aba{i}_entry_{col}', None)
             if entry:
                 entry.config(bg="white")
@@ -368,7 +363,7 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app):
     if aba1_entry:
         aba1_entry.focus_set()
 
-def limpar_tudo(cabecalho_ui, dobras_ui, app):
+def limpar_tudo(cabecalho_ui, dobras_ui, app_instance):
     '''
     Limpa todos os campos e labels do aplicativo.
     '''
@@ -406,7 +401,7 @@ def limpar_tudo(cabecalho_ui, dobras_ui, app):
             if hasattr(cabecalho_ui, widget_name):
                 widget = getattr(cabecalho_ui, widget_name)
                 if widget:                    widget.config(text=texto)        # Limpar dobras
-        limpar_dobras(cabecalho_ui, dobras_ui, app)
+        limpar_dobras(cabecalho_ui, dobras_ui, app_instance)
         
         # Executar todas as funções
         todas_funcoes(cabecalho_ui, dobras_ui)
