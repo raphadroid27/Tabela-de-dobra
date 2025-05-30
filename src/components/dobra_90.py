@@ -24,6 +24,7 @@ class DobraUI:
         O frame é criado apenas uma vez, e os widgets são atualizados
         '''
         self.frame = tk.Frame(frame)
+        self.w = w  # Armazenar o valor de w para uso posterior
 
         self.n = 6  # Número padrão de abas
 
@@ -39,12 +40,14 @@ class DobraUI:
         # Atualizar o valor de n
         self.n = valor
 
-        # Adicionar widgets novamente
+        # Limpar widgets antigos do frame antes de criar novos
+        for widget in self.frame.winfo_children():
+            widget.destroy()        # Adicionar widgets novamente
         labels = ['Medida Ext.', 'Medida Dobra', 'Metade Dobra']
         for label in labels:
             tk.Label(self.frame, text=label).grid(row=0, column=labels.index(label)+1)
 
-        for i in range(1, self.n):
+        for i in range(1, self.n + 1):
             self.frame.rowconfigure(0, weight=0)
             self.frame.rowconfigure(i, weight=0)
 
