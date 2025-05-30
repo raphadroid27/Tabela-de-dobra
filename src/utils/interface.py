@@ -449,15 +449,22 @@ def todas_funcoes(cabecalho_ui, dobras_ui):
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     '''
-    for tipo in ['espessura', 'canal', 'dedução']:
+    for tipo in ['material', 'espessura', 'canal', 'dedução']:
         atualizar_widgets(cabecalho_ui, tipo)
 
     atualizar_toneladas_m(cabecalho_ui)
     calcular_k_offset(cabecalho_ui)
     aba_minima_externa(cabecalho_ui)
     z_minimo_externo(cabecalho_ui)
-    for w in g.VALORES_W:
+    
+    # Calcular dobra apenas para a coluna específica passada como parâmetro
+    # Obter o valor w da instância dobras_ui (assumindo que tem um atributo w)
+    if hasattr(dobras_ui, 'w'):
+        w = dobras_ui.w
         calcular_dobra(cabecalho_ui, dobras_ui, w)
+    else:
+        # Fallback: usar apenas w=1 se não houver atributo w
+        calcular_dobra(cabecalho_ui, dobras_ui, 1)
 
     razao_ri_espessura(cabecalho_ui)
 
