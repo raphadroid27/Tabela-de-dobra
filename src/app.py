@@ -36,6 +36,7 @@ from src.components.avisos import AvisosUI
 from src.config import globals as g
 from src.utils.janelas import no_topo
 from src.utils.interface import (salvar_valores_cabecalho,
+                                 salvar_valores_dobra,
                                  restaurar_valores_cabecalho,
                                  restaurar_valores_dobra,
                                  todas_funcoes
@@ -64,7 +65,7 @@ class AppUI:
         self.expandir_h = None
         
         # Valores de largura das colunas
-        self.valores_w = [1]
+        self.valores_w = [1, 2]
 
     def inicializar_variaveis(self):
         '''
@@ -124,17 +125,22 @@ def carregar_interface(app_instance=None):
     # Se não foi passada uma instância, usa a global
     if app_instance is None:
         app_instance = app
-    
-    # Salvar os valores dos widgets do cabeçalho se já existir um
+      # Salvar os valores dos widgets do cabeçalho se já existir um
     if hasattr(app_instance, 'cabecalho_ui') and app_instance.cabecalho_ui:
         salvar_valores_cabecalho(app_instance.cabecalho_ui)
+    
+    # Salvar os valores das dobras se já existirem
+    if hasattr(app_instance, 'dobras_ui') and app_instance.dobras_ui:
+        for w in app_instance.valores_w:
+            if w in app_instance.dobras_ui:
+                salvar_valores_dobra(app_instance.dobras_ui[w], w)
     
     # Limpar widgets antigos no frame superior
     for widget in app_instance.frame_superior.winfo_children():
         widget.destroy()
 
     # Determinar número de dobras baseado na expansão vertical
-    numero_dobras = 11 if app_instance.expandir_v.get() == 1 else 6
+    numero_dobras = 10 if app_instance.expandir_v.get() == 1 else 5
     
     # Determinar valores de largura baseado na expansão horizontal
     app_instance.valores_w = [1, 2] if app_instance.expandir_h.get() == 1 else [1]
@@ -170,7 +176,7 @@ def carregar_interface(app_instance=None):
         if w in app_instance.dobras_ui:
             restaurar_valores_dobra(app_instance.dobras_ui[w], w)
     
-    restaurar_valores_cabecalho()
+    restaurar_valores_cabecalho(app_instance.cabecalho_ui)
     
     # Chamar todas_funcoes para cada coluna de dobra criada
     for w in app_instance.valores_w:
