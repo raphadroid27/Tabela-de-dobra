@@ -43,23 +43,20 @@ def criar_botoes(parent, app):
         height=1,
         command=lambda: expandir_h_handler(app)
     )
-    chk_h.grid(row=0, column=1, sticky='we')
-    
-    # Botão para limpar valores de dobras
+    chk_h.grid(row=0, column=1, sticky='we')    # Botão para limpar valores de dobras
     btn_limpar_dobras = tk.Button(
         frame,
         text="Limpar Dobras",
-        command=limpar_dobras,
+        command=lambda: limpar_dobras(app.cabecalho_ui, app.dobras_ui[1] if 1 in app.dobras_ui else None, app) if hasattr(app, 'dobras_ui') and hasattr(app, 'cabecalho_ui') else None,
         width=15,
         bg='yellow'
     )
     btn_limpar_dobras.grid(row=1, column=0, sticky='we', padx=2)
-    
-    # Botão para limpar todos os valores
+      # Botão para limpar todos os valores
     btn_limpar_tudo = tk.Button(
         frame,
         text="Limpar Tudo",
-        command=limpar_tudo,
+        command=lambda: limpar_tudo(app.cabecalho_ui, app.dobras_ui[1] if hasattr(app, 'dobras_ui') and 1 in app.dobras_ui else None, app) if hasattr(app, 'cabecalho_ui') else None,
         width=15,
         bg='red'
     )
