@@ -179,18 +179,24 @@ def restaurar_valores_dobra(dobras_ui, w):
     '''
     # Verificar se g.DOBRAS_VALORES foi inicializada
     if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
+        print("DOBRAS_VALORES não foi inicializada ou está vazia")
         return
 
-    # Restaurar os valores das dobras
-    for i in range(1, dobras_ui.n):
-        for col in range(1, w + 1):
-            if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
-                valor = g.DOBRAS_VALORES[i - 1][col - 1]
-                print(f"Restaurando valor para aba{i}_entry_{col}: {valor}")
-                entry = getattr(g, f'aba{i}_entry_{col}', None)
-                if entry:
-                    entry.delete(0, tk.END)
-                    entry.insert(0, valor)
+    try:
+        # Restaurar os valores das dobras
+        for i in range(1, dobras_ui.n):
+            for col in range(1, w + 1):
+                if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
+                    valor = g.DOBRAS_VALORES[i - 1][col - 1]
+                    entry = getattr(dobras_ui, f'aba{i}_entry_{col}', None)
+                    if entry and hasattr(entry, 'winfo_exists') and entry.winfo_exists():
+                        entry.delete(0, tk.END)
+                        entry.insert(0, valor)
+                        print(f"Valor restaurado para aba{i}_entry_{col}: {valor}")
+                    else:
+                        print(f"Widget aba{i}_entry_{col} não existe ou foi destruído")
+    except Exception as e:
+        print(f"Erro ao restaurar valores das dobras: {e}")
 
 def salvar_valores_cabecalho(cabecalho_ui):
     '''
@@ -199,17 +205,21 @@ def salvar_valores_cabecalho(cabecalho_ui):
     if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
         g.CABECALHO_VALORES = {}
 
-    g.CABECALHO_VALORES = {
-        'material_widget': cabecalho_ui.material_widget.get() if cabecalho_ui.material_widget else '',
-        'espessura_widget': cabecalho_ui.espessura_widget.get() if cabecalho_ui.espessura_widget else '',
-        'canal_widget': cabecalho_ui.canal_widget.get() if cabecalho_ui.canal_widget else '',
-        'comprimento_widget': cabecalho_ui.comprimento_widget.get() if cabecalho_ui.comprimento_widget else '',
-        'raio_interno_widget': cabecalho_ui.raio_interno_widget.get() if cabecalho_ui.raio_interno_widget else '',
-        'deducao_especifica_widget': cabecalho_ui.deducao_especifica_widget.get() if cabecalho_ui.deducao_especifica_widget else '',
-    }
-    print("Valores salvos:", g.CABECALHO_VALORES)
+    try:
+        g.CABECALHO_VALORES = {
+            'material': cabecalho_ui.material_widget.get() if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget else '',
+            'espessura': cabecalho_ui.espessura_widget.get() if hasattr(cabecalho_ui, 'espessura_widget') and cabecalho_ui.espessura_widget else '',
+            'canal': cabecalho_ui.canal_widget.get() if hasattr(cabecalho_ui, 'canal_widget') and cabecalho_ui.canal_widget else '',
+            'comprimento': cabecalho_ui.comprimento_widget.get() if hasattr(cabecalho_ui, 'comprimento_widget') and cabecalho_ui.comprimento_widget else '',
+            'raio_interno': cabecalho_ui.raio_interno_widget.get() if hasattr(cabecalho_ui, 'raio_interno_widget') and cabecalho_ui.raio_interno_widget else '',
+            'deducao_especifica': cabecalho_ui.deducao_especifica_widget.get() if hasattr(cabecalho_ui, 'deducao_especifica_widget') and cabecalho_ui.deducao_especifica_widget else '',
+        }
+        print("Valores salvos:", g.CABECALHO_VALORES)
+    except Exception as e:
+        print(f"Erro ao salvar valores do cabeçalho: {e}")
+        g.CABECALHO_VALORES = {}
 
-def restaurar_valores_cabecalho():
+def restaurar_valores_cabecalho(cabecalho_ui):
     '''
     Restaura os valores dos widgets no cabeçalho
     com base nos valores armazenados em g.CABECALHO_VALORES.
@@ -217,22 +227,28 @@ def restaurar_valores_cabecalho():
     # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
     if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
         g.CABECALHO_VALORES = {}
+        return
 
-    # Restaura os valores nos widgets
-    for widget_name, valor in g.CABECALHO_VALORES.items():
-        widget = getattr(g, widget_name, None)
-        if widget and isinstance(widget, (tk.Entry, ttk.Combobox)):
-            try:
-                if isinstance(widget, tk.Entry):
-                    widget.delete(0, tk.END)
-                    widget.insert(0, valor)
-                elif isinstance(widget, ttk.Combobox):
-                    widget.set(valor)
-            except Exception as e:
-                print(f"Erro ao restaurar valor para {widget_name}: {e}")
-                raise
+    try:
+        # Restaura os valores nos widgets
+        for widget_name, valor in g.CABECALHO_VALORES.items():
+            if hasattr(cabecalho_ui, f'{widget_name}_widget'):
+                widget = getattr(cabecalho_ui, f'{widget_name}_widget')
+                if widget and hasattr(widget, 'winfo_exists') and widget.winfo_exists():
+                    if isinstance(widget, tk.Entry):
+                        widget.delete(0, tk.END)
+                        widget.insert(0, valor)
+                    elif isinstance(widget, ttk.Combobox):
+                        widget.set(valor)
+                    print(f"Valor restaurado para {widget_name}: {valor}")
+                else:
+                    print(f"Widget {widget_name}_widget não existe ou foi destruído")
+            else:
+                print(f"Atributo {widget_name}_widget não encontrado em cabecalho_ui")
 
-    print("Valores restaurados:", g.CABECALHO_VALORES)
+        print("Valores restaurados:", g.CABECALHO_VALORES)
+    except Exception as e:
+        print(f"Erro ao restaurar valores do cabeçalho: {e}")
 
 def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     '''
@@ -291,7 +307,7 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
-def limpar_dobras(dobras_ui):
+def limpar_dobras(cabecalho_ui, dobras_ui, app):
     '''
     Limpa os valores das dobras e atualiza os labels correspondentes.
     '''
@@ -314,78 +330,94 @@ def limpar_dobras(dobras_ui):
     # Obter widgets dinamicamente
     def obter_widgets(prefixo):
         return [
-            getattr(g, f"{prefixo}{i}_label_{col}", None)
+            getattr(dobras_ui, f"{prefixo}{i}_label_{col}", None)
             for i in range(1, dobras_ui.n)
-            for col in g.VALORES_W
+            for col in app.valores_w
         ]
 
     # Limpar entradas e labels
-    dobras = [getattr(g, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in g.VALORES_W]
+    dobras = [getattr(dobras_ui, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in app.valores_w]
     medidas = obter_widgets("medidadobra")
     metades = obter_widgets("metadedobra")
-    blanks = [getattr(g, f"medida_blank_label_{col}", None) for col in g.VALORES_W]
-    metades_blanks = [getattr(g, f"metade_blank_label_{col}", None) for col in g.VALORES_W]
+    blanks = [getattr(dobras_ui, f"medida_blank_label_{col}", None) for col in app.valores_w]
+    metades_blanks = [getattr(dobras_ui, f"metade_blank_label_{col}", None) for col in app.valores_w]
 
     # Limpar widgets
     limpar_widgets(dobras, "delete")
     limpar_widgets(medidas + metades + blanks + metades_blanks, "config", "")
 
     # Limpar dedução específica
-    if g.DED_ESPEC_ENTRY:
-        g.DED_ESPEC_ENTRY.delete(0, tk.END)
+    if cabecalho_ui.deducao_especifica_widget:
+        cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
 
     # Resetar valores globais
     g.DOBRAS_VALORES = []
 
     # Alterar a cor de fundo das entradas de dobras para branco
     for i in range(1, dobras_ui.n):
-        for col in g.VALORES_W:
-            entry = getattr(g, f'aba{i}_entry_{col}', None)
+        for col in app.valores_w:
+            entry = getattr(dobras_ui, f'aba{i}_entry_{col}', None)
             if entry:
                 entry.config(bg="white")
 
     # Verifique se o atributo existe antes de usá-lo
-    aba1_entry = getattr(g, "aba1_entry_1", None)
+    aba1_entry = getattr(dobras_ui, "aba1_entry_1", None)
     if aba1_entry:
         aba1_entry.focus_set()
 
-def limpar_tudo():
+def limpar_tudo(cabecalho_ui, dobras_ui, app):
     '''
     Limpa todos os campos e labels do aplicativo.
     '''
-    campos = [
-        g.MAT_COMB, g.ESP_COMB, g.CANAL_COMB
-    ]
-    for campo in campos:
-        campo.set('')  # Limpa o valor selecionado
-        if campo != g.MAT_COMB:
-            campo.configure(values=[])  # Limpa os valores disponíveis
+    try:
+        # Limpar campos do cabeçalho usando a instância cabecalho_ui
+        if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:
+            cabecalho_ui.material_widget.set('')
+        if hasattr(cabecalho_ui, 'espessura_widget') and cabecalho_ui.espessura_widget:
+            cabecalho_ui.espessura_widget.set('')
+            cabecalho_ui.espessura_widget.configure(values=[])
+        if hasattr(cabecalho_ui, 'canal_widget') and cabecalho_ui.canal_widget:
+            cabecalho_ui.canal_widget.set('')
+            cabecalho_ui.canal_widget.configure(values=[])
+        
+        # Limpar entradas
+        if hasattr(cabecalho_ui, 'raio_interno_widget') and cabecalho_ui.raio_interno_widget:
+            cabecalho_ui.raio_interno_widget.delete(0, tk.END)
+        if hasattr(cabecalho_ui, 'comprimento_widget') and cabecalho_ui.comprimento_widget:
+            cabecalho_ui.comprimento_widget.delete(0, tk.END)
+        if hasattr(cabecalho_ui, 'deducao_especifica_widget') and cabecalho_ui.deducao_especifica_widget:
+            cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
 
-    entradas = [
-        g.RI_ENTRY, g.COMPR_ENTRY
-    ]
-    for entrada in entradas:
-        entrada.delete(0, tk.END)
+        # Limpar etiquetas
+        etiquetas_widgets = [
+            ('fator_k_widget', ''),
+            ('deducao_widget', ''),
+            ('offset_widget', ''),
+            ('observacoes_widget', ''),
+            ('ton_m_widget', ''),
+            ('aba_minima_widget', ''),
+            ('z90_widget', '')
+        ]
+        
+        for widget_name, texto in etiquetas_widgets:
+            if hasattr(cabecalho_ui, widget_name):
+                widget = getattr(cabecalho_ui, widget_name)
+                if widget:                    widget.config(text=texto)        # Limpar dobras
+        limpar_dobras(cabecalho_ui, dobras_ui, app)
+        
+        # Executar todas as funções
+        todas_funcoes(cabecalho_ui, dobras_ui)
 
-    etiquetas = {
-        g.K_LBL: "",
-        g.DED_LBL: "",
-        g.OFFSET_LBL: "",
-        g.OBS_LBL: "",
-        g.FORCA_LBL: "",
-        g.ABA_EXT_LBL: "",
-        g.Z_EXT_LBL: ""
-    }
-    for etiqueta, texto in etiquetas.items():
-        etiqueta.config(text=texto)
+        # Limpar razão R/E se existir
+        if g.RAZAO_RIE_LBL and g.RAZAO_RIE_LBL.winfo_exists():
+            g.RAZAO_RIE_LBL.config(text="")
 
-    limpar_dobras()
-    todas_funcoes()
-
-    if g.RAZAO_RIE_LBL and g.RAZAO_RIE_LBL.winfo_exists():
-        g.RAZAO_RIE_LBL.config(text="")
-
-    g.MAT_COMB.focus_set()  # Foca no combobox de material
+        # Focar no combobox de material
+        if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:
+            cabecalho_ui.material_widget.focus_set()
+            
+    except Exception as e:
+        print(f"Erro ao limpar todos os campos: {e}")
 
 def limpar_busca(tipo):
     '''
@@ -462,9 +494,6 @@ def todas_funcoes(cabecalho_ui, dobras_ui):
     if hasattr(dobras_ui, 'w'):
         w = dobras_ui.w
         calcular_dobra(cabecalho_ui, dobras_ui, w)
-    else:
-        # Fallback: usar apenas w=1 se não houver atributo w
-        calcular_dobra(cabecalho_ui, dobras_ui, 1)
 
     razao_ri_espessura(cabecalho_ui)
 
@@ -498,3 +527,34 @@ def configurar_frame_edicoes(parent, text, columns=3, rows=4):
         frame_edicoes.rowconfigure(i, weight=1)
 
     return frame_edicoes
+
+def salvar_valores_dobra(dobras_ui, w):
+    '''
+    Salva os valores atuais das dobras em g.DOBRAS_VALORES.
+    '''
+    try:
+        if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
+            g.DOBRAS_VALORES = []
+
+        # Garantir que g.DOBRAS_VALORES tenha o tamanho necessário
+        while len(g.DOBRAS_VALORES) < dobras_ui.n - 1:
+            g.DOBRAS_VALORES.append([])
+
+        # Salvar os valores das dobras
+        for i in range(1, dobras_ui.n):
+            # Garantir que cada linha tenha o tamanho necessário
+            while len(g.DOBRAS_VALORES[i - 1]) < w:
+                g.DOBRAS_VALORES[i - 1].append("")
+
+            for col in range(1, w + 1):
+                entry = getattr(g, f'aba{i}_entry_{col}', None)
+                if entry and hasattr(entry, 'winfo_exists') and entry.winfo_exists():
+                    valor = entry.get()
+                    g.DOBRAS_VALORES[i - 1][col - 1] = valor
+                    print(f"Valor salvo para aba{i}_entry_{col}: {valor}")
+                else:
+                    g.DOBRAS_VALORES[i - 1][col - 1] = ""
+
+        print("Valores de dobras salvos:", g.DOBRAS_VALORES)
+    except Exception as e:
+        print(f"Erro ao salvar valores das dobras: {e}")
