@@ -99,14 +99,12 @@ def z_minimo_externo(cabecalho_ui):
 def calcular_dobra(cabecalho_ui, dobras_ui, w):
     '''
     Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
-    '''
-    # Criar uma lista de listas para armazenar os valores de linha i e coluna w
+    '''    # Criar uma lista de listas para armazenar os valores de linha i e coluna w
     g.DOBRAS_VALORES = [
         [
-            getattr(dobras_ui, f'aba{i}_entry_{col}').get() or ''  # Substitui valores vazios por '0'
-            for col in range(1, w + 1)
+            getattr(dobras_ui, f'aba{i}_entry_{w}').get() or ''  # Usar w específico da instância
         ]
-        for i in range(1, g.N)
+        for i in range(1, dobras_ui.n + 1)
     ]
 
     deducao_valor = str(cabecalho_ui.deducao_widget.cget('text')).replace(' Copiado!', '')
@@ -122,33 +120,29 @@ def calcular_dobra(cabecalho_ui, dobras_ui, w):
         deducao_valor = deducao_espec
 
     if not deducao_valor:
-        return
-
-    # Função auxiliar para calcular medidas
+        return    # Função auxiliar para calcular medidas
     def calcular_medida(deducao_valor, i, w):
-        dobra = g.DOBRAS_VALORES[i - 1][w - 1].replace(',', '.')
+        dobra = g.DOBRAS_VALORES[i - 1][0].replace(',', '.')
 
         if dobra == "":
             getattr(dobras_ui, f'medidadobra{i}_label_{w}').config(text="")
             getattr(dobras_ui, f'metadedobra{i}_label_{w}').config(text="")
         else:
-            if i in (1, g.N - 1):
+            if i in (1, dobras_ui.n):
                 medidadobra = float(dobra) - float(deducao_valor) / 2
             else:
-                if g.DOBRAS_VALORES[i][w - 1] == "":
+                if i < len(g.DOBRAS_VALORES) and g.DOBRAS_VALORES[i][0] == "":
                     medidadobra = float(dobra) - float(deducao_valor) / 2
                 else:
                     medidadobra = float(dobra) - float(deducao_valor)
 
-            metade_dobra = medidadobra / 2
-
-            # Atualizar os widgets com os valores calculados
+            metade_dobra = medidadobra / 2            # Atualizar os widgets com os valores calculados
             getattr(dobras_ui, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
             getattr(dobras_ui, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
 
         blank = sum(
             float(getattr(dobras_ui, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
-            for row in range(1, g.N)
+            for row in range(1, dobras_ui.n + 1)
             if getattr(dobras_ui, f'medidadobra{row}_label_{w}').cget('text')
         )
 
@@ -165,13 +159,10 @@ def calcular_dobra(cabecalho_ui, dobras_ui, w):
         if metade_blank:
             label.config(text=f"{metade_blank:.2f}", fg="black")
         else:
-            label.config(text="")
-
-    # Iterar pelas linhas e colunas para calcular as medidas
-    for i in range(1, g.N):
-        for col in range(1, w + 1):
-            calcular_medida(deducao_valor, i, col)
-            verificar_aba_minima(cabecalho_ui, dobras_ui, g.DOBRAS_VALORES[i - 1][col - 1], i, col)
+            label.config(text="")    # Iterar pelas linhas para calcular as medidas
+    for i in range(1, dobras_ui.n + 1):
+        calcular_medida(deducao_valor, i, w)
+        verificar_aba_minima(cabecalho_ui, dobras_ui, g.DOBRAS_VALORES[i - 1][0], i, w)
 
 def verificar_aba_minima(cabecalho_ui, dobras_ui, dobra, i, w):
     '''
