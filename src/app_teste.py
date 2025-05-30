@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import tkinter as tk
 from src.components.cabecalho import CabecalhoUI
 from src.components.dobra_90 import DobraUI
-from src.components import botoes
+from src.components.botoes import BotoesUI
 
 def carregar_interface(frame_superior, dobras_ui):
     '''
@@ -34,7 +34,8 @@ def carregar_interface(frame_superior, dobras_ui):
     dobras_ui.frame.grid(row=1, column=0, sticky='wens', ipadx=2, ipady=2)
 
     # Adicionar botões
-    botoes.criar_botoes(self=None, root=frame_superior).grid(row=2, column=0, sticky='wens', ipadx=2, ipady=2)
+    botoes_ui = BotoesUI(frame_superior)
+    botoes_ui.frame.grid(row=2, column=0, sticky='wens', ipadx=2, ipady=2)
 
 def configurar_frames(app, dobras_ui):
     '''
@@ -57,12 +58,6 @@ def main():
     app.title("Cálculo de Dobra")
     app.geometry('340x400')
     app.resizable(False, False)
-
-    # Inicializar valores globais necessários
-    if not hasattr(g, 'VALORES_W'):
-        g.VALORES_W = [1]  # Definir apenas uma coluna para teste
-    if not hasattr(g, 'N'):
-        g.N = 6  # Número de abas padrão
 
     # Criar uma instância de DobraUI
     frame_superior = tk.LabelFrame(app)
