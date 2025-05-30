@@ -118,73 +118,73 @@ def form_false(form, editar_attr, root):
     setattr(g, editar_attr, False)
     form.main(root)
 
-def carregar_interface(app_instance=None):
+def carregar_interface(app_principal=None):
     '''
     Atualiza o cabeçalho e recria os widgets no frame de dobras.
     '''
     # Se não foi passada uma instância, usa a global
-    if app_instance is None:
-        app_instance = app
+    if app_principal is None:
+        app_principal = app
     
     # Determinar número de dobras baseado na expansão vertical
-    numero_dobras = 10 if app_instance.expandir_v.get() == 1 else 5
+    numero_dobras = 10 if app_principal.expandir_v.get() == 1 else 5
     
     # Determinar valores de largura baseado na expansão horizontal ANTES de salvar
-    novos_valores_w = [1, 2] if app_instance.expandir_h.get() == 1 else [1]
+    novos_valores_w = [1, 2] if app_principal.expandir_h.get() == 1 else [1]
     
     # Salvar os valores dos widgets do cabeçalho se já existir um
-    if hasattr(app_instance, 'cabecalho_ui') and app_instance.cabecalho_ui:
-        salvar_valores_cabecalho(app_instance.cabecalho_ui)
+    if hasattr(app_principal, 'cabecalho_ui') and app_principal.cabecalho_ui:
+        salvar_valores_cabecalho(app_principal.cabecalho_ui)
     
     # Salvar os valores das dobras se já existirem - usar TODOS os valores_w existentes
-    if hasattr(app_instance, 'dobras_ui') and app_instance.dobras_ui:
+    if hasattr(app_principal, 'dobras_ui') and app_principal.dobras_ui:
         # Salvar valores de todas as colunas existentes antes da mudança
-        for w in app_instance.dobras_ui.keys():
-            salvar_valores_dobra(app_instance.dobras_ui[w], w)
+        for w in app_principal.dobras_ui.keys():
+            salvar_valores_dobra(app_principal.dobras_ui[w], w)
     
     # Atualizar valores_w apenas após o salvamento
-    app_instance.valores_w = novos_valores_w
+    app_principal.valores_w = novos_valores_w
     
     # Limpar widgets antigos no frame superior
-    for widget in app_instance.frame_superior.winfo_children():
+    for widget in app_principal.frame_superior.winfo_children():
         widget.destroy()
 
     # Criar cabeçalho principal
-    app_instance.cabecalho_ui = CabecalhoUI(app_instance.frame_superior, None)
-    app_instance.cabecalho_ui.frame.grid(row=0, column=0, sticky='ewns', ipadx=2, ipady=2)    # Adicionar avisos se expansão horizontal estiver ativa
-    if app_instance.expandir_h.get() == 1:
-        app_instance.avisos_ui = AvisosUI(app_instance.frame_superior)
-        app_instance.avisos_ui.frame.grid(row=0, column=1, sticky='ewns', ipadx=2, ipady=2)
+    app_principal.cabecalho_ui = CabecalhoUI(app_principal.frame_superior, None)
+    app_principal.cabecalho_ui.frame.grid(row=0, column=0, sticky='ewns', ipadx=2, ipady=2)    # Adicionar avisos se expansão horizontal estiver ativa
+    if app_principal.expandir_h.get() == 1:
+        app_principal.avisos_ui = AvisosUI(app_principal.frame_superior)
+        app_principal.avisos_ui.frame.grid(row=0, column=1, sticky='ewns', ipadx=2, ipady=2)
 
     # Criar colunas de dobras baseado nos valores_w
-    app_instance.dobras_ui = {}
-    for w in app_instance.valores_w:
-        dobra_ui = DobraUI(app_instance.cabecalho_ui, app_instance.frame_superior, w)
-        dobra_ui.entradas_dobras(app_instance.cabecalho_ui, numero_dobras, w)
+    app_principal.dobras_ui = {}
+    for w in app_principal.valores_w:
+        dobra_ui = DobraUI(app_principal.cabecalho_ui, app_principal.frame_superior, w)
+        dobra_ui.entradas_dobras(app_principal.cabecalho_ui, numero_dobras, w)
         dobra_ui.frame.grid(row=1, column=w-1, sticky='ewns', ipadx=2, ipady=2)
-        app_instance.dobras_ui[w] = dobra_ui    # Atualizar referência no cabeçalho para a primeira coluna de dobras
-    if app_instance.dobras_ui:
-        app_instance.cabecalho_ui.dobras_ui = app_instance.dobras_ui[1]
-        app_instance.cabecalho_ui.app_instance = app_instance  # Adicionar referência para todas as colunas
+        app_principal.dobras_ui[w] = dobra_ui    # Atualizar referência no cabeçalho para a primeira coluna de dobras
+    if app_principal.dobras_ui:
+        app_principal.cabecalho_ui.dobras_ui = app_principal.dobras_ui[1]
+        app_principal.cabecalho_ui.app_principal = app_principal  # Adicionar referência para todas as colunas
 
     # Criar botões
-    app_instance.frame_botoes = criar_botoes(app_instance.frame_superior, app_instance)
-    columnspan = len(app_instance.valores_w)
-    app_instance.frame_botoes.grid(row=2, column=0, sticky='ewns', ipadx=2, ipady=2, columnspan=columnspan)
+    app_principal.frame_botoes = criar_botoes(app_principal.frame_superior, app_principal)
+    columnspan = len(app_principal.valores_w)
+    app_principal.frame_botoes.grid(row=2, column=0, sticky='ewns', ipadx=2, ipady=2, columnspan=columnspan)
 
     # Configurar grid weights para as colunas
-    for i, w in enumerate(app_instance.valores_w):
-        app_instance.frame_superior.columnconfigure(i, weight=1)    # Restaurar valores
-    for w in app_instance.valores_w:
-        if w in app_instance.dobras_ui:
-            restaurar_valores_dobra(app_instance.dobras_ui[w], w)
+    for i, w in enumerate(app_principal.valores_w):
+        app_principal.frame_superior.columnconfigure(i, weight=1)    # Restaurar valores
+    for w in app_principal.valores_w:
+        if w in app_principal.dobras_ui:
+            restaurar_valores_dobra(app_principal.dobras_ui[w], w)
     
-    restaurar_valores_cabecalho(app_instance.cabecalho_ui)
+    restaurar_valores_cabecalho(app_principal.cabecalho_ui)
     
     # Chamar todas_funcoes para cada coluna de dobra criada
-    for w in app_instance.valores_w:
-        if w in app_instance.dobras_ui:
-            todas_funcoes(app_instance.cabecalho_ui, app_instance.dobras_ui[w])
+    for w in app_principal.valores_w:
+        if w in app_principal.dobras_ui:
+            todas_funcoes(app_principal.cabecalho_ui, app_principal.dobras_ui[w])
 
 def configurar_janela_principal(config):
     '''

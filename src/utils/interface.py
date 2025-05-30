@@ -310,7 +310,7 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     else:
         print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
 
-def limpar_dobras(cabecalho_ui, dobras_ui, app_instance):
+def limpar_dobras(cabecalho_ui, dobras_ui, app_principal):
     '''
     Limpa os valores das dobras e atualiza os labels correspondentes.
     '''
@@ -334,13 +334,13 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app_instance):
     def obter_widgets(prefixo):        return [
             getattr(dobras_ui, f"{prefixo}{i}_label_{col}", None)
             for i in range(1, dobras_ui.n)
-            for col in app_instance.valores_w
+            for col in app_principal.valores_w
         ]    # Limpar entradas e labels
-    dobras = [getattr(dobras_ui, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in app_instance.valores_w]
+    dobras = [getattr(dobras_ui, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in app_principal.valores_w]
     medidas = obter_widgets("medidadobra")
     metades = obter_widgets("metadedobra")
-    blanks = [getattr(dobras_ui, f"medida_blank_label_{col}", None) for col in app_instance.valores_w]
-    metades_blanks = [getattr(dobras_ui, f"metade_blank_label_{col}", None) for col in app_instance.valores_w]
+    blanks = [getattr(dobras_ui, f"medida_blank_label_{col}", None) for col in app_principal.valores_w]
+    metades_blanks = [getattr(dobras_ui, f"metade_blank_label_{col}", None) for col in app_principal.valores_w]
 
     # Limpar widgets
     limpar_widgets(dobras, "delete")
@@ -353,7 +353,7 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app_instance):
     # Resetar valores globais
     g.DOBRAS_VALORES = []    # Alterar a cor de fundo das entradas de dobras para branco
     for i in range(1, dobras_ui.n):
-        for col in app_instance.valores_w:
+        for col in app_principal.valores_w:
             entry = getattr(dobras_ui, f'aba{i}_entry_{col}', None)
             if entry:
                 entry.config(bg="white")
@@ -363,7 +363,7 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app_instance):
     if aba1_entry:
         aba1_entry.focus_set()
 
-def limpar_tudo(cabecalho_ui, dobras_ui, app_instance):
+def limpar_tudo(cabecalho_ui, dobras_ui, app_principal):
     '''
     Limpa todos os campos e labels do aplicativo.
     '''
@@ -401,7 +401,7 @@ def limpar_tudo(cabecalho_ui, dobras_ui, app_instance):
             if hasattr(cabecalho_ui, widget_name):
                 widget = getattr(cabecalho_ui, widget_name)
                 if widget:                    widget.config(text=texto)        # Limpar dobras
-        limpar_dobras(cabecalho_ui, dobras_ui, app_instance)
+        limpar_dobras(cabecalho_ui, dobras_ui, app_principal)
         
         # Executar todas as funções
         todas_funcoes(cabecalho_ui, dobras_ui)
@@ -475,7 +475,7 @@ def listar(tipo):
                 continue
         config['lista'].insert("", "end", values=config['valores'](item))
 
-def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_instance=None):
+def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_principal=None):
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     
@@ -483,7 +483,7 @@ def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_instanc
         cabecalho_ui: Interface do cabeçalho
         dobras_ui: Interface de dobras específica (opcional)
         todas_colunas: Se True, recalcula todas as colunas ativas
-        app_instance: Instância do app para acessar todas as colunas
+        app_principal: Instância do app para acessar todas as colunas
     '''
     for tipo in ['material', 'espessura', 'canal', 'dedução']:
         atualizar_widgets(cabecalho_ui, tipo)
@@ -493,11 +493,11 @@ def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_instanc
     aba_minima_externa(cabecalho_ui)
     z_minimo_externo(cabecalho_ui)
     
-    # Se deve recalcular todas as colunas e tem app_instance
-    if todas_colunas and app_instance and hasattr(app_instance, 'dobras_ui'):
-        for w in app_instance.valores_w:
-            if w in app_instance.dobras_ui:
-                calcular_dobra(cabecalho_ui, app_instance.dobras_ui[w], w)
+    # Se deve recalcular todas as colunas e tem app_principal
+    if todas_colunas and app_principal and hasattr(app_principal, 'dobras_ui'):
+        for w in app_principal.valores_w:
+            if w in app_principal.dobras_ui:
+                calcular_dobra(cabecalho_ui, app_principal.dobras_ui[w], w)
     elif dobras_ui:
         # Calcular dobra apenas para a coluna específica passada como parâmetro
         if hasattr(dobras_ui, 'w'):
