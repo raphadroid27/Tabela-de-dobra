@@ -43,20 +43,22 @@ def criar_botoes(parent, app):
         height=1,
         command=lambda: expandir_h_handler(app)
     )
-    chk_h.grid(row=0, column=1, sticky='we')    # Botão para limpar valores de dobras
+    chk_h.grid(row=0, column=1, sticky='we')
+      # Botão para limpar valores de dobras
     btn_limpar_dobras = tk.Button(
         frame,
         text="Limpar Dobras",
-        command=lambda: limpar_dobras(app.cabecalho_ui, app.dobras_ui[1] if 1 in app.dobras_ui else None, app) if hasattr(app, 'dobras_ui') and hasattr(app, 'cabecalho_ui') else None,
+        command=lambda: limpar_dobras_todas_colunas(app) if hasattr(app, 'cabecalho_ui') else None,
         width=15,
         bg='yellow'
     )
     btn_limpar_dobras.grid(row=1, column=0, sticky='we', padx=2)
-      # Botão para limpar todos os valores
+      
+    # Botão para limpar todos os valores
     btn_limpar_tudo = tk.Button(
         frame,
         text="Limpar Tudo",
-        command=lambda: limpar_tudo(app.cabecalho_ui, app.dobras_ui[1] if hasattr(app, 'dobras_ui') and 1 in app.dobras_ui else None, app) if hasattr(app, 'cabecalho_ui') else None,
+        command=lambda: limpar_tudo_todas_colunas(app) if hasattr(app, 'cabecalho_ui') else None,
         width=15,
         bg='red'
     )
@@ -112,3 +114,101 @@ def expandir_v_handler(app):
         
     except ValueError as e:
         print(f"Erro ao expandir verticalmente: {e}")
+
+def limpar_dobras_todas_colunas(app):
+    '''
+    Limpa dobras em todas as colunas disponíveis.
+    '''
+    if hasattr(app, 'cabecalho_ui') and hasattr(app, 'dobras_ui') and app.dobras_ui:
+        # Limpar entradas de todas as colunas
+        for w in app.valores_w:
+            if w in app.dobras_ui:
+                dobras_ui = app.dobras_ui[w]
+                
+                # Limpar entradas de dobras para esta coluna específica
+                for i in range(1, dobras_ui.n):
+                    entry = getattr(dobras_ui, f'aba{i}_entry_{w}', None)
+                    if entry:
+                        entry.delete(0, tk.END)
+                        entry.config(bg="white")
+                
+                # Limpar labels de medidas, metades e blanks para esta coluna
+                for i in range(1, dobras_ui.n):
+                    for prefixo in ['medidadobra', 'metadedobra']:
+                        label = getattr(dobras_ui, f'{prefixo}{i}_label_{w}', None)
+                        if label:
+                            label.config(text="")
+                
+                # Limpar blanks
+                for suffix in ['medida_blank_label', 'metade_blank_label']:
+                    label = getattr(dobras_ui, f'{suffix}_{w}', None)
+                    if label:
+                        label.config(text="")
+        
+        # Limpar dedução específica
+        if hasattr(app.cabecalho_ui, 'deducao_especifica_widget') and app.cabecalho_ui.deducao_especifica_widget:
+            app.cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
+        
+        # Resetar valores globais
+        import src.config.globals as g
+        g.DOBRAS_VALORES = []
+        
+        # Focar no primeiro campo
+        if 1 in app.dobras_ui:
+            aba1_entry = getattr(app.dobras_ui[1], "aba1_entry_1", None)
+            if aba1_entry:
+                aba1_entry.focus_set()
+
+def limpar_tudo_todas_colunas(app):
+    '''
+    Limpa tudo em todas as colunas disponíveis.
+    '''
+    if hasattr(app, 'cabecalho_ui') and hasattr(app, 'dobras_ui') and app.dobras_ui:
+        # Limpar campos do cabeçalho
+        cabecalho_ui = app.cabecalho_ui
+        if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:
+            cabecalho_ui.material_widget.set('')
+        if hasattr(cabecalho_ui, 'espessura_widget') and cabecalho_ui.espessura_widget:
+            cabecalho_ui.espessura_widget.set('')
+            cabecalho_ui.espessura_widget.configure(values=[])
+        if hasattr(cabecalho_ui, 'canal_widget') and cabecalho_ui.canal_widget:
+            cabecalho_ui.canal_widget.set('')
+            cabecalho_ui.canal_widget.configure(values=[])
+        
+        # Limpar entradas
+        if hasattr(cabecalho_ui, 'raio_interno_widget') and cabecalho_ui.raio_interno_widget:
+            cabecalho_ui.raio_interno_widget.delete(0, tk.END)
+        if hasattr(cabecalho_ui, 'comprimento_widget') and cabecalho_ui.comprimento_widget:
+            cabecalho_ui.comprimento_widget.delete(0, tk.END)
+        if hasattr(cabecalho_ui, 'deducao_especifica_widget') and cabecalho_ui.deducao_especifica_widget:
+            cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
+
+        # Limpar etiquetas
+        etiquetas_widgets = [
+            ('fator_k_widget', ''),
+            ('deducao_widget', ''),
+            ('offset_widget', ''),
+            ('observacoes_widget', ''),
+            ('ton_m_widget', ''),
+            ('aba_minima_widget', ''),
+            ('z90_widget', '')
+        ]
+        
+        for widget_name, texto in etiquetas_widgets:
+            if hasattr(cabecalho_ui, widget_name):
+                widget = getattr(cabecalho_ui, widget_name)
+                if widget:
+                    widget.config(text=texto)
+        
+        # Limpar dobras
+        limpar_dobras_todas_colunas(app)
+        
+        # Executar todas as funções para cada coluna
+        from src.utils.interface import todas_funcoes
+        for w in app.valores_w:
+            if w in app.dobras_ui:
+                todas_funcoes(app.cabecalho_ui, app.dobras_ui[w])
+
+        # Focar no combobox de material
+        if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:
+            cabecalho_ui.material_widget.focus_set()
