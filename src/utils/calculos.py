@@ -111,7 +111,7 @@ def calcular_dobra(cabecalho_ui, dobras_ui, w):
     deducao_espec = cabecalho_ui.deducao_especifica_widget.get().replace(',', '.')
 
     # Exibir a matriz de valores para depuração
-    print("Matriz de dobras (g.dobras_get):")
+    print("Matriz de dobras (g.DOBRAS_VALORES):")
     for linha in g.DOBRAS_VALORES:
         print(linha)
 
