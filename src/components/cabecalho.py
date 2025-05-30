@@ -75,7 +75,7 @@ class CabecalhoUI:
                                                 'entry',
                                                 (3, 0),
                                                 justify="center")
-        self.raio_interno_widget.bind("<KeyRelease>", func=lambda event: todas_funcoes(self))
+        self.raio_interno_widget.bind("<KeyRelease>", func=lambda event: todas_funcoes(self, self.dobras_ui))
         tp.ToolTip(self.raio_interno_widget, "Digite o raio interno da peça em milímetros.")
 
         # Fator K
