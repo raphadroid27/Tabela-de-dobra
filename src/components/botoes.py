@@ -8,7 +8,6 @@ interativa.
 import tkinter as tk
 from src.utils.interface import limpar_dobras, limpar_tudo
 import src.config.globals as g
-from src.app_teste import carregar_interface
 import src.utils.classes.tooltip as tp
 
 class BotoesUI:
@@ -30,10 +29,13 @@ class BotoesUI:
         '''
         self.frame = tk.Frame(root)
 
-        self.frame.columnconfigure(0, weight=1)
-        self.frame.columnconfigure(1, weight=1)
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.rowconfigure(1, weight=1)
+        self.valores_w = [1]  # Valores iniciais para a largura das dobras
+        self.expandir_v = tk.IntVar()
+        self.expandir_h = tk.IntVar()
+
+        for i in range(2):
+            self.frame.columnconfigure(i, weight=1)
+            self.frame.rowconfigure(i, weight=1)
 
         def expandir_v(self):
             largura_atual = g.PRINC_FORM.winfo_width()
@@ -50,12 +52,12 @@ class BotoesUI:
                 carregar_interface(1, root)
 
             # Verificar se avisos devem aparecer
-            if g.EXP_H.get() == 1:
+            if self.expandir_h.get() == 1:
                 carregar_interface(2, root)
 
         def expandir_h(self):
             altura_atual = g.PRINC_FORM.winfo_height()
-            if g.EXP_H.get() == 1:
+            if self.expandir_h.get() == 1:
                 g.PRINC_FORM.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
                 self.valores_w = [1, 2]
                 carregar_interface(2, root)
@@ -65,7 +67,7 @@ class BotoesUI:
                 carregar_interface(1, root)
 
             # Verificar se avisos devem aparecer
-            if g.EXP_H.get() == 1:
+            if self.expandir_h.get() == 1:
                 carregar_interface(2, root)
 
         tk.Checkbutton(
@@ -74,16 +76,16 @@ class BotoesUI:
             variable=self.expandir_v,
             width=1,
             height=1,
-            command=expandir_v
+            command=lambda: expandir_v(self)
         ).grid(row=0, column=0, sticky='we')
 
         tk.Checkbutton(
             self.frame,
             text="Expandir Horizontal",
-            variable=g.EXP_H,
+            variable=self.expandir_h,
             width=1,
             height=1,
-            command=expandir_h
+            command=lambda: expandir_h(self)
         ).grid(row=0, column=1, sticky='we')
 
         # Botão para limpar valores de dobras
@@ -108,5 +110,3 @@ class BotoesUI:
                 text="Limpa as dobras")
         tp.ToolTip(self.frame.grid_slaves(row=1, column=1)[0],
                 text="Limpa todos os valores")
-
-        return self.frame
