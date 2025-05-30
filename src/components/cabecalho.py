@@ -23,6 +23,7 @@ class CabecalhoUI:
         '''
         self.frame = tk.Frame(root)
         self.dobras_ui = dobras_ui
+        self.app_instance = None  # Será definido posteriormente para acessar todas as colunas
 
         for i in range(4):
             self.frame.columnconfigure(i, weight=1)

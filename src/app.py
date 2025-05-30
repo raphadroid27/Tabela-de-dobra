@@ -162,11 +162,10 @@ def carregar_interface(app_instance=None):
         dobra_ui = DobraUI(app_instance.cabecalho_ui, app_instance.frame_superior, w)
         dobra_ui.entradas_dobras(app_instance.cabecalho_ui, numero_dobras, w)
         dobra_ui.frame.grid(row=1, column=w-1, sticky='ewns', ipadx=2, ipady=2)
-        app_instance.dobras_ui[w] = dobra_ui
-
-    # Atualizar referência no cabeçalho para a primeira coluna de dobras
+        app_instance.dobras_ui[w] = dobra_ui    # Atualizar referência no cabeçalho para a primeira coluna de dobras
     if app_instance.dobras_ui:
         app_instance.cabecalho_ui.dobras_ui = app_instance.dobras_ui[1]
+        app_instance.cabecalho_ui.app_instance = app_instance  # Adicionar referência para todas as colunas
 
     # Criar botões
     app_instance.frame_botoes = criar_botoes(app_instance.frame_superior, app_instance)

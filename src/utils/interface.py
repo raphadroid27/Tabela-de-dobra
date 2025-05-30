@@ -480,9 +480,15 @@ def listar(tipo):
                 continue
         config['lista'].insert("", "end", values=config['valores'](item))
 
-def todas_funcoes(cabecalho_ui, dobras_ui):
+def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_instance=None):
     '''
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
+    
+    Args:
+        cabecalho_ui: Interface do cabeçalho
+        dobras_ui: Interface de dobras específica (opcional)
+        todas_colunas: Se True, recalcula todas as colunas ativas
+        app_instance: Instância do app para acessar todas as colunas
     '''
     for tipo in ['material', 'espessura', 'canal', 'dedução']:
         atualizar_widgets(cabecalho_ui, tipo)
@@ -492,11 +498,16 @@ def todas_funcoes(cabecalho_ui, dobras_ui):
     aba_minima_externa(cabecalho_ui)
     z_minimo_externo(cabecalho_ui)
     
-    # Calcular dobra apenas para a coluna específica passada como parâmetro
-    # Obter o valor w da instância dobras_ui (assumindo que tem um atributo w)
-    if hasattr(dobras_ui, 'w'):
-        w = dobras_ui.w
-        calcular_dobra(cabecalho_ui, dobras_ui, w)
+    # Se deve recalcular todas as colunas e tem app_instance
+    if todas_colunas and app_instance and hasattr(app_instance, 'dobras_ui'):
+        for w in app_instance.valores_w:
+            if w in app_instance.dobras_ui:
+                calcular_dobra(cabecalho_ui, app_instance.dobras_ui[w], w)
+    elif dobras_ui:
+        # Calcular dobra apenas para a coluna específica passada como parâmetro
+        if hasattr(dobras_ui, 'w'):
+            w = dobras_ui.w
+            calcular_dobra(cabecalho_ui, dobras_ui, w)
 
     razao_ri_espessura(cabecalho_ui)
 
