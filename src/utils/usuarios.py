@@ -69,7 +69,7 @@ def login():
             messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=g.AUTEN_FORM)
             g.USUARIO_ID = usuario_obj.id
             g.AUTEN_FORM.destroy()
-            g.PRINC_FORM.title(f"Cálculo de Dobra - {usuario_obj.nome}")
+            app_principal.janela_principal.title(f"Cálculo de Dobra - {usuario_obj.nome}")
         else:
             messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.AUTEN_FORM)
     else:
@@ -116,7 +116,7 @@ def logout():
         messagebox.showerror("Erro", "Nenhum usuário logado.")
         return
     g.USUARIO_ID = None
-    g.PRINC_FORM.title("Cálculo de Dobra")
+    app_principal.janela_principal.title("Cálculo de Dobra")
     messagebox.showinfo("Logout", "Logout efetuado com sucesso.")
 
 def resetar_senha():
