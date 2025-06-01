@@ -17,22 +17,22 @@ engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def obter_configuracoes():
+def obter_configuracoes(deducao_ui):
     '''
     Retorna um dicionário com as configurações de cada tipo de item.
     '''
     return {
         'principal': {
-            'form': g.PRINC_FORM,
+            'form': deducao_ui.deducao_form,
         },
         'dedução': {
-            'form': g.DEDUC_FORM,
-            'lista': g.LIST_DED,
+            'form': deducao_ui.deducao_form,
+            'lista': deducao_ui.deducao_lista,
             'modelo': Deducao,
             'campos': {
-                'valor': g.DED_VALOR_ENTRY,
-                'observacao': g.DED_OBSER_ENTRY,
-                'forca': g.DED_FORCA_ENTRY
+                'valor': deducao_ui.deducao_valor_entry,
+                'observacao': deducao_ui.deducao_observacao_entry,
+                'forca': deducao_ui.deducao_forca_entry
             },
             'item_id': Deducao.id,
             'valores': lambda d: (d.id,
@@ -44,9 +44,9 @@ def obter_configuracoes():
                                 d.forca),
             'ordem': Deducao.valor,
             'entries': {
-                'material_combo': g.DED_MATER_COMB,
-                'espessura_combo': g.DED_ESPES_COMB,
-                'canal_combo': g.DED_CANAL_COMB
+                'material_combo': deducao_ui.deducao_material_combo,
+                'espessura_combo': deducao_ui.deducao_espessura_combo,
+                'canal_combo': deducao_ui.deducao_canal_combo
             }
         },
         'material': {
