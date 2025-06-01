@@ -52,37 +52,53 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 class AppUI:
     def __init__(self):
-        self.janela_principal = None
-        self.frame_superior = None
-        self.cabecalho_ui = None
-        self.dobras_ui = {}  # Dicionário para armazenar múltiplas colunas de dobra
-        self.botoes_ui = None
-        self.frame_botoes = None
-        self.avisos_ui = None
+
+        '''
+        Configura a janela principal do aplicativo.
+        '''
+        self.janela_principal = tk.Tk()
+        self.janela_principal.title("Cálculo de Dobra")
+        self.janela_principal.geometry('340x400')
         
-        # Estados de expansão - serão inicializados após criar a janela principal
-        self.expandir_v = None
-        self.expandir_h = None
+        # Carregar configuração antes de usar
+        config = carregar_configuracao()
+        if 'geometry' in config:
+            self.janela_principal.geometry(config['geometry'])
+        self.janela_principal.resizable(False, False)
+        self.janela_principal.update_idletasks()        # Inicializar as variáveis Tkinter após criar a janela
+
+        icone_path = obter_caminho_icone()
+        self.janela_principal.iconbitmap(icone_path)
+
+        self.dobras_ui = {}
+
+        '''
+        Configura os frames principais da janela.
+        '''
+        self.frame_superior = tk.LabelFrame(self.janela_principal)
+        self.frame_superior.pack(fill='both', expand=True, padx=10, pady=10)
+
+        for i in range(3):
+            self.frame_superior.rowconfigure(i, weight=1)
+        self.frame_superior.columnconfigure(0, weight=1)
+
+        # Inicializar as variáveis de expansão
+        self.expandir_v = tk.IntVar()
+        self.expandir_h = tk.IntVar()
         
         # Valores de largura das colunas
         self.valores_w = [1, 2]
 
-    def inicializar_variaveis(self):
-        '''
-        Inicializa as variáveis Tkinter após a criação da janela principal.
-        '''
-        self.expandir_v = tk.IntVar()
-        self.expandir_h = tk.IntVar()
+        self.cabecalho_ui = CabecalhoUI(self.frame_superior, None)
 
-def verificar_admin_existente():
+def verificar_admin_existente(app_principal):
     '''
     Verifica se existe um administrador cadastrado no banco de dados.
     Caso contrário, abre a tela de autenticação para criar um.
     '''
     admin_existente = session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
-        form_aut.main(g.PRINC_FORM)
-
+        form_aut.main(app_principal.janela_principal)
 
 def carregar_configuracao():
     '''
@@ -93,14 +109,12 @@ def carregar_configuracao():
             return json.load(f)
     return {}
 
-
 def salvar_configuracao(config):
     '''
     Salva a configuração do aplicativo em um arquivo JSON.
     '''
     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(config, f)
-
 
 def form_true(form, editar_attr, root):
     '''
@@ -144,14 +158,13 @@ def carregar_interface(app_principal=None):
     
     # Atualizar valores_w apenas após o salvamento
     app_principal.valores_w = novos_valores_w
-    
-    # Limpar widgets antigos no frame superior
+      # Limpar widgets antigos no frame superior
     for widget in app_principal.frame_superior.winfo_children():
         widget.destroy()
 
-    # Criar cabeçalho principal
+    # Recriar cabeçalho principal após limpeza
     app_principal.cabecalho_ui = CabecalhoUI(app_principal.frame_superior, None)
-    app_principal.cabecalho_ui.frame.grid(row=0, column=0, sticky='ewns', ipadx=2, ipady=2)    # Adicionar avisos se expansão horizontal estiver ativa
+    app_principal.cabecalho_ui.frame.grid(row=0, column=0, sticky='ewns', ipadx=2, ipady=2)# Adicionar avisos se expansão horizontal estiver ativa
     if app_principal.expandir_h.get() == 1:
         app_principal.avisos_ui = AvisosUI(app_principal.frame_superior)
         app_principal.avisos_ui.frame.grid(row=0, column=1, sticky='ewns', ipadx=2, ipady=2)
@@ -174,8 +187,7 @@ def carregar_interface(app_principal=None):
 
     # Configurar grid weights para as colunas
     for i, w in enumerate(app_principal.valores_w):
-        app_principal.frame_superior.columnconfigure(i, weight=1)    # Restaurar valores
-    for w in app_principal.valores_w:
+        app_principal.frame_superior.columnconfigure(i, weight=1)    # Restaurar valores    for w in app_principal.valores_w:
         if w in app_principal.dobras_ui:
             restaurar_valores_dobra(app_principal.dobras_ui[w], w)
     
@@ -186,32 +198,17 @@ def carregar_interface(app_principal=None):
         if w in app_principal.dobras_ui:
             todas_funcoes(app_principal.cabecalho_ui, app_principal.dobras_ui[w])
 
-def configurar_janela_principal(config):
+def on_closing():
     '''
-    Configura a janela principal do aplicativo.
+    Função chamada ao fechar a janela principal.
+    Salva a configuração atual antes de fechar.
     '''
-    app.janela_principal = tk.Tk()
-    app.janela_principal.title("Cálculo de Dobra")
-    app.janela_principal.geometry('340x400')
-    if 'geometry' in config:
-        app.janela_principal.geometry(config['geometry'])
-    app.janela_principal.resizable(False, False)
-    app.janela_principal.update_idletasks()
-
-    # Inicializar as variáveis Tkinter após criar a janela
-    app.inicializar_variaveis()
-
-    icone_path = obter_caminho_icone()
-    app.janela_principal.iconbitmap(icone_path)
-
-    def on_closing():
-        geometry = app.janela_principal.geometry()
-        position = geometry.split('+')[1:]
-        config['geometry'] = f"+{position[0]}+{position[1]}"
-        salvar_configuracao(config)
-        app.janela_principal.destroy()
-
-    app.janela_principal.protocol("WM_DELETE_WINDOW", on_closing)
+    geometry = app.janela_principal.geometry()
+    position = geometry.split('+')[1:]
+    config = carregar_configuracao()
+    config['geometry'] = f"+{position[0]}+{position[1]}"
+    salvar_configuracao(config)
+    app.janela_principal.destroy()
 
 def configurar_menu():
     '''
@@ -294,20 +291,6 @@ def configurar_menu():
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
     help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(app.janela_principal))
 
-def configurar_frames():
-    '''
-    Configura os frames principais da janela.
-    '''
-    app.frame_superior = tk.LabelFrame(app.janela_principal)
-    app.frame_superior.pack(fill='both', expand=True, padx=10, pady=10)
-
-    app.frame_superior.columnconfigure(0, weight=1)
-    app.frame_superior.rowconfigure(0, weight=1)
-    app.frame_superior.rowconfigure(1, weight=1)
-    app.frame_superior.rowconfigure(2, weight=1)
-
-    carregar_interface()
-
 def main():
     '''
     Função principal que inicializa a interface gráfica do aplicativo.
@@ -315,11 +298,19 @@ def main():
     global app
     app = AppUI()
     
-    config = carregar_configuracao()
-    configurar_janela_principal(config)
+    # Configurar protocolo de fechamento da janela
+    app.janela_principal.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    # Configurar menu
     configurar_menu()
-    configurar_frames()
-    verificar_admin_existente()
+    
+    # Carregar interface inicial
+    carregar_interface()
+    
+    # Verificar se existe admin
+    verificar_admin_existente(app)
+    
+    # Iniciar loop principal
     app.janela_principal.mainloop()
 
 if __name__ == "__main__":
