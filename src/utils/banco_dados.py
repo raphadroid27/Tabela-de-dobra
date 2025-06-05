@@ -17,13 +17,13 @@ engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def obter_configuracoes(deducao_ui):
+def obter_configuracoes(app_principal, deducao_ui):
     '''
     Retorna um dicionário com as configurações de cada tipo de item.
     '''
     return {
         'principal': {
-            'form': deducao_ui.deducao_form,
+            'form': app_principal.janela_principal,
         },
         'dedução': {
             'form': deducao_ui.deducao_form,
@@ -111,7 +111,7 @@ def obter_configuracoes(deducao_ui):
         }
     }
 
-def salvar_no_banco(obj, tipo, detalhes):
+def salvar_no_banco(obj, tipo, detalhes, app_principal):
     '''
     Salva um objeto no banco de dados e registra o log.
     '''
@@ -119,7 +119,7 @@ def salvar_no_banco(obj, tipo, detalhes):
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
 
-    configuracoes = obter_configuracoes()
+    configuracoes = obter_configuracoes(deducao_ui=app_principal.deducao_ui)
     config = configuracoes[tipo]
 
     messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",

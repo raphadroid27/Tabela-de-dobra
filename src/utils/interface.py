@@ -20,7 +20,7 @@ from src.utils.calculos import (calcular_dobra,
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
-def atualizar_widgets(cabecalho_ui, tipo):
+def atualizar_widgets(cabecalho_ui, deducao_ui, tipo):
     '''
     Atualiza os valores de comboboxes com base no tipo especificado.
 
@@ -33,8 +33,8 @@ def atualizar_widgets(cabecalho_ui, tipo):
             cabecalho_ui.material_widget.configure(values=materiais)
 
         # Verifica se o combobox de dedução de material existe e atualiza seus valores
-        if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
-            g.DED_MATER_COMB.configure(values=[m.nome for m in session
+        if deducao_ui and hasattr(deducao_ui, 'deducao_material_combo') and deducao_ui.deducao_material_combo and deducao_ui.deducao_material_combo.winfo_exists():
+            deducao_ui.deducao_material_combo.configure(values=[m.nome for m in session
                                                .query(Material)
                                                .order_by(Material.nome).all()])
 
@@ -48,8 +48,8 @@ def atualizar_widgets(cabecalho_ui, tipo):
             cabecalho_ui.espessura_widget.configure(values=[str(e.valor) for e in espessuras])
 
         # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
-        if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
-            g.DED_ESPES_COMB.configure(values=sorted([e.valor for e in session
+        if deducao_ui and hasattr(deducao_ui, 'deducao_espessura_combo') and deducao_ui.deducao_espessura_combo and deducao_ui.deducao_espessura_combo.winfo_exists():
+            deducao_ui.deducao_espessura_combo.configure(values=sorted([e.valor for e in session
                                                       .query(Espessura).all()]))
 
     def atualizar_canal():
@@ -70,8 +70,8 @@ def atualizar_widgets(cabecalho_ui, tipo):
             cabecalho_ui.canal_widget.configure(values=canais_valores)
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
-        if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
-            g.DED_CANAL_COMB.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
+        if deducao_ui and hasattr(deducao_ui, 'deducao_canal_combo') and deducao_ui.deducao_canal_combo and deducao_ui.deducao_canal_combo.winfo_exists():
+            deducao_ui.deducao_canal_combo.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
 
     def atualizar_deducao():
         espessura_valor = cabecalho_ui.espessura_widget.get()
@@ -98,8 +98,7 @@ def atualizar_widgets(cabecalho_ui, tipo):
                 cabecalho_ui.observacoes_widget.config(text='Observações não encontradas')
 
         for tipo in ['material', 'espessura', 'canal']:
-            atualizar_widgets(cabecalho_ui, tipo)
-
+            atualizar_widgets(cabecalho_ui, deducao_ui, tipo)
 
     # Mapeamento de tipos para funções
     acoes = {
@@ -417,11 +416,11 @@ def limpar_tudo(cabecalho_ui, dobras_ui, app_principal):
     except Exception as e:
         print(f"Erro ao limpar todos os campos: {e}")
 
-def limpar_busca(tipo):
+def limpar_busca(tipo, app_principal=None, deducao_ui=None):
     '''
     Limpa os campos de busca e atualiza a lista correspondente.
     '''
-    configuracoes = obter_configuracoes()
+    configuracoes = obter_configuracoes(app_principal, deducao_ui)
     if tipo == 'dedução':
         configuracoes[tipo]['entries']['material_combo'].delete(0, tk.END)
         configuracoes[tipo]['entries']['espessura_combo'].delete(0, tk.END)
@@ -429,7 +428,7 @@ def limpar_busca(tipo):
     else:
         configuracoes[tipo]['busca'].delete(0, tk.END)
 
-    listar(tipo)
+    listar(tipo, app_principal, deducao_ui)
 
 def focus_next_entry(current_index, w, dobras_ui):
     '''
@@ -451,11 +450,11 @@ def focus_previous_entry(current_index, w, dobras_ui):
         if previous_entry:
             previous_entry.focus()
 
-def listar(tipo):
+def listar(tipo, app_principal, deducao_ui):
     '''
     Lista os itens do banco de dados na interface gráfica.
     '''
-    configuracoes = obter_configuracoes()
+    configuracoes = obter_configuracoes(app_principal, deducao_ui)
     config = configuracoes[tipo]
 
     if config['lista'] is None or not config['lista'].winfo_exists():
@@ -486,7 +485,7 @@ def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_princip
         app_principal: Instância do app para acessar todas as colunas
     '''
     for tipo in ['material', 'espessura', 'canal', 'dedução']:
-        atualizar_widgets(cabecalho_ui, tipo)
+        atualizar_widgets(cabecalho_ui, None, tipo)
 
     atualizar_toneladas_m(cabecalho_ui)
     calcular_k_offset(cabecalho_ui)
