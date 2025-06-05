@@ -71,7 +71,6 @@ class AppUI:
         self.janela_principal.iconbitmap(icone_path)
 
         self.dobras_ui = {}
-
         '''
         Configura os frames principais da janela.
         '''
@@ -121,16 +120,26 @@ def form_true(form, editar_attr, root):
     Abre o formulário de edição de um item específico
     (dedução, material, espessura ou canal).
     '''
-    setattr(g, editar_attr, True)
-    form.main(root)
+    setattr(app, editar_attr, True)
+    if hasattr(form, 'FormDeducao'):
+        # Para o formulário de dedução, passa app como parâmetro
+        form_instance = form.FormDeducao(root, app_principal=app)
+        form_instance.main(root, app)
+    else:
+        form.main(root)
 
 def form_false(form, editar_attr, root):
     '''
     Fecha o formulário de edição de um item específico
     (dedução, material, espessura ou canal).
     '''
-    setattr(g, editar_attr, False)
-    form.main(root)
+    setattr(app, editar_attr, False)
+    if hasattr(form, 'FormDeducao'):
+        # Para o formulário de dedução, passa app como parâmetro
+        form_instance = form.FormDeducao(root, app_principal=app)
+        form_instance.main(root, app)
+    else:
+        form.main(root)
 
 def carregar_interface(app_principal=None):
     '''
@@ -221,19 +230,19 @@ def configurar_menu():
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
     file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao,
-                                                                           'EDIT_DED',
+                                                                           'editar_deducao',
                                                                            app.janela_principal))
 
     file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material,
-                                                                            'EDIT_MAT',
+                                                                            'editar_material',
                                                                             app.janela_principal))
 
     file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura,
-                                                                           'EDIT_ESP',
+                                                                           'editar_espessura',
                                                                            app.janela_principal))
 
     file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal,
-                                                                       'EDIT_CANAL',
+                                                                       'editar_canal',
                                                                        app.janela_principal))
     file_menu.add_separator()
     file_menu.add_command(label="Sair", command=app.janela_principal.destroy)
@@ -242,7 +251,7 @@ def configurar_menu():
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
     edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao,
-                                                                           'EDIT_DED',
+                                                                           'editar_deducao',
                                                                            app.janela_principal))
 
     edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material,
