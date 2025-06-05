@@ -21,8 +21,9 @@ def adicionar(tipo, app_principal=None, deducao_ui=None):
     '''
     Adiciona um novo item ao banco de dados com base no tipo especificado.
     '''
-    if not logado(tipo):
-        return
+    # if not logado(tipo):
+    #     return
+    #//// tirar permissão temporária para adição de deduções
 
     if tipo == 'dedução':
         adicionar_deducao(app_principal, deducao_ui)
@@ -42,19 +43,19 @@ def adicionar_deducao(app_principal=None, deducao_ui=None):
     '''
     Lógica para adicionar uma nova dedução.
     '''
-    espessura_valor = g.DED_ESPES_COMB.get()
-    canal_valor = g.DED_CANAL_COMB.get()
-    material_nome = g.DED_MATER_COMB.get()
-    nova_observacao_valor = g.DED_OBSER_ENTRY.get()
-    nova_forca_valor = g.DED_FORCA_ENTRY.get()
+    espessura_valor = deducao_ui.deducao_espessura_combo.get()
+    canal_valor = deducao_ui.deducao_canal_combo.get()
+    material_nome = deducao_ui.deducao_material_combo.get()
+    nova_observacao_valor = deducao_ui.deducao_observacao_entry.get()
+    nova_forca_valor = deducao_ui.deducao_forca_entry.get()
 
-    if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
+    if not all([espessura_valor, canal_valor, material_nome, deducao_ui.deducao_valor_entry.get()]):
         messagebox.showerror("Erro",
                              "Material, espessura, canal e valor da dedução são obrigatórios.",
-                             parent=g.DEDUC_FORM)
+                             parent=deducao_ui.deducao_form)
         return
 
-    nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
+    nova_deducao_valor = float(deducao_ui.deducao_valor_entry.get().replace(',', '.'))
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -81,7 +82,8 @@ def adicionar_deducao(app_principal=None, deducao_ui=None):
                     f'espessura: {espessura_valor}, '
                     f'canal: {canal_valor}, '
                     f'material: {material_nome}, '
-                    f'valor: {nova_deducao_valor}')
+                    f'valor: {nova_deducao_valor}', 
+                    app_principal, deducao_ui)
 
 def adicionar_espessura(app_principal=None, deducao_ui=None):
     '''
@@ -102,7 +104,7 @@ def adicionar_espessura(app_principal=None, deducao_ui=None):
         return
 
     nova_espessura = Espessura(valor=espessura_valor)
-    salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}')
+    salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}', app_principal, deducao_ui)
 
 def adicionar_material(app_principal=None, deducao_ui=None):
     '''
@@ -133,7 +135,8 @@ def adicionar_material(app_principal=None, deducao_ui=None):
                     f'nome: {nome_material}, '
                     f'densidade: {densidade_material}, '
                     f'escoamento: {escoamento_material}, '
-                    f'elasticidade: {elasticidade_material}')
+                    f'elasticidade: {elasticidade_material}',
+                    app_principal, deducao_ui)
 
 def adicionar_canal(app_principal=None, deducao_ui=None):
     '''
@@ -167,7 +170,8 @@ def adicionar_canal(app_principal=None, deducao_ui=None):
                     f'largura: {largura_canal}, '
                     f'altura: {altura_canal}, '
                     f'comprimento_total: {comprimento_total_canal}, '
-                    f'observacao: {observacao_canal}')
+                    f'observacao: {observacao_canal}',
+                    app_principal, deducao_ui)
 
 def editar(tipo, app_principal=None, deducao_ui=None):
     '''

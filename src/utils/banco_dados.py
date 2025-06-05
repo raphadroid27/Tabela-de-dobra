@@ -1,4 +1,3 @@
-
 '''
 Módulo utilitário para manipulação de banco de dados no aplicativo de cálculo de dobras.
 '''
@@ -111,7 +110,7 @@ def obter_configuracoes(app_principal, deducao_ui):
         }
     }
 
-def salvar_no_banco(obj, tipo, detalhes, app_principal):
+def salvar_no_banco(obj, tipo, detalhes, app_principal, deducao_ui=None):
     '''
     Salva um objeto no banco de dados e registra o log.
     '''
@@ -119,7 +118,7 @@ def salvar_no_banco(obj, tipo, detalhes, app_principal):
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
 
-    configuracoes = obter_configuracoes(deducao_ui=app_principal.deducao_ui)
+    configuracoes = obter_configuracoes(app_principal, deducao_ui)
     config = configuracoes[tipo]
 
     messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",
