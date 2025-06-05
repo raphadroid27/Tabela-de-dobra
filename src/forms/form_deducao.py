@@ -29,12 +29,6 @@ class FormDeducao:
         '''
         Configura a janela principal do formulário de deduções.
         '''
-        # Inicializar como None primeiro
-        self.deducao_form = None
-        
-        if self.deducao_form:
-            self.deducao_form.destroy()
-
         self.deducao_form = tk.Toplevel(root)
         self.deducao_form.geometry("500x420")
         self.deducao_form.resizable(False, False)
@@ -43,9 +37,9 @@ class FormDeducao:
         self.deducao_form.iconbitmap(icone_path)
 
         no_topo(self.deducao_form)
-        posicionar_janela(self.deducao_form, None, app_principal)
+        #posicionar_janela(self.deducao_form, None, app_principal)
 
-    def criar_frame_busca(self):
+    def criar_frame_busca(self, app_principal):
         '''
         Cria o frame de busca.
         '''
@@ -56,26 +50,26 @@ class FormDeducao:
             frame_busca.columnconfigure(i, weight=1)
 
         tk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
-        self.deducao_material_comb = ttk.Combobox(frame_busca)
-        self.deducao_material_comb.grid(row=1, column=0, padx=5, sticky="ew")
-        self.deducao_material_comb.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
+        self.deducao_material_combo = ttk.Combobox(frame_busca)
+        self.deducao_material_combo.grid(row=1, column=0, padx=5, sticky="ew")
+        self.deducao_material_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', app_principal, self))
 
         tk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
-        self.deducao_espessura_comb = ttk.Combobox(frame_busca)
-        self.deducao_espessura_comb.grid(row=1, column=1, padx=5, sticky="ew")
-        self.deducao_espessura_comb.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
+        self.deducao_espessura_combo = ttk.Combobox(frame_busca)
+        self.deducao_espessura_combo.grid(row=1, column=1, padx=5, sticky="ew")
+        self.deducao_espessura_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', app_principal, self))
 
         tk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
-        self.deducao_canal_comb = ttk.Combobox(frame_busca)
-        self.deducao_canal_comb.grid(row=1, column=2, padx=5, sticky="ew")
-        self.deducao_canal_comb.bind("<<ComboboxSelected>>", lambda event: buscar('dedução'))
+        self.deducao_canal_combo = ttk.Combobox(frame_busca)
+        self.deducao_canal_combo.grid(row=1, column=2, padx=5, sticky="ew")
+        self.deducao_canal_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', app_principal, self))
 
         tk.Button(frame_busca,
                 text="Limpar",
                 width=10,
-                command=lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
+                command=lambda: limpar_busca('dedução', app_principal, self)).grid(row=1, column=3, padx=5, pady=5)
 
-    def criar_lista_deducoes(self):
+    def criar_lista_deducoes(self, app_principal):
         '''
         Cria a lista de deduções.
         '''
@@ -95,15 +89,15 @@ class FormDeducao:
             self.deducao_lista.column("Observação", width=120, anchor="w")
 
         self.deducao_lista.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        listar('dedução')
+        listar('dedução', app_principal, deducao_ui=self)
 
-    def criar_frame_edicoes(self):
+    def criar_frame_edicoes(self, app_principal):
         '''
         Cria o frame de edições.
         '''
         frame_edicoes = configurar_frame_edicoes(self.frame,
                                                 text='Nova Dedução'
-                                                if not g.EDIT_DED
+                                                if not app_principal.editar_deducao
                                                 else 'Editar Dedução'
                                                 )
 
@@ -121,15 +115,15 @@ class FormDeducao:
 
         return frame_edicoes
 
-    def configurar_botoes(self, frame_edicoes):
+    def configurar_botoes(self, frame_edicoes, app_principal):
         '''
         Configura os botões de ação (Adicionar, Atualizar, Excluir).
         '''
-        if g.EDIT_DED:
+        if app_principal.editar_deducao:
             if self.deducao_form:
                 self.deducao_form.title("Editar/Excluir Dedução")
             if self.deducao_lista:
-                self.deducao_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução'))
+                self.deducao_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução', app_principal, self))
             frame_edicoes.config(text='Editar Dedução')
 
             tk.Button(
@@ -137,7 +131,7 @@ class FormDeducao:
                 text="Atualizar",
                 bg="green",
                 width=10,
-                command=lambda: editar('dedução')
+                command=lambda: editar('dedução', app_principal, self)
             ).grid(
                 row=1,
                 column=3,
@@ -151,7 +145,7 @@ class FormDeducao:
                 text="Excluir",
                 bg="red",
                 width=10,
-                command=lambda: excluir('dedução')
+                command=lambda: excluir('dedução', app_principal, self)
             ).grid(
                 row=2,
                 column=0,
@@ -169,7 +163,7 @@ class FormDeducao:
                 text="Adicionar",
                 bg="cyan",
                 width=10,
-                command=lambda: adicionar('dedução')
+                command=lambda: adicionar('dedução', app_principal, self)
             ).grid(
                 row=1,
                 column=3,
@@ -178,32 +172,31 @@ class FormDeducao:
                 sticky="eW"
             )
 
-    def atualizar_comboboxes(self):
+    def atualizar_comboboxes(self, cabecalho_ui):
         '''
         Atualiza os widgets de combobox.
         '''
         tipos = ['material', 'espessura', 'canal']
         for tipo in tipos:
-            atualizar_widgets(tipo)
+            atualizar_widgets(cabecalho_ui, deducao_ui=self, tipo=tipo)
 
-    def main(self, root):
+    def main(self, root, app_principal):
         '''
         Inicializa e exibe o formulário de gerenciamento de deduções.
         '''
-        self.configurar_janela(root)
+        #self.configurar_janela(root)
         self.frame = configurar_main_frame(self.deducao_form)
-        self.criar_frame_busca()
-        self.criar_lista_deducoes()
-        frame_edicoes = self.criar_frame_edicoes()
-        self.configurar_botoes(frame_edicoes)
-        self.atualizar_comboboxes()
+        self.criar_frame_busca(app_principal)
+        frame_edicoes = self.criar_frame_edicoes(app_principal)  # Criar ANTES da lista
+        self.criar_lista_deducoes(app_principal)  # Criar DEPOIS do frame de edições
+        self.configurar_botoes(frame_edicoes, app_principal)
+        self.atualizar_comboboxes(cabecalho_ui=app_principal.cabecalho_ui)
 
 def main(root):
     '''
     Função principal para inicializar o formulário de deduções.
     '''
-    form = FormDeducao(root)
-    form.main(root)
-
-    if __name__ == "__main__":
-        main(None)
+    # Importar app para acessar a instância principal
+    from src.app import app
+    form = FormDeducao(root, app_principal=app)
+    form.main(root, app)
