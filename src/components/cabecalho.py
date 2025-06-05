@@ -136,7 +136,7 @@ class CabecalhoUI:
         self.observacoes_widget = self.criar_widget(self.frame, 'label', (7, 0))
         self.observacoes_widget.grid(columnspan=4)
 
-        atualizar_widgets(self, 'material')
+        atualizar_widgets(self, None, 'material')
 
     def criar_label(self, frame, texto, linha_coluna, **kwargs):
         '''
