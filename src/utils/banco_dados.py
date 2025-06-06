@@ -127,7 +127,7 @@ def obter_configuracoes(ui):
     
     return configuracoes
 
-def salvar_no_banco(obj, tipo, detalhes, app_principal, deducao_ui=None):
+def salvar_no_banco(obj, tipo, detalhes, ui):
     '''
     Salva um objeto no banco de dados e registra o log.
     '''
@@ -135,7 +135,7 @@ def salvar_no_banco(obj, tipo, detalhes, app_principal, deducao_ui=None):
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
 
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
+    configuracoes = obter_configuracoes(ui)
     config = configuracoes[tipo]
 
     messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",
