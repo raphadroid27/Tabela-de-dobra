@@ -13,44 +13,44 @@ from src.utils.banco_dados import (session,
 from src.utils.janelas import habilitar_janelas
 from src.utils.interface import listar
 
-def novo_usuario():
+def novo_usuario(auten_ui):
     '''
     Cria um novo usuário com o nome e senha fornecidos.
     '''
-    novo_usuario_nome = g.USUARIO_ENTRY.get()
-    novo_usuario_senha = g.SENHA_ENTRY.get()
+    novo_usuario_nome = auten_ui.usuario_entry.get()
+    novo_usuario_senha = auten_ui.senha_entry.get()
     senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
 
     if novo_usuario_nome == "" or novo_usuario_senha == "":
-        messagebox.showerror("Erro", "Preencha todos os campos.", parent=g.AUTEN_FORM)
+        messagebox.showerror("Erro", "Preencha todos os campos.", parent=auten_ui.auten_form)
         return
 
     # Verificar se o usuário já existe
     usuario_obj = session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
     if usuario_obj:
-        messagebox.showerror("Erro", "Usuário já existente.", parent=g.AUTEN_FORM)
+        messagebox.showerror("Erro", "Usuário já existente.", parent=auten_ui.auten_form)
         return
 
     # Criar o novo usuário
-    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=g.ADMIN_VAR.get())
+    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=auten_ui.admin_var.get())
     session.add(usuario)
 
     # Usar tratativa_erro para tratar erros e confirmar a operação
     tratativa_erro()  # Chamar a função para tratar erros antes de continuar
-    messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=g.AUTEN_FORM)
-    g.AUTEN_FORM.destroy()
+    messagebox.showinfo("Sucesso", "Usuário cadastrado com sucesso.", parent=auten_ui.auten_form)
+    auten_ui.auten_form.destroy()
 
-    habilitar_janelas()
+    habilitar_janelas(auten_ui.app_principal)
 
-def login():
+def login(app_principal, auten_ui):
     '''
     Realiza o login do usuário com o nome e senha fornecidos.
     Se o usuário não existir, cria um novo usuário.
     '''
-    g.USUARIO_NOME = g.USUARIO_ENTRY.get()
-    usuario_senha = g.SENHA_ENTRY.get()
+    usuario_nome = auten_ui.usuario_entry.get()
+    usuario_senha = auten_ui.senha_entry.get()
 
-    usuario_obj = session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
+    usuario_obj = session.query(Usuario).filter_by(nome=usuario_nome).first()
 
     if usuario_obj:
         if usuario_obj.senha == "nova_senha":
@@ -66,16 +66,16 @@ def login():
                                     parent=g.AUTEN_FORM)
                 return
         elif usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest():
-            messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=g.AUTEN_FORM)
+            messagebox.showinfo("Login", "Login efetuado com sucesso.", parent=auten_ui.auten_form)
             g.USUARIO_ID = usuario_obj.id
-            g.AUTEN_FORM.destroy()
+            auten_ui.auten_form.destroy()
             app_principal.janela_principal.title(f"Cálculo de Dobra - {usuario_obj.nome}")
         else:
-            messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.AUTEN_FORM)
+            messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=auten_ui.auten_form)
     else:
-        messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=g.AUTEN_FORM)
+        messagebox.showerror("Erro", "Usuário ou senha incorretos.", parent=auten_ui.auten_form)
 
-    habilitar_janelas()
+    habilitar_janelas(app_principal)
 
 def logado(tipo):
     '''
@@ -89,11 +89,11 @@ def logado(tipo):
         return False
     return True
 
-def tem_permissao(tipo, role_requerida):
+def tem_permissao(tipo, role_requerida, form_ui):
     '''
     Verifica se o usuário tem permissão para realizar uma ação específica.
     '''
-    configuracoes = obter_configuracoes()
+    configuracoes = obter_configuracoes(form_ui)
     config = configuracoes[tipo]
 
     usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
@@ -108,7 +108,7 @@ def tem_permissao(tipo, role_requerida):
         return False
     return True
 
-def logout():
+def logout(app_principal):
     '''
     Realiza o logout do usuário atual.
     '''
@@ -140,18 +140,18 @@ def resetar_senha():
     else:
         tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.USUAR_FORM)
 
-def excluir_usuario():
+def excluir_usuario(tipo, form_ui):
     '''
     Exclui o usuário selecionado na lista de usuários.
     '''
-    if not tem_permissao('usuario', 'admin'):
+    if not tem_permissao('usuario', 'admin', form_ui):
         return
 
-    if g.LIST_USUARIO is None:
+    if form_ui.usuario_lista is None:
         return
 
-    selected_item = g.LIST_USUARIO.selection()[0]
-    item = g.LIST_USUARIO.item(selected_item)
+    selected_item = form_ui.usuario_lista.selection()[0]
+    item = form_ui.usuario_lista.item(selected_item)
     obj_id = item['values'][0]
     obj = session.query(Usuario).filter_by(id=obj_id).first()
     if obj is None:
