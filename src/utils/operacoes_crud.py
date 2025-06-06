@@ -17,45 +17,44 @@ from src.config import globals as g
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
 
-def adicionar(tipo, app_principal=None, deducao_ui=None):
+def adicionar(tipo, ui):
     '''
     Adiciona um novo item ao banco de dados com base no tipo especificado.
     '''
-    # if not logado(tipo):
-    #     return
-    #//// tirar permissão temporária para adição de deduções
+    if not logado(tipo):
+        return
 
     if tipo == 'dedução':
-        adicionar_deducao(app_principal, deducao_ui)
+        adicionar_deducao(ui)
     elif tipo == 'espessura':
-        adicionar_espessura(app_principal, deducao_ui)
+        adicionar_espessura(ui)
     elif tipo == 'material':
-        adicionar_material(app_principal, deducao_ui)
+        adicionar_material(ui)
     elif tipo == 'canal':
-        adicionar_canal(app_principal, deducao_ui)
+        adicionar_canal(ui)
 
-    limpar_campos(tipo, app_principal, deducao_ui)
-    listar(tipo, app_principal, deducao_ui)
-    atualizar_widgets(tipo, app_principal, deducao_ui)
-    buscar(tipo, app_principal, deducao_ui)
+    limpar_campos(tipo, ui)
+    listar(tipo, ui)
+    atualizar_widgets(tipo)
+    buscar(tipo, ui)
 
-def adicionar_deducao(app_principal=None, deducao_ui=None):
+def adicionar_deducao(ui):
     '''
     Lógica para adicionar uma nova dedução.
     '''
-    espessura_valor = deducao_ui.deducao_espessura_combo.get()
-    canal_valor = deducao_ui.deducao_canal_combo.get()
-    material_nome = deducao_ui.deducao_material_combo.get()
-    nova_observacao_valor = deducao_ui.deducao_observacao_entry.get()
-    nova_forca_valor = deducao_ui.deducao_forca_entry.get()
+    espessura_valor = g.DED_ESPES_COMB.get()
+    canal_valor = g.DED_CANAL_COMB.get()
+    material_nome = g.DED_MATER_COMB.get()
+    nova_observacao_valor = g.DED_OBSER_ENTRY.get()
+    nova_forca_valor = g.DED_FORCA_ENTRY.get()
 
-    if not all([espessura_valor, canal_valor, material_nome, deducao_ui.deducao_valor_entry.get()]):
+    if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
         messagebox.showerror("Erro",
                              "Material, espessura, canal e valor da dedução são obrigatórios.",
-                             parent=deducao_ui.deducao_form)
+                             parent=g.DEDUC_FORM)
         return
 
-    nova_deducao_valor = float(deducao_ui.deducao_valor_entry.get().replace(',', '.'))
+    nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -82,10 +81,9 @@ def adicionar_deducao(app_principal=None, deducao_ui=None):
                     f'espessura: {espessura_valor}, '
                     f'canal: {canal_valor}, '
                     f'material: {material_nome}, '
-                    f'valor: {nova_deducao_valor}', 
-                    app_principal, deducao_ui)
+                    f'valor: {nova_deducao_valor}', ui)
 
-def adicionar_espessura(app_principal=None, deducao_ui=None):
+def adicionar_espessura(ui):
     '''
     Lógica para adicionar uma nova espessura.
     '''
@@ -104,9 +102,9 @@ def adicionar_espessura(app_principal=None, deducao_ui=None):
         return
 
     nova_espessura = Espessura(valor=espessura_valor)
-    salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}', app_principal, deducao_ui)
+    salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}', ui)
 
-def adicionar_material(app_principal=None, deducao_ui=None):
+def adicionar_material(ui):
     '''
     Lógica para adicionar um novo material.
     '''
@@ -135,10 +133,9 @@ def adicionar_material(app_principal=None, deducao_ui=None):
                     f'nome: {nome_material}, '
                     f'densidade: {densidade_material}, '
                     f'escoamento: {escoamento_material}, '
-                    f'elasticidade: {elasticidade_material}',
-                    app_principal, deducao_ui)
+                    f'elasticidade: {elasticidade_material}', ui)
 
-def adicionar_canal(app_principal=None, deducao_ui=None):
+def adicionar_canal(ui):
     '''
     Lógica para adicionar um novo canal.
     '''
@@ -170,10 +167,9 @@ def adicionar_canal(app_principal=None, deducao_ui=None):
                     f'largura: {largura_canal}, '
                     f'altura: {altura_canal}, '
                     f'comprimento_total: {comprimento_total_canal}, '
-                    f'observacao: {observacao_canal}',
-                    app_principal, deducao_ui)
+                    f'observacao: {observacao_canal}', ui)
 
-def editar(tipo, app_principal=None, deducao_ui=None):
+def editar(tipo, ui):
     '''
     Edita um item existente no banco de dados com base no tipo especificado.
     Os tipos disponíveis são:
@@ -182,76 +178,84 @@ def editar(tipo, app_principal=None, deducao_ui=None):
     - material
     - canal
     '''
-    # if not tem_permissao(tipo, 'editor', app_principal, deducao_ui):
-    #     return
-    #//// tirar permissão temporária para edição de deduções
+    if not tem_permissao(tipo, 'editor'):  # Permitir que editores realizem esta ação
+        return
 
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
         return
 
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
-    config = configuracoes[tipo]
+    configuracoes = obter_configuracoes(ui)
+    config = configuracoes.get(tipo)
+    
+    if not config:
+        messagebox.showerror("Erro", f"Configuração para '{tipo}' não encontrada.")
+        return
 
-    obj = item_selecionado(tipo, app_principal, deducao_ui)
+    obj = item_selecionado(tipo, ui)
+    if not obj:
+        return
+        
     obj_id = obj.id
-    if obj:
-        alteracoes = []  # Lista para armazenar as alterações
-        for campo, entry in config['campos'].items():
-            valor_novo = entry.get().strip()
-            if valor_novo == "":
-                valor_novo = None
-            else:
-                try:
-                    if campo in ["largura", "altura", "comprimento_total"]:
-                        valor_novo = float(valor_novo.replace(",", "."))
-                except ValueError:
-                    messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
-                    return
+    alteracoes = []  # Lista para armazenar as alterações
+    
+    for campo, entry in config['campos'].items():
+        valor_novo = entry.get().strip()
+        if valor_novo == "":
+            valor_novo = None
+        else:
+            try:
+                if campo in ["largura", "altura", "comprimento_total"]:
+                    valor_novo = float(valor_novo.replace(",", "."))
+            except ValueError:
+                messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
+                return
 
-            valor_antigo = getattr(obj, campo)
-            if valor_antigo != valor_novo:  # Verifica se houve alteração
-                alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
-                setattr(obj, campo, valor_novo)
+        valor_antigo = getattr(obj, campo)
+        if valor_antigo != valor_novo:  # Verifica se houve alteração
+            alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
+            setattr(obj, campo, valor_novo)
 
-        tratativa_erro()
-        detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
-        # Registrar a edição com detalhes
-        registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
-        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
-    else:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
+    tratativa_erro()
+    detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
+    # Registrar a edição com detalhes
+    registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
+    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
 
     # Limpar os campos após a edição
     for entry in config['campos'].values():
         entry.delete(0, tk.END)
 
-    limpar_campos(tipo, app_principal, deducao_ui)
-    listar(tipo, app_principal, deducao_ui)
-    atualizar_widgets(tipo, app_principal, deducao_ui)
-    buscar(tipo, app_principal, deducao_ui)
+    limpar_campos(tipo, ui)
+    listar(tipo, ui)
+    atualizar_widgets(tipo)
+    buscar(tipo, ui)
 
-def excluir(tipo, app_principal=None, deducao_ui=None):
+def excluir(tipo, ui):
     '''
     Exclui um item do banco de dados com base no tipo especificado.
-    Os tipos disponíveis são:]
+    Os tipos disponíveis são:
     - dedução
     - espessura
     - material
     - canal
     '''
-    # if not tem_permissao(tipo,'editor'):
-    #     return
-    #//// tirar permissão temporária para exclusão de deduções
+    if not tem_permissao(tipo,'editor'):
+        return
 
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
-    config = configuracoes[tipo]
+    configuracoes = obter_configuracoes(ui)
+    config = configuracoes.get(tipo)
+    
+    if not config:
+        messagebox.showerror("Erro", f"Configuração para '{tipo}' não encontrada.")
+        return
 
-    if config['lista'] is None:
+    if not config['lista'].selection():
+        messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
         return
 
     aviso = messagebox.askyesno("Atenção!",
                                 f"Ao excluir um(a) {tipo} todas as deduções relacionadas "
-                                f"serão excluídas também, 'deseja continuar?",
+                                f"serão excluídas também, deseja continuar?",
                                 parent=config['form'])
     if not aviso:
         return
@@ -259,49 +263,56 @@ def excluir(tipo, app_principal=None, deducao_ui=None):
     selected_item = config['lista'].selection()[0]
     item = config['lista'].item(selected_item)
     obj_id = item['values'][0]
-
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
+    
     if obj is None:
         messagebox.showerror("Erro",
                              f"{tipo.capitalize()} não encontrado(a).",
                              parent=config['form'])
         return
 
-    deducao_objs = (
-        session.query(Deducao)
-        .join(Canal, Deducao.canal_id == Canal.id)  # Junção explícita entre Deducao e Canal
-        .filter(Canal.id == obj.id)  # Filtrar pelo ID do objeto selecionado
-        .all()
-    )
+    # Excluir deduções relacionadas apenas se não for uma dedução
+    if tipo != 'dedução':
+        deducao_objs = (
+            session.query(Deducao)
+            .join(Canal, Deducao.canal_id == Canal.id)
+            .filter(Canal.id == obj.id)
+            .all()
+        )
 
-    for d in deducao_objs:
-        session.delete(d)
+        for d in deducao_objs:
+            session.delete(d)
 
     session.delete(obj)
     tratativa_erro()
+    
     # Registrar a exclusão
     registrar_log(g.USUARIO_NOME,
                   "excluir",
                   tipo,
                   obj_id,
                   f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
+    
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso",
                          f"{tipo.capitalize()} excluído(a) com sucesso!",
                          parent=config['form'])
 
-    limpar_campos(tipo, app_principal, deducao_ui)
-    listar(tipo, app_principal, deducao_ui)
-    atualizar_widgets(tipo, app_principal, deducao_ui)
+    limpar_campos(tipo, ui)
+    listar(tipo, ui)
+    atualizar_widgets(tipo)
 
-def preencher_campos(tipo, app_principal=None, deducao_ui=None):
+def preencher_campos(tipo, form_ui):
     '''
     Preenche os campos de entrada com os dados do item selecionado na lista.
     '''
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
-    config = configuracoes[tipo]
+    configuracoes = obter_configuracoes(form_ui)
+    config = configuracoes.get(tipo)
+    
+    if not config:
+        return
 
-    obj = item_selecionado(tipo, app_principal, deducao_ui)
+    obj = item_selecionado(tipo, form_ui)
 
     if obj:
         for campo, entry in config['campos'].items():
@@ -311,7 +322,7 @@ def preencher_campos(tipo, app_principal=None, deducao_ui=None):
             else:
                 entry.insert(0, '')
 
-def limpar_campos(tipo, app_principal=None, deducao_ui=None):
+def limpar_campos(tipo, ui):
     '''
     Limpa os campos de entrada na aba correspondente ao tipo especificado.
     Os tipos disponíveis são:
@@ -320,14 +331,16 @@ def limpar_campos(tipo, app_principal=None, deducao_ui=None):
     - material
     - canal
     '''
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
-    config = configuracoes[tipo]
+    configuracoes = obter_configuracoes(ui)
+    config = configuracoes.get(tipo)
+    
+    if not config:
+        return
 
     for entry in config['campos'].values():
         entry.delete(0, tk.END)
 
-
-def item_selecionado(tipo, app_principal=None, deducao_ui=None):
+def item_selecionado(tipo, ui):
     '''
     Retorna o objeto selecionado na lista correspondente ao tipo especificado.
     Os tipos disponíveis são:
@@ -336,8 +349,12 @@ def item_selecionado(tipo, app_principal=None, deducao_ui=None):
     - material
     - canal
     '''
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
-    config = configuracoes[tipo]
+    configuracoes = obter_configuracoes(ui)
+    config = configuracoes.get(tipo)
+    
+    if not config:
+        messagebox.showerror("Erro", f"Configuração para '{tipo}' não encontrada.")
+        return None
 
     if not config['lista'].selection():
         messagebox.showerror("Erro", f"Nenhum {tipo} selecionado.")
@@ -350,16 +367,14 @@ def item_selecionado(tipo, app_principal=None, deducao_ui=None):
 
     return obj
 
-def buscar(tipo, app_principal, deducao_ui):
+def buscar(tipo, ui):
     '''
     Realiza a busca de itens no banco de dados com base nos critérios especificados.
     '''
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
-    config = configuracoes[tipo]
+    configuracoes = obter_configuracoes(ui)
+    config = configuracoes.get(tipo)
 
-    try:
-        config = configuracoes.get(tipo)
-    except KeyError:
+    if not config:
         messagebox.showerror("Erro", f"Tipo '{tipo}' não encontrado nas configurações.")
         return
 
@@ -389,7 +404,7 @@ def buscar(tipo, app_principal, deducao_ui):
     else:
         item = config['busca'].get().replace(',', '.') if config.get('busca') else ""
         if not item:
-            listar(tipo)
+            listar(tipo, ui)
             return
         itens = session.query(config['modelo']).filter(config['campo_busca'].like(f"{item}%"))
 
