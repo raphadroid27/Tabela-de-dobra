@@ -20,7 +20,7 @@ from src.utils.calculos import (calcular_dobra,
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
-def atualizar_widgets(cabecalho_ui, deducao_ui, tipo):
+def atualizar_widgets(cabecalho_ui, form_ui, tipo):
     '''
     Atualiza os valores de comboboxes com base no tipo especificado.
 
@@ -30,13 +30,13 @@ def atualizar_widgets(cabecalho_ui, deducao_ui, tipo):
         tipo (str): O tipo de combobox a ser atualizado.
     '''
     def atualizar_material():
-        if cabecalho_ui.material_widget and cabecalho_ui.material_widget.winfo_exists():
+        if cabecalho_ui and cabecalho_ui.material_widget and cabecalho_ui.material_widget.winfo_exists():
             materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
             cabecalho_ui.material_widget.configure(values=materiais)
 
         # Verifica se o combobox de dedução de material existe e atualiza seus valores
-        if deducao_ui and hasattr(deducao_ui, 'deducao_material_combo') and deducao_ui.deducao_material_combo and deducao_ui.deducao_material_combo.winfo_exists():
-            deducao_ui.deducao_material_combo.configure(values=[m.nome for m in session
+        if form_ui and hasattr(form_ui, 'deducao_material_combo') and form_ui.deducao_material_combo and form_ui.deducao_material_combo.winfo_exists():
+            form_ui.deducao_material_combo.configure(values=[m.nome for m in session
                                                .query(Material)
                                                .order_by(Material.nome).all()])
 
@@ -50,8 +50,8 @@ def atualizar_widgets(cabecalho_ui, deducao_ui, tipo):
             cabecalho_ui.espessura_widget.configure(values=[str(e.valor) for e in espessuras])
 
         # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
-        if deducao_ui and hasattr(deducao_ui, 'deducao_espessura_combo') and deducao_ui.deducao_espessura_combo and deducao_ui.deducao_espessura_combo.winfo_exists():
-            deducao_ui.deducao_espessura_combo.configure(values=sorted([e.valor for e in session
+        if form_ui and hasattr(form_ui, 'deducao_espessura_combo') and form_ui.deducao_espessura_combo and form_ui.deducao_espessura_combo.winfo_exists():
+            form_ui.deducao_espessura_combo.configure(values=sorted([e.valor for e in session
                                                       .query(Espessura).all()]))
 
     def atualizar_canal():
@@ -72,8 +72,8 @@ def atualizar_widgets(cabecalho_ui, deducao_ui, tipo):
             cabecalho_ui.canal_widget.configure(values=canais_valores)
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
-        if deducao_ui and hasattr(deducao_ui, 'deducao_canal_combo') and deducao_ui.deducao_canal_combo and deducao_ui.deducao_canal_combo.winfo_exists():
-            deducao_ui.deducao_canal_combo.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
+        if form_ui and hasattr(form_ui, 'deducao_canal_combo') and form_ui.deducao_canal_combo and form_ui.deducao_canal_combo.winfo_exists():
+            form_ui.deducao_canal_combo.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
 
     def atualizar_deducao():
         espessura_valor = cabecalho_ui.espessura_widget.get()
