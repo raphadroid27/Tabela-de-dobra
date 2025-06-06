@@ -25,6 +25,8 @@ def atualizar_widgets(cabecalho_ui, deducao_ui, tipo):
     Atualiza os valores de comboboxes com base no tipo especificado.
 
     Args:
+        cabecalho_ui: Interface do cabeçalho
+        deducao_ui: Interface de dedução (pode ser None)
         tipo (str): O tipo de combobox a ser atualizado.
     '''
     def atualizar_material():
@@ -97,16 +99,12 @@ def atualizar_widgets(cabecalho_ui, deducao_ui, tipo):
                 cabecalho_ui.deducao_widget.config(text='N/A', fg="red")
                 cabecalho_ui.observacoes_widget.config(text='Observações não encontradas')
 
-        for tipo in ['material', 'espessura', 'canal']:
-            atualizar_widgets(cabecalho_ui, deducao_ui, tipo)
-
     # Mapeamento de tipos para funções
     acoes = {
         'material': atualizar_material,
         'espessura': atualizar_espessura,
         'canal': atualizar_canal,
         'dedução': atualizar_deducao
-
     }
 
     # Executa a ação correspondente ao tipo
@@ -260,18 +258,18 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     configuracoes = {
         'dedução': {
             'label': g.DED_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
-                                       calcular_k_offset())
+            'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'), 
+                                     calcular_k_offset(cabecalho_ui))
         },
         'fator_k': {
             'label': g.K_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
-                                       calcular_k_offset())
+            'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'), 
+                                     calcular_k_offset(cabecalho_ui))
         },
         'offset': {
             'label': g.OFFSET_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
-                                       calcular_k_offset())
+            'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'), 
+                                     calcular_k_offset(cabecalho_ui))
         },
         'medida_dobra': {
             'label': lambda numero: getattr(g, f'medidadobra{numero}_label_{w}', None),
@@ -291,7 +289,10 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
         }
     }
 
-    config = configuracoes[tipo]
+    config = configuracoes.get(tipo)
+    if not config:
+        print(f"Tipo '{tipo}' não encontrado nas configurações.")
+        return
 
     label = config['label'](numero) if callable(config['label']) else config['label']
     if label is None:
@@ -330,11 +331,14 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app_principal):
                     widget.config(text=valor)
 
     # Obter widgets dinamicamente
-    def obter_widgets(prefixo):        return [
+    def obter_widgets(prefixo):
+        return [
             getattr(dobras_ui, f"{prefixo}{i}_label_{col}", None)
             for i in range(1, dobras_ui.n)
             for col in app_principal.valores_w
-        ]    # Limpar entradas e labels
+        ]
+
+    # Limpar entradas e labels
     dobras = [getattr(dobras_ui, f"aba{i}_entry_{col}", None) for i in range(1, dobras_ui.n) for col in app_principal.valores_w]
     medidas = obter_widgets("medidadobra")
     metades = obter_widgets("metadedobra")
@@ -350,7 +354,9 @@ def limpar_dobras(cabecalho_ui, dobras_ui, app_principal):
         cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
 
     # Resetar valores globais
-    g.DOBRAS_VALORES = []    # Alterar a cor de fundo das entradas de dobras para branco
+    g.DOBRAS_VALORES = []
+
+    # Alterar a cor de fundo das entradas de dobras para branco
     for i in range(1, dobras_ui.n):
         for col in app_principal.valores_w:
             entry = getattr(dobras_ui, f'aba{i}_entry_{col}', None)
@@ -399,14 +405,17 @@ def limpar_tudo(cabecalho_ui, dobras_ui, app_principal):
         for widget_name, texto in etiquetas_widgets:
             if hasattr(cabecalho_ui, widget_name):
                 widget = getattr(cabecalho_ui, widget_name)
-                if widget:                    widget.config(text=texto)        # Limpar dobras
+                if widget:
+                    widget.config(text=texto)
+
+        # Limpar dobras
         limpar_dobras(cabecalho_ui, dobras_ui, app_principal)
         
         # Executar todas as funções
         todas_funcoes(cabecalho_ui, dobras_ui)
 
         # Limpar razão R/E se existir
-        if g.RAZAO_RIE_LBL and g.RAZAO_RIE_LBL.winfo_exists():
+        if hasattr(g, 'RAZAO_RIE_LBL') and g.RAZAO_RIE_LBL and g.RAZAO_RIE_LBL.winfo_exists():
             g.RAZAO_RIE_LBL.config(text="")
 
         # Focar no combobox de material
@@ -416,19 +425,26 @@ def limpar_tudo(cabecalho_ui, dobras_ui, app_principal):
     except Exception as e:
         print(f"Erro ao limpar todos os campos: {e}")
 
-def limpar_busca(tipo, app_principal=None, deducao_ui=None):
+def limpar_busca(tipo, ui):
     '''
     Limpa os campos de busca e atualiza a lista correspondente.
     '''
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
+    configuracoes = obter_configuracoes(ui)
+    config = configuracoes.get(tipo)
+    
+    if not config:
+        return
+        
     if tipo == 'dedução':
-        configuracoes[tipo]['entries']['material_combo'].delete(0, tk.END)
-        configuracoes[tipo]['entries']['espessura_combo'].delete(0, tk.END)
-        configuracoes[tipo]['entries']['canal_combo'].delete(0, tk.END)
+        if 'entries' in config:
+            config['entries']['material_combo'].delete(0, tk.END)
+            config['entries']['espessura_combo'].delete(0, tk.END)
+            config['entries']['canal_combo'].delete(0, tk.END)
     else:
-        configuracoes[tipo]['busca'].delete(0, tk.END)
+        if 'busca' in config and config['busca']:
+            config['busca'].delete(0, tk.END)
 
-    listar(tipo, app_principal, deducao_ui)
+    listar(tipo, ui)
 
 def focus_next_entry(current_index, w, dobras_ui):
     '''
@@ -450,14 +466,14 @@ def focus_previous_entry(current_index, w, dobras_ui):
         if previous_entry:
             previous_entry.focus()
 
-def listar(tipo, app_principal, deducao_ui):
+def listar(tipo, ui):
     '''
     Lista os itens do banco de dados na interface gráfica.
     '''
-    configuracoes = obter_configuracoes(app_principal, deducao_ui)
-    config = configuracoes[tipo]
+    configuracoes = obter_configuracoes(ui)
+    config = configuracoes.get(tipo)
 
-    if config['lista'] is None or not config['lista'].winfo_exists():
+    if not config or not config['lista'] or not config['lista'].winfo_exists():
         return
 
     for item in config['lista'].get_children():
