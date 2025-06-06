@@ -20,12 +20,12 @@ from src.config import globals as g
 
 class FormUsuario:
 
-    def __init__(self, root, app_principal):
+    def __init__(self, root):
         '''
         Configura a janela principal do formulário de usuários.
         '''
         # Verificar se o usuário é administrador
-        if not tem_permissao('usuario', 'admin'):
+        if not tem_permissao('usuario', 'admin', self):
             return
 
         self.usuario_form = tk.Toplevel(root)
@@ -111,15 +111,13 @@ class FormUsuario:
         self.criar_lista_usuarios(app_principal)
         self.configurar_botoes(app_principal)
 
-def main(root):
+def main(root, app_principal=None):
     '''
     Função principal para inicializar o formulário de usuários.
     '''
     # Importar app para acessar a instância principal
-    from src.app import app
-    form = FormUsuario(root, app_principal=app)
-    if form.usuario_form:  # Verificar se a janela foi criada (permissão válida)
-        form.main(root, app)
+    form = FormUsuario(root, app_principal, form_ui=None)
+    form.main(root, app_principal)
 
 if __name__ == "__main__":
     main(None)
