@@ -52,22 +52,22 @@ class FormDeducao:
         tk.Label(frame_busca, text="Material:").grid(row=0, column=0, padx=2, sticky='sw')
         self.deducao_material_combo = ttk.Combobox(frame_busca)
         self.deducao_material_combo.grid(row=1, column=0, padx=5, sticky="ew")
-        self.deducao_material_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', app_principal, self))
+        self.deducao_material_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', self))
 
         tk.Label(frame_busca, text="Espessura:").grid(row=0, column=1, padx=2, sticky='sw')
         self.deducao_espessura_combo = ttk.Combobox(frame_busca)
         self.deducao_espessura_combo.grid(row=1, column=1, padx=5, sticky="ew")
-        self.deducao_espessura_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', app_principal, self))
+        self.deducao_espessura_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', self))
 
         tk.Label(frame_busca, text="Canal:").grid(row=0, column=2, padx=2, sticky='sw')
         self.deducao_canal_combo = ttk.Combobox(frame_busca)
         self.deducao_canal_combo.grid(row=1, column=2, padx=5, sticky="ew")
-        self.deducao_canal_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', app_principal, self))
+        self.deducao_canal_combo.bind("<<ComboboxSelected>>", lambda event: buscar('dedução', self))
 
         tk.Button(frame_busca,
                 text="Limpar",
                 width=10,
-                command=lambda: limpar_busca('dedução', app_principal, self)).grid(row=1, column=3, padx=5, pady=5)
+                command=lambda: limpar_busca('dedução', self)).grid(row=1, column=3, padx=5, pady=5)
 
     def criar_lista_deducoes(self, app_principal):
         '''
@@ -89,7 +89,7 @@ class FormDeducao:
             self.deducao_lista.column("Observação", width=120, anchor="w")
 
         self.deducao_lista.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        listar('dedução', app_principal, deducao_ui=self)
+        listar('dedução', ui=self)
 
     def criar_frame_edicoes(self, app_principal):
         '''
@@ -123,7 +123,7 @@ class FormDeducao:
             if self.deducao_form:
                 self.deducao_form.title("Editar/Excluir Dedução")
             if self.deducao_lista:
-                self.deducao_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução', app_principal, self))
+                self.deducao_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('dedução', self))
             frame_edicoes.config(text='Editar Dedução')
 
             tk.Button(

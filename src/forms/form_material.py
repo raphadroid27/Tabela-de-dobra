@@ -52,11 +52,11 @@ class FormMaterial:
         tk.Label(frame_busca, text="Nome:").grid(row=0, column=0)
         self.material_busca_entry = tk.Entry(frame_busca)
         self.material_busca_entry.grid(row=0, column=1, sticky="ew")
-        self.material_busca_entry.bind("<KeyRelease>", lambda event: buscar('material', app_principal, self))
+        self.material_busca_entry.bind("<KeyRelease>", lambda event: buscar('material', self))
 
         tk.Button(frame_busca,
                   text="Limpar",
-                  command=lambda: limpar_busca('material', app_principal, self)).grid(row=0, column=2, padx=5, pady=5)
+                  command=lambda: limpar_busca('material', self)).grid(row=0, column=2, padx=5, pady=5)
 
     def criar_lista_materiais(self, app_principal):
         '''
@@ -70,7 +70,7 @@ class FormMaterial:
             self.material_lista.column(col, anchor="center", width=20)
 
         self.material_lista.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        listar('material', app_principal, deducao_ui=self)
+        listar('material', ui=self)
 
     def criar_frame_edicoes(self, app_principal):
         '''
@@ -120,17 +120,17 @@ class FormMaterial:
             if self.material_form:
                 self.material_form.title("Editar/Excluir Material")
             if self.material_lista:
-                self.material_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('material', app_principal, self))
+                self.material_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('material', self))
             frame_edicoes.config(text='Editar Material')
 
             tk.Button(self.frame,
                       text="Excluir",
-                      command=lambda: excluir('material', app_principal, self),
+                      command=lambda: excluir('material', self),
                       bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
             tk.Button(frame_edicoes,
                       text="Atualizar",
-                      command=lambda: editar('material', app_principal, self),
+                      command=lambda: editar('material', self),
                       bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
         else:
             if self.material_form:
@@ -138,7 +138,7 @@ class FormMaterial:
             frame_edicoes.config(text='Novo Material')
             tk.Button(frame_edicoes,
                       text="Adicionar",
-                      command=lambda: adicionar('material', app_principal, self),
+                      command=lambda: adicionar('material', self),
                       bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
 
     def main(self, root, app_principal):

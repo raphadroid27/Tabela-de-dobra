@@ -53,11 +53,11 @@ class FormEspessura:
         tk.Label(frame_busca, text="Valor:").grid(row=0, column=0)
         self.espessura_busca_entry = tk.Entry(frame_busca)
         self.espessura_busca_entry.grid(row=0, column=1, sticky="ew")
-        self.espessura_busca_entry.bind("<KeyRelease>", lambda event: buscar('espessura', app_principal, self))
+        self.espessura_busca_entry.bind("<KeyRelease>", lambda event: buscar('espessura', self))
 
         tk.Button(frame_busca,
                   text="Limpar",
-                  command=lambda: limpar_busca('espessura', app_principal, self)).grid(row=0, column=2, padx=5, pady=5)
+                  command=lambda: limpar_busca('espessura', self)).grid(row=0, column=2, padx=5, pady=5)
 
     def criar_lista_espessuras(self, app_principal):
         '''
@@ -71,7 +71,7 @@ class FormEspessura:
             self.espessura_lista.column(col, anchor="center")
 
         self.espessura_lista.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        listar('espessura', app_principal, deducao_ui=self)
+        listar('espessura', ui=self)
 
     def criar_frame_edicoes(self, app_principal):
         '''
@@ -97,17 +97,17 @@ class FormEspessura:
             if self.espessura_form:
                 self.espessura_form.title("Editar/Excluir Espessura")
             if self.espessura_lista:
-                self.espessura_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('espessura', app_principal, self))
+                self.espessura_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('espessura', self))
             frame_edicoes.config(text='Editar Espessura')
 
             tk.Button(frame_edicoes,
                       text="Atualizar",
-                      command=lambda: editar('espessura', app_principal, self),
+                      command=lambda: editar('espessura', self),
                       bg="green").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
             tk.Button(self.frame,
                       text="Excluir",
-                      command=lambda: excluir('espessura', app_principal, self),
+                      command=lambda: excluir('espessura', self),
                       bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         else:
             if self.espessura_form:
@@ -116,7 +116,7 @@ class FormEspessura:
 
             tk.Button(frame_edicoes,
                       text="Adicionar",
-                      command=lambda: adicionar('espessura', app_principal, self),
+                      command=lambda: adicionar('espessura', self),
                       bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
     def main(self, root, app_principal):
@@ -125,8 +125,8 @@ class FormEspessura:
         '''
         self.frame = configurar_main_frame(self.espessura_form)
         self.criar_frame_busca(app_principal)
-        self.criar_lista_espessuras(app_principal)
         frame_edicoes = self.criar_frame_edicoes(app_principal)
+        self.criar_lista_espessuras(app_principal)
         self.configurar_botoes(frame_edicoes, app_principal)
 
 def main(root):

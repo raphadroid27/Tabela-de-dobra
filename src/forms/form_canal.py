@@ -51,10 +51,10 @@ class FormCanal:
         tk.Label(frame_busca, text="Valor:").grid(row=0, column=0)
         self.canal_busca_entry = tk.Entry(frame_busca)
         self.canal_busca_entry.grid(row=0, column=1, sticky="ew")
-        self.canal_busca_entry.bind("<KeyRelease>", lambda event: buscar('canal', app_principal, self))
+        self.canal_busca_entry.bind("<KeyRelease>", lambda event: buscar('canal', self))
 
         tk.Button(frame_busca, text="Limpar",
-                  command=lambda: limpar_busca('canal', app_principal, self)).grid(row=0, column=2, padx=5, pady=5)
+                  command=lambda: limpar_busca('canal', self)).grid(row=0, column=2, padx=5, pady=5)
 
     def criar_lista_canais(self, app_principal):
         '''
@@ -68,7 +68,7 @@ class FormCanal:
             self.canal_lista.column(col, anchor="center", width=20)
 
         self.canal_lista.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        listar('canal', app_principal, deducao_ui=self)
+        listar('canal', ui=self)
 
     def criar_frame_edicoes(self, app_principal):
         '''
@@ -116,16 +116,16 @@ class FormCanal:
             if self.canal_form:
                 self.canal_form.title("Editar/Excluir Canal")
             if self.canal_lista:
-                self.canal_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal', app_principal, self))
+                self.canal_lista.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal', self))
             frame_edicoes.config(text='Editar Canal')
 
             tk.Button(self.frame, text="Excluir",
-                      command=lambda: excluir('canal', app_principal, self),
+                      command=lambda: excluir('canal', self),
                       bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
             tk.Button(frame_edicoes,
                       text="Atualizar",
-                      command=lambda: editar('canal', app_principal, self),
+                      command=lambda: editar('canal', self),
                       bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
         else:
             if self.canal_form:
@@ -133,7 +133,7 @@ class FormCanal:
             frame_edicoes.config(text='Novo Canal')
             tk.Button(frame_edicoes,
                       text="Adicionar",
-                      command=lambda: adicionar('canal', app_principal, self),
+                      command=lambda: adicionar('canal', self),
                       bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
 
     def main(self, root, app_principal):
