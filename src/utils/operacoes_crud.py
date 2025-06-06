@@ -17,44 +17,45 @@ from src.config import globals as g
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
 
-def adicionar(tipo, ui):
+def adicionar(tipo, form_ui):
     '''
     Adiciona um novo item ao banco de dados com base no tipo especificado.
     '''
-    if not logado(tipo):
-        return
+    # if not logado(tipo):
+    #     return
+    #//// REMOVER LOGADO
 
     if tipo == 'dedução':
-        adicionar_deducao(ui)
+        adicionar_deducao(form_ui)
     elif tipo == 'espessura':
-        adicionar_espessura(ui)
+        adicionar_espessura(form_ui)
     elif tipo == 'material':
-        adicionar_material(ui)
+        adicionar_material(form_ui)
     elif tipo == 'canal':
-        adicionar_canal(ui)
+        adicionar_canal(form_ui)
 
-    limpar_campos(tipo, ui)
-    listar(tipo, ui)
-    atualizar_widgets(tipo)
-    buscar(tipo, ui)
+    limpar_campos(tipo, form_ui)
+    listar(tipo, form_ui)
+    atualizar_widgets(None, tipo)
+    buscar(tipo, form_ui)
 
-def adicionar_deducao(ui):
+def adicionar_deducao(form_ui):
     '''
     Lógica para adicionar uma nova dedução.
     '''
-    espessura_valor = g.DED_ESPES_COMB.get()
-    canal_valor = g.DED_CANAL_COMB.get()
-    material_nome = g.DED_MATER_COMB.get()
-    nova_observacao_valor = g.DED_OBSER_ENTRY.get()
-    nova_forca_valor = g.DED_FORCA_ENTRY.get()
+    espessura_valor = form_ui.deducao_espessura_combo.get()
+    canal_valor = form_ui.deducao_canal_combo.get()
+    material_nome = form_ui.deducao_material_combo.get()
+    nova_observacao_valor = form_ui.deducao_observacao_entry.get()
+    nova_forca_valor = ui.deducao_forca_entry.get()
 
-    if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
+    if not all([espessura_valor, canal_valor, material_nome, ui.deducao_valor_entry.get()]):
         messagebox.showerror("Erro",
                              "Material, espessura, canal e valor da dedução são obrigatórios.",
                              parent=g.DEDUC_FORM)
         return
 
-    nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
+    nova_deducao_valor = float(ui.deducao_valor_entry.get().replace(',', '.'))
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -87,12 +88,12 @@ def adicionar_espessura(ui):
     '''
     Lógica para adicionar uma nova espessura.
     '''
-    espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
+    espessura_valor = ui.espessura_valor_entry.get().replace(',', '.')
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         messagebox.showwarning("Atenção!",
                                "A espessura deve conter apenas números ou números decimais.",
                                parent=g.ESPES_FORM)
-        g.ESP_VALOR_ENTRY.delete(0, tk.END)
+        ui.espessura_valor_entry.delete(0, tk.END)
         return
 
     espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
@@ -108,10 +109,10 @@ def adicionar_material(ui):
     '''
     Lógica para adicionar um novo material.
     '''
-    nome_material = g.MAT_NOME_ENTRY.get()
-    densidade_material = g.MAT_DENS_ENTRY.get()
-    escoamento_material = g.MAT_ESCO_ENTRY.get()
-    elasticidade_material = g.MAT_ELAS_ENTRY.get()
+    nome_material = ui.material_nome_entry.get()
+    densidade_material = ui.material_densidade_entry.get()
+    escoamento_material = ui.material_escoamento_entry.get()
+    elasticidade_material = ui.material_elasticidade_entry.get()
 
     if not nome_material:
         messagebox.showerror("Erro", "O campo Material é obrigatório.", parent=g.MATER_FORM)
@@ -139,11 +140,11 @@ def adicionar_canal(ui):
     '''
     Lógica para adicionar um novo canal.
     '''
-    valor_canal = g.CANAL_VALOR_ENTRY.get()
-    largura_canal = g.CANAL_LARGU_ENTRY.get()
-    altura_canal = g.CANAL_ALTUR_ENTRY.get()
-    comprimento_total_canal = g.CANAL_COMPR_ENTRY.get()
-    observacao_canal = g.CANAL_OBSER_ENTRY.get()
+    valor_canal = ui.canal_valor_entry.get()
+    largura_canal = ui.canal_largura_entry.get()
+    altura_canal = ui.canal_altura_entry.get()
+    comprimento_total_canal = ui.canal_comprimento_total_entry.get()
+    observacao_canal = ui.canal_observacao_entry.get()
 
     if not valor_canal:
         messagebox.showerror("Erro", "O campo Canal é obrigatório.")
@@ -178,8 +179,9 @@ def editar(tipo, ui):
     - material
     - canal
     '''
-    if not tem_permissao(tipo, 'editor'):  # Permitir que editores realizem esta ação
-        return
+    # if not tem_permissao(tipo, 'editor'):
+    #     return
+    #//// REMOVER TEM_PERMISSAO
 
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
         return
@@ -227,7 +229,7 @@ def editar(tipo, ui):
 
     limpar_campos(tipo, ui)
     listar(tipo, ui)
-    atualizar_widgets(tipo)
+    atualizar_widgets(None, None, tipo)
     buscar(tipo, ui)
 
 def excluir(tipo, ui):
@@ -239,8 +241,9 @@ def excluir(tipo, ui):
     - material
     - canal
     '''
-    if not tem_permissao(tipo,'editor'):
-        return
+    # if not tem_permissao(tipo,'editor'):
+    #     return
+    #//// REMOVER TEM_PERMISSAO
 
     configuracoes = obter_configuracoes(ui)
     config = configuracoes.get(tipo)
