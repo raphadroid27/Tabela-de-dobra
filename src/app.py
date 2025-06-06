@@ -125,6 +125,18 @@ def form_true(form, editar_attr, root):
         # Para o formulário de dedução, passa app como parâmetro
         form_instance = form.FormDeducao(root, app_principal=app)
         form_instance.main(root, app)
+    elif hasattr(form, 'FormMaterial'):
+        # Para o formulário de material, passa app como parâmetro
+        form_instance = form.FormMaterial(root, app_principal=app)
+        form_instance.main(root, app)
+    elif hasattr(form, 'FormEspessura'):
+        # Para o formulário de espessura, passa app como parâmetro
+        form_instance = form.FormEspessura(root, app_principal=app)
+        form_instance.main(root, app)
+    elif hasattr(form, 'FormCanal'):
+        # Para o formulário de canal, passa app como parâmetro
+        form_instance = form.FormCanal(root, app_principal=app)
+        form_instance.main(root, app)
     else:
         form.main(root)
 
@@ -137,6 +149,18 @@ def form_false(form, editar_attr, root):
     if hasattr(form, 'FormDeducao'):
         # Para o formulário de dedução, passa app como parâmetro
         form_instance = form.FormDeducao(root, app_principal=app)
+        form_instance.main(root, app)
+    elif hasattr(form, 'FormMaterial'):
+        # Para o formulário de material, passa app como parâmetro
+        form_instance = form.FormMaterial(root, app_principal=app)
+        form_instance.main(root, app)
+    elif hasattr(form, 'FormEspessura'):
+        # Para o formulário de espessura, passa app como parâmetro
+        form_instance = form.FormEspessura(root, app_principal=app)
+        form_instance.main(root, app)
+    elif hasattr(form, 'FormCanal'):
+        # Para o formulário de canal, passa app como parâmetro
+        form_instance = form.FormCanal(root, app_principal=app)
         form_instance.main(root, app)
     else:
         form.main(root)
@@ -245,9 +269,7 @@ def configurar_menu():
                                                                        'editar_canal',
                                                                        app.janela_principal))
     file_menu.add_separator()
-    file_menu.add_command(label="Sair", command=app.janela_principal.destroy)
-
-    # Menu Editar
+    file_menu.add_command(label="Sair", command=app.janela_principal.destroy)    # Menu Editar
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
     edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao,
@@ -255,15 +277,15 @@ def configurar_menu():
                                                                            app.janela_principal))
 
     edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material,
-                                                                           'EDIT_MAT',
+                                                                           'editar_material',
                                                                            app.janela_principal))
 
     edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura,
-                                                                           'EDIT_ESP',
+                                                                           'editar_espessura',
                                                                            app.janela_principal))
 
     edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal,
-                                                                       'EDIT_CANAL',
+                                                                       'editar_canal',
                                                                        app.janela_principal))
 
     # Menu Opções
