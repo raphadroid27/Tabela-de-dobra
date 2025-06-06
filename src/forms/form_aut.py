@@ -14,81 +14,121 @@ from src.utils.janelas import (desabilitar_janelas,
                               habilitar_janelas,
                               posicionar_janela
                               )
-from src.config import globals as g
+from src.utils.utilitarios import obter_caminho_icone
 
-def main(root):
-    '''
-    Função principal que cria a janela de autenticação.
-    Se a janela já existir, ela é destruída antes de criar uma nova.
-    A janela é configurada com campos para usuário e senha, e um botão para login ou
-    criação de novo usuário, dependendo do estado atual do sistema.
-    '''
+class FormAutenticacao:
 
-    if g.AUTEN_FORM:
-        g.AUTEN_FORM.destroy()
+    def __init__(self, root, app_principal=None, login=True):
+        '''
+        Configura a janela principal do formulário de autenticação.
+        '''
+        self.app_principal = app_principal
+        self.login = login  # Adicionar o atributo login
+        
+        # if self.auten_form:
+        #     self.auten_form.destroy()
 
-    g.AUTEN_FORM = tk.Toplevel(root)
-    g.AUTEN_FORM.geometry("200x120")
-    g.AUTEN_FORM.resizable(False, False)
-    g.AUTEN_FORM.attributes('-toolwindow', True)
-    g.AUTEN_FORM.attributes("-topmost", True)
-    g.AUTEN_FORM.focus()
-    desabilitar_janelas()
-    g.AUTEN_FORM.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(),
-                                                       g.AUTEN_FORM.destroy()
-                                                       if g.AUTEN_FORM
-                                                       else None])
+        self.auten_form = tk.Toplevel(root)
+        
+        self.auten_form.geometry("200x120")
+        self.auten_form.resizable(False, False)
+        
+        try:
+            icone_path = obter_caminho_icone()
+            self.auten_form.iconbitmap(icone_path)
+        except:
+            pass  # Se não encontrar o ícone, continua sem ele
+        
+        self.auten_form.attributes('-toolwindow', True)
+        self.auten_form.attributes("-topmost", True)
+        self.auten_form.focus()
+        
+        desabilitar_janelas(app_principal)
+        self.auten_form.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(app_principal),
+                                                             self.auten_form.destroy()
+                                                             if self.auten_form
+                                                             else None])
 
-    posicionar_janela(g.AUTEN_FORM, 'centro')
+    def criar_frame_principal(self):
+        '''
+        Cria o frame principal do formulário.
+        '''
+        self.main_frame = tk.Frame(self.auten_form)
+        self.main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
-    main_frame = tk.Frame(g.AUTEN_FORM)
-    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
+        for i in range(2):
+            self.main_frame.columnconfigure(i, weight=1)
+        for i in range(4):
+            self.main_frame.rowconfigure(i, weight=1)
 
-    main_frame.columnconfigure(0, weight=1)
-    main_frame.columnconfigure(1, weight=1)
+    def criar_campos_usuario_senha(self):
+        '''
+        Cria os campos de usuário e senha.
+        '''
+        tk.Label(self.main_frame, text="Usuário:").grid(row=0, column=0, padx=5, pady=5)
+        self.usuario_entry = tk.Entry(self.main_frame)
+        self.usuario_entry.focus()
+        self.usuario_entry.grid(row=0, column=1, padx=5, pady=5)
 
-    main_frame.rowconfigure(0,weight=0)
-    main_frame.rowconfigure(1,weight=0)
-    main_frame.rowconfigure(2,weight=1)
-    main_frame.rowconfigure(3,weight=1)
+        tk.Label(self.main_frame, text="Senha:").grid(row=1, column=0, padx=5, pady=5)
+        self.senha_entry = tk.Entry(self.main_frame, show="*")
+        self.senha_entry.grid(row=1, column=1, padx=5, pady=5)
 
-    tk.Label(main_frame, text="Usuário:").grid(row=0, column=0,padx=5, pady=5)
-    g.USUARIO_ENTRY = tk.Entry(main_frame)
-    g.USUARIO_ENTRY.focus()
-    g.USUARIO_ENTRY.grid(row=0, column=1,padx=5, pady=5)
-    tk.Label(main_frame, text="Senha:").grid(row=1, column=0,padx=5, pady=5)
-    g.SENHA_ENTRY = tk.Entry(main_frame, show="*")
-    g.SENHA_ENTRY.grid(row=1, column=1,padx=5, pady=5)
+    def verificar_admin_existente(self):
+        '''
+        Verifica se já existe um administrador no sistema.
+        '''
+        return session.query(Usuario).filter(Usuario.role == 'admin').first()
 
-    admin_existente = session.query(Usuario).filter(Usuario.role == 'admin').first()
-
-    g.ADMIN_VAR = tk.StringVar()
-
-    if g.LOGIN:
-        g.AUTEN_FORM.title("Login")
-        tk.Button(main_frame,
-                text="Login",
-                command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
-    else:
+    def configurar_campo_admin(self, admin_existente):
+        '''
+        Configura o campo de administrador para novos usuários.
+        '''
+        self.admin_var = tk.StringVar()
+        
         if not admin_existente:
-            g.AUTEN_FORM.geometry("200x150")
-            tk.Label(main_frame, text="Admin:").grid(row=2, column=0, padx=5, pady=5)
-            # Definir o valor inicial e os valores on/off
-            g.ADMIN_VAR.set('viewer') # Valor padrão quando desmarcado
-            admin_checkbox = tk.Checkbutton(main_frame,
-                                            variable=g.ADMIN_VAR,
-                                            onvalue='admin',
-                                            offvalue='viewer')
+            self.auten_form.geometry("200x150")
+            tk.Label(self.main_frame, text="Admin:").grid(row=2, column=0, padx=5, pady=5)
+            self.admin_var.set('viewer')  # Valor padrão quando desmarcado
+            admin_checkbox = tk.Checkbutton(self.main_frame,
+                           variable=self.admin_var,
+                                          onvalue='admin',
+                                          offvalue='viewer')
             admin_checkbox.grid(row=2, column=1, padx=5, pady=5)
         else:
             # Se já existe admin, o novo usuário não pode ser admin
-            g.ADMIN_VAR.set('viewer')
+            self.admin_var.set('viewer')
 
-        g.AUTEN_FORM.title("Novo Usuário")
-        tk.Button(main_frame,
-                text="Salvar",
-                # Na função novo_usuario, use g.ADMIN_VAR.get() para obter o valor
-                command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
+    def configurar_botoes(self):
+        '''
+        Configura os botões de ação (Login ou Salvar).
+        '''
+        admin_existente = self.verificar_admin_existente()
 
-if __name__ == "__main__":
-    main(None)
+        if self.login:
+            self.auten_form.title("Login")
+            tk.Button(self.main_frame,
+                     text="Login",
+                     command=lambda: login(self.app_principal, self)).grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+        else:
+            self.configurar_campo_admin(admin_existente)
+            self.auten_form.title("Novo Usuário")
+            tk.Button(self.main_frame,
+                     text="Salvar",
+                     command=lambda: novo_usuario(self)).grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+
+    def main(self, root, app_principal=None):
+        '''
+        Inicializa e exibe o formulário de autenticação.
+        '''
+        #posicionar_janela(self.auten_form, 'centro')
+        self.criar_frame_principal()
+        self.criar_campos_usuario_senha()
+        self.configurar_botoes()
+
+def main(root, app_principal=None, login=True):
+    '''
+    Função principal para inicializar o formulário de autenticação.
+    '''
+    form = FormAutenticacao(root, app_principal=app_principal, login=login)
+    form.main(root, app_principal)
