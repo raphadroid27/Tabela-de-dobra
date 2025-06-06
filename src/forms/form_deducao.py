@@ -131,7 +131,7 @@ class FormDeducao:
                 text="Atualizar",
                 bg="green",
                 width=10,
-                command=lambda: editar('dedução', app_principal, self)
+                command=lambda: editar('dedução', self)
             ).grid(
                 row=1,
                 column=3,
@@ -145,7 +145,7 @@ class FormDeducao:
                 text="Excluir",
                 bg="red",
                 width=10,
-                command=lambda: excluir('dedução', app_principal, self)
+                command=lambda: excluir('dedução', self)
             ).grid(
                 row=2,
                 column=0,
@@ -163,7 +163,7 @@ class FormDeducao:
                 text="Adicionar",
                 bg="cyan",
                 width=10,
-                command=lambda: adicionar('dedução', app_principal, self)
+                command=lambda: adicionar('dedução', self)
             ).grid(
                 row=1,
                 column=3,
@@ -178,7 +178,7 @@ class FormDeducao:
         '''
         tipos = ['material', 'espessura', 'canal']
         for tipo in tipos:
-            atualizar_widgets(cabecalho_ui, deducao_ui=self, tipo=tipo)
+            atualizar_widgets(cabecalho_ui, form_ui=self, tipo=tipo)
 
     def main(self, root, app_principal):
         '''
