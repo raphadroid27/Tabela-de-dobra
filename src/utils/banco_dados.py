@@ -16,22 +16,22 @@ engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def obter_configuracoes(app_principal, deducao_ui):
+def obter_configuracoes(ui):
     '''
     Retorna um dicionário com as configurações de cada tipo de item.
     '''
-    return {
-        'principal': {
-            'form': app_principal.janela_principal,
-        },
-        'dedução': {
-            'form': deducao_ui.deducao_form,
-            'lista': deducao_ui.deducao_lista,
+    configuracoes = {}
+    
+    # Configuração para dedução
+    if hasattr(ui, 'deducao_form'):
+        configuracoes['dedução'] = {
+            'form': ui.deducao_form,
+            'lista': ui.deducao_lista,
             'modelo': Deducao,
             'campos': {
-                'valor': deducao_ui.deducao_valor_entry,
-                'observacao': deducao_ui.deducao_observacao_entry,
-                'forca': deducao_ui.deducao_forca_entry
+                'valor': ui.deducao_valor_entry,
+                'observacao': ui.deducao_observacao_entry,
+                'forca': ui.deducao_forca_entry
             },
             'item_id': Deducao.id,
             'valores': lambda d: (d.id,
@@ -43,72 +43,89 @@ def obter_configuracoes(app_principal, deducao_ui):
                                 d.forca),
             'ordem': Deducao.valor,
             'entries': {
-                'material_combo': deducao_ui.deducao_material_combo,
-                'espessura_combo': deducao_ui.deducao_espessura_combo,
-                'canal_combo': deducao_ui.deducao_canal_combo
+                'material_combo': ui.deducao_material_combo,
+                'espessura_combo': ui.deducao_espessura_combo,
+                'canal_combo': ui.deducao_canal_combo
             }
-        },
-        'material': {
-            'form': g.MATER_FORM,
-            'lista': g.LIST_MAT,
+        }
+
+    # Configuração para material
+    if hasattr(ui, 'material_form'):
+        configuracoes['material'] = {
+            'form': ui.material_form,
+            'lista': ui.material_lista,
             'modelo': Material,
             'campos': {
-                'nome': g.MAT_NOME_ENTRY,
-                'densidade': g.MAT_DENS_ENTRY,
-                'escoamento': g.MAT_ESCO_ENTRY,
-                'elasticidade': g.MAT_ELAS_ENTRY
+                'nome': ui.material_nome_entry,
+                'densidade': ui.material_densidade_entry,
+                'escoamento': ui.material_escoamento_entry,
+                'elasticidade': ui.material_elasticidade_entry
             },
-            'item_id': Material.id,  # Corrigido de Deducao.material_id
+            'item_id': Material.id,
             'valores': lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade),
             'ordem': Material.id,
-            'entry': g.MAT_NOME_ENTRY,
-            'busca': g.MAT_BUSCA_ENTRY,
+            'entry': ui.material_nome_entry,
+            'busca': ui.material_busca_entry,
             'campo_busca': Material.nome
-        },
-        'espessura': {
-            'form': g.ESPES_FORM,
-            'lista': g.LIST_ESP,
+        }
+
+    # Configuração para espessura
+    if hasattr(ui, 'espessura_form'):
+        configuracoes['espessura'] = {
+            'form': ui.espessura_form,
+            'lista': ui.espessura_lista,
             'modelo': Espessura,
-            'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
+            'item_id': Espessura.id,
             'valores': lambda e: (e.id, e.valor),
             'ordem': Espessura.valor,
-            'entry': g.ESP_VALOR_ENTRY,
-            'busca': g.ESP_BUSCA_ENTRY,
-            'campo_busca': Espessura.valor  # Corrigido de espessura.valor
-        },
-        'canal': {
-            'form': g.CANAL_FORM,
-            'lista': g.LIST_CANAL,
-            'modelo': Canal,  # Corrigido de canal
+            'entry': ui.espessura_valor_entry,
+            'busca': ui.espessura_busca_entry,
+            'campo_busca': Espessura.valor
+        }
+
+    # Configuração para canal
+    if hasattr(ui, 'canal_form'):
+        configuracoes['canal'] = {
+            'form': ui.canal_form,
+            'lista': ui.canal_lista,
+            'modelo': Canal,
             'campos': {
-                'valor': g.CANAL_VALOR_ENTRY,
-                'largura': g.CANAL_LARGU_ENTRY,
-                'altura': g.CANAL_ALTUR_ENTRY,
-                'comprimento_total': g.CANAL_COMPR_ENTRY,
-                'observacao': g.CANAL_OBSER_ENTRY
+                'valor': ui.canal_valor_entry,
+                'largura': ui.canal_largura_entry,
+                'altura': ui.canal_altura_entry,
+                'comprimento_total': ui.canal_comprimento_entry,
+                'observacao': ui.canal_observacao_entry
             },
-            'item_id': Canal.id,  # Corrigido de deducao.canal_id
+            'item_id': Canal.id,
             'valores': lambda c: (c.id,
                                   c.valor,
                                   c.largura,
                                   c.altura,
                                   c.comprimento_total,
                                   c.observacao),
-            'ordem': Canal.valor,  # Corrigido de canal.valor
-            'entry': g.CANAL_VALOR_ENTRY,
-            'busca': g.CANAL_BUSCA_ENTRY,
-            'campo_busca': Canal.valor  # Corrigido de canal.valor
-        },
-        'usuario': {
-            'form': g.USUAR_FORM,
-            'lista': g.LIST_USUARIO,
-            'modelo': Usuario,  # Corrigido de usuario
-            'valores': lambda u: (u.id, u.nome, u.role),
-            'ordem': Usuario.nome,  # Corrigido de usuario.nome
-            'entry': g.USUARIO_BUSCA_ENTRY,
-            'campo_busca': Usuario.nome  # Corrigido de usuario.nome
+            'ordem': Canal.valor,
+            'busca': ui.canal_busca_entry,
+            'campo_busca': Canal.valor
         }
-    }
+
+    # Configuração para usuário
+    if hasattr(ui, 'usuario_form'):
+        configuracoes['usuario'] = {
+            'form': ui.usuario_form,
+            'lista': ui.usuario_lista,
+            'modelo': Usuario,
+            'campos': {
+                'nome': ui.usuario_nome_entry,
+                'role': ui.usuario_role_combo  # Assumindo que existe um combo para role
+            },
+            'item_id': Usuario.id,
+            'valores': lambda u: (u.id, u.nome, u.role),
+            'ordem': Usuario.nome,
+            'entry': ui.usuario_busca_entry,
+            'campo_busca': Usuario.nome
+        }
+    
+    return configuracoes
 
 def salvar_no_banco(obj, tipo, detalhes, app_principal, deducao_ui=None):
     '''
