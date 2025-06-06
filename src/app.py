@@ -97,7 +97,7 @@ def verificar_admin_existente(app_principal):
     '''
     admin_existente = session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
-        form_aut.main(app_principal.janela_principal)
+        form_aut.main(app_principal.janela_principal, app_principal, login=False)
 
 def carregar_configuracao():
     '''
@@ -137,6 +137,10 @@ def form_true(form, editar_attr, root):
         # Para o formulário de canal, passa app como parâmetro
         form_instance = form.FormCanal(root, app_principal=app)
         form_instance.main(root, app)
+    elif hasattr(form, 'FormAutenticacao'):
+        # Para o formulário de autenticação, passa app como parâmetro
+        form_instance = form.FormAutenticacao(root, app_principal=app)
+        form_instance.main(root, app)
     else:
         form.main(root)
 
@@ -161,6 +165,10 @@ def form_false(form, editar_attr, root):
     elif hasattr(form, 'FormCanal'):
         # Para o formulário de canal, passa app como parâmetro
         form_instance = form.FormCanal(root, app_principal=app)
+        form_instance.main(root, app)
+    elif hasattr(form, 'FormAutenticacao'):
+        # Para o formulário de autenticação, passa app como parâmetro
+        form_instance = form.FormAutenticacao(root, app_principal=app)
         form_instance.main(root, app)
     else:
         form.main(root)
@@ -304,18 +312,14 @@ def configurar_menu():
     # Menu Usuário
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
-    usuario_menu.add_command(label="Login", command=lambda: form_true(form_aut,
-                                                                      "LOGIN",
-                                                                      app.janela_principal))
+    usuario_menu.add_command(label="Login", command=lambda: form_aut.main(app.janela_principal, app, login=True))
 
-    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_false(form_aut,
-                                                                           "LOGIN",
-                                                                           app.janela_principal))
+    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_aut.main(app.janela_principal, app, login=False))
 
     usuario_menu.add_command(label="Gerenciar Usuários",
-                             command=lambda: form_usuario.main(app.janela_principal))
+                             command=lambda: form_usuario.main(app.janela_principal, app))
     usuario_menu.add_separator()
-    usuario_menu.add_command(label="Sair", command=logout)
+    usuario_menu.add_command(label="Sair", command=lambda: logout(app))
 
     # Menu Ajuda
     help_menu = tk.Menu(menu_bar, tearoff=0)
