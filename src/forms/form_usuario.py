@@ -8,7 +8,7 @@
 import tkinter as tk
 from tkinter import ttk
 from src.utils.janelas import (no_topo, posicionar_janela)
-from src.utils.interface import (listar, limpar_busca)
+from src.utils.interface import (listar, limpar_busca, configurar_main_frame)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar
 from src.utils.usuarios import (tem_permissao,
@@ -18,82 +18,108 @@ from src.utils.usuarios import (tem_permissao,
                                  )
 from src.config import globals as g
 
+class FormUsuario:
+
+    def __init__(self, root, app_principal):
+        '''
+        Configura a janela principal do formulário de usuários.
+        '''
+        # Verificar se o usuário é administrador
+        if not tem_permissao('usuario', 'admin'):
+            return
+
+        self.usuario_form = tk.Toplevel(root)
+        self.usuario_form.title("Editar/Excluir Usuário")
+        self.usuario_form.geometry("300x280")
+        self.usuario_form.resizable(False, False)
+
+        icone_path = obter_caminho_icone()
+        self.usuario_form.iconbitmap(icone_path)
+
+        no_topo(self.usuario_form)
+        posicionar_janela(self.usuario_form, 'centro')
+
+    def criar_frame_busca(self, app_principal):
+        '''
+        Cria o frame de busca.
+        '''
+        frame_busca = tk.LabelFrame(self.frame, text='Filtrar Usuários', pady=5)
+        frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
+
+        for i in range(3):
+            frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
+
+        tk.Label(frame_busca, text="Usuário:").grid(row=0, column=0)
+        self.usuario_busca_entry = tk.Entry(frame_busca)
+        self.usuario_busca_entry.grid(row=0, column=1, sticky="ew")
+        self.usuario_busca_entry.bind("<KeyRelease>", lambda event: buscar('usuario', app_principal, self))
+
+        tk.Button(frame_busca,
+                  text="Limpar",
+                  command=lambda: limpar_busca('usuario', app_principal, self)).grid(row=0, column=2, padx=5, pady=5)
+
+    def criar_lista_usuarios(self, app_principal):
+        '''
+        Cria a lista de usuários.
+        '''
+        columns = ("Id", "Nome", "Permissões")
+        self.usuario_lista = ttk.Treeview(self.frame, columns=columns, show="headings")
+        self.usuario_lista["displaycolumns"] = ("Nome", "Permissões")
+        
+        for col in columns:
+            self.usuario_lista.heading(col, text=col)
+            self.usuario_lista.column(col, anchor="center", width=20)
+
+        self.usuario_lista.grid(row=1, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
+        listar('usuario', app_principal, ui=self)
+
+    def configurar_botoes(self, app_principal):
+        '''
+        Configura os botões de ação (Tornar Editor, Resetar Senha, Excluir).
+        '''
+        tk.Button(self.frame,
+                 text="Tornar Editor",
+                 command=lambda: tornar_editor(app_principal, self),
+                 bg="green",
+                 width=10).grid(row=2, column=0, padx=5, pady=5, sticky="w")
+
+        tk.Button(self.frame,
+                  text="Resetar Senha",
+                  command=lambda: resetar_senha(app_principal, self),
+                  bg="yellow",
+                  width=10).grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+
+        tk.Button(self.frame,
+                  text="Excluir",
+                  command=lambda: excluir_usuario(app_principal, self),
+                  bg="red",
+                  width=10).grid(row=2, column=2, padx=5, pady=5, sticky="e")
+
+    def main(self, root, app_principal):
+        '''
+        Inicializa e exibe o formulário de gerenciamento de usuários.
+        '''
+        self.frame = configurar_main_frame(self.usuario_form)
+        
+        for i in range(3):
+            self.frame.columnconfigure(i, weight=1)
+
+        for i in range(3):
+            self.frame.rowconfigure(i, weight=1 if i == 1 else 0)
+
+        self.criar_frame_busca(app_principal)
+        self.criar_lista_usuarios(app_principal)
+        self.configurar_botoes(app_principal)
+
 def main(root):
     '''
-    Função principal para gerenciar usuários.
-    Inicializa a interface gráfica para edição, exclusão e gerenciamento de permissões.
+    Função principal para inicializar o formulário de usuários.
     '''
-    # Verificar se o usuário é administrador
-    if not tem_permissao('usuario', 'admin'):
-        return
-
-    if g.USUAR_FORM is not None:
-        g.USUAR_FORM.destroy()
-
-    g.USUAR_FORM = tk.Toplevel(root)
-    g.USUAR_FORM.title("Editar/Excluir Usuário")
-    g.USUAR_FORM.geometry("300x280")
-    g.USUAR_FORM.resizable(False, False)
-
-    # Define o ícone
-    icone_path = obter_caminho_icone()
-    g.USUAR_FORM.iconbitmap(icone_path)
-
-    no_topo(g.USUAR_FORM)
-    posicionar_janela(g.USUAR_FORM, 'centro')
-
-    main_frame = tk.Frame(g.USUAR_FORM)
-    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
-
-    for i in range(3):
-        main_frame.columnconfigure(i, weight=1)
-
-    for i in range(3):
-        main_frame.rowconfigure(i, weight=1 if i == 1 else 0)
-
-    frame_busca = tk.LabelFrame(main_frame, text='Filtrar Usuários', pady=5)
-    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
-
-    for i in range(3):
-        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
-
-    tk.Label(frame_busca, text="Usuário:").grid(row=0,column=0)
-    g.USUARIO_BUSCA_ENTRY=tk.Entry(frame_busca)
-    g.USUARIO_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
-    g.USUARIO_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('usuario'))
-
-    tk.Button(frame_busca,
-              text="Limpar",
-              command = lambda: limpar_busca('usuario')).grid(row=0, column=2, padx=5, pady=5)
-
-    columns = ("Id","Nome", "Permissões")
-    g.LIST_USUARIO = ttk.Treeview(main_frame, columns=columns, show="headings")
-    g.LIST_USUARIO["displaycolumns"] = ("Nome", "Permissões")
-    for col in columns:
-        g.LIST_USUARIO.heading(col, text=col)
-        g.LIST_USUARIO.column(col, anchor="center", width=20)
-
-    g.LIST_USUARIO.grid(row=1, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
-
-    tk.Button(main_frame,
-             text="Tornar Editor",
-             command=tornar_editor,
-             bg="green",
-             width=10).grid(row=2, column=0, padx=5, pady=5, sticky="w")
-
-    tk.Button(main_frame,
-              text="Resetar Senha",
-              command=resetar_senha,
-              bg="yellow",
-              width=10).grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-
-    tk.Button(main_frame,
-              text="Excluir",
-              command=excluir_usuario,
-              bg="red",
-              width=10).grid(row=2, column=2, padx=5, pady=5, sticky="e")
-
-    listar('usuario')
+    # Importar app para acessar a instância principal
+    from src.app import app
+    form = FormUsuario(root, app_principal=app)
+    if form.usuario_form:  # Verificar se a janela foi criada (permissão válida)
+        form.main(root, app)
 
 if __name__ == "__main__":
     main(None)
