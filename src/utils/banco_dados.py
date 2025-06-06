@@ -75,6 +75,9 @@ def obter_configuracoes(ui):
             'form': ui.espessura_form,
             'lista': ui.espessura_lista,
             'modelo': Espessura,
+            'campos': {
+                'valor': ui.espessura_valor_entry
+            },
             'item_id': Espessura.id,
             'valores': lambda e: (e.id, e.valor),
             'ordem': Espessura.valor,
