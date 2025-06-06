@@ -17,7 +17,7 @@ from src.config import globals as g
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
 
-def adicionar(tipo, form_ui):
+def adicionar(tipo, form_ui, app_principal):
     '''
     Adiciona um novo item ao banco de dados com base no tipo especificado.
     '''
@@ -36,7 +36,7 @@ def adicionar(tipo, form_ui):
 
     limpar_campos(tipo, form_ui)
     listar(tipo, form_ui)
-    atualizar_widgets(None, tipo)
+    atualizar_widgets(app_principal.cabecalho_ui, form_ui, tipo)
     buscar(tipo, form_ui)
 
 def adicionar_deducao(form_ui):
@@ -47,15 +47,15 @@ def adicionar_deducao(form_ui):
     canal_valor = form_ui.deducao_canal_combo.get()
     material_nome = form_ui.deducao_material_combo.get()
     nova_observacao_valor = form_ui.deducao_observacao_entry.get()
-    nova_forca_valor = ui.deducao_forca_entry.get()
+    nova_forca_valor = form_ui.deducao_forca_entry.get()
 
-    if not all([espessura_valor, canal_valor, material_nome, ui.deducao_valor_entry.get()]):
+    if not all([espessura_valor, canal_valor, material_nome, form_ui.deducao_valor_entry.get()]):
         messagebox.showerror("Erro",
                              "Material, espessura, canal e valor da dedução são obrigatórios.",
                              parent=g.DEDUC_FORM)
         return
 
-    nova_deducao_valor = float(ui.deducao_valor_entry.get().replace(',', '.'))
+    nova_deducao_valor = float(form_ui.deducao_valor_entry.get().replace(',', '.'))
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -82,18 +82,18 @@ def adicionar_deducao(form_ui):
                     f'espessura: {espessura_valor}, '
                     f'canal: {canal_valor}, '
                     f'material: {material_nome}, '
-                    f'valor: {nova_deducao_valor}', ui)
+                    f'valor: {nova_deducao_valor}', form_ui)
 
-def adicionar_espessura(ui):
+def adicionar_espessura(form_ui):
     '''
     Lógica para adicionar uma nova espessura.
     '''
-    espessura_valor = ui.espessura_valor_entry.get().replace(',', '.')
+    espessura_valor = form_ui.espessura_valor_entry.get().replace(',', '.')
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         messagebox.showwarning("Atenção!",
                                "A espessura deve conter apenas números ou números decimais.",
                                parent=g.ESPES_FORM)
-        ui.espessura_valor_entry.delete(0, tk.END)
+        form_ui.espessura_valor_entry.delete(0, tk.END)
         return
 
     espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
@@ -103,16 +103,16 @@ def adicionar_espessura(ui):
         return
 
     nova_espessura = Espessura(valor=espessura_valor)
-    salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}', ui)
+    salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}', form_ui)
 
-def adicionar_material(ui):
+def adicionar_material(form_ui):
     '''
     Lógica para adicionar um novo material.
     '''
-    nome_material = ui.material_nome_entry.get()
-    densidade_material = ui.material_densidade_entry.get()
-    escoamento_material = ui.material_escoamento_entry.get()
-    elasticidade_material = ui.material_elasticidade_entry.get()
+    nome_material = form_ui.material_nome_entry.get()
+    densidade_material = form_ui.material_densidade_entry.get()
+    escoamento_material = form_ui.material_escoamento_entry.get()
+    elasticidade_material = form_ui.material_elasticidade_entry.get()
 
     if not nome_material:
         messagebox.showerror("Erro", "O campo Material é obrigatório.", parent=g.MATER_FORM)
@@ -134,17 +134,17 @@ def adicionar_material(ui):
                     f'nome: {nome_material}, '
                     f'densidade: {densidade_material}, '
                     f'escoamento: {escoamento_material}, '
-                    f'elasticidade: {elasticidade_material}', ui)
+                    f'elasticidade: {elasticidade_material}', form_ui)
 
-def adicionar_canal(ui):
+def adicionar_canal(form_ui):
     '''
     Lógica para adicionar um novo canal.
     '''
-    valor_canal = ui.canal_valor_entry.get()
-    largura_canal = ui.canal_largura_entry.get()
-    altura_canal = ui.canal_altura_entry.get()
-    comprimento_total_canal = ui.canal_comprimento_total_entry.get()
-    observacao_canal = ui.canal_observacao_entry.get()
+    valor_canal = form_ui.canal_valor_entry.get()
+    largura_canal = form_ui.canal_largura_entry.get()
+    altura_canal = form_ui.canal_altura_entry.get()
+    comprimento_total_canal = form_ui.canal_comprimento_entry.get()
+    observacao_canal = form_ui.canal_observacao_entry.get()
 
     if not valor_canal:
         messagebox.showerror("Erro", "O campo Canal é obrigatório.")
@@ -168,9 +168,9 @@ def adicionar_canal(ui):
                     f'largura: {largura_canal}, '
                     f'altura: {altura_canal}, '
                     f'comprimento_total: {comprimento_total_canal}, '
-                    f'observacao: {observacao_canal}', ui)
+                    f'observacao: {observacao_canal}', form_ui)
 
-def editar(tipo, ui):
+def editar(tipo, form_ui, app_principal):
     '''
     Edita um item existente no banco de dados com base no tipo especificado.
     Os tipos disponíveis são:
@@ -186,14 +186,14 @@ def editar(tipo, ui):
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
         return
 
-    configuracoes = obter_configuracoes(ui)
+    configuracoes = obter_configuracoes(form_ui)
     config = configuracoes.get(tipo)
     
     if not config:
         messagebox.showerror("Erro", f"Configuração para '{tipo}' não encontrada.")
         return
 
-    obj = item_selecionado(tipo, ui)
+    obj = item_selecionado(tipo, form_ui)
     if not obj:
         return
         
@@ -227,12 +227,12 @@ def editar(tipo, ui):
     for entry in config['campos'].values():
         entry.delete(0, tk.END)
 
-    limpar_campos(tipo, ui)
-    listar(tipo, ui)
-    atualizar_widgets(None, None, tipo)
-    buscar(tipo, ui)
+    limpar_campos(tipo, form_ui)
+    listar(tipo, form_ui)
+    atualizar_widgets(app_principal.cabecalho_ui, None, tipo)
+    buscar(tipo, form_ui)
 
-def excluir(tipo, ui):
+def excluir(tipo, form_ui, app_principal):
     '''
     Exclui um item do banco de dados com base no tipo especificado.
     Os tipos disponíveis são:
@@ -245,7 +245,7 @@ def excluir(tipo, ui):
     #     return
     #//// REMOVER TEM_PERMISSAO
 
-    configuracoes = obter_configuracoes(ui)
+    configuracoes = obter_configuracoes(form_ui)
     config = configuracoes.get(tipo)
     
     if not config:
@@ -301,9 +301,9 @@ def excluir(tipo, ui):
                          f"{tipo.capitalize()} excluído(a) com sucesso!",
                          parent=config['form'])
 
-    limpar_campos(tipo, ui)
-    listar(tipo, ui)
-    atualizar_widgets(tipo)
+    limpar_campos(tipo, form_ui)
+    listar(tipo, form_ui)
+    atualizar_widgets(app_principal.cabecalho_ui, None, tipo)
 
 def preencher_campos(tipo, form_ui):
     '''
