@@ -131,7 +131,7 @@ class FormDeducao:
                 text="Atualizar",
                 bg="green",
                 width=10,
-                command=lambda: editar('dedução', self)
+                command=lambda: editar('dedução', self, app_principal)
             ).grid(
                 row=1,
                 column=3,
@@ -145,7 +145,7 @@ class FormDeducao:
                 text="Excluir",
                 bg="red",
                 width=10,
-                command=lambda: excluir('dedução', self)
+                command=lambda: excluir('dedução', self, app_principal)
             ).grid(
                 row=2,
                 column=0,
@@ -163,7 +163,7 @@ class FormDeducao:
                 text="Adicionar",
                 bg="cyan",
                 width=10,
-                command=lambda: adicionar('dedução', self)
+                command=lambda: adicionar('dedução', self, app_principal)
             ).grid(
                 row=1,
                 column=3,

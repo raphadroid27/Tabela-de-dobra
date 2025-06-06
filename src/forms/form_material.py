@@ -125,12 +125,12 @@ class FormMaterial:
 
             tk.Button(self.frame,
                       text="Excluir",
-                      command=lambda: excluir('material', self),
+                      command=lambda: excluir('material', self, app_principal),
                       bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
             tk.Button(frame_edicoes,
                       text="Atualizar",
-                      command=lambda: editar('material', self),
+                      command=lambda: editar('material', self, app_principal),
                       bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
         else:
             if self.material_form:
@@ -138,7 +138,7 @@ class FormMaterial:
             frame_edicoes.config(text='Novo Material')
             tk.Button(frame_edicoes,
                       text="Adicionar",
-                      command=lambda: adicionar('material', self),
+                      command=lambda: adicionar('material', self, app_principal),
                       bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
 
     def main(self, root, app_principal):

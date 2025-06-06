@@ -120,12 +120,12 @@ class FormCanal:
             frame_edicoes.config(text='Editar Canal')
 
             tk.Button(self.frame, text="Excluir",
-                      command=lambda: excluir('canal', self),
+                      command=lambda: excluir('canal', self, app_principal),
                       bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
             tk.Button(frame_edicoes,
                       text="Atualizar",
-                      command=lambda: editar('canal', self),
+                      command=lambda: editar('canal', self, app_principal),
                       bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
         else:
             if self.canal_form:
@@ -133,7 +133,7 @@ class FormCanal:
             frame_edicoes.config(text='Novo Canal')
             tk.Button(frame_edicoes,
                       text="Adicionar",
-                      command=lambda: adicionar('canal', self),
+                      command=lambda: adicionar('canal', self, app_principal),
                       bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
 
     def main(self, root, app_principal):

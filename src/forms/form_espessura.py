@@ -102,12 +102,12 @@ class FormEspessura:
 
             tk.Button(frame_edicoes,
                       text="Atualizar",
-                      command=lambda: editar('espessura', self),
+                      command=lambda: editar('espessura', self, app_principal),
                       bg="green").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
             tk.Button(self.frame,
                       text="Excluir",
-                      command=lambda: excluir('espessura', self),
+                      command=lambda: excluir('espessura', self, app_principal),
                       bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         else:
             if self.espessura_form:
@@ -116,7 +116,7 @@ class FormEspessura:
 
             tk.Button(frame_edicoes,
                       text="Adicionar",
-                      command=lambda: adicionar('espessura', self),
+                      command=lambda: adicionar('espessura', self, app_principal),
                       bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
     def main(self, root, app_principal):
