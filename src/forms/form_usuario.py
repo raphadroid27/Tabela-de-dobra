@@ -6,16 +6,17 @@
 # para variáveis globais e o módulo funcoes para operações relacionadas ao banco de dados.
 '''
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.interface import (listar, limpar_busca, configurar_main_frame)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar
-from src.utils.usuarios import (tem_permissao,
-                                 tornar_editor,
+from src.utils.usuarios import (tornar_editor,
                                  resetar_senha,
                                  excluir_usuario
                                  )
+from src.utils.banco_dados import session
+from src.models.models import Usuario
 from src.config import globals as g
 
 class FormUsuario:
@@ -24,10 +25,7 @@ class FormUsuario:
         '''
         Configura a janela principal do formulário de usuários.
         '''
-        # Verificar se o usuário é administrador
-        if not tem_permissao('usuario', 'admin', self):
-            return
-
+        # Criar o formulário (permissão já foi verificada na função main)
         self.usuario_form = tk.Toplevel(root)
         self.usuario_form.title("Editar/Excluir Usuário")
         self.usuario_form.geometry("300x280")
@@ -37,7 +35,7 @@ class FormUsuario:
         self.usuario_form.iconbitmap(icone_path)
 
         no_topo(self.usuario_form)
-        posicionar_janela(self.usuario_form, 'centro')
+        #posicionar_janela(self.usuario_form, 'centro')
 
     def criar_frame_busca(self, app_principal):
         '''
@@ -56,7 +54,7 @@ class FormUsuario:
 
         tk.Button(frame_busca,
                   text="Limpar",
-                  command=lambda: limpar_busca('usuario', app_principal, self)).grid(row=0, column=2, padx=5, pady=5)
+                  command=lambda: limpar_busca('usuario', self)).grid(row=0, column=2, padx=5, pady=5)
 
     def criar_lista_usuarios(self, app_principal):
         '''
@@ -71,7 +69,7 @@ class FormUsuario:
             self.usuario_lista.column(col, anchor="center", width=20)
 
         self.usuario_lista.grid(row=1, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
-        listar('usuario', app_principal, ui=self)
+        listar('usuario', ui=self)
 
     def configurar_botoes(self, app_principal):
         '''
@@ -79,19 +77,19 @@ class FormUsuario:
         '''
         tk.Button(self.frame,
                  text="Tornar Editor",
-                 command=lambda: tornar_editor(app_principal, self),
+                 command=lambda: tornar_editor(self),
                  bg="green",
                  width=10).grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
         tk.Button(self.frame,
                   text="Resetar Senha",
-                  command=lambda: resetar_senha(app_principal, self),
+                  command=lambda: resetar_senha(self),
                   bg="yellow",
                   width=10).grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
         tk.Button(self.frame,
                   text="Excluir",
-                  command=lambda: excluir_usuario(app_principal, self),
+                  command=lambda: excluir_usuario(self),
                   bg="red",
                   width=10).grid(row=2, column=2, padx=5, pady=5, sticky="e")
 
@@ -115,8 +113,26 @@ def main(root, app_principal=None):
     '''
     Função principal para inicializar o formulário de usuários.
     '''
-    # Importar app para acessar a instância principal
-    form = FormUsuario(root, app_principal, form_ui=None)
+    # Verificar permissão diretamente sem usar obter_configuracoes
+    
+    try:
+        # Verificar se há usuário logado
+        if not g.USUARIO_ID:
+            messagebox.showerror("Erro", "Você precisa estar logado para acessar esta função.")
+            return
+        
+        # Buscar o usuário no banco de dados
+        usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
+        if not usuario_obj or usuario_obj.role != "admin":
+            messagebox.showerror("Erro", "Você não tem permissão para acessar esta função.")
+            return
+    
+    except Exception as e:
+        messagebox.showerror("Erro", f"Erro ao verificar permissões: {str(e)}")
+        return
+    
+    # Se tem permissão, criar o formulário
+    form = FormUsuario(root)
     form.main(root, app_principal)
 
 if __name__ == "__main__":
