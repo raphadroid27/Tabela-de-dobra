@@ -36,7 +36,7 @@ class FormDeducao:
         icone_path = obter_caminho_icone()
         self.deducao_form.iconbitmap(icone_path)
 
-        no_topo(self.deducao_form)
+        no_topo(self.deducao_form, app_principal)
         #posicionar_janela(self.deducao_form, None, app_principal)
 
     def criar_frame_busca(self, app_principal):

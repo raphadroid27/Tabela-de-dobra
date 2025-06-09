@@ -21,7 +21,7 @@ from src.config import globals as g
 
 class FormUsuario:
 
-    def __init__(self, root):
+    def __init__(self, root, app_principal):
         '''
         Configura a janela principal do formulário de usuários.
         '''
@@ -34,7 +34,7 @@ class FormUsuario:
         icone_path = obter_caminho_icone()
         self.usuario_form.iconbitmap(icone_path)
 
-        no_topo(self.usuario_form)
+        no_topo(self.usuario_form, app_principal)
         #posicionar_janela(self.usuario_form, 'centro')
 
     def criar_frame_busca(self, app_principal):

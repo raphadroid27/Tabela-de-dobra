@@ -36,7 +36,7 @@ class FormMaterial:
         icone_path = obter_caminho_icone()
         self.material_form.iconbitmap(icone_path)
 
-        no_topo(self.material_form)
+        no_topo(self.material_form, app_principal)
         #posicionar_janela(self.material_form, None, app_principal)
 
     def criar_frame_busca(self, app_principal):
