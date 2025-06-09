@@ -251,80 +251,82 @@ def on_closing():
     salvar_configuracao(config)
     app.janela_principal.destroy()
 
-def configurar_menu():
+def configurar_menu(app_principal):
     '''
     Configura o menu superior da janela principal.
     '''
-    menu_bar = tk.Menu(app.janela_principal)
-    app.janela_principal.config(menu=menu_bar)
+    menu_bar = tk.Menu(app_principal.janela_principal)
+    app_principal.janela_principal.config(menu=menu_bar)
 
     # Menu Arquivo
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
     file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao,
                                                                            'editar_deducao',
-                                                                           app.janela_principal))
+                                                                           app_principal.janela_principal))
 
     file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material,
                                                                             'editar_material',
-                                                                            app.janela_principal))
+                                                                            app_principal.janela_principal))
 
     file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura,
                                                                            'editar_espessura',
-                                                                           app.janela_principal))
+                                                                           app_principal.janela_principal))
 
     file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal,
                                                                        'editar_canal',
-                                                                       app.janela_principal))
+                                                                       app_principal.janela_principal))
     file_menu.add_separator()
-    file_menu.add_command(label="Sair", command=app.janela_principal.destroy)    # Menu Editar
+    file_menu.add_command(label="Sair", command=app_principal.janela_principal.destroy)
+    
+    # Menu Editar
     edit_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Editar", menu=edit_menu)
     edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao,
                                                                            'editar_deducao',
-                                                                           app.janela_principal))
+                                                                           app_principal.janela_principal))
 
     edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material,
                                                                            'editar_material',
-                                                                           app.janela_principal))
+                                                                           app_principal.janela_principal))
 
     edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura,
                                                                            'editar_espessura',
-                                                                           app.janela_principal))
+                                                                           app_principal.janela_principal))
 
     edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal,
                                                                        'editar_canal',
-                                                                       app.janela_principal))
+                                                                       app_principal.janela_principal))
 
     # Menu Opções
     opcoes_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
-    g.NO_TOPO_VAR = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="No topo", variable=g.NO_TOPO_VAR,
-                                command=lambda: no_topo(app.janela_principal))
+    app_principal.no_topo_var = tk.IntVar()
+    opcoes_menu.add_checkbutton(label="No topo", variable=app_principal.no_topo_var,
+                                command=lambda: no_topo(app_principal.janela_principal, app_principal))
 
     # Menu ferramentas
     ferramentas_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ferramentas", menu=ferramentas_menu)
     ferramentas_menu.add_command(label="Razão Raio/Espessura",
-                                 command=lambda: form_razao_rie.main(app.janela_principal))
+                                 command=lambda: form_razao_rie.main(app_principal.janela_principal))
 
     # Menu Usuário
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
-    usuario_menu.add_command(label="Login", command=lambda: form_aut.main(app.janela_principal, app, login=True))
+    usuario_menu.add_command(label="Login", command=lambda: form_aut.main(app_principal.janela_principal, app_principal, login=True))
 
-    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_aut.main(app.janela_principal, app, login=False))
+    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_aut.main(app_principal.janela_principal, app_principal, login=False))
 
     usuario_menu.add_command(label="Gerenciar Usuários",
-                             command=lambda: form_usuario.main(app.janela_principal, app))
+                             command=lambda: form_usuario.main(app_principal.janela_principal, app_principal))
     usuario_menu.add_separator()
-    usuario_menu.add_command(label="Sair", command=lambda: logout(app))
+    usuario_menu.add_command(label="Sair", command=lambda: logout(app_principal))
 
     # Menu Ajuda
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
-    help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(app.janela_principal))
+    help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(app_principal.janela_principal))
 
 def main():
     '''
@@ -336,8 +338,8 @@ def main():
     # Configurar protocolo de fechamento da janela
     app.janela_principal.protocol("WM_DELETE_WINDOW", on_closing)
     
-    # Configurar menu
-    configurar_menu()
+    # Configurar menu - passar a instância como parâmetro
+    configurar_menu(app)
     
     # Carregar interface inicial
     carregar_interface()
