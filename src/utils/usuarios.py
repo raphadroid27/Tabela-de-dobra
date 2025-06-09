@@ -119,28 +119,28 @@ def logout(app_principal):
     app_principal.janela_principal.title("Cálculo de Dobra")
     messagebox.showinfo("Logout", "Logout efetuado com sucesso.")
 
-def resetar_senha():
+def resetar_senha(form_ui):
     '''
     Reseta a senha do usuário selecionado na lista de usuários.
     '''
-    selected_item = g.LIST_USUARIO.selection()
+    selected_item = form_ui.usuario_lista.selection()
     if not selected_item:
         tk.messagebox.showwarning("Aviso",
                                   "Selecione um usuário para resetar a senha.",
-                                  parent=g.USUAR_FORM)
+                                  parent=form_ui.usuario_form)
         return
 
-    user_id = g.LIST_USUARIO.item(selected_item, "values")[0]
+    user_id = form_ui.usuario_lista.item(selected_item, "values")[0]
     novo_password = "nova_senha"  # Defina a nova senha padrão aqui
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
     if usuario_obj:
         usuario_obj.senha = novo_password
         tratativa_erro()
-        tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.", parent=g.USUAR_FORM)
+        tk.messagebox.showinfo("Sucesso", "Senha resetada com sucesso.", parent=form_ui.usuario_form)
     else:
-        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.USUAR_FORM)
+        tk.messagebox.showerror("Erro", "Usuário não encontrado.", parent=form_ui.usuario_form)
 
-def excluir_usuario(tipo, form_ui):
+def excluir_usuario(form_ui):
     '''
     Exclui o usuário selecionado na lista de usuários.
     '''
@@ -155,61 +155,61 @@ def excluir_usuario(tipo, form_ui):
     obj_id = item['values'][0]
     obj = session.query(Usuario).filter_by(id=obj_id).first()
     if obj is None:
-        messagebox.showerror("Erro", "Usuário não encontrado.", parent=g.USUAR_FORM)
+        messagebox.showerror("Erro", "Usuário não encontrado.", parent=form_ui.usuario_form)
         return
 
     if obj.role == "admin":
         messagebox.showerror("Erro",
                              "Não é possível excluir um administrador.",
-                             parent=g.USUAR_FORM)
+                             parent=form_ui.usuario_form)
         return
 
     aviso = messagebox.askyesno("Atenção!",
                                 "Tem certeza que deseja excluir o usuário?",
-                                parent=g.USUAR_FORM)
+                                parent=form_ui.usuario_form)
     if not aviso:
         return
 
     session.delete(obj)
     tratativa_erro()
-    g.LIST_USUARIO.delete(selected_item)
+    form_ui.usuario_lista.delete(selected_item)
     messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!", parent=g.USUAR_FORM)
 
-    listar('usuario')
+    listar('usuario', form_ui)
 
-def tornar_editor():
+def tornar_editor(form_ui):
     '''
     Promove o usuário selecionado a editor.
     '''
-    selected_item = g.LIST_USUARIO.selection()
+    selected_item = form_ui.usuario_lista.selection()
     if not selected_item:
         tk.messagebox.showwarning("Aviso",
                                   "Selecione um usuário para promover a editor.",
-                                  parent=g.USUAR_FORM)
+                                  parent=form_ui.usuario_form)
         return
 
-    user_id = g.LIST_USUARIO.item(selected_item, "values")[0]
+    user_id = form_ui.usuario_lista.item(selected_item, "values")[0]
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
 
     if usuario_obj:
         if usuario_obj.role == "admin":
             tk.messagebox.showerror("Erro",
                                     "O usuário já é um administrador.",
-                                    parent=g.USUAR_FORM)
+                                    parent=form_ui.usuario_form)
             return
         if usuario_obj.role == "editor":
             tk.messagebox.showinfo("Informação",
                                    "O usuário já é um editor.",
-                                   parent=g.USUAR_FORM)
+                                   parent=form_ui.usuario_form)
             return
 
         usuario_obj.role = "editor"
         tratativa_erro()
         tk.messagebox.showinfo("Sucesso",
                                "Usuário promovido a editor com sucesso.",
-                               parent=g.USUAR_FORM)
-        listar('usuario')  # Atualiza a lista de usuários na interface
+                               parent=form_ui.usuario_form)
+        listar('usuario', form_ui)
     else:
         tk.messagebox.showerror("Erro",
                                 "Usuário não encontrado.",
-                                parent=g.USUAR_FORM)
+                                parent=form_ui.usuario_form)
