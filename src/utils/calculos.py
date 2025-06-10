@@ -190,11 +190,11 @@ def verificar_aba_minima(cabecalho_ui, dobras_ui, dobra, i, w):
             entry_widget.config(fg="black", bg="white")
             print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
 
-def razao_ri_espessura(cabecalho_ui):
+def razao_ri_espessura(cabecalho_ui, rie_ui):
     '''
     Calcula a razão entre o raio interno e a espessura, atualizando o label correspondente.
     '''
-    if not g.RAZAO_RIE_LBL or not g.RAZAO_RIE_LBL.winfo_exists():
+    if not rie_ui.razao_rie_widget or not rie_ui.razao_rie_widget.winfo_exists():
         return
 
     try:
@@ -212,7 +212,7 @@ def razao_ri_espessura(cabecalho_ui):
         razao = min(razao, 10)
 
         # Atualiza o label com o valor calculado
-        g.RAZAO_RIE_LBL.config(text=f"{razao:.1f}")
+        rie_ui.razao_rie_widget.config(text=f"{razao:.1f}")
 
     except ValueError:
         # Trata erros de conversão
