@@ -119,7 +119,7 @@ class FormAutenticacao:
         '''
         Inicializa e exibe o formulário de autenticação.
         '''
-        #posicionar_janela(self.auten_form, 'centro')
+        posicionar_janela(self.auten_form, self.app_principal, 'centro')
         self.criar_frame_principal()
         self.criar_campos_usuario_senha()
         self.configurar_botoes()

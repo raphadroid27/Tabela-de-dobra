@@ -30,12 +30,12 @@ class FormUsuario:
         self.usuario_form.title("Editar/Excluir Usuário")
         self.usuario_form.geometry("300x280")
         self.usuario_form.resizable(False, False)
-
+        
         icone_path = obter_caminho_icone()
         self.usuario_form.iconbitmap(icone_path)
 
         no_topo(self.usuario_form, app_principal)
-        #posicionar_janela(self.usuario_form, 'centro')
+        posicionar_janela(self.usuario_form, app_principal, 'centro')
 
     def criar_frame_busca(self, app_principal):
         '''

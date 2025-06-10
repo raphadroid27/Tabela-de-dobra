@@ -38,7 +38,7 @@ class FormEspessura:
         self.espessura_form.iconbitmap(icone_path)
 
         no_topo(self.espessura_form, app_principal)
-        #posicionar_janela(self.espessura_form, None, app_principal)
+        posicionar_janela(self.espessura_form, app_principal, None)
 
     def criar_frame_busca(self, app_principal):
         '''

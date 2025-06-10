@@ -14,7 +14,7 @@ from src.config import globals as g
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 
-def main(root):
+def main(root, app_principal=None):
     '''
     Função principal que cria a janela "Sobre".
     '''
@@ -22,14 +22,12 @@ def main(root):
     g.SOBRE_FORM.title("Sobre")
     g.SOBRE_FORM.geometry("300x210")
     g.SOBRE_FORM.resizable(False, False)
-    g.SOBRE_FORM.attributes("-topmost", True)
-
-    # Define o ícone
+    g.SOBRE_FORM.attributes("-topmost", True)    # Define o ícone
     icone_path = obter_caminho_icone()
     g.SOBRE_FORM.iconbitmap(icone_path)
 
-    no_topo(g.SOBRE_FORM)
-    posicionar_janela(g.SOBRE_FORM, 'centro')
+    no_topo(g.SOBRE_FORM, app_principal)
+    posicionar_janela(g.SOBRE_FORM, app_principal, 'centro')
 
     label_titulo = tk.Label(g.SOBRE_FORM, text="Cálculo de Dobra", font=("Arial", 16, "bold"))
     label_titulo.pack(pady=10)

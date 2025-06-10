@@ -8,7 +8,7 @@ from src.utils.utilitarios import obter_caminho_icone
 from src.utils.calculos import razao_ri_espessura
 from src.config import globals as g
 
-def main(root):
+def main(root, app_principal=None):
     '''
     Inicializa e exibe o formulário de cálculo de razão raio interno / espessura.
     Configura a interface gráfica para exibir os valores e fatores K correspondentes.
@@ -19,14 +19,12 @@ def main(root):
     g.RIE_FORM = tk.Toplevel(root)
     g.RIE_FORM.title("Raio Interno / Espessura")
     g.RIE_FORM.geometry("240x280")
-    g.RIE_FORM.resizable(False, False)
-
-    # Define o ícone
+    g.RIE_FORM.resizable(False, False)    # Define o ícone
     icone_path = obter_caminho_icone()
     g.RIE_FORM.iconbitmap(icone_path)
 
-    no_topo(g.RIE_FORM)
-    posicionar_janela(g.RIE_FORM,None)
+    no_topo(g.RIE_FORM, app_principal)
+    posicionar_janela(g.RIE_FORM, app_principal, None)
 
     main_frame = tk.Frame(g.RIE_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
