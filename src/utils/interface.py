@@ -257,34 +257,34 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
     '''
     configuracoes = {
         'dedução': {
-            'label': g.DED_LBL,
+            'label': cabecalho_ui.deducao_widget,
             'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'), 
                                      calcular_k_offset(cabecalho_ui))
         },
         'fator_k': {
-            'label': g.K_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'), 
+            'label': cabecalho_ui.fator_k_widget,
+            'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'),
                                      calcular_k_offset(cabecalho_ui))
         },
         'offset': {
-            'label': g.OFFSET_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'), 
+            'label': cabecalho_ui.offset_widget,
+            'funcao_calculo': lambda: (atualizar_widgets(cabecalho_ui, None, 'dedução'),
                                      calcular_k_offset(cabecalho_ui))
         },
         'medida_dobra': {
-            'label': lambda numero: getattr(g, f'medidadobra{numero}_label_{w}', None),
+            'label': lambda numero: getattr(dobras_ui, f'medidadobra{numero}_label_{w}', None),
             'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         },
         'metade_dobra': {
-            'label': lambda numero: getattr(g, f'metadedobra{numero}_label_{w}', None),
+            'label': lambda numero: getattr(dobras_ui, f'metadedobra{numero}_label_{w}', None),
             'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         },
         'blank': {
-            'label': getattr(g, f'medida_blank_label_{w}', None),
+            'label': getattr(dobras_ui, f'medida_blank_label_{w}', None),
             'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         },
         'metade_blank': {
-            'label': getattr(g, f'metade_blank_label_{w}', None),
+            'label': getattr(dobras_ui, f'metade_blank_label_{w}', None),
             'funcao_calculo': lambda: calcular_dobra(cabecalho_ui, dobras_ui, w)
         }
     }
@@ -425,11 +425,11 @@ def limpar_tudo(cabecalho_ui, dobras_ui, app_principal):
     except Exception as e:
         print(f"Erro ao limpar todos os campos: {e}")
 
-def limpar_busca(tipo, ui):
+def limpar_busca(tipo, form_ui):
     '''
     Limpa os campos de busca e atualiza a lista correspondente.
     '''
-    configuracoes = obter_configuracoes(ui)
+    configuracoes = obter_configuracoes(form_ui)
     config = configuracoes.get(tipo)
     
     if not config:
@@ -444,7 +444,7 @@ def limpar_busca(tipo, ui):
         if 'busca' in config and config['busca']:
             config['busca'].delete(0, tk.END)
 
-    listar(tipo, ui)
+    listar(tipo, form_ui)
 
 def focus_next_entry(current_index, w, dobras_ui):
     '''
