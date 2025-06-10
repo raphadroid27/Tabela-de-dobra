@@ -25,9 +25,7 @@ class FormAutenticacao:
         self.app_principal = app_principal
         self.login = login  # Adicionar o atributo login
         
-        # if self.auten_form:
-        #     self.auten_form.destroy()
-
+        # Criar a janela de autenticação
         self.auten_form = tk.Toplevel(root)
         
         self.auten_form.geometry("200x120")
@@ -43,7 +41,7 @@ class FormAutenticacao:
         self.auten_form.attributes("-topmost", True)
         self.auten_form.focus()
         
-        desabilitar_janelas(app_principal)
+        desabilitar_janelas(app_principal, excluir_janela=self.auten_form)
         self.auten_form.protocol("WM_DELETE_WINDOW", lambda: [habilitar_janelas(app_principal),
                                                              self.auten_form.destroy()
                                                              if self.auten_form

@@ -1,6 +1,7 @@
 '''
 Módulo com funções auxiliares para manipulação de janelas no aplicativo.
 '''
+import tkinter as tk
 from src.config import globals as g
 
 def no_topo(form, app_principal):
@@ -49,11 +50,49 @@ def posicionar_janela(form, app_principal, posicao=None):
 
     form.geometry(f"+{x}+{y}")
 
-def desabilitar_janelas(app_principal):
+def obter_todas_janelas_toplevel(app_principal, excluir_janela=None):
     '''
-    Desabilita todas as janelas do aplicativo.
+    Obtém todas as janelas Toplevel abertas do aplicativo.
+    
+    Args:
+        app_principal: Instância do aplicativo principal
+        excluir_janela: Janela que deve ser excluída da lista (por exemplo, o próprio auten_form)
     '''
-    forms = [app_principal.janela_principal]
+    janelas = []
+    
+    def buscar_toplevel(widget):
+        for child in widget.winfo_children():
+            if isinstance(child, tk.Toplevel):
+                # Só adiciona se não for a janela a ser excluída
+                if excluir_janela is None or child != excluir_janela:
+                    janelas.append(child)
+            # Continua a busca recursivamente
+            buscar_toplevel(child)
+    
+    # Buscar a partir da janela principal
+    if app_principal and app_principal.janela_principal:
+        buscar_toplevel(app_principal.janela_principal)
+    
+    return janelas
+
+def desabilitar_janelas(app_principal, excluir_janela=None):
+    '''
+    Desabilita todas as janelas do aplicativo, incluindo a principal e todas as Toplevel abertas,
+    exceto a janela especificada em excluir_janela.
+    
+    Args:
+        app_principal: Instância do aplicativo principal
+        excluir_janela: Janela que deve permanecer habilitada (por exemplo, auten_form)
+    '''
+    if not app_principal:
+        return
+        
+    # Obter todas as janelas Toplevel abertas, excluindo a especificada
+    janelas_toplevel = obter_todas_janelas_toplevel(app_principal, excluir_janela)
+    
+    # Lista de todas as janelas (principal + toplevel), excluindo a janela especificada
+    forms = [app_principal.janela_principal] + janelas_toplevel
+    
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', True)
@@ -61,9 +100,17 @@ def desabilitar_janelas(app_principal):
 
 def habilitar_janelas(app_principal):
     '''
-    Habilita todas as janelas do aplicativo.
+    Habilita todas as janelas do aplicativo, incluindo a principal e todas as Toplevel abertas.
     '''
-    forms = [app_principal.janela_principal]
+    if not app_principal:
+        return
+        
+    # Obter todas as janelas Toplevel abertas
+    janelas_toplevel = obter_todas_janelas_toplevel(app_principal)
+    
+    # Lista de todas as janelas (principal + toplevel)
+    forms = [app_principal.janela_principal] + janelas_toplevel
+    
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', False)
