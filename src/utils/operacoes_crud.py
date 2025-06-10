@@ -52,7 +52,7 @@ def adicionar_deducao(form_ui):
     if not all([espessura_valor, canal_valor, material_nome, form_ui.deducao_valor_entry.get()]):
         messagebox.showerror("Erro",
                              "Material, espessura, canal e valor da dedução são obrigatórios.",
-                             parent=g.DEDUC_FORM)
+                             parent=form_ui.deducao_form)
         return
 
     nova_deducao_valor = float(form_ui.deducao_valor_entry.get().replace(',', '.'))
@@ -92,14 +92,14 @@ def adicionar_espessura(form_ui):
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         messagebox.showwarning("Atenção!",
                                "A espessura deve conter apenas números ou números decimais.",
-                               parent=g.ESPES_FORM)
+                               parent=form_ui.espessura_form)
         form_ui.espessura_valor_entry.delete(0, tk.END)
         return
 
     espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
     if espessura_existente:
         messagebox.showerror("Erro", "Espessura já existe no banco de dados.",
-                             parent=g.ESPES_FORM)
+                             parent=form_ui.espessura_form)
         return
 
     nova_espessura = Espessura(valor=espessura_valor)
@@ -115,12 +115,12 @@ def adicionar_material(form_ui):
     elasticidade_material = form_ui.material_elasticidade_entry.get()
 
     if not nome_material:
-        messagebox.showerror("Erro", "O campo Material é obrigatório.", parent=g.MATER_FORM)
+        messagebox.showerror("Erro", "O campo Material é obrigatório.", parent=form_ui.material_form)
         return
 
     material_existente = session.query(Material).filter_by(nome=nome_material).first()
     if material_existente:
-        messagebox.showerror("Erro", "Material já existe no banco de dados.", parent=g.MATER_FORM)
+        messagebox.showerror("Erro", "Material já existe no banco de dados.", parent=form_ui.material_form)
         return
 
     novo_material = Material(
@@ -147,7 +147,7 @@ def adicionar_canal(form_ui):
     observacao_canal = form_ui.canal_observacao_entry.get()
 
     if not valor_canal:
-        messagebox.showerror("Erro", "O campo Canal é obrigatório.")
+        messagebox.showerror("Erro", "O campo Canal é obrigatório.", parent=form_ui.canal_form)
         return
 
     canal_existente = session.query(Canal).filter_by(valor=valor_canal).first()
