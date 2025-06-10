@@ -53,7 +53,7 @@ def desabilitar_janelas(app_principal):
     '''
     Desabilita todas as janelas do aplicativo.
     '''
-    forms = [app_principal.janela_principal, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
+    forms = [app_principal.janela_principal]
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', True)
@@ -63,7 +63,7 @@ def habilitar_janelas(app_principal):
     '''
     Habilita todas as janelas do aplicativo.
     '''
-    forms = [app_principal.janela_principal, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
+    forms = [app_principal.janela_principal]
     for form in forms:
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', False)
