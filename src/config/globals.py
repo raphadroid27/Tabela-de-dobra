@@ -32,6 +32,3 @@ RAIO_K = {
     9.0: 0.50,
     10.0: 0.50
 }
-
-# Widget para razão R/E
-RAZAO_RIE_LBL = None
