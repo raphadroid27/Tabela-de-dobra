@@ -85,7 +85,7 @@ class CabecalhoUI:
                                            'label',
                                            (3, 1))
         self.fator_k_widget.bind("<Button-1>",
-                            func=lambda event: copiar('fator_k'))
+                            func=lambda event: copiar(self.dobras_ui, self, 'fator_k'))
         tp.ToolTip(self.fator_k_widget, "Clique para copiar o fator K.")
 
         # Dedução
@@ -94,7 +94,7 @@ class CabecalhoUI:
                                            'label',
                                            (3, 2))
         self.deducao_widget.bind("<Button-1>",
-                            func=lambda event: copiar('dedução'))
+                            func=lambda event: copiar(self.dobras_ui, self, 'dedução'))
         tp.ToolTip(self.deducao_widget, "Clique para copiar a dedução.")
 
         # Offset
@@ -103,7 +103,7 @@ class CabecalhoUI:
                                           'label',
                                           (3, 3))
         self.offset_widget.bind("<Button-1>",
-                           func=lambda event: copiar('offset'))
+                           func=lambda event: copiar(self.dobras_ui, self, 'offset'))
         tp.ToolTip(self.offset_widget, "Clique para copiar o offset.")
 
         # Dedução específica

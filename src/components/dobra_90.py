@@ -69,7 +69,7 @@ class DobraUI:
                                                             width=LARGURA))
             label = getattr(self, f'medidadobra{i}_label_{w}')
             label.grid(row=i, column=2, sticky='we', padx=2)
-            label.bind("<Button-1>", lambda event, i=i: copiar('medida_dobra', i, w))
+            label.bind("<Button-1>", lambda event, i=i: copiar(self, cabecalho_ui, 'medida_dobra', i, w))
             tp.ToolTip(label, "Clique para copiar a medida da dobra.")
 
             setattr(self, f'metadedobra{i}_label_{w}', tk.Label(self.frame,
@@ -77,7 +77,7 @@ class DobraUI:
                                                             width=LARGURA))
             label = getattr(self, f'metadedobra{i}_label_{w}')
             label.grid(row=i, column=3, sticky='we', padx=2)
-            label.bind("<Button-1>", lambda event, i=i: copiar('metade_dobra', i, w))
+            label.bind("<Button-1>", lambda event, i=i: copiar(self, cabecalho_ui, 'metade_dobra', i, w))
             tp.ToolTip(label, "Clique para copiar a metade da dobra.")
 
         tk.Label(self.frame, text="Medida do Blank:").grid(row=i+1,
@@ -91,7 +91,7 @@ class DobraUI:
                                                     width=LARGURA))
         medida_blank = getattr(self, f'medida_blank_label_{w}')
         medida_blank.grid(row=i+1, column=2, sticky='we', padx=2)
-        medida_blank.bind("<Button-1>", lambda event: copiar('blank', i, w))
+        medida_blank.bind("<Button-1>", lambda event: copiar(self, cabecalho_ui, 'blank', None, w))
         tp.ToolTip(medida_blank, "Clique para copiar a medida do blank.")
 
         setattr(self, f'metade_blank_label_{w}', tk.Label(self.frame,
@@ -99,5 +99,5 @@ class DobraUI:
                                                     width=LARGURA))
         metade_blank = getattr(self, f'metade_blank_label_{w}')
         metade_blank.grid(row=i+1, column=3, sticky='we', padx=2)
-        metade_blank.bind("<Button-1>", lambda event: copiar('metade_blank', i, w))
+        metade_blank.bind("<Button-1>", lambda event: copiar(self, cabecalho_ui, 'metade_blank', None, w))
         tp.ToolTip(metade_blank, "Clique para copiar a metade do blank.")
