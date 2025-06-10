@@ -309,7 +309,7 @@ def configurar_menu(app_principal):
     ferramentas_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ferramentas", menu=ferramentas_menu)
     ferramentas_menu.add_command(label="Razão Raio/Espessura",
-                                 command=lambda: form_razao_rie.main(app_principal.janela_principal))
+                                 command=lambda: form_razao_rie.main(app_principal.janela_principal, app_principal))
 
     # Menu Usuário
     usuario_menu = tk.Menu(menu_bar, tearoff=0)
@@ -326,7 +326,7 @@ def configurar_menu(app_principal):
     # Menu Ajuda
     help_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Ajuda", menu=help_menu)
-    help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(app_principal.janela_principal))
+    help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(app_principal.janela_principal, app_principal))
 
 def main():
     '''
