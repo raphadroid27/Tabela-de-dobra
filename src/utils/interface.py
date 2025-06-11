@@ -26,21 +26,22 @@ def atualizar_razao_ri_espessura_se_aberta(cabecalho_ui):
     '''
     try:
         # Importar aqui para evitar importação circular
-        from src.forms.form_razao_rie import FormRaioInternoEspessura
+        from src.forms.form_razao_rie import FormRIE
         
-        # Verificar se existe uma instância ativa da janela de razão
-        if (FormRaioInternoEspessura.instancia_ativa and 
-            hasattr(FormRaioInternoEspessura.instancia_ativa, 'rie_form') and
-            FormRaioInternoEspessura.instancia_ativa.rie_form and
-            FormRaioInternoEspessura.instancia_ativa.rie_form.winfo_exists() and
-            hasattr(FormRaioInternoEspessura.instancia_ativa, 'razao_rie_widget') and
-            FormRaioInternoEspessura.instancia_ativa.razao_rie_widget):
+        # Verificação simplificada da instância ativa
+        instancia = FormRIE.instancia_ativa
+        
+        # Verificar se a instância existe e a janela ainda está ativa
+        if (instancia and 
+            hasattr(instancia, 'rie_form') and 
+            instancia.rie_form and
+            instancia.rie_form.winfo_exists()):
             
             # Chamar a função de cálculo da razão
-            razao_ri_espessura(cabecalho_ui, FormRaioInternoEspessura.instancia_ativa)
+            razao_ri_espessura(cabecalho_ui, instancia)
             
-    except (ImportError, AttributeError, tk.TclError):
-        # Se houver erro (janela fechada, importação circular, etc.), simplesmente ignora
+    except Exception:
+        # Se houver qualquer erro, simplesmente ignora
         pass
 
 def atualizar_widgets(cabecalho_ui, form_ui, tipo):
