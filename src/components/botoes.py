@@ -3,6 +3,8 @@ Módulo para criar os botões e checkbuttons na interface gráfica.
 '''
 import tkinter as tk
 import src.utils.classes.tooltip as tp
+from src.utils.widget_cache import clear_entries_fast, clear_labels_fast, clear_header_fast
+from src.utils.calculation_cache import ui_debouncer
 
 def criar_botoes(parent, app_principal):
     '''
@@ -115,33 +117,19 @@ def expandir_v_handler(app_principal):
 def limpar_dobras_todas_colunas(app_principal):
     '''
     Limpa dobras em todas as colunas disponíveis.
+    Versão otimizada usando widget cache.
     '''
     if hasattr(app_principal, 'cabecalho_ui') and hasattr(app_principal, 'dobras_ui') and app_principal.dobras_ui:
-        # Limpar entradas de todas as colunas
+        # Usar versões otimizadas de limpeza
         for w in app_principal.valores_w:
             if w in app_principal.dobras_ui:
                 dobras_ui = app_principal.dobras_ui[w]
                 
-                # Limpar entradas de dobras para esta coluna específica
-                for i in range(1, dobras_ui.n):
-                    entry = getattr(dobras_ui, f'aba{i}_entry_{w}', None)
-                    if entry:
-                        entry.delete(0, tk.END)
-                        entry.config(bg="white")
-                
-                # Limpar labels de medidas, metades e blanks para esta coluna
-                for i in range(1, dobras_ui.n):
-                    for prefixo in ['medidadobra', 'metadedobra']:
-                        label = getattr(dobras_ui, f'{prefixo}{i}_label_{w}', None)
-                        if label:
-                            label.config(text="")
-                
-                # Limpar blanks
-                for suffix in ['medida_blank_label', 'metade_blank_label']:
-                    label = getattr(dobras_ui, f'{suffix}_{w}', None)
-                    if label:
-                        label.config(text="")
-          # Limpar dedução específica
+                # Limpeza otimizada de entradas e labels
+                clear_entries_fast(dobras_ui, w)
+                clear_labels_fast(dobras_ui, w)
+        
+        # Limpar dedução específica
         if hasattr(app_principal.cabecalho_ui, 'deducao_especifica_widget') and app_principal.cabecalho_ui.deducao_especifica_widget:
             app_principal.cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
         
@@ -149,61 +137,37 @@ def limpar_dobras_todas_colunas(app_principal):
         import src.config.globals as g
         g.DOBRAS_VALORES = []
         
-        # Focar no primeiro campo
+        # Focar no primeiro campo usando cache
         if 1 in app_principal.dobras_ui:
-            aba1_entry = getattr(app_principal.dobras_ui[1], "aba1_entry_1", None)
+            from src.utils.widget_cache import get_cached_widget
+            aba1_entry = get_cached_widget(app_principal.dobras_ui[1], "aba1_entry_1")
             if aba1_entry:
                 aba1_entry.focus_set()
 
 def limpar_tudo_todas_colunas(app_principal):
     '''
     Limpa tudo em todas as colunas disponíveis.
+    Versão otimizada usando widget cache e debounce.
     '''
     if hasattr(app_principal, 'cabecalho_ui') and hasattr(app_principal, 'dobras_ui') and app_principal.dobras_ui:
-        # Limpar campos do cabeçalho
-        cabecalho_ui = app_principal.cabecalho_ui
-        if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:
-            cabecalho_ui.material_widget.set('')
-        if hasattr(cabecalho_ui, 'espessura_widget') and cabecalho_ui.espessura_widget:
-            cabecalho_ui.espessura_widget.set('')
-            cabecalho_ui.espessura_widget.configure(values=[])
-        if hasattr(cabecalho_ui, 'canal_widget') and cabecalho_ui.canal_widget:
-            cabecalho_ui.canal_widget.set('')
-            cabecalho_ui.canal_widget.configure(values=[])
+        # Usar limpeza otimizada do cabeçalho
+        clear_header_fast(app_principal.cabecalho_ui)
         
-        # Limpar entradas
-        if hasattr(cabecalho_ui, 'raio_interno_widget') and cabecalho_ui.raio_interno_widget:
-            cabecalho_ui.raio_interno_widget.delete(0, tk.END)
-        if hasattr(cabecalho_ui, 'comprimento_widget') and cabecalho_ui.comprimento_widget:
-            cabecalho_ui.comprimento_widget.delete(0, tk.END)
-        if hasattr(cabecalho_ui, 'deducao_especifica_widget') and cabecalho_ui.deducao_especifica_widget:
-            cabecalho_ui.deducao_especifica_widget.delete(0, tk.END)
-
-        # Limpar etiquetas
-        etiquetas_widgets = [
-            ('fator_k_widget', ''),
-            ('deducao_widget', ''),
-            ('offset_widget', ''),
-            ('observacoes_widget', ''),
-            ('ton_m_widget', ''),
-            ('aba_minima_widget', ''),
-            ('z90_widget', '')
-        ]
-        
-        for widget_name, texto in etiquetas_widgets:
-            if hasattr(cabecalho_ui, widget_name):
-                widget = getattr(cabecalho_ui, widget_name)
-                if widget:
-                    widget.config(text=texto)
-          # Limpar dobras
+        # Limpar dobras usando versão otimizada
         limpar_dobras_todas_colunas(app_principal)
         
-        # Executar todas as funções para cada coluna
-        from src.utils.interface import todas_funcoes
-        for w in app_principal.valores_w:
-            if w in app_principal.dobras_ui:
-                todas_funcoes(app_principal.cabecalho_ui, app_principal.dobras_ui[w])
+        # Executar todas as funções com debounce para evitar cálculos excessivos
+        def delayed_update():
+            from src.utils.interface import todas_funcoes
+            for w in app_principal.valores_w:
+                if w in app_principal.dobras_ui:
+                    todas_funcoes(app_principal.cabecalho_ui, app_principal.dobras_ui[w])
+        
+        # Aplicar debounce para não executar múltiplas vezes
+        ui_debouncer.debounce('limpar_tudo_update', delayed_update, 0.5)
 
-        # Focar no combobox de material
-        if hasattr(cabecalho_ui, 'material_widget') and cabecalho_ui.material_widget:
-            cabecalho_ui.material_widget.focus_set()
+        # Focar no combobox de material usando cache
+        from src.utils.widget_cache import get_cached_widget
+        material_widget = get_cached_widget(app_principal.cabecalho_ui, 'material_widget')
+        if material_widget:
+            material_widget.focus_set()
