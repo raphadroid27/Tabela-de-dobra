@@ -7,9 +7,47 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        # Excluir dialetos SQLAlchemy não utilizados para reduzir tamanho
+        'sqlalchemy.dialects.mysql',
+        'sqlalchemy.dialects.postgresql', 
+        'sqlalchemy.dialects.oracle',
+        'sqlalchemy.dialects.mssql',
+        'sqlalchemy.dialects.sybase',
+        'sqlalchemy.dialects.firebird',
+        # Excluir outros módulos desnecessários
+        'pandas',
+        'numpy',
+        'matplotlib',
+        'PIL',
+        'selenium',
+        'requests',
+        'urllib3',
+        'cryptography',
+        'pytest',
+        'setuptools',
+        'distutils',
+        # Excluir módulos de desenvolvimento/teste
+        'unittest',
+        'doctest',
+        'pdb',
+        'cProfile',
+        'profile',
+        'pstats',
+        # Excluir suporte a outros GUIs
+        'PyQt5',
+        'PyQt6', 
+        'PySide2',
+        'PySide6',
+        'wx',
+        'kivy',
+        # Excluir compiladores
+        'compiler',
+        'py_compile',
+        'compileall'
+    ],
     noarchive=False,
-    optimize=0,
+    optimize=2,  # Otimização máxima do bytecode Python
 )
 pyz = PYZ(a.pure)
 
