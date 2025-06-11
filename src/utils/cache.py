@@ -11,8 +11,8 @@ from src.models.models import Material, Espessura, Canal, Deducao
 
 # Importar otimizações adicionais
 try:
-    from src.utils.calculation_cache import calculation_cache
-    from src.utils.widget_cache import cache_widget
+    from src.utils.cache_calculos import calculation_cache
+    from src.utils.cache_widgets import cache_widget
     _OPTIMIZATIONS_AVAILABLE = True
 except ImportError:
     _OPTIMIZATIONS_AVAILABLE = False

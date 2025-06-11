@@ -3,7 +3,7 @@ Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos c
 '''
 import tkinter as tk
 from tkinter import ttk
-from src.utils.classes import tooltip as tp
+from src.utils.classes import dica_ferramenta as tp
 from src.utils.interface import (atualizar_widgets,
                                  atualizar_toneladas_m,
                                  copiar

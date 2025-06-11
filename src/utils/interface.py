@@ -27,7 +27,7 @@ from src.utils.calculos import (calcular_dobra,
                                 razao_ri_espessura
                                 )
 from src.config import globals as g
-import src.utils.classes.tooltip as tp
+import src.utils.classes.dica_ferramenta as tp
 
 def atualizar_rie_se_aberta(cabecalho_ui):
     '''

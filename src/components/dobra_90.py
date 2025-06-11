@@ -7,7 +7,7 @@ from src.utils.interface import (calcular_dobra,
                                  focus_next_entry,
                                  focus_previous_entry
                                  )
-from src.utils.classes import tooltip as tp
+from src.utils.classes import dica_ferramenta as tp
 
 LARGURA = 12
 

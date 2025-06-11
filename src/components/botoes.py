@@ -2,9 +2,9 @@
 Módulo para criar os botões e checkbuttons na interface gráfica.
 '''
 import tkinter as tk
-import src.utils.classes.tooltip as tp
-from src.utils.widget_cache import limpar_entradas_rapido, limpar_labels_rapido, limpar_cabecalho_rapido
-from src.utils.calculation_cache import ui_debouncer
+import src.utils.classes.dica_ferramenta as tp
+from src.utils.cache_widgets import limpar_entradas_rapido, limpar_labels_rapido, limpar_cabecalho_rapido
+from src.utils.cache_calculos import ui_debouncer
 
 def criar_botoes(parent, app_principal):
     '''
@@ -138,7 +138,7 @@ def limpar_dobras_todas_colunas(app_principal):
         g.DOBRAS_VALORES = []
           # Focar no primeiro campo usando cache
         if 1 in app_principal.dobras_ui:
-            from src.utils.widget_cache import obter_widget_em_cache
+            from src.utils.cache_widgets import obter_widget_em_cache
             aba1_entry = obter_widget_em_cache(app_principal.dobras_ui[1], "aba1_entry_1")
             if aba1_entry:
                 aba1_entry.focus_set()
@@ -166,7 +166,7 @@ def limpar_tudo_todas_colunas(app_principal):
         ui_debouncer.debounce('limpar_tudo_update', delayed_update, 0.5)
 
         # Focar no combobox de material usando cache
-        from src.utils.widget_cache import obter_widget_em_cache
+        from src.utils.cache_widgets import obter_widget_em_cache
         material_widget = obter_widget_em_cache(app_principal.cabecalho_ui, 'material_widget')
         if material_widget:
             material_widget.focus_set()
