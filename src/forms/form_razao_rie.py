@@ -11,11 +11,11 @@ from src.config import globals as g
 class FormRaioInternoEspessura:
     '''Classe para o formulário de cálculo de razão raio interno / espessura.
     Esta classe inicializa a interface gráfica e exibe os valores calculados
-    e os fatores K correspondentes.
-    A classe utiliza a biblioteca tkinter para a construção da interface e
+    e os fatores K correspondentes.    A classe utiliza a biblioteca tkinter para a construção da interface e
     o módulo globals para armazenar variáveis globais.
     '''
     rie_form = None
+    instancia_ativa = None  # Variável de classe para armazenar a instância ativa
     
     def __init__(self, root, app_principal=None, cabecalho_ui=None, rie_ui=None):
         '''
@@ -25,10 +25,16 @@ class FormRaioInternoEspessura:
         if self.rie_form:
             self.rie_form.destroy()
 
+        # Definir esta instância como a ativa
+        FormRaioInternoEspessura.instancia_ativa = self
+
         self.rie_form = tk.Toplevel(root)
         self.rie_form.title("Raio Interno / Espessura")
         self.rie_form.geometry("240x280")
         self.rie_form.resizable(False, False)
+        
+        # Configurar protocolo de fechamento para limpar a instância ativa
+        self.rie_form.protocol("WM_DELETE_WINDOW", self._on_closing)
         
         # Define o ícone
         icone_path = obter_caminho_icone()
@@ -91,6 +97,14 @@ class FormRaioInternoEspessura:
 
         razao_ri_espessura(cabecalho_ui, self)
         create_table(main_frame, g.RAIO_K)
+
+    def _on_closing(self):
+        '''
+        Método chamado quando a janela é fechada.
+        Limpa a referência da instância ativa.
+        '''
+        FormRaioInternoEspessura.instancia_ativa = None
+        self.rie_form.destroy()
 
 def main(root, app_principal=None):
     '''
