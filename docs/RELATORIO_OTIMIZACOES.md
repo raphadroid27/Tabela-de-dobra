@@ -59,7 +59,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - Facilidade para adicionar novos tipos de cálculo
 
 #### 4. **Script Consolidado de Materiais** ✅
-**Arquivo:** `scripts/add_materials.py`
+**Arquivo:** `scripts/adicionar_materiais.py`
 
 **Implementação:**
 - Substituição de 3 scripts duplicados (90% de código repetido)
@@ -86,7 +86,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - **Redução do uso de memória:** 25-35%
 
 #### 6. **Limpeza Automatizada de Imports (Fase 1)** ✅
-**Arquivo:** `scripts/cleanup_imports.py`
+**Arquivo:** `scripts/limpar_imports.py`
 
 **Implementação:**
 - Script de análise AST para identificar imports não utilizados
@@ -110,7 +110,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - Transparência para o código cliente
 
 #### 8. **Ferramentas e Scripts de Performance** ✅
-**Arquivo:** `scripts/test_performance.py`
+**Arquivo:** `scripts/testar_performance.py`
 
 **Implementação:**
 - Suite de testes de performance automatizada
@@ -158,7 +158,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - **Benefício:** Redução de ~60% nas consultas durante atualizações de UI
 
 #### 10. **Sistema de Cache de Cálculos com Debounce** ✅
-**Arquivo:** `src/utils/calculation_cache.py`
+**Arquivo:** `src/utils/cache_calculos.py`
 - **Implementação:** Cache LRU para resultados de cálculos + debounce para eventos de UI
 - **Funcionalidades:**
   - Cache temporizado (5 minutos) para resultados
@@ -167,7 +167,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - **Benefício:** 50-75% melhoria em cálculos repetitivos
 
 #### 11. **Sistema de Cache de Widgets** ✅
-**Arquivo:** `src/utils/widget_cache.py`
+**Arquivo:** `src/utils/cache_widgets.py`
 - **Implementação:** Pool de widgets Tkinter para evitar getattr() repetitivo
 - **Funcionalidades:**
   - Cache de referências de widgets por objeto
@@ -184,7 +184,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
   - Redução drástica de chamadas getattr()
 
 #### 13. **Sistema de Cache de Configuração** ✅
-**Arquivo:** `src/utils/config_cache.py`
+**Arquivo:** `src/utils/cache_configuracao.py`
 - **Implementação:** Write-back cache para arquivos JSON
 - **Funcionalidades:**
   - Cache em memória com write-delay de 2s
@@ -193,7 +193,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - **Benefício:** 80-95% redução em I/O de configuração
 
 #### 14. **Otimizações SQLite Avançadas** ✅
-**Arquivo:** `src/utils/sqlite_optimizer.py`
+**Arquivo:** `src/utils/otimizador_sqlite.py`
 - **Implementação:** PRAGMA otimizações + índices compostos
 - **Funcionalidades:**
   - Cache de 64MB, Journal WAL, Synchronous NORMAL
@@ -203,7 +203,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - **Benefício:** 15-30% melhoria em consultas complexas
 
 #### 15. **Sistema de Validação Centralizado** ✅
-**Arquivo:** `src/utils/validation_system.py`
+**Arquivo:** `src/utils/sistema_validacao.py`
 - **Implementação:** Validador cached com regras reutilizáveis
 - **Funcionalidades:**
   - Cache de resultados de validação (1 minuto)
@@ -212,7 +212,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - **Benefício:** 25-45% melhoria em validações
 
 #### 16. **Pool de Formulários (Lazy Loading)** ✅
-**Arquivo:** `src/utils/form_pool.py`
+**Arquivo:** `src/utils/pool_formularios.py`
 - **Implementação:** Reutilização de instâncias de formulários
 - **Funcionalidades:**
   - Pool com máximo de 3 instâncias por tipo
@@ -221,7 +221,7 @@ Este documento consolida todas as otimizações de performance implementadas no 
 - **Benefício:** 30-50% melhoria na abertura de formulários
 
 #### 17. **Script de Otimização Integrado** ✅
-**Arquivo:** `scripts/optimize_performance.py`
+**Arquivo:** `scripts/otimizar_performance.py`
 - **Implementação:** Orquestrador de todas as otimizações
 - **Funcionalidades:**
   - Aplicação automática de todas as otimizações
@@ -289,18 +289,18 @@ Este documento consolida todas as otimizações de performance implementadas no 
 ### **Novos Arquivos Criados:**
 #### Fase 1:
 1. `src/utils/cache.py` - Sistema de cache inteligente
-2. `scripts/test_performance.py` - Suite de testes
-3. `scripts/cleanup_imports.py` - Limpeza de imports
-4. `scripts/add_materials.py` - Script consolidado
+2. `scripts/testar_performance.py` - Suite de testes
+3. `scripts/limpar_imports.py` - Limpeza de imports
+4. `scripts/adicionar_materiais.py` - Script consolidado
 
 #### Fase 2:
-5. `src/utils/calculation_cache.py` - Sistema de cache de cálculos
-6. `src/utils/widget_cache.py` - Cache de widgets Tkinter
-7. `src/utils/config_cache.py` - Cache de configurações
-8. `src/utils/sqlite_optimizer.py` - Otimizações SQLite
-9. `src/utils/validation_system.py` - Sistema de validação
-10. `src/utils/form_pool.py` - Pool de formulários
-11. `scripts/optimize_performance.py` - Script integrado
+5. `src/utils/cache_calculos.py` - Sistema de cache de cálculos
+6. `src/utils/cache_widgets.py` - Cache de widgets Tkinter
+7. `src/utils/cache_configuracao.py` - Cache de configurações
+8. `src/utils/otimizador_sqlite.py` - Otimizações SQLite
+9. `src/utils/sistema_validacao.py` - Sistema de validação
+10. `src/utils/pool_formularios.py` - Pool de formulários
+11. `scripts/otimizar_performance.py` - Script integrado
 
 ### **Arquivos Modificados:**
 #### Fase 1:

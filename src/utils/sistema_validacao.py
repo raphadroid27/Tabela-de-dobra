@@ -334,7 +334,7 @@ class ValidadorCache:
 
 
 # Instância global do validador
-cached_validator = CachedValidator()
+cached_validator = ValidadorCache()
 
 
 def validate_field(field: str, value: Any, context: Dict = None) -> List[ValidationResult]:

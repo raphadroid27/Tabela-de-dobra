@@ -253,7 +253,7 @@ def main():
     print(f"   Total de imports não utilizados: {total_unused}")
     
     if dry_run and total_unused > 0:
-        print(f"\n💡 Execute 'python scripts/cleanup_imports.py --apply' para aplicar as mudanças.")
+        print(f"\n💡 Execute 'python scripts/limpar_imports.py --apply' para aplicar as mudanças.")
 
 if __name__ == "__main__":
     main()

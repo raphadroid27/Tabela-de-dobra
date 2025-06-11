@@ -313,7 +313,7 @@ class GerenciadorFormularios:
 
 
 # Instância global do gerenciador
-form_manager = FormManager()
+form_manager = GerenciadorFormularios()
 
 
 def open_form(form_name: str, *args, **kwargs) -> Any:

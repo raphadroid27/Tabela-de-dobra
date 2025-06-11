@@ -3,6 +3,14 @@ Otimizações específicas para SQLite incluindo índices, PRAGMA e cache de con
 """
 import time
 from sqlalchemy.engine import Engine
+from sqlalchemy import event, text
+
+# Importar engine do banco de dados
+try:
+    from src.utils.banco_dados import engine
+except ImportError:
+    # Fallback se não conseguir importar
+    engine = None
 
 
 class SQLiteOptimizer:
@@ -189,7 +197,7 @@ class SQLiteOptimizer:
 
 
 # Instância global do otimizador
-sqlite_optimizer = SQLiteOptimizer(engine)
+sqlite_optimizer = SQLiteOptimizer(engine) if engine else None
 
 
 # Event listener para aplicar otimizações na conexão
@@ -218,12 +226,16 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 def optimize_database():
     """Função conveniente para otimizar banco de dados."""
-    return sqlite_optimizer.apply_all_optimizations()
+    if sqlite_optimizer:
+        return sqlite_optimizer.apply_all_optimizations()
+    return {}
 
 
 def get_db_performance_stats():
     """Função conveniente para obter estatísticas de performance."""
-    return sqlite_optimizer.get_database_stats()
+    if sqlite_optimizer:
+        return sqlite_optimizer.get_database_stats()
+    return {}
 
 
 class QueryPerformanceMonitor:

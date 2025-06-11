@@ -265,7 +265,7 @@ def main():
     
     # Validar argumentos
     if len(sys.argv) < 2:
-        print("Uso: python add_materials.py <material1> [material2] [material3]")
+        print("Uso: python adicionar_materiais.py <material1> [material2] [material3]")
         print("Materiais disponíveis: carbono, inox, h14, all")
         return
     
