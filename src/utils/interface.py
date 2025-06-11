@@ -240,7 +240,7 @@ def restaurar_valores_dobra(dobras_ui, w):
 
     try:
         # Restaurar os valores das dobras apenas para a coluna w
-        for i in range(1, dobras_ui.n):
+        for i in range(1, dobras_ui.n + 1):  # ✅ CORRIGIDO: incluir a última linha
             # Verificar se existem dados para esta linha e coluna
             if (i - 1 < len(g.DOBRAS_VALORES) and 
                 w - 1 < len(g.DOBRAS_VALORES[i - 1])):
@@ -620,11 +620,11 @@ def salvar_valores_dobra(dobras_ui, w):
             g.DOBRAS_VALORES = []
 
         # Garantir que g.DOBRAS_VALORES tenha o tamanho necessário para as linhas
-        while len(g.DOBRAS_VALORES) < dobras_ui.n - 1:
+        while len(g.DOBRAS_VALORES) < dobras_ui.n:  # ✅ Corrigido: dobras_ui.n em vez de dobras_ui.n - 1
             g.DOBRAS_VALORES.append([])
 
         # Salvar os valores das dobras apenas para a coluna w
-        for i in range(1, dobras_ui.n):
+        for i in range(1, dobras_ui.n + 1):  # ✅ Corrigido: incluir a última linha
             # Garantir que cada linha tenha o tamanho necessário para conter até a coluna w
             while len(g.DOBRAS_VALORES[i - 1]) < w:
                 g.DOBRAS_VALORES[i - 1].append("")

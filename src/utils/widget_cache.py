@@ -107,7 +107,7 @@ class OperacoesWidgetOtimizadas:
         if not widgets_em_cache:
             # Primeira execução - construir cache
             widgets = []
-            for i in range(1, dobras_ui.n + 1):  # Corrigido: incluir a última linha
+            for i in range(1, dobras_ui.n + 1):  # ✅ Já correto
                 entrada = self.cache.obter_widget(dobras_ui, f'aba{i}_entry_{w}')
                 if entrada:
                     widgets.append(entrada)
