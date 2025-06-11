@@ -128,10 +128,16 @@ def obter_configuracoes(form_ui):
 def salvar_no_banco(obj, tipo, detalhes, ui):
     '''
     Salva um objeto no banco de dados e registra o log.
+    Invalida cache após modificação.
     '''
+    from src.utils.cache import cache_manager
+    
     session.add(obj)
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
+    
+    # Invalidar cache relevante
+    cache_manager.invalidate_cache()
 
     configuracoes = obter_configuracoes(ui)
     config = configuracoes[tipo]
