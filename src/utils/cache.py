@@ -1,12 +1,21 @@
 '''
 Sistema de cache para otimizar consultas ao banco de dados.
 Reduz consultas repetitivas e melhora a performance da aplicação.
+Integrado com sistemas de calculation cache e widget cache.
 '''
 from functools import lru_cache, wraps
 import time
 from typing import List, Optional
 from src.utils.banco_dados import session
 from src.models.models import Material, Espessura, Canal, Deducao
+
+# Importar otimizações adicionais
+try:
+    from src.utils.calculation_cache import calculation_cache
+    from src.utils.widget_cache import widget_cache
+    _OPTIMIZATIONS_AVAILABLE = True
+except ImportError:
+    _OPTIMIZATIONS_AVAILABLE = False
 
 
 class CacheManager:
