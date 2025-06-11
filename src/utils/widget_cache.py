@@ -3,6 +3,7 @@ Sistema de cache para widgets Tkinter e otimização de loops com getattr().
 Reduz custos de reflexão e melhora performance de operações de UI.
 """
 from collections import defaultdict
+from typing import Any, List
 
 
 class WidgetCache:
