@@ -20,7 +20,7 @@ from src.utils.calculos import (calcular_dobra,
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
-def atualizar_razao_ri_espessura_se_aberta(cabecalho_ui):
+def atualizar_rie_se_aberta(cabecalho_ui):
     '''
     Verifica se a janela de razão R/E está aberta e atualiza o valor se necessário.
     '''
@@ -543,7 +543,7 @@ def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_princip
             calcular_dobra(cabecalho_ui, dobras_ui, w)
 
     # Verificar se existe janela de razão R/E aberta e atualizar se necessário
-    atualizar_razao_ri_espessura_se_aberta(cabecalho_ui)
+    atualizar_rie_se_aberta(cabecalho_ui)
 
     # Atualizar tooltips
     canal_tooltip(cabecalho_ui)
