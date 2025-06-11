@@ -77,18 +77,6 @@ def login(app_principal, auten_ui):
 
     habilitar_janelas(app_principal)
 
-def logado(tipo):
-    '''
-    Verifica se o usuário está logado antes de permitir ações em formulários específicos.
-    '''
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
-    if g.USUARIO_ID is None:
-        messagebox.showerror("Erro", "Login requerido.", parent=config['form'])
-        return False
-    return True
-
 def tem_permissao(tipo, role_requerida, form_ui):
     '''
     Verifica se o usuário tem permissão para realizar uma ação específica.

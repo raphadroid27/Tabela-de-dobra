@@ -21,9 +21,8 @@ def adicionar(tipo, form_ui, app_principal):
     '''
     Adiciona um novo item ao banco de dados com base no tipo especificado.
     '''
-    # if not logado(tipo):
-    #     return
-    #//// REMOVER LOGADO
+    if not tem_permissao(tipo, 'editor', form_ui):
+        return
 
     if tipo == 'dedução':
         adicionar_deducao(form_ui)
@@ -179,9 +178,8 @@ def editar(tipo, form_ui, app_principal):
     - material
     - canal
     '''
-    # if not tem_permissao(tipo, 'editor'):
-    #     return
-    #//// REMOVER TEM_PERMISSAO
+    if not tem_permissao(tipo, 'editor', form_ui):
+        return
 
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
         return
@@ -241,9 +239,8 @@ def excluir(tipo, form_ui, app_principal):
     - material
     - canal
     '''
-    # if not tem_permissao(tipo,'editor'):
-    #     return
-    #//// REMOVER TEM_PERMISSAO
+    if not tem_permissao(tipo, 'editor', form_ui):
+        return
 
     configuracoes = obter_configuracoes(form_ui)
     config = configuracoes.get(tipo)
