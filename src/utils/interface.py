@@ -2,14 +2,17 @@
 Este módulo contém funções auxiliares para o aplicativo de cálculo de dobras.
 
 As funções incluem a atualização de widgets, manipulação de valores de dobras,
-restauração de valores, e outras operações relacionadas ao funcionamento do
+restauração de valores, e outras operações relacionadas    if canal_obj and comprimento_float and comprimento_total:
+        if comprimento_float < comprimento_total:
+            cabecalho_ui.comprimento_widget.config(fg="black")
+        elif comprimento_float >= comprimento_total:
+            cabecalho_ui.comprimento_widget.config(fg="red")uncionamento do
 aplicativo de cálculo de dobras.
 '''
 import tkinter as tk
 from tkinter import ttk
 import re
 import pyperclip
-from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.banco_dados import session, obter_configuracoes
 from src.utils.cache import (
     get_materiais_cached, 
@@ -195,16 +198,18 @@ def atualizar_toneladas_m(cabecalho_ui):
     material_nome = cabecalho_ui.material_widget.get()
     canal_valor = cabecalho_ui.canal_widget.get()
 
-    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
-    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+    # Usar cache para buscar objetos (elimina consultas duplicadas)
+    espessuras = get_espessuras_cached()
+    materiais = get_materiais_cached()
+    canais = get_canais_cached()
+    
+    espessura_obj = next((e for e in espessuras if e.valor == float(espessura_valor)), None) if espessura_valor else None
+    material_obj = next((m for m in materiais if m.nome == material_nome), None)
+    canal_obj = next((c for c in canais if c.valor == canal_valor), None)
 
     if espessura_obj and material_obj and canal_obj:
-        deducao_obj = session.query(Deducao).filter(
-            Deducao.espessura_id == espessura_obj.id,
-            Deducao.material_id == material_obj.id,
-            Deducao.canal_id == canal_obj.id
-        ).first()
+        # Usar cache para buscar dedução
+        deducao_obj = cache_manager.get_deducao(material_obj.id, espessura_obj.id, canal_obj.id)
 
         if deducao_obj and deducao_obj.forca is not None:
             toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
@@ -213,12 +218,11 @@ def atualizar_toneladas_m(cabecalho_ui):
         else:
             cabecalho_ui.ton_m_widget.config(text='N/A', fg="red")
 
-    # Verificar se o comprimento é menor que o comprimento total do canal
-    canal_obj = session.query(Canal).filter_by(valor=cabecalho_ui.canal_widget.get()).first()
+    # Verificar comprimento usando objeto já consultado (elimina consulta duplicada)
     comprimento_total = canal_obj.comprimento_total if canal_obj else None
-    comprimento = float(comprimento) if comprimento else None
+    comprimento_float = float(comprimento) if comprimento else None
 
-    if canal_obj and comprimento and comprimento_total:
+    if canal_obj and comprimento_float and comprimento_total:
         if comprimento < comprimento_total:
             cabecalho_ui.comprimento_widget.config(fg="black")
         elif comprimento >= comprimento_total:
