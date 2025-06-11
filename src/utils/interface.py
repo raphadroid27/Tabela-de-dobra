@@ -20,6 +20,29 @@ from src.utils.calculos import (calcular_dobra,
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
+def atualizar_razao_ri_espessura_se_aberta(cabecalho_ui):
+    '''
+    Verifica se a janela de razão R/E está aberta e atualiza o valor se necessário.
+    '''
+    try:
+        # Importar aqui para evitar importação circular
+        from src.forms.form_razao_rie import FormRaioInternoEspessura
+        
+        # Verificar se existe uma instância ativa da janela de razão
+        if (FormRaioInternoEspessura.instancia_ativa and 
+            hasattr(FormRaioInternoEspessura.instancia_ativa, 'rie_form') and
+            FormRaioInternoEspessura.instancia_ativa.rie_form and
+            FormRaioInternoEspessura.instancia_ativa.rie_form.winfo_exists() and
+            hasattr(FormRaioInternoEspessura.instancia_ativa, 'razao_rie_widget') and
+            FormRaioInternoEspessura.instancia_ativa.razao_rie_widget):
+            
+            # Chamar a função de cálculo da razão
+            razao_ri_espessura(cabecalho_ui, FormRaioInternoEspessura.instancia_ativa)
+            
+    except (ImportError, AttributeError, tk.TclError):
+        # Se houver erro (janela fechada, importação circular, etc.), simplesmente ignora
+        pass
+
 def atualizar_widgets(cabecalho_ui, form_ui, tipo):
     '''
     Atualiza os valores de comboboxes com base no tipo especificado.
@@ -497,8 +520,7 @@ def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_princip
     Args:
         cabecalho_ui: Interface do cabeçalho
         dobras_ui: Interface de dobras específica (opcional)
-        todas_colunas: Se True, recalcula todas as colunas ativas
-        app_principal: Instância do app para acessar todas as colunas
+        todas_colunas: Se True, recalcula todas as colunas ativas        app_principal: Instância do app para acessar todas as colunas
     '''
     for tipo in ['material', 'espessura', 'canal', 'dedução']:
         atualizar_widgets(cabecalho_ui, None, tipo)
@@ -519,7 +541,8 @@ def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_princip
             w = dobras_ui.w
             calcular_dobra(cabecalho_ui, dobras_ui, w)
 
-    razao_ri_espessura(cabecalho_ui)
+    # Verificar se existe janela de razão R/E aberta e atualizar se necessário
+    atualizar_razao_ri_espessura_se_aberta(cabecalho_ui)
 
     # Atualizar tooltips
     canal_tooltip(cabecalho_ui)
