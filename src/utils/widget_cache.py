@@ -107,15 +107,15 @@ class OperacoesWidgetOtimizadas:
         if not widgets_em_cache:
             # Primeira execução - construir cache
             widgets = []
-            for i in range(1, dobras_ui.n):
+            for i in range(1, dobras_ui.n + 1):  # Corrigido: incluir a última linha
                 entrada = self.cache.obter_widget(dobras_ui, f'aba{i}_entry_{w}')
                 if entrada:
                     widgets.append(entrada)
-            
+        
             # Armazenar no cache
             self.cache.cachear_lista_widgets(chave_cache, widgets)
             widgets_em_cache = widgets
-        
+    
         # Usar widgets cached - muito mais rápido que getattr repetitivo
         for entrada in widgets_em_cache:
             if entrada:
@@ -137,21 +137,21 @@ class OperacoesWidgetOtimizadas:
         if not labels_em_cache:
             # Construir cache de labels
             labels = []
-            for i in range(1, dobras_ui.n):
+            for i in range(1, dobras_ui.n + 1):  # Corrigido: incluir a última linha
                 for prefixo in ['medidadobra', 'metadedobra']:
                     label = self.cache.obter_widget(dobras_ui, f'{prefixo}{i}_label_{w}')
                     if label:
                         labels.append(label)
-            
+        
             # Labels de blank
             for sufixo in ['medida_blank_label', 'metade_blank_label']:
                 label = self.cache.obter_widget(dobras_ui, f'{sufixo}_{w}')
                 if label:
                     labels.append(label)
-            
+        
             self.cache.cachear_lista_widgets(chave_cache_labels, labels)
             labels_em_cache = labels
-        
+    
         # Limpar usando cache
         for label in labels_em_cache:
             if label:
