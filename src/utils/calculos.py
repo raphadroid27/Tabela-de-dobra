@@ -3,6 +3,8 @@ Funções auxiliares para o aplicativo de cálculo de dobras.
 '''
 from math import pi
 import re
+from abc import ABC, abstractmethod
+from typing import Tuple, Dict
 from src.config import globals as g
 from src.models.models import Canal
 from src.utils.banco_dados import session
@@ -99,70 +101,89 @@ def z_minimo_externo(cabecalho_ui):
 def calcular_dobra(cabecalho_ui, dobras_ui, w):
     '''
     Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
-    '''    # Criar uma lista de listas para armazenar os valores de linha i e coluna w
-    g.DOBRAS_VALORES = [
-        [
-            getattr(dobras_ui, f'aba{i}_entry_{w}').get() or ''  # Usar w específico da instância
-        ]
-        for i in range(1, dobras_ui.n + 1)
-    ]
+    Versão otimizada usando Strategy Pattern.
+    '''
+    # Obter valores das abas de forma otimizada
+    valores_abas = []
+    for i in range(1, dobras_ui.n + 1):
+        entry = getattr(dobras_ui, f'aba{i}_entry_{w}', None)
+        if entry:
+            valor = entry.get().replace(',', '.') if entry.get() else ''
+            valores_abas.append(valor)
+        else:
+            valores_abas.append('')
+    
+    # Atualizar g.DOBRAS_VALORES de forma mais eficiente
+    g.DOBRAS_VALORES = [[valor] for valor in valores_abas]
 
+    # Obter valor da dedução
     deducao_valor = str(cabecalho_ui.deducao_widget.cget('text')).replace(' Copiado!', '')
     deducao_espec = cabecalho_ui.deducao_especifica_widget.get().replace(',', '.')
-
-    # Exibir a matriz de valores para depuração
-    print("Matriz de dobras (g.DOBRAS_VALORES):")
-    for linha in g.DOBRAS_VALORES:
-        print(linha)
-
-    # Determinar o valor da dedução
-    if deducao_espec != "":
+    
+    # Usar dedução específica se fornecida
+    if deducao_espec:
         deducao_valor = deducao_espec
 
     if not deducao_valor:
-        return    # Função auxiliar para calcular medidas
-    def calcular_medida(deducao_valor, i, w):
-        dobra = g.DOBRAS_VALORES[i - 1][0].replace(',', '.')
+        return
 
-        if dobra == "":
+    try:
+        deducao_float = float(deducao_valor)
+    except ValueError:
+        print(f"Erro: Valor de dedução inválido: {deducao_valor}")
+        return
+
+    # Calcular medidas usando Strategy Pattern
+    medidas_calculadas = []
+    
+    for i, valor_aba in enumerate(valores_abas, 1):
+        if not valor_aba:
+            medidas_calculadas.append((0.0, 0.0))
+            # Limpar widgets
             getattr(dobras_ui, f'medidadobra{i}_label_{w}').config(text="")
             getattr(dobras_ui, f'metadedobra{i}_label_{w}').config(text="")
         else:
-            if i in (1, dobras_ui.n):
-                medidadobra = float(dobra) - float(deducao_valor) / 2
-            else:
-                if i < len(g.DOBRAS_VALORES) and g.DOBRAS_VALORES[i][0] == "":
-                    medidadobra = float(dobra) - float(deducao_valor) / 2
-                else:
-                    medidadobra = float(dobra) - float(deducao_valor)
+            try:
+                dobra_float = float(valor_aba)
+                # Determinar se próxima aba está vazia
+                proxima_vazia = (i < len(valores_abas) and not valores_abas[i])
+                
+                # Usar calculador com Strategy Pattern
+                medida_dobra, metade_dobra = calculador_dobra.calcular(
+                    dobra_float, deducao_float, i, dobras_ui.n, proxima_vazia
+                )
+                
+                medidas_calculadas.append((medida_dobra, metade_dobra))
+                
+                # Atualizar widgets
+                getattr(dobras_ui, f'medidadobra{i}_label_{w}').config(
+                    text=f'{medida_dobra:.2f}', fg="black"
+                )
+                getattr(dobras_ui, f'metadedobra{i}_label_{w}').config(
+                    text=f'{metade_dobra:.2f}', fg="black"
+                )
+                
+            except ValueError:
+                medidas_calculadas.append((0.0, 0.0))
+                print(f"Erro: Valor inválido na aba {i}: {valor_aba}")
+        
+        # Verificar aba mínima
+        verificar_aba_minima(cabecalho_ui, dobras_ui, valor_aba, i, w)
 
-            metade_dobra = medidadobra / 2            # Atualizar os widgets com os valores calculados
-            getattr(dobras_ui, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
-            getattr(dobras_ui, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
+    # Calcular blank (soma das medidas)
+    blank = sum(medida for medida, _ in medidas_calculadas if medida > 0)
+    metade_blank = blank / 2 if blank > 0 else 0
 
-        blank = sum(
-            float(getattr(dobras_ui, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
-            for row in range(1, dobras_ui.n + 1)
-            if getattr(dobras_ui, f'medidadobra{row}_label_{w}').cget('text')
-        )
-
-        metade_blank = blank / 2
-
-        # Atualizar os widgets com os valores calculados
-        label = getattr(dobras_ui, f'medida_blank_label_{w}')
-        if blank:
-            label.config(text=f"{blank:.2f}", fg="black")
-        else:
-            label.config(text="")
-
-        label = getattr(dobras_ui, f'metade_blank_label_{w}')
-        if metade_blank:
-            label.config(text=f"{metade_blank:.2f}", fg="black")
-        else:
-            label.config(text="")    # Iterar pelas linhas para calcular as medidas
-    for i in range(1, dobras_ui.n + 1):
-        calcular_medida(deducao_valor, i, w)
-        verificar_aba_minima(cabecalho_ui, dobras_ui, g.DOBRAS_VALORES[i - 1][0], i, w)
+    # Atualizar widgets de blank
+    blank_label = getattr(dobras_ui, f'medida_blank_label_{w}')
+    metade_blank_label = getattr(dobras_ui, f'metade_blank_label_{w}')
+    
+    if blank > 0:
+        blank_label.config(text=f"{blank:.2f}", fg="black")
+        metade_blank_label.config(text=f"{metade_blank:.2f}", fg="black")
+    else:
+        blank_label.config(text="")
+        metade_blank_label.config(text="")
 
 def verificar_aba_minima(cabecalho_ui, dobras_ui, dobra, i, w):
     '''
@@ -217,3 +238,70 @@ def razao_ri_espessura(cabecalho_ui, rie_ui):
     except ValueError:
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo da razão.")
+
+# Strategy Pattern para diferentes tipos de cálculo de dobra
+class CalculoStrategy(ABC):
+    """Interface para estratégias de cálculo de dobra."""
+    
+    @abstractmethod
+    def calcular_medida_dobra(self, dobra: float, deducao: float, posicao: str) -> float:
+        """Calcula a medida da dobra baseado na posição."""
+        pass
+
+class CalculoPrimUltAbas(CalculoStrategy):
+    """Estratégia para primeira e última abas."""
+    
+    def calcular_medida_dobra(self, dobra: float, deducao: float, posicao: str) -> float:
+        return dobra - (deducao / 2)
+
+class CalculoAbaMeio(CalculoStrategy):
+    """Estratégia para abas do meio."""
+    
+    def calcular_medida_dobra(self, dobra: float, deducao: float, posicao: str) -> float:
+        return dobra - deducao
+
+class CalculoAbaAdjVazia(CalculoStrategy):
+    """Estratégia para aba adjacente a aba vazia."""
+    
+    def calcular_medida_dobra(self, dobra: float, deducao: float, posicao: str) -> float:
+        return dobra - (deducao / 2)
+
+class CalculadorDobra:
+    """Calculador de dobras usando Strategy Pattern."""
+    
+    def __init__(self):
+        self._strategies: Dict[str, CalculoStrategy] = {
+            'primeira_ultima': CalculoPrimUltAbas(),
+            'meio': CalculoAbaMeio(),
+            'adj_vazia': CalculoAbaAdjVazia()
+        }
+    
+    def determinar_estrategia(self, i: int, total_abas: int, proxima_vazia: bool) -> str:
+        """Determina qual estratégia usar baseado na posição da aba."""
+        if i in (1, total_abas):
+            return 'primeira_ultima'
+        elif proxima_vazia:
+            return 'adj_vazia'
+        else:
+            return 'meio'
+    
+    def calcular(self, dobra: float, deducao: float, i: int, total_abas: int, proxima_vazia: bool) -> Tuple[float, float]:
+        """
+        Calcula medida e metade da dobra.
+        
+        Returns:
+            Tuple[float, float]: (medida_dobra, metade_dobra)
+        """
+        if not dobra or dobra == 0:
+            return 0.0, 0.0
+            
+        estrategia_nome = self.determinar_estrategia(i, total_abas, proxima_vazia)
+        estrategia = self._strategies[estrategia_nome]
+        
+        medida_dobra = estrategia.calcular_medida_dobra(dobra, deducao, estrategia_nome)
+        metade_dobra = medida_dobra / 2
+        
+        return medida_dobra, metade_dobra
+
+# Instância global do calculador
+calculador_dobra = CalculadorDobra()
