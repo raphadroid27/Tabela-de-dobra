@@ -2,7 +2,6 @@
 Módulo para criar os botões e checkbuttons na interface gráfica.
 '''
 import tkinter as tk
-from src.utils.interface import limpar_dobras, limpar_tudo
 import src.utils.classes.tooltip as tp
 
 def criar_botoes(parent, app_principal):

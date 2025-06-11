@@ -12,7 +12,7 @@ from src.utils.banco_dados import (session,
                          registrar_log,
                          obter_configuracoes
                          )
-from src.utils.usuarios import logado, tem_permissao
+from src.utils.usuarios import tem_permissao
 from src.config import globals as g
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
