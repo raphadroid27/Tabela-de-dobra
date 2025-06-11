@@ -510,7 +510,7 @@ def focus_next_entry(current_index, w, dobras_ui):
     Move o foco para o próximo campo de entrada na aba atual.
     '''
     next_index = current_index + 1
-    if next_index < dobras_ui.n:
+    if next_index <= dobras_ui.n:
         next_entry = getattr(dobras_ui, f'aba{next_index}_entry_{w}', None)
         if next_entry:
             next_entry.focus()

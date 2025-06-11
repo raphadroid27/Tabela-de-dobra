@@ -57,12 +57,10 @@ class InterfaceDobra:
             entry = getattr(self, f'aba{i}_entry_{w}')
             entry.grid(row=i, column=1, sticky='we', padx=2)
             entry.bind("<KeyRelease>", lambda event: calcular_dobra(cabecalho_ui, self, w))
-            tp.ToolTip(entry, "Insira o valor da dobra.")
-
-            # Adicionar navegação com teclas direcionais
-            entry.bind("<Down>", lambda event, i=i: focus_next_entry(i, w))
-            entry.bind("<Up>", lambda event, i=i: focus_previous_entry(i, w))
-            entry.bind("<Return>", lambda event, i=i: focus_next_entry(i, w))
+            tp.ToolTip(entry, "Insira o valor da dobra.")            # Adicionar navegação com teclas direcionais
+            entry.bind("<Down>", lambda event, i=i: focus_next_entry(i, w, self))
+            entry.bind("<Up>", lambda event, i=i: focus_previous_entry(i, w, self))
+            entry.bind("<Return>", lambda event, i=i: focus_next_entry(i, w, self))
 
             setattr(self, f'medidadobra{i}_label_{w}', tk.Label(self.frame,
                                                             relief="sunken",
