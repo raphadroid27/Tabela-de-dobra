@@ -3,7 +3,7 @@ Módulo para criar os botões e checkbuttons na interface gráfica.
 '''
 import tkinter as tk
 import src.utils.classes.tooltip as tp
-from src.utils.widget_cache import clear_entries_fast, clear_labels_fast, clear_header_fast
+from src.utils.widget_cache import limpar_entradas_rapido, limpar_labels_rapido, limpar_cabecalho_rapido
 from src.utils.calculation_cache import ui_debouncer
 
 def criar_botoes(parent, app_principal):
@@ -30,7 +30,7 @@ def criar_botoes(parent, app_principal):
         variable=app_principal.expandir_v,
         width=1,
         height=1,
-        command=lambda: expandir_v_handler(app_principal)
+        command=lambda: manipulador_expansao_v(app_principal)
     )
     chk_v.grid(row=0, column=0, sticky='we')
     
@@ -41,7 +41,7 @@ def criar_botoes(parent, app_principal):
         variable=app_principal.expandir_h,
         width=1,
         height=1,
-        command=lambda: expandir_h_handler(app_principal)
+        command=lambda: manipulador_expansao_h(app_principal)
     )
     chk_h.grid(row=0, column=1, sticky='we')      # Botão para limpar valores de dobras
     btn_limpar_dobras = tk.Button(
@@ -71,7 +71,7 @@ def criar_botoes(parent, app_principal):
     
     return frame
 
-def expandir_h_handler(app_principal):
+def manipulador_expansao_h(app_principal):
     '''
     Manipula a expansão horizontal da interface.
     '''
@@ -94,7 +94,7 @@ def expandir_h_handler(app_principal):
     except ValueError as e:
         print(f"Erro ao expandir horizontalmente: {e}")
 
-def expandir_v_handler(app_principal):
+def manipulador_expansao_v(app_principal):
     '''
     Manipula a expansão vertical da interface.
     '''
@@ -126,8 +126,8 @@ def limpar_dobras_todas_colunas(app_principal):
                 dobras_ui = app_principal.dobras_ui[w]
                 
                 # Limpeza otimizada de entradas e labels
-                clear_entries_fast(dobras_ui, w)
-                clear_labels_fast(dobras_ui, w)
+                limpar_entradas_rapido(dobras_ui, w)
+                limpar_labels_rapido(dobras_ui, w)
         
         # Limpar dedução específica
         if hasattr(app_principal.cabecalho_ui, 'deducao_especifica_widget') and app_principal.cabecalho_ui.deducao_especifica_widget:
@@ -136,11 +136,10 @@ def limpar_dobras_todas_colunas(app_principal):
         # Resetar valores globais
         import src.config.globals as g
         g.DOBRAS_VALORES = []
-        
-        # Focar no primeiro campo usando cache
+          # Focar no primeiro campo usando cache
         if 1 in app_principal.dobras_ui:
-            from src.utils.widget_cache import get_cached_widget
-            aba1_entry = get_cached_widget(app_principal.dobras_ui[1], "aba1_entry_1")
+            from src.utils.widget_cache import obter_widget_em_cache
+            aba1_entry = obter_widget_em_cache(app_principal.dobras_ui[1], "aba1_entry_1")
             if aba1_entry:
                 aba1_entry.focus_set()
 
@@ -151,7 +150,7 @@ def limpar_tudo_todas_colunas(app_principal):
     '''
     if hasattr(app_principal, 'cabecalho_ui') and hasattr(app_principal, 'dobras_ui') and app_principal.dobras_ui:
         # Usar limpeza otimizada do cabeçalho
-        clear_header_fast(app_principal.cabecalho_ui)
+        limpar_cabecalho_rapido(app_principal.cabecalho_ui)
         
         # Limpar dobras usando versão otimizada
         limpar_dobras_todas_colunas(app_principal)
@@ -167,7 +166,7 @@ def limpar_tudo_todas_colunas(app_principal):
         ui_debouncer.debounce('limpar_tudo_update', delayed_update, 0.5)
 
         # Focar no combobox de material usando cache
-        from src.utils.widget_cache import get_cached_widget
-        material_widget = get_cached_widget(app_principal.cabecalho_ui, 'material_widget')
+        from src.utils.widget_cache import obter_widget_em_cache
+        material_widget = obter_widget_em_cache(app_principal.cabecalho_ui, 'material_widget')
         if material_widget:
             material_widget.focus_set()

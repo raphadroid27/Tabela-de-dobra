@@ -196,7 +196,7 @@ class FormPool:
             self._active_forms.clear()
 
 
-class FormManager:
+class GerenciadorFormularios:
     """Gerenciador inteligente de formulários."""
     
     def __init__(self):

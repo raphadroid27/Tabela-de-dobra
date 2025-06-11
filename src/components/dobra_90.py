@@ -11,7 +11,7 @@ from src.utils.classes import tooltip as tp
 
 LARGURA = 12
 
-class DobraUI:
+class InterfaceDobra:
     """
     Classe para criar o frame de dobras na interface gráfica.
     Esta classe contém métodos para criar o frame de dobras, configurar os widgets

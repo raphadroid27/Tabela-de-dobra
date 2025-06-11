@@ -3,7 +3,7 @@ Módulo responsável por criar o frame de avisos na interface gráfica.
 '''
 import tkinter as tk
 
-class AvisosUI:
+class InterfaceAvisos:
     '''
     Classe para criar o frame de avisos na interface gráfica.
     Esta classe segue o padrão das outras classes UI do aplicativo.
@@ -42,12 +42,12 @@ class AvisosUI:
 # Função de compatibilidade com o código existente
 def avisos(root):
     '''
-    Função de compatibilidade que cria uma instância de AvisosUI.
+    Função de compatibilidade que cria uma instância de InterfaceAvisos.
     
     Args:
         root: O widget pai onde o frame será inserido.
         
     Returns:
-        AvisosUI: Instância da classe AvisosUI.
+        InterfaceAvisos: Instância da classe InterfaceAvisos.
     '''
-    return AvisosUI(root)
+    return InterfaceAvisos(root)

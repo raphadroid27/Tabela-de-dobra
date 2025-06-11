@@ -4,11 +4,12 @@ Reduz cálculos repetitivos e melhora responsividade da interface.
 """
 import time
 import threading
+from functools import wraps
 from typing import Any, Dict, Callable, Optional, Tuple
 from collections import defaultdict
 
 
-class CalculationCache:
+class CacheCalculos:
     """Cache inteligente para resultados de cálculos com debounce."""
     
     def __init__(self):
@@ -107,7 +108,7 @@ class CalculationCache:
 
 
 # Instância global do cache de cálculos
-calculation_cache = CalculationCache()
+calculation_cache = CacheCalculos()
 
 
 class UIDebouncer:

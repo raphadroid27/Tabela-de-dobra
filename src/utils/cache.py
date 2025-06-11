@@ -12,13 +12,13 @@ from src.models.models import Material, Espessura, Canal, Deducao
 # Importar otimizações adicionais
 try:
     from src.utils.calculation_cache import calculation_cache
-    from src.utils.widget_cache import widget_cache
+    from src.utils.widget_cache import cache_widget
     _OPTIMIZATIONS_AVAILABLE = True
 except ImportError:
     _OPTIMIZATIONS_AVAILABLE = False
 
 
-class CacheManager:
+class GerenciadorCache:
     """Gerenciador de cache para consultas ao banco de dados."""
     
     def __init__(self):
@@ -171,7 +171,7 @@ class CacheManager:
 
 
 # Instância global do cache
-cache_manager = CacheManager()
+cache_manager = GerenciadorCache()
 
 
 def invalidate_cache_on_change(cache_types: List[str] = None):
@@ -192,22 +192,22 @@ def invalidate_cache_on_change(cache_types: List[str] = None):
 
 
 # Funções de conveniência para uso direto
-def get_materiais_cached() -> List[Material]:
+def obter_materiais_em_cache() -> List[Material]:
     """Obtém materiais com cache."""
     return cache_manager.get_materiais()
 
-def get_espessuras_cached() -> List[Espessura]:
+def obter_espessuras_em_cache() -> List[Espessura]:
     """Obtém espessuras com cache."""
     return cache_manager.get_espessuras()
 
-def get_canais_cached() -> List[Canal]:
+def obter_canais_em_cache() -> List[Canal]:
     """Obtém canais com cache."""
     return cache_manager.get_canais()
 
-def get_deducao_cached(material_id: int, espessura_id: int, canal_id: int) -> Optional[Deducao]:
+def obter_deducao_em_cache(material_id: int, espessura_id: int, canal_id: int) -> Optional[Deducao]:
     """Obtém dedução com cache."""
     return cache_manager.get_deducao(material_id, espessura_id, canal_id)
 
-def get_deducoes_cached() -> List[Deducao]:
+def obter_deducoes_em_cache() -> List[Deducao]:
     """Obtém todas as deduções com cache."""
     return cache_manager.get_deducoes()

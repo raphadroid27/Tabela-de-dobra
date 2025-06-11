@@ -15,9 +15,9 @@ import re
 import pyperclip
 from src.utils.banco_dados import session, obter_configuracoes
 from src.utils.cache import (
-    get_materiais_cached, 
-    get_espessuras_cached, 
-    get_canais_cached,
+    obter_materiais_em_cache, 
+    obter_espessuras_em_cache, 
+    obter_canais_em_cache,
     cache_manager
 )
 from src.utils.calculos import (calcular_dobra,
@@ -64,22 +64,22 @@ def atualizar_widgets(cabecalho_ui, form_ui, tipo):
     '''
     def atualizar_material():
         if cabecalho_ui and cabecalho_ui.material_widget and cabecalho_ui.material_widget.winfo_exists():
-            materiais = [m.nome for m in get_materiais_cached()]
+            materiais = [m.nome for m in obter_materiais_em_cache()]
             cabecalho_ui.material_widget.configure(values=materiais)
 
         # Verifica se o combobox de dedução de material existe e atualiza seus valores
         if form_ui and hasattr(form_ui, 'deducao_material_combo') and form_ui.deducao_material_combo and form_ui.deducao_material_combo.winfo_exists():
-            form_ui.deducao_material_combo.configure(values=[m.nome for m in get_materiais_cached()])
+            form_ui.deducao_material_combo.configure(values=[m.nome for m in obter_materiais_em_cache()])
 
     def atualizar_espessura():
         material_nome = cabecalho_ui.material_widget.get()
         # Usar cache para buscar material
-        materiais = get_materiais_cached()
+        materiais = obter_materiais_em_cache()
         material_obj = next((m for m in materiais if m.nome == material_nome), None)
         
         if material_obj:
             # Buscar espessuras relacionadas usando cache
-            espessuras = get_espessuras_cached()
+            espessuras = obter_espessuras_em_cache()
             # Filtrar espessuras válidas para o material através das deduções
             deducoes = cache_manager.get_cached_data('deducoes')
             espessuras_validas = [e for e in espessuras 
@@ -90,22 +90,22 @@ def atualizar_widgets(cabecalho_ui, form_ui, tipo):
 
         # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
         if form_ui and hasattr(form_ui, 'deducao_espessura_combo') and form_ui.deducao_espessura_combo and form_ui.deducao_espessura_combo.winfo_exists():
-            form_ui.deducao_espessura_combo.configure(values=sorted([e.valor for e in get_espessuras_cached()]))
+            form_ui.deducao_espessura_combo.configure(values=sorted([e.valor for e in obter_espessuras_em_cache()]))
 
     def atualizar_canal():
         espessura_valor = cabecalho_ui.espessura_widget.get()
         material_nome = cabecalho_ui.material_widget.get()
         
         # Usar cache para buscar objetos
-        espessuras = get_espessuras_cached()
-        materiais = get_materiais_cached()
+        espessuras = obter_espessuras_em_cache()
+        materiais = obter_materiais_em_cache()
         
         espessura_obj = next((e for e in espessuras if e.valor == float(espessura_valor)), None) if espessura_valor else None
         material_obj = next((m for m in materiais if m.nome == material_nome), None)
 
         if espessura_obj and material_obj:
             # Buscar canais relacionados usando cache
-            canais = get_canais_cached()
+            canais = obter_canais_em_cache()
             deducoes = cache_manager.get_cached_data('deducoes')
             
             # Filtrar canais válidos para o material e espessura
@@ -122,7 +122,7 @@ def atualizar_widgets(cabecalho_ui, form_ui, tipo):
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
         if form_ui and hasattr(form_ui, 'deducao_canal_combo') and form_ui.deducao_canal_combo and form_ui.deducao_canal_combo.winfo_exists():
-            form_ui.deducao_canal_combo.configure(values=sorted([c.valor for c in get_canais_cached()]))
+            form_ui.deducao_canal_combo.configure(values=sorted([c.valor for c in obter_canais_em_cache()]))
 
     def atualizar_deducao():
         espessura_valor = cabecalho_ui.espessura_widget.get()
@@ -130,9 +130,9 @@ def atualizar_widgets(cabecalho_ui, form_ui, tipo):
         canal_valor = cabecalho_ui.canal_widget.get()
 
         # Usar cache para buscar objetos
-        espessuras = get_espessuras_cached()
-        materiais = get_materiais_cached()
-        canais = get_canais_cached()
+        espessuras = obter_espessuras_em_cache()
+        materiais = obter_materiais_em_cache()
+        canais = obter_canais_em_cache()
         
         espessura_obj = next((e for e in espessuras if e.valor == float(espessura_valor)), None) if espessura_valor else None
         material_obj = next((m for m in materiais if m.nome == material_nome), None)
@@ -176,7 +176,7 @@ def canal_tooltip(cabecalho_ui):
         tp.ToolTip(cabecalho_ui.canal_widget, "Selecione o canal de dobra.")
     else:
         # Usar cache para buscar canal
-        canais = get_canais_cached()
+        canais = obter_canais_em_cache()
         canal_obj = next((c for c in canais if c.valor == cabecalho_ui.canal_widget.get()), None)
         
         if canal_obj:
@@ -199,9 +199,9 @@ def atualizar_toneladas_m(cabecalho_ui):
     canal_valor = cabecalho_ui.canal_widget.get()
 
     # Usar cache para buscar objetos (elimina consultas duplicadas)
-    espessuras = get_espessuras_cached()
-    materiais = get_materiais_cached()
-    canais = get_canais_cached()
+    espessuras = obter_espessuras_em_cache()
+    materiais = obter_materiais_em_cache()
+    canais = obter_canais_em_cache()
     
     espessura_obj = next((e for e in espessuras if e.valor == float(espessura_valor)), None) if espessura_valor else None
     material_obj = next((m for m in materiais if m.nome == material_nome), None)

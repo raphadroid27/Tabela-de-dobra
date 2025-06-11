@@ -4,6 +4,7 @@ Melhora performance e consistência das validações em formulários CRUD.
 """
 from functools import lru_cache
 from enum import Enum
+from typing import Any, Dict, List, Callable
 
 
 class ValidationResult:
@@ -39,7 +40,7 @@ class ValidationRule:
             return ValidationResult(False, f"Erro na validação: {e}")
 
 
-class CachedValidator:
+class ValidadorCache:
     """Validador com cache para evitar validações repetitivas."""
     
     def __init__(self):
@@ -270,8 +271,8 @@ class CachedValidator:
             return False
         
         try:
-            from src.utils.cache import get_materiais_cached
-            materiais = get_materiais_cached()
+            from src.utils.cache import obter_materiais_em_cache
+            materiais = obter_materiais_em_cache()
             return any(m.nome == str(value) for m in materiais)
         except:
             return True  # Em caso de erro, assumir válido

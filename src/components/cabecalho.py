@@ -12,7 +12,7 @@ from src.utils.interface import todas_funcoes
 
 LARGURA = 9  # Largura padrão para os widgets
 
-class CabecalhoUI:
+class InterfaceCabecalho:
     '''
     Classe para criar o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
     Esta classe contém métodos para criar rótulos e widgets de entrada, além de configurar o cabeçalho da interface.

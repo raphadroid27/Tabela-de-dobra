@@ -19,7 +19,7 @@ import json
 import tkinter as tk
 from src.utils.banco_dados import session
 from src.models import Usuario
-from src.components.dobra_90 import DobraUI
+from src.components.dobra_90 import InterfaceDobra
 from src.components.botoes import criar_botoes
 from src.forms import (
     form_espessura,
@@ -31,8 +31,8 @@ from src.forms import (
     form_usuario,
     form_razao_rie
 )
-from src.components.cabecalho import CabecalhoUI
-from src.components.avisos import AvisosUI
+from src.components.cabecalho import InterfaceCabecalho
+from src.components.avisos import InterfaceAvisos
 from src.config import globals as g
 from src.utils.janelas import no_topo
 from src.utils.interface import (salvar_valores_cabecalho,
@@ -50,7 +50,7 @@ CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
-class AppUI:
+class InterfaceApp:
     def __init__(self):
 
         '''
@@ -88,7 +88,7 @@ class AppUI:
         # Valores de largura das colunas
         self.valores_w = [1, 2]
 
-        self.cabecalho_ui = CabecalhoUI(self.frame_superior, None)
+        self.cabecalho_ui = InterfaceCabecalho(self.frame_superior, None)
 
 def verificar_admin_existente(app_principal):
     '''
@@ -196,27 +196,31 @@ def carregar_interface(app_principal=None):
         # Salvar valores de todas as colunas existentes antes da mudança
         for w in app_principal.dobras_ui.keys():
             salvar_valores_dobra(app_principal.dobras_ui[w], w)
-    
-    # Atualizar valores_w apenas após o salvamento
+      # Atualizar valores_w apenas após o salvamento
     app_principal.valores_w = novos_valores_w
-      # Limpar widgets antigos no frame superior
+    
+    # Limpar widgets antigos no frame superior
     for widget in app_principal.frame_superior.winfo_children():
         widget.destroy()
 
     # Recriar cabeçalho principal após limpeza
-    app_principal.cabecalho_ui = CabecalhoUI(app_principal.frame_superior, None)
-    app_principal.cabecalho_ui.frame.grid(row=0, column=0, sticky='ewns', ipadx=2, ipady=2)# Adicionar avisos se expansão horizontal estiver ativa
+    app_principal.cabecalho_ui = InterfaceCabecalho(app_principal.frame_superior, None)
+    app_principal.cabecalho_ui.frame.grid(row=0, column=0, sticky='ewns', ipadx=2, ipady=2)
+    
+    # Adicionar avisos se expansão horizontal estiver ativa
     if app_principal.expandir_h.get() == 1:
-        app_principal.avisos_ui = AvisosUI(app_principal.frame_superior)
+        app_principal.avisos_ui = InterfaceAvisos(app_principal.frame_superior)
         app_principal.avisos_ui.frame.grid(row=0, column=1, sticky='ewns', ipadx=2, ipady=2)
 
     # Criar colunas de dobras baseado nos valores_w
     app_principal.dobras_ui = {}
     for w in app_principal.valores_w:
-        dobra_ui = DobraUI(app_principal.cabecalho_ui, app_principal.frame_superior, w)
+        dobra_ui = InterfaceDobra(app_principal.cabecalho_ui, app_principal.frame_superior, w)
         dobra_ui.entradas_dobras(app_principal.cabecalho_ui, numero_dobras, w)
         dobra_ui.frame.grid(row=1, column=w-1, sticky='ewns', ipadx=2, ipady=2)
-        app_principal.dobras_ui[w] = dobra_ui    # Atualizar referência no cabeçalho para a primeira coluna de dobras
+        app_principal.dobras_ui[w] = dobra_ui
+    
+    # Atualizar referência no cabeçalho para a primeira coluna de dobras
     if app_principal.dobras_ui:
         app_principal.cabecalho_ui.dobras_ui = app_principal.dobras_ui[1]
         app_principal.cabecalho_ui.app_principal = app_principal  # Adicionar referência para todas as colunas
@@ -333,7 +337,7 @@ def main():
     Função principal que inicializa a interface gráfica do aplicativo.
     '''
     global app
-    app = AppUI()
+    app = InterfaceApp()
     
     # Configurar protocolo de fechamento da janela
     app.janela_principal.protocol("WM_DELETE_WINDOW", on_closing)

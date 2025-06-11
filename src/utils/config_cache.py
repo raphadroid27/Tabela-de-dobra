@@ -6,9 +6,10 @@ import json
 import threading
 from pathlib import Path
 import os
+from typing import Dict, Any
 
 
-class ConfigurationCache:
+class CacheConfiguracao:
     """Cache inteligente para configurações de aplicação."""
     
     def __init__(self, config_file: str):
@@ -191,13 +192,13 @@ class ConfigurationCache:
             }
 
 
-class ConfigManager:
+class GerenciadorConfig:
     """Gerenciador global de configurações com cache."""
     
     def __init__(self):
         self._caches = {}
     
-    def get_cache(self, config_file: str) -> ConfigurationCache:
+    def get_cache(self, config_file: str) -> CacheConfiguracao:
         """
         Obtém cache para arquivo de configuração específico.
         
@@ -208,7 +209,7 @@ class ConfigManager:
             Cache de configuração
         """
         if config_file not in self._caches:
-            self._caches[config_file] = ConfigurationCache(config_file)
+            self._caches[config_file] = CacheConfiguracao(config_file)
         return self._caches[config_file]
     
     def flush_all(self):
@@ -230,15 +231,15 @@ class ConfigManager:
 
 
 # Instância global do gerenciador
-config_manager = ConfigManager()
+config_manager = GerenciadorConfig()
 
 
-def get_config_cache(config_file: str) -> ConfigurationCache:
+def get_config_cache(config_file: str) -> CacheConfiguracao:
     """Função conveniente para obter cache de configuração."""
     return config_manager.get_cache(config_file)
 
 
-def get_app_config() -> ConfigurationCache:
+def get_app_config() -> CacheConfiguracao:
     """Função conveniente para configuração principal da aplicação."""
     config_file = os.path.join(os.path.dirname(__file__), '..', '..', 'config.json')
     return get_config_cache(config_file)
