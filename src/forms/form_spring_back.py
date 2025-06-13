@@ -1,6 +1,7 @@
-'''
+"""
 Formulário para o cálculo de Spring Back
-'''
+"""
+
 import tkinter as tk
 from tkinter import ttk
 from src.models.models import Material
@@ -13,7 +14,7 @@ spring_back_form = tk.Tk()
 spring_back_form.title("Cálculo de Spring Back")
 
 frame = tk.Frame(spring_back_form)
-frame.pack(pady=5, padx=5, fill='both', expand=True)
+frame.pack(pady=5, padx=5, fill="both", expand=True)
 
 # Obtém os nomes dos materiais como strings a partir da consulta
 materiais = [str(material.nome) for material in session.query(Material).all()]

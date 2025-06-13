@@ -1,15 +1,13 @@
-'''
+"""
 Este módulo contém funções para criar e gerenciar o frame de dobras
-'''
+"""
+
 import tkinter as tk
-from src.utils.interface import (calcular_dobra,
-                                 copiar,
-                                 focus_next_entry,
-                                 focus_previous_entry
-                                 )
+from src.utils.interface import calcular_dobra, copiar, focus_next_entry, focus_previous_entry
 from src.utils.classes import dica_ferramenta as tp
 
 LARGURA = 12
+
 
 class InterfaceDobra:
     """
@@ -19,10 +17,10 @@ class InterfaceDobra:
     """
 
     def __init__(self, cabecalho_ui, frame, w):
-        '''
+        """
         Cria o frame para as dobras, com base no valor de n.
         O frame é criado apenas uma vez, e os widgets são atualizados
-        '''
+        """
         self.frame = tk.Frame(frame)
         self.w = w  # Armazenar o valor de w para uso posterior
 
@@ -34,18 +32,18 @@ class InterfaceDobra:
         self.entradas_dobras(cabecalho_ui, self.n, w)
 
     def entradas_dobras(self, cabecalho_ui, valor, w):
-        '''
+        """
         Cria os widgets para as dobras, com base no valor de n.
-        '''
+        """
         # Atualizar o valor de n
         self.n = valor
 
         # Limpar widgets antigos do frame antes de criar novos
         for widget in self.frame.winfo_children():
-            widget.destroy()        # Adicionar widgets novamente
-        labels = ['Medida Ext.', 'Medida Dobra', 'Metade Dobra']
+            widget.destroy()  # Adicionar widgets novamente
+        labels = ["Medida Ext.", "Medida Dobra", "Metade Dobra"]
         for label in labels:
-            tk.Label(self.frame, text=label).grid(row=0, column=labels.index(label)+1)
+            tk.Label(self.frame, text=label).grid(row=0, column=labels.index(label) + 1)
 
         for i in range(1, self.n + 1):
             self.frame.rowconfigure(0, weight=0)
@@ -53,49 +51,61 @@ class InterfaceDobra:
 
             tk.Label(self.frame, text=f"Aba {i}:").grid(row=i, column=0)
 
-            setattr(self, f'aba{i}_entry_{w}', tk.Entry(self.frame, width=LARGURA, justify="center"))
-            entry = getattr(self, f'aba{i}_entry_{w}')
-            entry.grid(row=i, column=1, sticky='we', padx=2)
+            setattr(
+                self, f"aba{i}_entry_{w}", tk.Entry(self.frame, width=LARGURA, justify="center")
+            )
+            entry = getattr(self, f"aba{i}_entry_{w}")
+            entry.grid(row=i, column=1, sticky="we", padx=2)
             entry.bind("<KeyRelease>", lambda event: calcular_dobra(cabecalho_ui, self, w))
-            tp.ToolTip(entry, "Insira o valor da dobra.")            # Adicionar navegação com teclas direcionais
+            tp.DicaFerramenta(
+                entry, "Insira o valor da dobra."
+            )  # Adicionar navegação com teclas direcionais
             entry.bind("<Down>", lambda event, i=i: focus_next_entry(i, w, self))
             entry.bind("<Up>", lambda event, i=i: focus_previous_entry(i, w, self))
             entry.bind("<Return>", lambda event, i=i: focus_next_entry(i, w, self))
 
-            setattr(self, f'medidadobra{i}_label_{w}', tk.Label(self.frame,
-                                                            relief="sunken",
-                                                            width=LARGURA))
-            label = getattr(self, f'medidadobra{i}_label_{w}')
-            label.grid(row=i, column=2, sticky='we', padx=2)
-            label.bind("<Button-1>", lambda event, i=i: copiar(self, cabecalho_ui, 'medida_dobra', i, w))
-            tp.ToolTip(label, "Clique para copiar a medida da dobra.")
+            setattr(
+                self,
+                f"medidadobra{i}_label_{w}",
+                tk.Label(self.frame, relief="sunken", width=LARGURA),
+            )
+            label = getattr(self, f"medidadobra{i}_label_{w}")
+            label.grid(row=i, column=2, sticky="we", padx=2)
+            label.bind(
+                "<Button-1>", lambda event, i=i: copiar(self, cabecalho_ui, "medida_dobra", i, w)
+            )
+            tp.DicaFerramenta(label, "Clique para copiar a medida da dobra.")
 
-            setattr(self, f'metadedobra{i}_label_{w}', tk.Label(self.frame,
-                                                            relief="sunken",
-                                                            width=LARGURA))
-            label = getattr(self, f'metadedobra{i}_label_{w}')
-            label.grid(row=i, column=3, sticky='we', padx=2)
-            label.bind("<Button-1>", lambda event, i=i: copiar(self, cabecalho_ui, 'metade_dobra', i, w))
-            tp.ToolTip(label, "Clique para copiar a metade da dobra.")
+            setattr(
+                self,
+                f"metadedobra{i}_label_{w}",
+                tk.Label(self.frame, relief="sunken", width=LARGURA),
+            )
+            label = getattr(self, f"metadedobra{i}_label_{w}")
+            label.grid(row=i, column=3, sticky="we", padx=2)
+            label.bind(
+                "<Button-1>", lambda event, i=i: copiar(self, cabecalho_ui, "metade_dobra", i, w)
+            )
+            tp.DicaFerramenta(label, "Clique para copiar a metade da dobra.")
 
-        tk.Label(self.frame, text="Medida do Blank:").grid(row=i+1,
-                                                            column=0,
-                                                            columnspan=2,
-                                                            sticky='e',
-                                                            padx=2)
+        tk.Label(self.frame, text="Medida do Blank:").grid(
+            row=i + 1, column=0, columnspan=2, sticky="e", padx=2
+        )
 
-        setattr(self, f'medida_blank_label_{w}', tk.Label(self.frame,
-                                                    relief="sunken",
-                                                    width=LARGURA))
-        medida_blank = getattr(self, f'medida_blank_label_{w}')
-        medida_blank.grid(row=i+1, column=2, sticky='we', padx=2)
-        medida_blank.bind("<Button-1>", lambda event: copiar(self, cabecalho_ui, 'blank', None, w))
-        tp.ToolTip(medida_blank, "Clique para copiar a medida do blank.")
+        setattr(
+            self, f"medida_blank_label_{w}", tk.Label(self.frame, relief="sunken", width=LARGURA)
+        )
+        medida_blank = getattr(self, f"medida_blank_label_{w}")
+        medida_blank.grid(row=i + 1, column=2, sticky="we", padx=2)
+        medida_blank.bind("<Button-1>", lambda event: copiar(self, cabecalho_ui, "blank", None, w))
+        tp.DicaFerramenta(medida_blank, "Clique para copiar a medida do blank.")
 
-        setattr(self, f'metade_blank_label_{w}', tk.Label(self.frame,
-                                                    relief="sunken",
-                                                    width=LARGURA))
-        metade_blank = getattr(self, f'metade_blank_label_{w}')
-        metade_blank.grid(row=i+1, column=3, sticky='we', padx=2)
-        metade_blank.bind("<Button-1>", lambda event: copiar(self, cabecalho_ui, 'metade_blank', None, w))
-        tp.ToolTip(metade_blank, "Clique para copiar a metade do blank.")
+        setattr(
+            self, f"metade_blank_label_{w}", tk.Label(self.frame, relief="sunken", width=LARGURA)
+        )
+        metade_blank = getattr(self, f"metade_blank_label_{w}")
+        metade_blank.grid(row=i + 1, column=3, sticky="we", padx=2)
+        metade_blank.bind(
+            "<Button-1>", lambda event: copiar(self, cabecalho_ui, "metade_blank", None, w)
+        )
+        tp.DicaFerramenta(metade_blank, "Clique para copiar a metade do blank.")
