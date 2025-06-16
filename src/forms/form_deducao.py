@@ -183,7 +183,7 @@ def main(root):
     Função principal para inicializar o formulário de deduções.
     """
     # Importar app para acessar a instância principal
-    from src.app import app
+    from src.app import APP
 
-    form = FormDeducao(root, app_principal=app)
-    form.main(root, app)
+    form = FormDeducao(root, app_principal=APP)
+    form.main(root, APP)

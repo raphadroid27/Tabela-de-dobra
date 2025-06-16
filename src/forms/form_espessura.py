@@ -142,10 +142,10 @@ def main(root):
     Função principal para inicializar o formulário de espessuras.
     """
     # Importar app para acessar a instância principal
-    from src.app import app
+    from src.app import APP
 
-    form = FormEspessura(root, app_principal=app)
-    form.main(root, app)
+    form = FormEspessura(root, app_principal=APP)
+    form.main(root, APP)
 
 
 if __name__ == "__main__":

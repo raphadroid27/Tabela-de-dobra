@@ -53,6 +53,9 @@ CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
+# Variável global para armazenar a instância da aplicação principal
+APP = None
+
 
 class InterfaceApp:
     """Classe principal da interface da aplicação."""
@@ -70,7 +73,7 @@ class InterfaceApp:
         if "geometry" in config:
             self.janela_principal.geometry(config["geometry"])
         self.janela_principal.resizable(False, False)
-        self.janela_principal.update_idletasks()  # Inicializar as variáveis Tkinter após criar a janela
+        self.janela_principal.update_idletasks()
 
         icone_path = obter_caminho_icone()
         self.janela_principal.iconbitmap(icone_path)
@@ -90,10 +93,12 @@ class InterfaceApp:
         self.expandir_v = tk.IntVar()
         self.expandir_h = tk.IntVar()
         # Valores de largura das colunas
-        self.valores_w = [1, 2]
-
-        # Dicionário para rastrear formulários abertos
+        self.valores_w = [1, 2]        # Dicionário para rastrear formulários abertos
         self.formularios_abertos = {}
+
+        # Inicializar atributos que serão definidos posteriormente
+        self.avisos_ui = None
+        self.frame_botoes = None
 
         self.cabecalho_ui = InterfaceCabecalho(self.frame_superior, None)
 
@@ -131,8 +136,8 @@ def verificar_formulario_aberto(nome_formulario):
     Verifica se um formulário já está aberto e o foca se estiver.
     Retorna True se o formulário já está aberto, False caso contrário.
     """
-    if nome_formulario in app.formularios_abertos:
-        janela_ou_flag = app.formularios_abertos[nome_formulario]
+    if nome_formulario in APP.formularios_abertos:
+        janela_ou_flag = APP.formularios_abertos[nome_formulario]
 
         # Se for apenas True (flag), assumir que está aberto
         if janela_ou_flag is True:
@@ -148,7 +153,7 @@ def verificar_formulario_aberto(nome_formulario):
             return True
         except (tk.TclError, AttributeError):
             # Se a janela não existe mais, remove do dicionário
-            del app.formularios_abertos[nome_formulario]
+            del APP.formularios_abertos[nome_formulario]
             return False
     return False
 
@@ -166,33 +171,33 @@ def form_true(form, editar_attr, root):
         return
 
     # Marcar como aberto
-    app.formularios_abertos[nome_formulario] = True
+    APP.formularios_abertos[nome_formulario] = True
 
-    setattr(app, editar_attr, True)
+    setattr(APP, editar_attr, True)
     if hasattr(form, "FormDeducao"):
         # Para o formulário de dedução, passa app como parâmetro
-        form_instance = form.FormDeducao(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormDeducao(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormMaterial"):
         # Para o formulário de material, passa app como parâmetro
-        form_instance = form.FormMaterial(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormMaterial(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormEspessura"):
         # Para o formulário de espessura, passa app como parâmetro
-        form_instance = form.FormEspessura(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormEspessura(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormCanal"):
         # Para o formulário de canal, passa app como parâmetro
-        form_instance = form.FormCanal(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormCanal(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormAutenticacao"):
         # Para o formulário de autenticação, passa app como parâmetro
-        form_instance = form.FormAutenticacao(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormAutenticacao(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     else:
         form.main(root)
@@ -212,33 +217,33 @@ def form_false(form, editar_attr, root):
         return
 
     # Marcar como aberto
-    app.formularios_abertos[nome_formulario] = True
+    APP.formularios_abertos[nome_formulario] = True
 
-    setattr(app, editar_attr, False)
+    setattr(APP, editar_attr, False)
     if hasattr(form, "FormDeducao"):
         # Para o formulário de dedução, passa app como parâmetro
-        form_instance = form.FormDeducao(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormDeducao(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormMaterial"):
         # Para o formulário de material, passa app como parâmetro
-        form_instance = form.FormMaterial(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormMaterial(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormEspessura"):
         # Para o formulário de espessura, passa app como parâmetro
-        form_instance = form.FormEspessura(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormEspessura(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormCanal"):
         # Para o formulário de canal, passa app como parâmetro
-        form_instance = form.FormCanal(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormCanal(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     elif hasattr(form, "FormAutenticacao"):
         # Para o formulário de autenticação, passa app como parâmetro
-        form_instance = form.FormAutenticacao(root, app_principal=app)
-        form_instance.main(root, app)
+        form_instance = form.FormAutenticacao(root, app_principal=APP)
+        form_instance.main(root, APP)
         registrar_callback_fechamento(nome_formulario, root)
     else:
         form.main(root)
@@ -251,7 +256,7 @@ def carregar_interface(app_principal=None):
     """
     # Se não foi passada uma instância, usa a global
     if app_principal is None:
-        app_principal = app
+        app_principal = APP
 
     # Determinar número de dobras baseado na expansão vertical
     numero_dobras = 10 if app_principal.expandir_v.get() == 1 else 5
@@ -327,12 +332,12 @@ def on_closing():
     Função chamada ao fechar a janela principal.
     Salva a configuração atual antes de fechar.
     """
-    geometry = app.janela_principal.geometry()
+    geometry = APP.janela_principal.geometry()
     position = geometry.split("+")[1:]
     config = carregar_configuracao()
     config["geometry"] = f"+{position[0]}+{position[1]}"
     salvar_configuracao(config)
-    app.janela_principal.destroy()
+    APP.janela_principal.destroy()
 
 
 def configurar_menu(app_principal):
@@ -446,8 +451,8 @@ def registrar_callback_fechamento(nome_formulario, root):
     """
 
     def remover_do_dicionario():
-        if nome_formulario in app.formularios_abertos:
-            del app.formularios_abertos[nome_formulario]
+        if nome_formulario in APP.formularios_abertos:
+            del APP.formularios_abertos[nome_formulario]
 
     # Aguardar um momento para que a janela seja criada
     def configurar_callback():
@@ -479,7 +484,7 @@ def abrir_form_sobre(root, app_principal):
         return
 
     # Marcar como aberto temporariamente
-    app.formularios_abertos[nome_formulario] = True
+    APP.formularios_abertos[nome_formulario] = True
 
     try:
         form_sobre.main(root, app_principal)
@@ -487,8 +492,8 @@ def abrir_form_sobre(root, app_principal):
         registrar_callback_fechamento(nome_formulario, root)
     except Exception as e:
         # Se houve erro, remover do dicionário
-        if nome_formulario in app.formularios_abertos:
-            del app.formularios_abertos[nome_formulario]
+        if nome_formulario in APP.formularios_abertos:
+            del APP.formularios_abertos[nome_formulario]
         raise e
 
 
@@ -501,7 +506,7 @@ def abrir_form_razao_rie(root, app_principal):
         return
 
     # Marcar como aberto temporariamente
-    app.formularios_abertos[nome_formulario] = True
+    APP.formularios_abertos[nome_formulario] = True
 
     try:
         form_razao_rie.main(root, app_principal)
@@ -509,8 +514,8 @@ def abrir_form_razao_rie(root, app_principal):
         registrar_callback_fechamento(nome_formulario, root)
     except Exception as e:
         # Se houve erro, remover do dicionário
-        if nome_formulario in app.formularios_abertos:
-            del app.formularios_abertos[nome_formulario]
+        if nome_formulario in APP.formularios_abertos:
+            del APP.formularios_abertos[nome_formulario]
         raise e
 
 
@@ -523,7 +528,7 @@ def abrir_form_usuario(root, app_principal):
         return
 
     # Marcar como aberto temporariamente
-    app.formularios_abertos[nome_formulario] = True
+    APP.formularios_abertos[nome_formulario] = True
 
     try:
         form_usuario.main(root, app_principal)
@@ -531,8 +536,8 @@ def abrir_form_usuario(root, app_principal):
         registrar_callback_fechamento(nome_formulario, root)
     except Exception as e:
         # Se houve erro, remover do dicionário
-        if nome_formulario in app.formularios_abertos:
-            del app.formularios_abertos[nome_formulario]
+        if nome_formulario in APP.formularios_abertos:
+            del APP.formularios_abertos[nome_formulario]
         raise e
 
 
@@ -545,7 +550,7 @@ def abrir_form_aut(root, app_principal, login=True):
         return
 
     # Marcar como aberto temporariamente
-    app.formularios_abertos[nome_formulario] = True
+    APP.formularios_abertos[nome_formulario] = True
 
     try:
         form_aut.main(root, app_principal, login=login)
@@ -553,8 +558,8 @@ def abrir_form_aut(root, app_principal, login=True):
         registrar_callback_fechamento(nome_formulario, root)
     except Exception as e:
         # Se houve erro, remover do dicionário
-        if nome_formulario in app.formularios_abertos:
-            del app.formularios_abertos[nome_formulario]
+        if nome_formulario in APP.formularios_abertos:
+            del APP.formularios_abertos[nome_formulario]
         raise e
 
 
@@ -562,23 +567,23 @@ def main():
     """
     Função principal que inicializa a interface gráfica do aplicativo.
     """
-    global app
-    app = InterfaceApp()
+    global APP
+    APP = InterfaceApp()
 
     # Configurar protocolo de fechamento da janela
-    app.janela_principal.protocol("WM_DELETE_WINDOW", on_closing)
+    APP.janela_principal.protocol("WM_DELETE_WINDOW", on_closing)
 
     # Configurar menu - passar a instância como parâmetro
-    configurar_menu(app)
+    configurar_menu(APP)
 
     # Carregar interface inicial
     carregar_interface()
 
     # Verificar se existe admin
-    verificar_admin_existente(app)
+    verificar_admin_existente(APP)
 
     # Iniciar loop principal
-    app.janela_principal.mainloop()
+    APP.janela_principal.mainloop()
 
 
 if __name__ == "__main__":

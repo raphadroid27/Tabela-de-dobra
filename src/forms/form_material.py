@@ -156,10 +156,10 @@ def main(root):
     Função principal para inicializar o formulário de materiais.
     """
     # Importar app para acessar a instância principal
-    from src.app import app
+    from src.app import APP
 
-    form = FormMaterial(root, app_principal=app)
-    form.main(root, app)
+    form = FormMaterial(root, app_principal=APP)
+    form.main(root, APP)
 
 
 if __name__ == "__main__":
