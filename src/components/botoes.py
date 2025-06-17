@@ -7,9 +7,8 @@ interativa.
 '''
 import tkinter as tk
 from src.components.dobra_90 import entradas_dobras
-from src.utils.interface import limpar_dobras, limpar_tudo
+from src.utils.limpeza import limpar_dobras, limpar_tudo
 import src.config.globals as g
-from src.app import carregar_interface
 import src.utils.classes.tooltip as tp
 
 def criar_botoes(root):
@@ -34,31 +33,31 @@ def criar_botoes(root):
             g.PRINC_FORM.geometry(f"{largura_atual}x500")
             for w in g.VALORES_W:
                 entradas_dobras(11, w)
-            carregar_interface(1, root)
+            g.CARREGAR_INTERFACE_FUNC(1, root)
         else:
             g.PRINC_FORM.geometry(f"{largura_atual}x400")
             for w in g.VALORES_W:
                 entradas_dobras(6, w)
-            carregar_interface(1, root)
+            g.CARREGAR_INTERFACE_FUNC(1, root)
 
         # Verificar se avisos devem aparecer
         if g.EXP_H.get() == 1:
-            carregar_interface(2, root)
+            g.CARREGAR_INTERFACE_FUNC(2, root)
 
     def expandir_h():
         altura_atual = g.PRINC_FORM.winfo_height()
         if g.EXP_H.get() == 1:
             g.PRINC_FORM.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
             g.VALORES_W = [1, 2]
-            carregar_interface(2, root)
+            g.CARREGAR_INTERFACE_FUNC(2, root)
         else:
             g.PRINC_FORM.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
             g.VALORES_W = [1]
-            carregar_interface(1, root)
+            g.CARREGAR_INTERFACE_FUNC(1, root)
 
         # Verificar se avisos devem aparecer
         if g.EXP_H.get() == 1:
-            carregar_interface(2, root)
+            g.CARREGAR_INTERFACE_FUNC(2, root)
 
     tk.Checkbutton(
         frame_botoes,
