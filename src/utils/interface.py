@@ -2,18 +2,17 @@
 Este módulo contém funções auxiliares para o aplicativo de cálculo de dobras.
 
 As funções incluem a atualização de widgets, manipulação de valores de dobras,
-restauração de valores, e outras operações relacionadas    if canal_obj and comprimento_float and comprimento_total:
-        if comprimento_float < comprimento_total:
-            cabecalho_ui.comprimento_widget.config(fg="black")
-        elif comprimento_float >= comprimento_total:
-            cabecalho_ui.comprimento_widget.config(fg="red")uncionamento do
+restauração de valores, e outras operações relacionadas ao funcionamento do
 aplicativo de cálculo de dobras.
 """
 
 import tkinter as tk
 from tkinter import ttk
 import re
+from typing import cast
+
 import pyperclip
+
 from src.utils.banco_dados import session, obter_configuracoes
 from src.utils.cache import (
     obter_materiais_em_cache,
@@ -38,7 +37,7 @@ def atualizar_rie_se_aberta(cabecalho_ui):
     """
     try:
         # Importar aqui para evitar importação circular
-        from src.forms.form_razao_rie import FormRIE
+        from src.forms.form_razao_rie import FormRIE  # pylint: disable=import-outside-toplevel
 
         # Verificação simplificada da instância ativa
         instancia = FormRIE.instancia_ativa
@@ -50,12 +49,11 @@ def atualizar_rie_se_aberta(cabecalho_ui):
             and instancia.rie_form
             and instancia.rie_form.winfo_exists()
         ):
-
             # Chamar a função de cálculo da razão
             razao_ri_espessura(cabecalho_ui, instancia)
 
-    except Exception:
-        # Se houver qualquer erro, simplesmente ignora
+    except (AttributeError, ImportError, TypeError):
+        # Se houver erro de importação circular ou atributo, simplesmente ignora
         pass
 
 
@@ -104,10 +102,21 @@ def atualizar_widgets(cabecalho_ui, form_ui, tipo):
                 e
                 for e in espessuras
                 if any(
-                    d.material_id == material_obj.id and d.espessura_id == e.id for d in deducoes
+                    d.material_id == material_obj.id and d.espessura_id == e.id
+                    for d in deducoes
                 )
             ]
-            espessuras_validas.sort(key=lambda x: x.valor)
+            # Ordenar espessuras por valor numérico (converter para evitar problemas de tipagem)
+            def get_valor_numerico(espessura):
+                """Extrai o valor numérico da espessura para ordenação."""
+                try:
+                    # Usar getattr para obter o valor atual do atributo
+                    valor = getattr(espessura, 'valor', 0)
+                    return float(valor) if valor is not None else 0.0
+                except (ValueError, TypeError, AttributeError):
+                    return 0.0
+
+            espessuras_validas.sort(key=get_valor_numerico)
             cabecalho_ui.espessura_widget.configure(
                 values=[str(e.valor) for e in espessuras_validas]
             )
@@ -117,26 +126,53 @@ def atualizar_widgets(cabecalho_ui, form_ui, tipo):
             form_ui
             and hasattr(form_ui, "deducao_espessura_combo")
             and form_ui.deducao_espessura_combo
-            and form_ui.deducao_espessura_combo.winfo_exists()
-        ):
+            and form_ui.deducao_espessura_combo.winfo_exists()        ):
+            # Extrair valores numéricos das espessuras para ordenação
+            espessuras_valores = []
+            for e in obter_espessuras_em_cache():
+                try:
+                    valor = getattr(e, 'valor', 0)
+                    if valor is not None:
+                        espessuras_valores.append(float(valor))
+                except (ValueError, TypeError, AttributeError):
+                    continue
+
             form_ui.deducao_espessura_combo.configure(
-                values=sorted([e.valor for e in obter_espessuras_em_cache()])
+                values=sorted(espessuras_valores)
             )
 
     def atualizar_canal():
         espessura_valor = cabecalho_ui.espessura_widget.get()
-        material_nome = cabecalho_ui.material_widget.get()
-
-        # Usar cache para buscar objetos
+        material_nome = cabecalho_ui.material_widget.get()        # Usar cache para buscar objetos
         espessuras = obter_espessuras_em_cache()
         materiais = obter_materiais_em_cache()
 
-        espessura_obj = (
-            next((e for e in espessuras if e.valor == float(espessura_valor)), None)
-            if espessura_valor
-            else None
-        )
-        material_obj = next((m for m in materiais if m.nome == material_nome), None)
+        espessura_obj = None
+        if espessura_valor:
+            try:
+                valor_buscado = float(espessura_valor)
+                for e in espessuras:
+                    # Comparar valores de forma segura, evitando ColumnElement
+                    try:
+                        valor_espessura = float(getattr(e, 'valor', 0))
+                        # Comparação com tolerância para valores de ponto flutuante
+                        if abs(valor_espessura - valor_buscado) < 0.001:
+                            espessura_obj = e
+                            break
+                    except (ValueError, TypeError, AttributeError):
+                        continue
+            except (ValueError, TypeError):
+                espessura_obj = None
+
+        material_obj = None
+        for m in materiais:
+            try:
+                nome_material = getattr(m, 'nome', '')
+                if nome_material == material_nome:
+                    material_obj = m
+                    break
+            except (AttributeError, TypeError):
+                continue
 
         if espessura_obj and material_obj:
             # Buscar canais relacionados usando cache
@@ -166,43 +202,89 @@ def atualizar_widgets(cabecalho_ui, form_ui, tipo):
             form_ui
             and hasattr(form_ui, "deducao_canal_combo")
             and form_ui.deducao_canal_combo
-            and form_ui.deducao_canal_combo.winfo_exists()
-        ):
+            and form_ui.deducao_canal_combo.winfo_exists()        ):
+            # Extrair valores dos canais para ordenação
+            canais_valores = []
+            for c in obter_canais_em_cache():
+                try:
+                    valor = getattr(c, 'valor', '')
+                    if valor is not None:
+                        canais_valores.append(str(valor))
+                except (ValueError, TypeError, AttributeError):
+                    continue
+
             form_ui.deducao_canal_combo.configure(
-                values=sorted([c.valor for c in obter_canais_em_cache()])
+                values=sorted(canais_valores)
             )
 
     def atualizar_deducao():
         espessura_valor = cabecalho_ui.espessura_widget.get()
         material_nome = cabecalho_ui.material_widget.get()
-        canal_valor = cabecalho_ui.canal_widget.get()
-
-        # Usar cache para buscar objetos
+        canal_valor = cabecalho_ui.canal_widget.get()        # Usar cache para buscar objetos
         espessuras = obter_espessuras_em_cache()
         materiais = obter_materiais_em_cache()
         canais = obter_canais_em_cache()
 
-        espessura_obj = (
-            next((e for e in espessuras if e.valor == float(espessura_valor)), None)
-            if espessura_valor
-            else None
-        )
-        material_obj = next((m for m in materiais if m.nome == material_nome), None)
-        canal_obj = next((c for c in canais if c.valor == canal_valor), None)
+        espessura_obj = None
+        if espessura_valor:
+            try:
+                valor_buscado = float(espessura_valor)
+                for e in espessuras:
+                    try:
+                        valor_espessura = float(getattr(e, 'valor', 0))
+                        if abs(valor_espessura - valor_buscado) < 0.001:
+                            espessura_obj = e
+                            break
+                    except (ValueError, TypeError, AttributeError):
+                        continue
+            except (ValueError, TypeError):
+                espessura_obj = None
+
+        material_obj = None
+        for m in materiais:
+            try:
+                nome_material = getattr(m, 'nome', '')
+                if nome_material == material_nome:
+                    material_obj = m
+                    break
+            except (AttributeError, TypeError):
+                continue
+
+        canal_obj = None
+        for c in canais:
+            try:
+                valor_canal = getattr(c, 'valor', '')
+                if valor_canal == canal_valor:
+                    canal_obj = c
+                    break
+            except (AttributeError, TypeError):
+                continue
 
         if espessura_obj and material_obj and canal_obj:
             # Buscar dedução usando cache
             deducoes = cache_manager.get_cached_data("deducoes")
-            deducao_obj = next(
-                (
-                    d
-                    for d in deducoes
-                    if d.espessura_id == espessura_obj.id
-                    and d.material_id == material_obj.id
-                    and d.canal_id == canal_obj.id
-                ),
-                None,
-            )
+            # Buscar dedução de forma segura, evitando ColumnElement comparisons
+            deducao_obj = None
+            try:
+                espessura_id = int(getattr(espessura_obj, 'id', 0))
+                material_id = int(getattr(material_obj, 'id', 0))
+                canal_id = int(getattr(canal_obj, 'id', 0))
+
+                for d in deducoes:
+                    try:
+                        d_espessura_id = int(getattr(d, 'espessura_id', 0))
+                        d_material_id = int(getattr(d, 'material_id', 0))
+                        d_canal_id = int(getattr(d, 'canal_id', 0))
+
+                        if (d_espessura_id == espessura_id and
+                            d_material_id == material_id and
+                            d_canal_id == canal_id):
+                            deducao_obj = d
+                            break
+                    except (ValueError, TypeError, AttributeError):
+                        continue
+            except (ValueError, TypeError, AttributeError):
+                deducao_obj = None
 
             if deducao_obj:
                 cabecalho_ui.deducao_widget.config(text=deducao_obj.valor, fg="black")
@@ -233,16 +315,27 @@ def canal_tooltip(cabecalho_ui):
     if cabecalho_ui.canal_widget.get() == "":
         cabecalho_ui.canal_widget.set("")
         tp.DicaFerramenta(cabecalho_ui.canal_widget, "Selecione o canal de dobra.")
-    else:
-        # Usar cache para buscar canal
+    else:        # Usar cache para buscar canal
         canais = obter_canais_em_cache()
         canal_obj = next((c for c in canais if c.valor == cabecalho_ui.canal_widget.get()), None)
 
         if canal_obj:
-            canal_obs = canal_obj.observacao if canal_obj.observacao else "N/A."
-            canal_comprimento_total = (
-                canal_obj.comprimento_total if canal_obj.comprimento_total else "N/A."
-            )
+            # Extrair valores de forma segura, evitando problemas com Column[str] e Column[Unknown]
+            try:
+                canal_obs_valor = getattr(canal_obj, 'observacao', None)
+                canal_obs = str(canal_obs_valor) if canal_obs_valor is not None else "N/A."
+            except (AttributeError, TypeError):
+                canal_obs = "N/A."
+
+            try:
+                canal_comprimento_valor = getattr(canal_obj, 'comprimento_total', None)
+                canal_comprimento_total = (
+                    str(canal_comprimento_valor)
+                    if canal_comprimento_valor is not None
+                    else "N/A."
+                )
+            except (AttributeError, TypeError):
+                canal_comprimento_total = "N/A."
 
             tp.DicaFerramenta(
                 cabecalho_ui.canal_widget,
@@ -265,17 +358,50 @@ def atualizar_toneladas_m(cabecalho_ui):
     materiais = obter_materiais_em_cache()
     canais = obter_canais_em_cache()
 
-    espessura_obj = (
-        next((e for e in espessuras if e.valor == float(espessura_valor)), None)
-        if espessura_valor
-        else None
-    )
-    material_obj = next((m for m in materiais if m.nome == material_nome), None)
-    canal_obj = next((c for c in canais if c.valor == canal_valor), None)
+    espessura_obj = None
+    if espessura_valor:
+        try:
+            valor_buscado = float(espessura_valor)
+            for e in espessuras:
+                try:
+                    valor_espessura = float(getattr(e, 'valor', 0))
+                    if abs(valor_espessura - valor_buscado) < 0.001:
+                        espessura_obj = e
+                        break
+                except (ValueError, TypeError, AttributeError):
+                    continue
+        except (ValueError, TypeError):
+            espessura_obj = None
+
+    material_obj = None
+    for m in materiais:
+        try:
+            nome_material = getattr(m, 'nome', '')
+            if nome_material == material_nome:
+                material_obj = m
+                break
+        except (AttributeError, TypeError):
+            continue
+
+    canal_obj = None
+    for c in canais:
+        try:
+            valor_canal = getattr(c, 'valor', '')
+            if valor_canal == canal_valor:
+                canal_obj = c
+                break
+        except (AttributeError, TypeError):
+            continue
 
     if espessura_obj and material_obj and canal_obj:
-        # Usar cache para buscar dedução
-        deducao_obj = cache_manager.get_deducao(material_obj.id, espessura_obj.id, canal_obj.id)
+        # Usar cache para buscar dedução - extrair IDs de forma segura
+        try:
+            material_id = int(getattr(material_obj, 'id', 0))
+            espessura_id = int(getattr(espessura_obj, 'id', 0))
+            canal_id = int(getattr(canal_obj, 'id', 0))
+            deducao_obj = cache_manager.get_deducao(material_id, espessura_id, canal_id)
+        except (ValueError, TypeError, AttributeError):
+            deducao_obj = None
 
         if deducao_obj and deducao_obj.forca is not None:
             toneladas_m = (
@@ -288,13 +414,29 @@ def atualizar_toneladas_m(cabecalho_ui):
             cabecalho_ui.ton_m_widget.config(text="N/A", fg="red")
 
     # Verificar comprimento usando objeto já consultado (elimina consulta duplicada)
-    comprimento_total = canal_obj.comprimento_total if canal_obj else None
-    comprimento_float = float(comprimento) if comprimento else None
+    comprimento_total = None
+    if canal_obj:
+        try:
+            comprimento_total_valor = getattr(canal_obj, 'comprimento_total', None)
+            comprimento_total = (
+                float(comprimento_total_valor)
+                if comprimento_total_valor is not None
+                else None
+            )
+        except (ValueError, TypeError, AttributeError):
+            comprimento_total = None
+
+    comprimento_float = None
+    if comprimento:
+        try:
+            comprimento_float = float(comprimento)
+        except (ValueError, TypeError):
+            comprimento_float = None
 
     if canal_obj and comprimento_float and comprimento_total:
-        if comprimento < comprimento_total:
+        if comprimento_float < comprimento_total:
             cabecalho_ui.comprimento_widget.config(fg="black")
-        elif comprimento >= comprimento_total:
+        elif comprimento_float >= comprimento_total:
             cabecalho_ui.comprimento_widget.config(fg="red")
 
 
@@ -323,7 +465,8 @@ def restaurar_valores_dobra(dobras_ui, w):
                     print(f"Widget aba{i}_entry_{w} não existe ou foi destruído")
             else:
                 print(f"Não há dados salvos para aba{i}_entry_{w}")
-    except Exception as e:
+
+    except (AttributeError, IndexError, ValueError, TypeError) as e:
         print(f"Erro ao restaurar valores das dobras: {e}")
 
 
@@ -369,7 +512,8 @@ def salvar_valores_cabecalho(cabecalho_ui):
             ),
         }
         print("Valores salvos:", g.CABECALHO_VALORES)
-    except Exception as e:
+
+    except (AttributeError, TypeError) as e:
         print(f"Erro ao salvar valores do cabeçalho: {e}")
         g.CABECALHO_VALORES = {}
 
@@ -378,15 +522,20 @@ def restaurar_valores_cabecalho(cabecalho_ui):
     """
     Restaura os valores dos widgets no cabeçalho
     com base nos valores armazenados em g.CABECALHO_VALORES.
-    """
-    # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
+    """    # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
     if not hasattr(g, "CABECALHO_VALORES") or not isinstance(g.CABECALHO_VALORES, dict):
         g.CABECALHO_VALORES = {}
         return
 
     try:
+        # Garantir que temos um dicionário válido antes de iterar
+        cabecalho_valores = cast(dict, g.CABECALHO_VALORES)
+        if not cabecalho_valores:
+            print("Nenhum valor salvo para restaurar.")
+            return
+
         # Restaura os valores nos widgets
-        for widget_name, valor in g.CABECALHO_VALORES.items():
+        for widget_name, valor in cabecalho_valores.items():
             if hasattr(cabecalho_ui, f"{widget_name}_widget"):
                 widget = getattr(cabecalho_ui, f"{widget_name}_widget")
                 if widget and hasattr(widget, "winfo_exists") and widget.winfo_exists():
@@ -402,7 +551,7 @@ def restaurar_valores_cabecalho(cabecalho_ui):
                 print(f"Atributo {widget_name}_widget não encontrado em cabecalho_ui")
 
         print("Valores restaurados:", g.CABECALHO_VALORES)
-    except Exception as e:
+    except (AttributeError, KeyError, ValueError) as e:
         print(f"Erro ao restaurar valores do cabeçalho: {e}")
 
 
@@ -447,8 +596,7 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
         },
         "metade_blank": {
             "label": getattr(dobras_ui, f"metade_blank_label_{w}", None),
-            "funcao_calculo": lambda: calcular_dobra(cabecalho_ui, dobras_ui, w),
-        },
+            "funcao_calculo": lambda: calcular_dobra(cabecalho_ui, dobras_ui, w),        },
     }
 
     config = configuracoes.get(tipo)
@@ -457,20 +605,35 @@ def copiar(dobras_ui, cabecalho_ui, tipo, numero=None, w=None):
         return
 
     label = config["label"](numero) if callable(config["label"]) else config["label"]
+
     if label is None:
         print(f"Erro: Label não encontrado para o tipo '{tipo}' com numero={numero} e w={w}.")
         return
 
-    if label.cget("text") == "":
+    # Verificar se o label é um widget válido do tkinter
+    if not hasattr(label, "cget") or not hasattr(label, "config"):
+        print(f"Erro: O objeto para o tipo '{tipo}' não é um widget válido do tkinter.")
         return
 
-    if hasattr(label, "cget") and "text" in label.keys():
+    try:
+        # Fazer cast para tk.Label para resolver problemas de tipagem
+        widget_label = cast(tk.Label, label)
+
+        # Verificar se o texto está vazio
+        texto_atual = str(widget_label.cget("text"))
+        if texto_atual == "":
+            return
+
+        # Executar cálculo e copiar
         config["funcao_calculo"]()
-        pyperclip.copy(label.cget("text"))
-        print(f'Valor copiado {label.cget("text")}')
-        label.config(text=f'{label.cget("text")} Copiado!', fg="green")
-    else:
-        print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
+        texto_atual = str(widget_label.cget("text"))
+        pyperclip.copy(texto_atual)
+        print(f'Valor copiado {texto_atual}')
+        widget_label.config(text=f'{texto_atual} Copiado!', fg="green")
+    except tk.TclError as e:
+        print(f"Erro ao acessar widget para o tipo '{tipo}': {e}")
+    except (ValueError, AttributeError, OSError) as e:
+        print(f"Erro inesperado ao copiar valor do tipo '{tipo}': {e}")
 
 
 def limpar_dobras(cabecalho_ui, dobras_ui, app_principal):
@@ -598,7 +761,7 @@ def limpar_tudo(cabecalho_ui, dobras_ui, app_principal):
         if hasattr(cabecalho_ui, "material_widget") and cabecalho_ui.material_widget:
             cabecalho_ui.material_widget.focus_set()
 
-    except Exception as e:
+    except (AttributeError, tk.TclError) as e:
         print(f"Erro ao limpar todos os campos: {e}")
 
 
@@ -671,14 +834,15 @@ def listar(tipo, ui):
         config["lista"].insert("", "end", values=config["valores"](item))
 
 
-def todas_funcoes(cabecalho_ui, dobras_ui=None, todas_colunas=False, app_principal=None):
+def todas_funcoes(
+    cabecalho_ui, dobras_ui=None, todas_colunas=False, app_principal=None
+):
     """
-    Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
-
-    Args:
+    Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.    Args:
         cabecalho_ui: Interface do cabeçalho
         dobras_ui: Interface de dobras específica (opcional)
-        todas_colunas: Se True, recalcula todas as colunas ativas        app_principal: Instância do app para acessar todas as colunas
+        todas_colunas: Se True, recalcula todas as colunas ativas
+        app_principal: Instância do app para acessar todas as colunas
     """
     for tipo in ["material", "espessura", "canal", "dedução"]:
         atualizar_widgets(cabecalho_ui, None, tipo)
@@ -766,5 +930,5 @@ def salvar_valores_dobra(dobras_ui, w):
                 g.DOBRAS_VALORES[i - 1][w - 1] = ""
 
         print(f"Valores de dobras salvos para coluna {w}:", g.DOBRAS_VALORES)
-    except Exception as e:
+    except (KeyError, IndexError, ValueError, AttributeError) as e:
         print(f"Erro ao salvar valores das dobras: {e}")
