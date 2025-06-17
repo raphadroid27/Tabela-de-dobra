@@ -12,6 +12,9 @@ EXP_H = None
 USUARIO_ID = None
 USUARIO_NOME = None
 
+# Função para carregar interface (definida dinamicamente para evitar importação cíclica)
+CARREGAR_INTERFACE_FUNC = None
+
 # head.py widgets
 MAT_COMB = None
 ESP_COMB = None
