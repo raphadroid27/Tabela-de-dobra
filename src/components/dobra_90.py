@@ -88,15 +88,18 @@ class InterfaceDobra:
             )
             tp.DicaFerramenta(label, "Clique para copiar a metade da dobra.")
 
+        # Garantir que i está definido mesmo se o loop não executar
+        last_row = self.n if hasattr(self, 'n') and self.n > 0 else 0
+
         tk.Label(self.frame, text="Medida do Blank:").grid(
-            row=i + 1, column=0, columnspan=2, sticky="e", padx=2
+            row=last_row + 1, column=0, columnspan=2, sticky="e", padx=2
         )
 
         setattr(
             self, f"medida_blank_label_{w}", tk.Label(self.frame, relief="sunken", width=LARGURA)
         )
         medida_blank = getattr(self, f"medida_blank_label_{w}")
-        medida_blank.grid(row=i + 1, column=2, sticky="we", padx=2)
+        medida_blank.grid(row=last_row + 1, column=2, sticky="we", padx=2)
         medida_blank.bind("<Button-1>", lambda event: copiar(self, cabecalho_ui, "blank", None, w))
         tp.DicaFerramenta(medida_blank, "Clique para copiar a medida do blank.")
 
@@ -104,7 +107,7 @@ class InterfaceDobra:
             self, f"metade_blank_label_{w}", tk.Label(self.frame, relief="sunken", width=LARGURA)
         )
         metade_blank = getattr(self, f"metade_blank_label_{w}")
-        metade_blank.grid(row=i + 1, column=3, sticky="we", padx=2)
+        metade_blank.grid(row=last_row + 1, column=3, sticky="we", padx=2)
         metade_blank.bind(
             "<Button-1>", lambda event: copiar(self, cabecalho_ui, "metade_blank", None, w)
         )
