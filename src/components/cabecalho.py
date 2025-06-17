@@ -13,8 +13,10 @@ LARGURA = 9  # Largura padrão para os widgets
 
 class InterfaceCabecalho:
     """
-    Classe para criar o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
-    Esta classe contém métodos para criar rótulos e widgets de entrada, além de configurar o cabeçalho da interface.
+    Classe para criar o cabeçalho da interface gráfica com os
+    campos de entrada e os rótulos correspondentes.
+    Esta classe contém métodos para criar rótulos e widgets de entrada,
+    além de configurar o cabeçalho da interface.
     """
 
     def __init__(self, root, dobras_ui):
