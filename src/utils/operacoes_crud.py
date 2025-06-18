@@ -41,12 +41,17 @@ def adicionar(tipo):
 def adicionar_deducao():
     '''
     Lógica para adicionar uma nova dedução.
-    '''
+    '''    # Verificar se os widgets foram inicializados
+    if (g.DED_ESPES_COMB is None or g.DED_CANAL_COMB is None or
+        g.DED_MATER_COMB is None or g.DED_VALOR_ENTRY is None):
+        messagebox.showerror("Erro", "Interface não inicializada corretamente.")
+        return
+
     espessura_valor = g.DED_ESPES_COMB.get()
     canal_valor = g.DED_CANAL_COMB.get()
     material_nome = g.DED_MATER_COMB.get()
-    nova_observacao_valor = g.DED_OBSER_ENTRY.get()
-    nova_forca_valor = g.DED_FORCA_ENTRY.get()
+    nova_observacao_valor = g.DED_OBSER_ENTRY.get() if g.DED_OBSER_ENTRY else ""
+    nova_forca_valor = g.DED_FORCA_ENTRY.get() if g.DED_FORCA_ENTRY else ""
 
     if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
         messagebox.showerror("Erro",
@@ -55,9 +60,21 @@ def adicionar_deducao():
         return
 
     nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
+
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
+
+    # Verificar se os objetos foram encontrados no banco
+    if not espessura_obj:
+        messagebox.showerror("Erro", f"Espessura '{espessura_valor}' não encontrada no banco.")
+        return
+    if not canal_obj:
+        messagebox.showerror("Erro", f"Canal '{canal_valor}' não encontrado no banco.")
+        return
+    if not material_obj:
+        messagebox.showerror("Erro", f"Material '{material_nome}' não encontrado no banco.")
+        return
 
     deducao_existente = session.query(Deducao).filter_by(
         espessura_id=espessura_obj.id,
@@ -87,6 +104,10 @@ def adicionar_espessura():
     '''
     Lógica para adicionar uma nova espessura.
     '''
+    if g.ESP_VALOR_ENTRY is None:
+        messagebox.showerror("Erro", "Campo de espessura não inicializado.")
+        return
+
     espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         messagebox.showwarning("Atenção!",
@@ -107,7 +128,12 @@ def adicionar_espessura():
 def adicionar_material():
     '''
     Lógica para adicionar um novo material.
-    '''
+    '''    # Verificar se os widgets foram inicializados
+    if (g.MAT_NOME_ENTRY is None or g.MAT_DENS_ENTRY is None or
+        g.MAT_ESCO_ENTRY is None or g.MAT_ELAS_ENTRY is None):
+        messagebox.showerror("Erro", "Interface não inicializada corretamente.")
+        return
+
     nome_material = g.MAT_NOME_ENTRY.get()
     densidade_material = g.MAT_DENS_ENTRY.get()
     escoamento_material = g.MAT_ESCO_ENTRY.get()
@@ -138,7 +164,13 @@ def adicionar_material():
 def adicionar_canal():
     '''
     Lógica para adicionar um novo canal.
-    '''
+    '''    # Verificar se os widgets foram inicializados
+    if (g.CANAL_VALOR_ENTRY is None or g.CANAL_LARGU_ENTRY is None or
+        g.CANAL_ALTUR_ENTRY is None or g.CANAL_COMPR_ENTRY is None or
+        g.CANAL_OBSER_ENTRY is None):
+        messagebox.showerror("Erro", "Interface não inicializada corretamente.")
+        return
+
     valor_canal = g.CANAL_VALOR_ENTRY.get()
     largura_canal = g.CANAL_LARGU_ENTRY.get()
     altura_canal = g.CANAL_ALTUR_ENTRY.get()
@@ -188,10 +220,16 @@ def editar(tipo):
     config = configuracoes[tipo]
 
     obj = item_selecionado(tipo)
+    if obj is None:
+        messagebox.showerror("Erro", "Nenhum item selecionado para editar.")
+        return
+
     obj_id = obj.id
     if obj:
         alteracoes = []  # Lista para armazenar as alterações
         for campo, entry in config['campos'].items():
+            if entry is None:
+                continue
             valor_novo = entry.get().strip()
             if valor_novo == "":
                 valor_novo = None
@@ -348,12 +386,16 @@ def buscar(tipo):
     Realiza a busca de itens no banco de dados com base nos critérios especificados.
     '''
     configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
 
     try:
         config = configuracoes.get(tipo)
     except KeyError:
         messagebox.showerror("Erro", f"Tipo '{tipo}' não encontrado nas configurações.")
+        return
+
+    # Verificar se config não é None
+    if config is None:
+        messagebox.showerror("Erro", f"Configuração para '{tipo}' não encontrada.")
         return
 
     if tipo != 'dedução' and (config.get('busca') is None or not config['busca'].winfo_exists()):
