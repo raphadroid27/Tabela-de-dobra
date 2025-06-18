@@ -72,15 +72,17 @@ def limpar_tudo():
         g.MAT_COMB, g.ESP_COMB, g.CANAL_COMB
     ]
     for campo in campos:
-        campo.set('')  # Limpa o valor selecionado
-        if campo != g.MAT_COMB:
-            campo.configure(values=[])  # Limpa os valores disponíveis
+        if campo is not None:
+            campo.set('')  # Limpa o valor selecionado
+            if campo != g.MAT_COMB:
+                campo.configure(values=[])  # Limpa os valores disponíveis
 
     entradas = [
         g.RI_ENTRY, g.COMPR_ENTRY
     ]
     for entrada in entradas:
-        entrada.delete(0, tk.END)
+        if entrada is not None:
+            entrada.delete(0, tk.END)
 
     etiquetas = {
         g.K_LBL: "",
@@ -92,7 +94,8 @@ def limpar_tudo():
         g.Z_EXT_LBL: ""
     }
     for etiqueta, texto in etiquetas.items():
-        etiqueta.config(text=texto)
+        if etiqueta is not None:
+            etiqueta.config(text=texto)
 
     limpar_dobras()
     todas_funcoes()

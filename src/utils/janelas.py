@@ -11,13 +11,18 @@ def no_topo(form):
         if window and window.winfo_exists():
             window.attributes("-topmost",on_top)
 
-    on_top_valor = g.NO_TOPO_VAR.get() == 1
-    set_topmost(form, on_top_valor)
+    if g.NO_TOPO_VAR is not None:
+        on_top_valor = g.NO_TOPO_VAR.get() == 1
+        set_topmost(form, on_top_valor)
 
 def posicionar_janela(form, posicao=None):
     '''
     Posiciona a janela em relação à janela principal.
     '''
+    # Verificar se a janela principal existe
+    if g.PRINC_FORM is None:
+        return
+
     form.update_idletasks()
     g.PRINC_FORM.update_idletasks()
     largura_monitor = g.PRINC_FORM.winfo_screenwidth()
