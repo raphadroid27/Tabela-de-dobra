@@ -39,13 +39,18 @@ def atualizar_widgets(tipo):
                                                .order_by(Material.nome).all()])
 
     def atualizar_espessura():
+        if not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get'):
+            return
+
         material_nome = g.MAT_COMB.get()
         material_obj = session.query(Material).filter_by(nome=material_nome).first()
         if material_obj:
             espessuras = session.query(Espessura).join(Deducao).filter(
                 Deducao.material_id == material_obj.id
             ).order_by(Espessura.valor)
-            g.ESP_COMB.configure(values=[str(e.valor) for e in espessuras])
+
+            if g.ESP_COMB and hasattr(g.ESP_COMB, 'configure'):
+                g.ESP_COMB.configure(values=[str(e.valor) for e in espessuras])
 
         # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
         if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
@@ -53,6 +58,10 @@ def atualizar_widgets(tipo):
                                                       .query(Espessura).all()]))
 
     def atualizar_canal():
+        if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
+            not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get')):
+            return
+
         espessura_valor = g.ESP_COMB.get()
         material_nome = g.MAT_COMB.get()
         espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
@@ -67,13 +76,19 @@ def atualizar_widgets(tipo):
                 [str(c.valor) for c in canais],
                 key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
             )
-            g.CANAL_COMB.configure(values=canais_valores)
+            if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'configure'):
+                g.CANAL_COMB.configure(values=canais_valores)
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
         if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
             g.DED_CANAL_COMB.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
 
     def atualizar_deducao():
+        if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
+            not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get') or
+            not g.CANAL_COMB or not hasattr(g.CANAL_COMB, 'get')):
+            return
+
         espessura_valor = g.ESP_COMB.get()
         material_nome = g.MAT_COMB.get()
         canal_valor = g.CANAL_COMB.get()
@@ -90,12 +105,16 @@ def atualizar_widgets(tipo):
             ).first()
 
             if deducao_obj:
-                g.DED_LBL.config(text=deducao_obj.valor, fg="black")
+                if g.DED_LBL and hasattr(g.DED_LBL, 'config'):
+                    g.DED_LBL.config(text=deducao_obj.valor, fg="black")
                 observacao = deducao_obj.observacao or 'Observações não encontradas'
-                g.OBS_LBL.config(text=f'{observacao}')
+                if g.OBS_LBL and hasattr(g.OBS_LBL, 'config'):
+                    g.OBS_LBL.config(text=f'{observacao}')
             else:
-                g.DED_LBL.config(text='N/A', fg="red")
-                g.OBS_LBL.config(text='Observações não encontradas')
+                if g.DED_LBL and hasattr(g.DED_LBL, 'config'):
+                    g.DED_LBL.config(text='N/A', fg="red")
+                if g.OBS_LBL and hasattr(g.OBS_LBL, 'config'):
+                    g.OBS_LBL.config(text='Observações não encontradas')
 
         for tipo in ['material', 'espessura', 'canal']:
             atualizar_widgets(tipo)
@@ -119,15 +138,18 @@ def canal_tooltip():
     Atualiza o tooltip do combobox de canais com as
     observações e comprimento total do canal selecionado.
     '''
+    if not g.CANAL_COMB or not hasattr(g.CANAL_COMB, 'get'):
+        return
+
     if g.CANAL_COMB.get() == "":
-        g.CANAL_COMB.set("")
+        if hasattr(g.CANAL_COMB, 'set'):
+            g.CANAL_COMB.set("")
         tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
     else:
         canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
         if canal_obj:
-            canal_obs = canal_obj.observacao if canal_obj.observacao else "N/A."
-            canal_comprimento_total = (canal_obj.comprimento_total
-                                       if canal_obj.comprimento_total else "N/A.")
+            canal_obs = getattr(canal_obj, 'observacao', None) or "N/A."
+            canal_comprimento_total = getattr(canal_obj, 'comprimento_total', None) or "N/A."
 
             tp.ToolTip(g.CANAL_COMB,
                        f'Obs: {canal_obs}\n'
@@ -138,6 +160,12 @@ def atualizar_toneladas_m():
     '''
     Atualiza o valor de toneladas por metro com base no comprimento e na dedução selecionada.
     '''
+    if (not g.COMPR_ENTRY or not hasattr(g.COMPR_ENTRY, 'get') or
+        not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
+        not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get') or
+        not g.CANAL_COMB or not hasattr(g.CANAL_COMB, 'get')):
+        return
+
     comprimento = g.COMPR_ENTRY.get()
     espessura_valor = g.ESP_COMB.get()
     material_nome = g.MAT_COMB.get()
@@ -157,20 +185,25 @@ def atualizar_toneladas_m():
         if deducao_obj and deducao_obj.forca is not None:
             toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
                            if comprimento else deducao_obj.forca)
-            g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', fg="black")
+            if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'config'):
+                g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', fg="black")
         else:
-            g.FORCA_LBL.config(text='N/A', fg="red")
+            if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'config'):
+                g.FORCA_LBL.config(text='N/A', fg="red")
 
     # Verificar se o comprimento é menor que o comprimento total do canal
-    canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
-    comprimento_total = canal_obj.comprimento_total if canal_obj else None
-    comprimento = float(comprimento) if comprimento else None
+    if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'get'):
+        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
+        comprimento_total = getattr(canal_obj, 'comprimento_total', None) if canal_obj else None
+        comprimento = float(comprimento) if comprimento else None
 
-    if canal_obj and comprimento and comprimento_total:
-        if comprimento < comprimento_total:
-            g.COMPR_ENTRY.config(fg="black")
-        elif comprimento >= comprimento_total:
-            g.COMPR_ENTRY.config(fg="red")
+        if canal_obj and comprimento and comprimento_total:
+            if comprimento < comprimento_total:
+                if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'config'):
+                    g.COMPR_ENTRY.config(fg="black")
+            elif comprimento >= comprimento_total:
+                if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'config'):
+                    g.COMPR_ENTRY.config(fg="red")
 
 def restaurar_valores_dobra(w):
     '''
@@ -280,16 +313,53 @@ def copiar(tipo, numero=None, w=None):
         print(f"Erro: Label não encontrado para o tipo '{tipo}' com numero={numero} e w={w}.")
         return
 
-    if label.cget('text') == "":
+    # Verificar se o label é um widget válido do tkinter
+    if not hasattr(label, 'cget') or not hasattr(label, 'config'):
+        print(f"Erro: O objeto para o tipo '{tipo}' não é um widget válido do tkinter.")
         return
 
-    if hasattr(label, 'cget') and 'text' in label.keys():
-        config['funcao_calculo']()
-        pyperclip.copy(label.cget('text'))
-        print(f'Valor copiado {label.cget("text")}')
-        label.config(text=f'{label.cget("text")} Copiado!', fg="green")
+    # Verificar se o texto está vazio
+    try:
+        texto_atual = getattr(label, 'cget')('text')
+        # Converter para string para garantir compatibilidade
+        texto_atual = str(texto_atual)
+        if texto_atual == "":
+            return
+    except (tk.TclError, AttributeError):
+        print(f"Erro: Não foi possível acessar o texto do widget para o tipo '{tipo}'.")
+        return
+
+    # Remover " Copiado!" se já estiver presente para evitar repetição
+    if " Copiado!" in texto_atual:
+        texto_original = texto_atual.replace(" Copiado!", "")
     else:
-        print(f"Erro: O label para o tipo '{tipo}' não possui o atributo 'text'.")
+        texto_original = texto_atual
+
+    config['funcao_calculo']()
+
+    # Obter o texto atualizado após o cálculo
+    try:
+        texto_atualizado = getattr(label, 'cget')('text')
+        # Converter para string e remover " Copiado!" se já estiver presente
+        texto_atualizado = str(texto_atualizado)
+        if " Copiado!" in texto_atualizado:
+            texto_atualizado = texto_atualizado.replace(" Copiado!", "")
+    except (tk.TclError, AttributeError):
+        texto_atualizado = texto_original
+
+    pyperclip.copy(texto_atualizado)
+    print(f'Valor copiado {texto_atualizado}')
+    getattr(label, 'config')(text=f'{texto_atualizado} Copiado!', fg="green")
+
+    # Agendar a remoção do "Copiado!" após 2 segundos
+    def remover_copiado():
+        try:
+            getattr(label, 'config')(text=texto_atualizado, fg="black")
+        except (tk.TclError, AttributeError):
+            pass
+
+    if hasattr(label, 'after'):
+        getattr(label, 'after')(2000, remover_copiado)
 
 def limpar_busca(tipo):
     '''
