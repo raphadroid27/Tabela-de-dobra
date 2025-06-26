@@ -22,13 +22,16 @@ def carregar_interface(var, frame_superior):
                    1 para apenas o cabeçalho principal.
                    2 para cabeçalho com avisos.
         frame_superior (tk.Frame): Frame onde os widgets serão adicionados.
-    '''
-    # Salvar os valores dos widgets do cabeçalho
+    '''    # Salvar os valores dos widgets do cabeçalho
     # Isso deve ser feito antes de recriar os widgets
     salvar_valores_cabecalho()
 
-    print(f'g.EXP_V: {g.EXP_V.get()}')
-    print(f'g.EXP_H: {g.EXP_H.get()}')
+    # Verificar se as variáveis estão inicializadas antes de usar .get()
+    exp_v_value = g.EXP_V.get() if g.EXP_V is not None else 'Não inicializado'
+    exp_h_value = g.EXP_H.get() if g.EXP_H is not None else 'Não inicializado'
+
+    print(f'g.EXP_V: {exp_v_value}')
+    print(f'g.EXP_H: {exp_h_value}')
 
     # Limpar widgets antigos no frame superior
     for widget in frame_superior.winfo_children():
