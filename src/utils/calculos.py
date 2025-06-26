@@ -7,6 +7,33 @@ from src.config import globals as g
 from src.models.models import Canal
 from src.utils.banco_dados import session
 
+def verificar_widget_inicializado(widget, metodo='get', default_value=''):
+    '''
+    Verifica se um widget está inicializado antes de chamar seus métodos.
+    
+    Args:
+        widget: O widget a ser verificado
+        metodo: O método a ser chamado ('get', 'cget', 'config')
+        default_value: Valor padrão caso o widget não esteja inicializado
+    
+    Returns:
+        O resultado do método ou o valor padrão
+    '''
+    if widget is None:
+        return default_value
+
+    try:
+        if metodo == 'get':
+            return widget.get()
+        elif metodo == 'cget':
+            return widget.cget('text')
+        elif metodo == 'config':
+            return widget.config
+        else:
+            return default_value
+    except (AttributeError, TypeError):
+        return default_value
+
 def calcular_k_offset():
     '''
     Calcula o fator K com base nos valores de espessura, dedução e raio interno.
@@ -14,13 +41,15 @@ def calcular_k_offset():
     '''
     try:
         # Obtém os valores diretamente e verifica se são válidos
-        espessura = float(g.ESP_COMB.get() or 0)
-        raio_interno = float(g.RI_ENTRY.get().replace(',', '.') or 0)
-        deducao_espec = float(g.DED_ESPEC_ENTRY.get().replace(',', '.') or 0)
-        deducao_valor = float(g.DED_LBL.cget('text') or 0)
+        espessura = float(verificar_widget_inicializado(g.ESP_COMB, 'get', '0') or 0)
+        raio_interno_str = verificar_widget_inicializado(g.RI_ENTRY, 'get', '0') or '0'
+        raio_interno = float(raio_interno_str.replace(',', '.'))
+        deducao_espec_str = verificar_widget_inicializado(g.DED_ESPEC_ENTRY, 'get', '0') or '0'
+        deducao_espec = float(deducao_espec_str.replace(',', '.'))
+        deducao_valor = float(verificar_widget_inicializado(g.DED_LBL, 'cget', '0') or 0)
 
         # Usa a dedução específica, se fornecida
-        if g.DED_ESPEC_ENTRY.get():
+        if verificar_widget_inicializado(g.DED_ESPEC_ENTRY, 'get'):
             deducao_valor = deducao_espec
 
         # Valida se os valores necessários são maiores que zero
@@ -35,14 +64,14 @@ def calcular_k_offset():
         fator_k = min(fator_k, 0.5)
 
         #Calcula o offset
-        offset = fator_k * espessura
+        offset = fator_k * espessura        # Atualiza o label com o valor calculado
+        if g.K_LBL is not None:
+            g.K_LBL.config(text=f"{fator_k:.2f}", fg="blue"
+                           if deducao_valor == deducao_espec else "black")
 
-        # Atualiza o label com o valor calculado
-        g.K_LBL.config(text=f"{fator_k:.2f}", fg="blue"
-                       if deducao_valor == deducao_espec else "black")
-
-        g.OFFSET_LBL.config(text=f"{offset:.2f}", fg="blue"
-                            if deducao_valor == deducao_espec else "black")
+        if g.OFFSET_LBL is not None:
+            g.OFFSET_LBL.config(text=f"{offset:.2f}", fg="blue"
+                                if deducao_valor == deducao_espec else "black")
 
     except ValueError:
         # Trata erros de conversão
@@ -56,15 +85,18 @@ def aba_minima_externa():
     aba_minima_valor = 0  # Valor padrão caso a condição não seja satisfeita
 
     try:
-        if g.CANAL_COMB.get() != "":
-            canal_valor = float(re.findall(r'\d+\.?\d*', g.CANAL_COMB.get())[0])
-            espessura = float(g.ESP_COMB.get())
+        canal_valor = verificar_widget_inicializado(g.CANAL_COMB, 'get', '')
+        if canal_valor != "":
+            canal_valor = float(re.findall(r'\d+\.?\d*', canal_valor)[0])
+            espessura = float(verificar_widget_inicializado(g.ESP_COMB, 'get', '0'))
 
             aba_minima_valor = canal_valor / 2 + espessura + 2
-            g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
+            if g.ABA_EXT_LBL is not None:
+                g.ABA_EXT_LBL.config(text=f"{aba_minima_valor:.0f}")
     except (ValueError, AttributeError) as e:
         print(f"Erro ao calcular aba mínima externa: {e}")
-        g.ABA_EXT_LBL.config(text="N/A", fg="red")
+        if g.ABA_EXT_LBL is not None:
+            g.ABA_EXT_LBL.config(text="N/A", fg="red")
 
     return aba_minima_valor
 
@@ -75,22 +107,36 @@ def z_minimo_externo():
     '''
     try:
         # Obtém os valores diretamente e verifica se são válidos
-        material = g.MAT_COMB.get()
-        espessura = float(g.ESP_COMB.get())
-        canal_valor = g.CANAL_COMB.get()
-        deducao_valor = float(g.DED_LBL.cget('text'))
+        material = verificar_widget_inicializado(g.MAT_COMB, 'get', '')
+        espessura = float(verificar_widget_inicializado(g.ESP_COMB, 'get', '0'))
+        canal_valor = verificar_widget_inicializado(g.CANAL_COMB, 'get', '')
+        deducao_valor = float(verificar_widget_inicializado(g.DED_LBL, 'cget', '0'))
 
         canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
         if material != "" and espessura != "" and canal_valor != "":
-            if not canal_obj.largura:
-                g.Z_EXT_LBL.config(text="N/A", fg="red")
+            if canal_obj is None or not hasattr(canal_obj, 'largura'):
+                if g.Z_EXT_LBL is not None:
+                    g.Z_EXT_LBL.config(text="N/A", fg="red")
+                return
+              # Verificar se largura tem valor válido
+            try:
+                largura_value = canal_obj.largura
+                # Converter para valor Python para comparação
+                if largura_value is None:
+                    if g.Z_EXT_LBL is not None:
+                        g.Z_EXT_LBL.config(text="N/A", fg="red")
+                    return
+            except (AttributeError, ValueError, TypeError):
+                if g.Z_EXT_LBL is not None:
+                    g.Z_EXT_LBL.config(text="N/A", fg="red")
                 return
 
             if canal_valor and deducao_valor:
                 canal_valor = float(re.findall(r'\d+\.?\d*', canal_valor)[0])
                 valor_z_min_ext = espessura + (deducao_valor / 2) + (canal_obj.largura / 2) + 2
-                g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', fg="black")
+                if g.Z_EXT_LBL is not None:
+                    g.Z_EXT_LBL.config(text=f'{valor_z_min_ext:.0f}', fg="black")
 
     except ValueError:
         # Trata erros de conversão
@@ -103,21 +149,23 @@ def calcular_dobra(w):
     # Criar uma lista de listas para armazenar os valores de linha i e coluna w
     g.DOBRAS_VALORES = [
         [
-            getattr(g, f'aba{i}_entry_{col}').get() or ''  # Substitui valores vazios por '0'
+            getattr(g, f'aba{i}_entry_{col}').get() or ''
+            if getattr(g, f'aba{i}_entry_{col}', None) is not None else ''
             for col in range(1, w + 1)
         ]
         for i in range(1, g.N)
     ]
 
-    deducao_valor = str(g.DED_LBL.cget('text')).replace(' Copiado!', '')
-    deducao_espec = g.DED_ESPEC_ENTRY.get().replace(',', '.')
+    deducao_valor = str(verificar_widget_inicializado(g.DED_LBL, 'cget', '')).replace(
+        ' Copiado!', '')
+    deducao_espec_str = verificar_widget_inicializado(g.DED_ESPEC_ENTRY, 'get', '') or ''
+    deducao_espec = deducao_espec_str.replace(',', '.')
 
     # Exibir a matriz de valores para depuração
     print("Matriz de dobras (g.dobras_get):")
-    for linha in g.DOBRAS_VALORES:
-        print(linha)
-
-    # Determinar o valor da dedução
+    if g.DOBRAS_VALORES is not None:
+        for linha in g.DOBRAS_VALORES:
+            print(linha)    # Determinar o valor da dedução
     if deducao_espec != "":
         deducao_valor = deducao_espec
 
@@ -126,16 +174,26 @@ def calcular_dobra(w):
 
     # Função auxiliar para calcular medidas
     def calcular_medida(deducao_valor, i, w):
+        if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i - 1 or
+            len(g.DOBRAS_VALORES[i - 1]) <= w - 1):
+            return
+
         dobra = g.DOBRAS_VALORES[i - 1][w - 1].replace(',', '.')
 
         if dobra == "":
-            getattr(g, f'medidadobra{i}_label_{w}').config(text="")
-            getattr(g, f'metadedobra{i}_label_{w}').config(text="")
+            widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
+            widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
+            if widget_medida is not None:
+                widget_medida.config(text="")
+            if widget_metade is not None:
+                widget_metade.config(text="")
         else:
             if i in (1, g.N - 1):
                 medidadobra = float(dobra) - float(deducao_valor) / 2
             else:
-                if g.DOBRAS_VALORES[i][w - 1] == "":
+                if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i or
+                    len(g.DOBRAS_VALORES[i]) <= w - 1 or
+                    g.DOBRAS_VALORES[i][w - 1] == ""):
                     medidadobra = float(dobra) - float(deducao_valor) / 2
                 else:
                     medidadobra = float(dobra) - float(deducao_valor)
@@ -143,8 +201,12 @@ def calcular_dobra(w):
             metade_dobra = medidadobra / 2
 
             # Atualizar os widgets com os valores calculados
-            getattr(g, f'medidadobra{i}_label_{w}').config(text=f'{medidadobra:.2f}', fg="black")
-            getattr(g, f'metadedobra{i}_label_{w}').config(text=f'{metade_dobra:.2f}', fg="black")
+            widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
+            widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
+            if widget_medida is not None:
+                widget_medida.config(text=f'{medidadobra:.2f}', fg="black")
+            if widget_metade is not None:
+                widget_metade.config(text=f'{metade_dobra:.2f}', fg="black")
 
         blank = sum(
         float(getattr(g, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
@@ -208,8 +270,9 @@ def razao_ri_espessura():
 
     try:
         # Obtém os valores diretamente e verifica se são válidos
-        espessura = float(g.ESP_COMB.get() or 0)
-        raio_interno = float(g.RI_ENTRY.get().replace(',', '.') or 0)
+        espessura = float(verificar_widget_inicializado(g.ESP_COMB, 'get', '0') or 0)
+        raio_interno_str = verificar_widget_inicializado(g.RI_ENTRY, 'get', '0') or '0'
+        raio_interno = float(raio_interno_str.replace(',', '.'))
 
         # Valida se os valores necessários são maiores que zero
         if not raio_interno or not espessura:
