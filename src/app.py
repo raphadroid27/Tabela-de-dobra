@@ -104,11 +104,12 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.iconbitmap(icone_path)
 
     def on_closing():
-        geometry = g.PRINC_FORM.geometry()
-        position = geometry.split('+')[1:]
-        config['geometry'] = f"+{position[0]}+{position[1]}"
-        salvar_configuracao(config)
-        g.PRINC_FORM.destroy()
+        if g.PRINC_FORM is not None:
+            geometry = g.PRINC_FORM.geometry()
+            position = geometry.split('+')[1:]
+            config['geometry'] = f"+{position[0]}+{position[1]}"
+            salvar_configuracao(config)
+            g.PRINC_FORM.destroy()
 
     g.PRINC_FORM.protocol("WM_DELETE_WINDOW", on_closing)
 
@@ -116,12 +117,14 @@ def configurar_menu():
     '''
     Configura o menu superior da janela principal.
     '''
-    menu_bar = tk.Menu(g.PRINC_FORM)
-    g.PRINC_FORM.config(menu=menu_bar)
+    if g.PRINC_FORM is None:
+        return
 
-    # Menu Arquivo
+    menu_bar = tk.Menu(g.PRINC_FORM)
+    g.PRINC_FORM.config(menu=menu_bar)    # Menu Arquivo
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
+
     file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao,
                                                                            'EDIT_DED',
                                                                            g.PRINC_FORM))
@@ -138,7 +141,8 @@ def configurar_menu():
                                                                        'EDIT_CANAL',
                                                                        g.PRINC_FORM))
     file_menu.add_separator()
-    file_menu.add_command(label="Sair", command=g.PRINC_FORM.destroy)
+    file_menu.add_command(label="Sair",
+                          command=lambda: g.PRINC_FORM.destroy() if g.PRINC_FORM else None)
 
     # Menu Editar
     edit_menu = tk.Menu(menu_bar, tearoff=0)
@@ -222,7 +226,8 @@ def main():
     configurar_menu()
     configurar_frames()
     verificar_admin_existente()
-    g.PRINC_FORM.mainloop()
+    if g.PRINC_FORM is not None:
+        g.PRINC_FORM.mainloop()
 
 if __name__ == "__main__":
     main()
