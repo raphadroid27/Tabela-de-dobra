@@ -54,8 +54,10 @@ def atualizar_widgets(tipo):
 
         # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
         if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
-            g.DED_ESPES_COMB.configure(values=sorted([e.valor for e in session
-                                                      .query(Espessura).all()]))
+            valores_espessura = session.query(Espessura.valor).distinct().all()
+            valores_limpos = [float(valor[0]) for valor in valores_espessura
+                             if valor[0] is not None]
+            g.DED_ESPES_COMB.configure(values=sorted(valores_limpos))
 
     def atualizar_canal():
         if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
@@ -81,7 +83,10 @@ def atualizar_widgets(tipo):
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
         if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
-            g.DED_CANAL_COMB.configure(values=sorted([c.valor for c in session.query(Canal).all()]))
+            valores_canal = session.query(Canal.valor).distinct().all()
+            valores_canal_limpos = [str(valor[0]) for valor in valores_canal
+                                   if valor[0] is not None]
+            g.DED_CANAL_COMB.configure(values=sorted(valores_canal_limpos))
 
     def atualizar_deducao():
         if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
