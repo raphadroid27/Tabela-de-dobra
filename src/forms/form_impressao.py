@@ -9,7 +9,10 @@ import os
 import subprocess
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.janelas import (no_topo,
+                               posicionar_janela,
+                               habilitar_janelas,
+                               desabilitar_janelas)
 from src.utils.utilitarios import obter_caminho_icone
 from src.config import globals as g
 
@@ -111,10 +114,17 @@ def selecionar_diretorio():
     """
     Abre o diálogo para seleção de diretório.
     """
-    diretorio = filedialog.askdirectory(title="Selecionar Diretório dos PDFs")
-    if diretorio:
+    desabilitar_janelas()  # Desabilita ANTES de abrir o diálogo
+    
+    diretorio = filedialog.askdirectory(title="Selecionar Diretório dos PDFs", parent=g.IMPRESSAO_FORM)
+    
+    habilitar_janelas()  # Sempre habilita DEPOIS que o diálogo for fechado
+    
+    if diretorio:  # Se selecionou um diretório, atualiza o campo
         g.IMPRESSAO_DIRETORIO_ENTRY.delete(0, tk.END)
         g.IMPRESSAO_DIRETORIO_ENTRY.insert(0, diretorio)
+    else:
+        habilitar_janelas()
 
 def adicionar_arquivo():
     """
