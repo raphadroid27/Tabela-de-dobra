@@ -1,4 +1,4 @@
-"""
+﻿"""
 Módulo para criar os botões e checkbuttons na interface gráfica.
 Este módulo é responsável por criar os botões e checkbuttons que
 serão exibidos na parte inferior da interface gráfica. Os botões
@@ -27,37 +27,55 @@ def criar_botoes(root):
     frame_botoes.rowconfigure(1, weight=1)
 
     def expandir_v():
+        if g.PRINC_FORM is None:
+            return
+
         largura_atual = g.PRINC_FORM.winfo_width()
 
-        if g.EXP_V.get() == 1:
+        if g.EXP_V is not None and g.EXP_V.get() == 1:
             g.PRINC_FORM.geometry(f"{largura_atual}x500")
             for w in g.VALORES_W:
                 entradas_dobras(11, w)
-            g.CARREGAR_INTERFACE_FUNC(1, root)
+            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+                g.CARREGAR_INTERFACE_FUNC(1, root)  # pylint: disable=not-callable
         else:
             g.PRINC_FORM.geometry(f"{largura_atual}x400")
             for w in g.VALORES_W:
                 entradas_dobras(6, w)
-            g.CARREGAR_INTERFACE_FUNC(1, root)
+            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+                g.CARREGAR_INTERFACE_FUNC(1, root)  # pylint: disable=not-callable
 
         # Verificar se avisos devem aparecer
-        if g.EXP_H.get() == 1:
-            g.CARREGAR_INTERFACE_FUNC(2, root)
+        if g.EXP_H is not None and g.EXP_H.get() == 1:
+            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+                g.CARREGAR_INTERFACE_FUNC(2, root)  # pylint: disable=not-callable
 
     def expandir_h():
+        if g.PRINC_FORM is None:
+            return
+
         altura_atual = g.PRINC_FORM.winfo_height()
-        if g.EXP_H.get() == 1:
+        if g.EXP_H is not None and g.EXP_H.get() == 1:
             g.PRINC_FORM.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
             g.VALORES_W = [1, 2]
-            g.CARREGAR_INTERFACE_FUNC(2, root)
+            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+                g.CARREGAR_INTERFACE_FUNC(2, root)  # pylint: disable=not-callable
         else:
             g.PRINC_FORM.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
             g.VALORES_W = [1]
-            g.CARREGAR_INTERFACE_FUNC(1, root)
+            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+                g.CARREGAR_INTERFACE_FUNC(1, root)  # pylint: disable=not-callable
 
         # Verificar se avisos devem aparecer
-        if g.EXP_H.get() == 1:
-            g.CARREGAR_INTERFACE_FUNC(2, root)
+        if g.EXP_H is not None and g.EXP_H.get() == 1:
+            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+                g.CARREGAR_INTERFACE_FUNC(2, root)  # pylint: disable=not-callable
+
+    # Verificar se as variáveis existem, se não, criar
+    if g.EXP_V is None:
+        g.EXP_V = tk.IntVar()
+    if g.EXP_H is None:
+        g.EXP_H = tk.IntVar()
 
     tk.Checkbutton(
         frame_botoes,
