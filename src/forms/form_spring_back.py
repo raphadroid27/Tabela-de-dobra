@@ -1,6 +1,6 @@
-'''
+"""
 Formulário para o cálculo de Spring Back
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 from src.models.models import Material

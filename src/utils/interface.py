@@ -1,10 +1,10 @@
-'''
+"""
 Este módulo contém funções auxiliares para o aplicativo de cálculo de dobras.
 
 As funções incluem a atualização de widgets, manipulação de valores de dobras,
 restauração de valores, e outras operações relacionadas ao funcionamento do
 aplicativo de cálculo de dobras.
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 import re
@@ -21,7 +21,7 @@ from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
 def _atualizar_material():
-    '''Atualiza os valores do combobox de materiais.'''
+    """Atualiza os valores do combobox de materiais."""
     if g.MAT_COMB and g.MAT_COMB.winfo_exists():
         materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
         g.MAT_COMB.configure(values=materiais)
@@ -34,7 +34,7 @@ def _atualizar_material():
 
 
 def _atualizar_espessura():
-    '''Atualiza os valores do combobox de espessuras.'''
+    """Atualiza os valores do combobox de espessuras."""
     if not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get'):
         return
 
@@ -57,7 +57,7 @@ def _atualizar_espessura():
 
 
 def _atualizar_canal():
-    '''Atualiza os valores do combobox de canais.'''
+    """Atualiza os valores do combobox de canais."""
     if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
         not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get')):
         return
@@ -88,7 +88,7 @@ def _atualizar_canal():
 
 
 def _atualizar_deducao():
-    '''Atualiza os valores de dedução com base nos widgets selecionados.'''
+    """Atualiza os valores de dedução com base nos widgets selecionados."""
     # Verificar se todos os widgets necessários estão disponíveis
     widgets_requeridos = [
         (g.ESP_COMB, 'get'),
@@ -132,12 +132,12 @@ def _atualizar_deducao():
 
 
 def atualizar_widgets(tipo):
-    '''
+    """
     Atualiza os valores de comboboxes com base no tipo especificado.
 
     Args:
         tipo (str): O tipo de combobox a ser atualizado.
-    '''
+    """
     # Mapeamento de tipos para funções
     acoes = {
         'material': _atualizar_material,
@@ -151,10 +151,10 @@ def atualizar_widgets(tipo):
         acoes[tipo]()
 
 def canal_tooltip():
-    '''
+    """
     Atualiza o tooltip do combobox de canais com as
     observações e comprimento total do canal selecionado.
-    '''
+    """
     if not g.CANAL_COMB or not hasattr(g.CANAL_COMB, 'get'):
         return
 
@@ -174,9 +174,9 @@ def canal_tooltip():
                        delay=0)
 
 def atualizar_toneladas_m():
-    '''
+    """
     Atualiza o valor de toneladas por metro com base no comprimento e na dedução selecionada.
-    '''
+    """
     # Verificar se todos os widgets necessários estão disponíveis
     widgets_requeridos = [
         (g.COMPR_ENTRY, 'get'),
@@ -229,10 +229,10 @@ def atualizar_toneladas_m():
                     g.COMPR_ENTRY.config(fg="red")
 
 def restaurar_valores_dobra(w):
-    '''
+    """
     Restaura os valores das dobras e os campos de cabeçalho
     a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
-    '''
+    """
     # Verificar se g.DOBRAS_VALORES foi inicializada
     if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
         return
@@ -249,9 +249,9 @@ def restaurar_valores_dobra(w):
                     entry.insert(0, valor)
 
 def salvar_valores_cabecalho():
-    '''
+    """
     Salva os valores atuais dos widgets no cabeçalho em g.CABECALHO_VALORES.
-    '''
+    """
     if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
         g.CABECALHO_VALORES = {}
 
@@ -266,10 +266,10 @@ def salvar_valores_cabecalho():
     print("Valores salvos:", g.CABECALHO_VALORES)
 
 def restaurar_valores_cabecalho():
-    '''
+    """
     Restaura os valores dos widgets no cabeçalho
     com base nos valores armazenados em g.CABECALHO_VALORES.
-    '''
+    """
     # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
     if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
         g.CABECALHO_VALORES = {}
@@ -291,10 +291,10 @@ def restaurar_valores_cabecalho():
     print("Valores restaurados:", g.CABECALHO_VALORES)
 
 def copiar(tipo, numero=None, w=None):
-    '''
+    """
     Copia o valor do label correspondente ao tipo e 
     número especificados para a área de transferência.
-    '''
+    """
     configuracoes = {
         'dedução': {
             'label': g.DED_LBL,
@@ -385,9 +385,9 @@ def copiar(tipo, numero=None, w=None):
         getattr(label, 'after')(2000, remover_copiado)
 
 def limpar_busca(tipo):
-    '''
+    """
     Limpa os campos de busca e atualiza a lista correspondente.
-    '''
+    """
     configuracoes = obter_configuracoes()
     if tipo == 'dedução':
         configuracoes[tipo]['entries']['material_combo'].delete(0, tk.END)
@@ -399,9 +399,9 @@ def limpar_busca(tipo):
     listar(tipo)
 
 def focus_next_entry(current_index, w):
-    '''
+    """
     Move o foco para o próximo campo de entrada na aba atual.
-    '''
+    """
     next_index = current_index + 1
     if next_index < g.N:
         next_entry = getattr(g, f'aba{next_index}_entry_{w}', None)
@@ -409,9 +409,9 @@ def focus_next_entry(current_index, w):
             next_entry.focus()
 
 def focus_previous_entry(current_index, w):
-    '''
+    """
     Move o foco para o campo de entrada anterior na aba atual.
-    '''
+    """
     previous_index = current_index - 1
     if previous_index > 0:
         previous_entry = getattr(g, f'aba{previous_index}_entry_{w}', None)
@@ -419,9 +419,9 @@ def focus_previous_entry(current_index, w):
             previous_entry.focus()
 
 def listar(tipo):
-    '''
+    """
     Lista os itens do banco de dados na interface gráfica.
-    '''
+    """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -443,9 +443,9 @@ def listar(tipo):
         config['lista'].insert("", "end", values=config['valores'](item))
 
 def todas_funcoes():
-    '''
+    """
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
-    '''
+    """
     for tipo in ['espessura', 'canal', 'dedução']:
         atualizar_widgets(tipo)
 
@@ -462,9 +462,9 @@ def todas_funcoes():
     canal_tooltip()
 
 def configurar_main_frame(parent, rows=4):
-    '''
+    """
     Configura o frame principal com colunas e linhas padrão.
-    '''
+    """
     main_frame = tk.Frame(parent)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
 
@@ -475,9 +475,9 @@ def configurar_main_frame(parent, rows=4):
     return main_frame
 
 def configurar_frame_edicoes(parent, text, columns=3, rows=4):
-    '''
+    """
     Cria um frame de edições com configuração padrão.
-    '''
+    """
     frame_edicoes = tk.LabelFrame(parent, text=text, pady=5)
     frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
 

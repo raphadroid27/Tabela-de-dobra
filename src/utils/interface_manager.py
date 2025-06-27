@@ -1,7 +1,7 @@
-'''
+"""
 Módulo para gerenciar a interface principal do aplicativo.
 Este módulo é responsável por carregar e recarregar a interface do aplicativo.
-'''
+"""
 from src.components.cabecalho import cabecalho
 from src.components.avisos import avisos
 from src.components.dobra_90 import dobras
@@ -14,7 +14,7 @@ from src.utils.interface import (salvar_valores_cabecalho,
 
 
 def carregar_interface(var, frame_superior):
-    '''
+    """
     Atualiza o cabeçalho e recria os widgets no frame de dobras com base no valor de var.
 
     Args:
@@ -22,7 +22,7 @@ def carregar_interface(var, frame_superior):
                    1 para apenas o cabeçalho principal.
                    2 para cabeçalho com avisos.
         frame_superior (tk.Frame): Frame onde os widgets serão adicionados.
-    '''    # Salvar os valores dos widgets do cabeçalho
+    """    # Salvar os valores dos widgets do cabeçalho
     # Isso deve ser feito antes de recriar os widgets
     salvar_valores_cabecalho()
 

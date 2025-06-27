@@ -1,23 +1,23 @@
-'''
+"""
 Módulo com funções utilitárias para limpeza da interface.
-'''
+"""
 import tkinter as tk
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
 
 def limpar_dobras():
-    '''
+    """
     Limpa os valores das dobras e atualiza os labels correspondentes.
-    '''
+    """
     def limpar_widgets(widgets, metodo, valor=""):
-        '''
+        """
         Limpa ou redefine widgets com base no método fornecido.
 
         Args:
             widgets (list): Lista de widgets a serem limpos.
             metodo (str): Método a ser chamado no widget (ex.: 'delete', 'config').
             valor (str): Valor a ser usado no método (se aplicável).
-        '''
+        """
         for widget in widgets:
             if widget:
                 if metodo == "delete":
@@ -65,9 +65,9 @@ def limpar_dobras():
 
 
 def limpar_tudo():
-    '''
+    """
     Limpa todos os campos e labels do aplicativo.
-    '''
+    """
     campos = [
         g.MAT_COMB, g.ESP_COMB, g.CANAL_COMB
     ]

@@ -1,10 +1,10 @@
-'''
+"""
 # Formulário de Dedução
 # Este módulo implementa o formulário de dedução, permitindo a adição, edição
 # e exclusão de deduções. Ele utiliza a biblioteca tkinter para a interface
 # gráfica, o módulo globals para variáveis globais e o módulo funcoes para
 # operações relacionadas ao banco de dados.
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 from src.utils.janelas import (no_topo, posicionar_janela)
@@ -24,9 +24,9 @@ from src.utils.operacoes_crud import (buscar,
 from src.config import globals as g
 
 def configurar_janela(root):
-    '''
+    """
     Configura a janela principal do formulário de deduções.
-    '''
+    """
     if g.DEDUC_FORM:
         g.DEDUC_FORM.destroy()
 
@@ -41,9 +41,9 @@ def configurar_janela(root):
     posicionar_janela(g.DEDUC_FORM, None)
 
 def criar_frame_busca(main_frame):
-    '''
+    """
     Cria o frame de busca.
-    '''
+    """
     frame_busca = tk.LabelFrame(main_frame, text='Buscar Deduções', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
@@ -71,9 +71,9 @@ def criar_frame_busca(main_frame):
               command=lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
 
 def criar_lista_deducoes(main_frame):
-    '''
+    """
     Cria a lista de deduções.
-    '''
+    """
     columns = ("Id", "Material", "Espessura", "Canal", "Dedução", "Observação", "Força")
     g.LIST_DED = ttk.Treeview(main_frame, columns=columns, show="headings")
     g.LIST_DED["displaycolumns"] = ("Material",
@@ -93,9 +93,9 @@ def criar_lista_deducoes(main_frame):
     listar('dedução')
 
 def criar_frame_edicoes(main_frame):
-    '''
+    """
     Cria o frame de edições.
-    '''
+    """
     frame_edicoes = configurar_frame_edicoes(main_frame,
                                              text='Nova Dedução'
                                              if not g.EDIT_DED
@@ -117,9 +117,9 @@ def criar_frame_edicoes(main_frame):
     return frame_edicoes
 
 def configurar_botoes(main_frame, frame_edicoes):
-    '''
+    """
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
-    '''
+    """
     if g.EDIT_DED:
         if g.DEDUC_FORM:
             g.DEDUC_FORM.title("Editar/Excluir Dedução")
@@ -174,17 +174,17 @@ def configurar_botoes(main_frame, frame_edicoes):
         )
 
 def atualizar_comboboxes():
-    '''
+    """
     Atualiza os widgets de combobox.
-    '''
+    """
     tipos = ['material', 'espessura', 'canal']
     for tipo in tipos:
         atualizar_widgets(tipo)
 
 def main(root):
-    '''
+    """
     Inicializa e exibe o formulário de gerenciamento de deduções.
-    '''
+    """
     configurar_janela(root)
     main_frame = configurar_main_frame(g.DEDUC_FORM)
     criar_frame_busca(main_frame)

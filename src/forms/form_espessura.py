@@ -1,11 +1,11 @@
-'''
+"""
 # Formulário de Espessura
 # Este módulo implementa a interface gráfica para gerenciar espessuras de materiais.
 # Ele permite adicionar, editar e excluir registros de espessuras, utilizando a
 # biblioteca tkinter para a construção da interface. As variáveis globais são
 # gerenciadas pelo módulo `globals`, enquanto as operações de banco de dados
 # são realizadas pelo módulo `funcoes`.
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 
@@ -23,9 +23,9 @@ from src.utils.operacoes_crud import (buscar,
 from src.config import globals as g
 
 def configurar_janela(root):
-    '''
+    """
     Configura a janela principal do formulário de espessuras.
-    '''
+    """
     if g.ESPES_FORM:
         g.ESPES_FORM.destroy()
 
@@ -40,9 +40,9 @@ def configurar_janela(root):
     posicionar_janela(g.ESPES_FORM, None)
 
 def criar_frame_busca(main_frame):
-    '''
+    """
     Cria o frame de busca.
-    '''
+    """
     frame_busca = tk.LabelFrame(main_frame, text='Buscar Espessuras', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
@@ -59,9 +59,9 @@ def criar_frame_busca(main_frame):
               command=lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
 def criar_lista_espessuras(main_frame):
-    '''
+    """
     Cria a lista de espessuras.
-    '''
+    """
     columns = ("Id", "Valor")
     g.LIST_ESP = ttk.Treeview(main_frame, columns=columns, show="headings")
     g.LIST_ESP["displaycolumns"] = "Valor"
@@ -73,9 +73,9 @@ def criar_lista_espessuras(main_frame):
     listar('espessura')
 
 def criar_frame_edicoes(main_frame):
-    '''
+    """
     Cria o frame de edições.
-    '''
+    """
     frame_edicoes = configurar_frame_edicoes(main_frame,
                                              text='Adicionar Espessura'
                                              if not g.EDIT_ESP
@@ -91,9 +91,9 @@ def criar_frame_edicoes(main_frame):
               bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
 def configurar_botoes(main_frame):
-    '''
+    """
     Configura os botões de ação (Excluir).
-    '''
+    """
     if g.ESPES_FORM is not None:
         if g.EDIT_ESP:
             g.ESPES_FORM.title("Editar/Excluir Espessura")
@@ -107,9 +107,9 @@ def configurar_botoes(main_frame):
         print("Erro: g.ESPES_FORM não foi inicializado.")
 
 def main(root):
-    '''
+    """
     Inicializa e exibe o formulário de gerenciamento de espessuras.
-    '''
+    """
     configurar_janela(root)
     main_frame = configurar_main_frame(g.ESPES_FORM)
     criar_frame_busca(main_frame)

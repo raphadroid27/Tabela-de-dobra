@@ -1,6 +1,6 @@
-'''
+"""
 Este módulo contém funções para criar e gerenciar o frame de dobras
-'''
+"""
 import tkinter as tk
 from src.config import globals as g
 from src.utils.interface import (calcular_dobra,
@@ -13,10 +13,10 @@ from src.utils.classes import tooltip as tp
 LARGURA = 12
 
 def dobras(frame, w):
-    '''
+    """
     Cria o frame para as dobras, com base no valor de n.
     O frame é criado apenas uma vez, e os widgets são atualizados
-    '''
+    """
     g.FRAME_DOBRA = tk.Frame(frame)
 
     for i in range(4):
@@ -26,9 +26,9 @@ def dobras(frame, w):
     return g.FRAME_DOBRA
 
 def entradas_dobras(valor, w):
-    '''
+    """
     Cria os widgets para as dobras, com base no valor de n.
-    '''
+    """
     # Atualizar o valor de n
     g.N = valor
 

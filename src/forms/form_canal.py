@@ -1,10 +1,10 @@
-'''
+"""
 # Formulário de Canal
 # Este módulo implementa o formulário de canal, permitindo a adição, edição
 # e exclusão de canais. Ele utiliza a biblioteca tkinter para a interface
 # gráfica, o módulo globals para variáveis globais e o módulo funcoes para
 # operações relacionadas ao banco de dados.
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 from src.utils.janelas import (no_topo, posicionar_janela)
@@ -23,9 +23,9 @@ from src.utils.operacoes_crud import (buscar,
 from src.config import globals as g
 
 def configurar_janela(root):
-    '''
+    """
     Configura a janela principal do formulário.
-    '''
+    """
     if g.CANAL_FORM:
         g.CANAL_FORM.destroy()
 
@@ -40,9 +40,9 @@ def configurar_janela(root):
     posicionar_janela(g.CANAL_FORM, None)
 
 def criar_frame_busca(main_frame):
-    '''
+    """
     Cria o frame de busca.
-    '''
+    """
     frame_busca = tk.LabelFrame(main_frame, text='Buscar Canais', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
@@ -58,9 +58,9 @@ def criar_frame_busca(main_frame):
               command=lambda: limpar_busca('canal')).grid(row=0, column=2, padx=5, pady=5)
 
 def criar_lista_canais(main_frame):
-    '''
+    """
     Cria a lista de canais.
-    '''
+    """
     columns = ("Id", "Canal", "Largura", "Altura", "Compr.", "Obs.")
     g.LIST_CANAL = ttk.Treeview(main_frame, columns=columns, show="headings")
     g.LIST_CANAL["displaycolumns"] = ("Canal", "Largura", "Altura", "Compr.", "Obs.")
@@ -72,9 +72,9 @@ def criar_lista_canais(main_frame):
     listar('canal')
 
 def criar_frame_edicoes(main_frame):
-    '''
+    """
     Cria o frame de edições.
-    '''
+    """
     frame_edicoes = configurar_frame_edicoes(main_frame,
                                              text='Novo Canal'
                                              if not g.EDIT_CANAL
@@ -110,9 +110,9 @@ def criar_frame_edicoes(main_frame):
     return frame_edicoes
 
 def configurar_botoes(main_frame, frame_edicoes):
-    '''
+    """
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
-    '''
+    """
     if g.EDIT_CANAL:
         if g.CANAL_FORM:
             g.CANAL_FORM.title("Editar/Excluir Canal")
@@ -138,9 +138,9 @@ def configurar_botoes(main_frame, frame_edicoes):
                   bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
 
 def main(root):
-    '''
+    """
     Inicializa e exibe o formulário de gerenciamento de canais.
-    '''
+    """
     configurar_janela(root)
     main_frame = configurar_main_frame(g.CANAL_FORM)
     criar_frame_busca(main_frame)

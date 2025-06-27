@@ -1,11 +1,11 @@
-'''
+"""
 # Formulário de Material
 # Este módulo contém a implementação do formulário de materiais, que permite
 # adicionar, editar e excluir materiais. O formulário é
 # construído usando a biblioteca tkinter e utiliza o módulo globals para
 # armazenar variáveis globais e o módulo funcoes para realizar operações
 # relacionadas ao banco de dados.
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 from src.utils.janelas import (no_topo, posicionar_janela)
@@ -24,9 +24,9 @@ from src.utils.operacoes_crud import (buscar,
 from src.config import globals as g
 
 def configurar_janela(root):
-    '''
+    """
     Configura a janela principal do formulário de materiais.
-    '''
+    """
     if g.MATER_FORM:
         g.MATER_FORM.destroy()
 
@@ -41,9 +41,9 @@ def configurar_janela(root):
     posicionar_janela(g.MATER_FORM, None)
 
 def criar_frame_busca(main_frame):
-    '''
+    """
     Cria o frame de busca.
-    '''
+    """
     frame_busca = tk.LabelFrame(main_frame, text='Buscar Materiais', pady=5)
     frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
@@ -60,9 +60,9 @@ def criar_frame_busca(main_frame):
               command=lambda: limpar_busca('material')).grid(row=0, column=2, padx=5, pady=5)
 
 def criar_lista_materiais(main_frame):
-    '''
+    """
     Cria a lista de materiais.
-    '''
+    """
     columns = ("Id", "Nome", "Densidade", "Escoamento", "Elasticidade")
     g.LIST_MAT = ttk.Treeview(main_frame, columns=columns, show="headings")
     g.LIST_MAT["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
@@ -74,9 +74,9 @@ def criar_lista_materiais(main_frame):
     listar('material')
 
 def criar_frame_edicoes(main_frame):
-    '''
+    """
     Cria o frame de edições.
-    '''
+    """
     frame_edicoes = configurar_frame_edicoes(main_frame,
                                              text='Novo Material'
                                              if not g.EDIT_MAT
@@ -114,9 +114,9 @@ def criar_frame_edicoes(main_frame):
     return frame_edicoes
 
 def configurar_botoes(main_frame, frame_edicoes):
-    '''
+    """
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
-    '''
+    """
     if g.MATER_FORM is not None:
         if g.EDIT_MAT:
             g.MATER_FORM.title("Editar/Excluir Material")
@@ -146,9 +146,9 @@ def configurar_botoes(main_frame, frame_edicoes):
         print("Erro: g.MATER_FORM não foi inicializado.")
 
 def main(root):
-    '''
+    """
     Inicializa e exibe o formulário de gerenciamento de materiais.
-    '''
+    """
     configurar_janela(root)
     main_frame = configurar_main_frame(g.MATER_FORM)
     criar_frame_busca(main_frame)

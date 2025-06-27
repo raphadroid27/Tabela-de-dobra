@@ -1,6 +1,6 @@
-﻿'''
+﻿"""
 Funções auxiliares para o aplicativo de cálculo de dobras.
-'''
+"""
 from math import pi
 import re
 from src.config import globals as g
@@ -8,7 +8,7 @@ from src.models.models import Canal
 from src.utils.banco_dados import session
 
 def verificar_widget_inicializado(widget, metodo='get', default_value=''):
-    '''
+    """
     Verifica se um widget está inicializado antes de chamar seus métodos.
 
     Args:
@@ -18,7 +18,7 @@ def verificar_widget_inicializado(widget, metodo='get', default_value=''):
 
     Returns:
         O resultado do método ou o valor padrão
-    '''
+    """
     if widget is None:
         return default_value
 
@@ -34,10 +34,10 @@ def verificar_widget_inicializado(widget, metodo='get', default_value=''):
         return default_value
 
 def calcular_k_offset():
-    '''
+    """
     Calcula o fator K com base nos valores de espessura, dedução e raio interno.
     Atualiza o label correspondente com o valor calculado.
-    '''
+    """
     try:
         # Obtém os valores diretamente e verifica se são válidos
         espessura = float(verificar_widget_inicializado(g.ESP_COMB, 'get', '0') or 0)
@@ -77,10 +77,10 @@ def calcular_k_offset():
         print("Erro: Valores inválidos fornecidos para o cálculo do fator K.")
 
 def aba_minima_externa():
-    '''
+    """
     Calcula a aba mínima externa com base no valor do canal e na espessura.
     Atualiza o label correspondente com o valor calculado.
-    '''
+    """
     aba_minima_valor = 0  # Valor padrão caso a condição não seja satisfeita
 
     try:
@@ -100,10 +100,10 @@ def aba_minima_externa():
     return aba_minima_valor
 
 def z_minimo_externo():
-    '''
+    """
     Calcula o valor mínimo externo com base na espessura, dedução e largura do canal.
     Atualiza o label correspondente com o valor calculado.
-    '''
+    """
     try:
         # Obtém os valores diretamente e verifica se são válidos
         material = verificar_widget_inicializado(g.MAT_COMB, 'get', '')
@@ -142,7 +142,7 @@ def z_minimo_externo():
         print("Erro: Valores inválidos fornecidos para o cálculo do Z mínimo externo.")
 
 def _obter_valores_dobras(w):
-    '''Obtém os valores das dobras dos widgets de entrada.'''
+    """Obtém os valores das dobras dos widgets de entrada."""
     return [
         [
             getattr(g, f'aba{i}_entry_{col}').get() or ''
@@ -153,7 +153,7 @@ def _obter_valores_dobras(w):
     ]
 
 def _obter_valor_deducao():
-    '''Obtém o valor da dedução dos widgets correspondentes.'''
+    """Obtém o valor da dedução dos widgets correspondentes."""
     deducao_valor = str(verificar_widget_inicializado(g.DED_LBL, 'cget', '')).replace(
         ' Copiado!', '')
     deducao_espec_str = verificar_widget_inicializado(g.DED_ESPEC_ENTRY, 'get', '') or ''
@@ -164,7 +164,7 @@ def _obter_valor_deducao():
     return deducao_valor
 
 def _calcular_medida_dobra(dobra, deducao_valor, i):
-    '''Calcula a medida da dobra baseada na posição e valor de dedução.'''
+    """Calcula a medida da dobra baseada na posição e valor de dedução."""
     if i in (1, g.N - 1):
         return float(dobra) - float(deducao_valor) / 2
 
@@ -176,7 +176,7 @@ def _calcular_medida_dobra(dobra, deducao_valor, i):
     return float(dobra) - float(deducao_valor)
 
 def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
-    '''Atualiza os widgets com os valores calculados de dobra.'''
+    """Atualiza os widgets com os valores calculados de dobra."""
     widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
     widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
     if widget_medida is not None:
@@ -185,7 +185,7 @@ def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
         widget_metade.config(text=f'{metade_dobra:.2f}', fg="black")
 
 def _limpar_widgets_dobra(i, w):
-    '''Limpa os widgets de dobra quando o valor está vazio.'''
+    """Limpa os widgets de dobra quando o valor está vazio."""
     widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
     widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
     if widget_medida is not None:
@@ -194,7 +194,7 @@ def _limpar_widgets_dobra(i, w):
         widget_metade.config(text="")
 
 def _calcular_e_atualizar_blank(w):
-    '''Calcula e atualiza os valores de blank para uma coluna.'''
+    """Calcula e atualiza os valores de blank para uma coluna."""
     blank = sum(
         float(getattr(g, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
         for row in range(1, g.N)
@@ -217,9 +217,9 @@ def _calcular_e_atualizar_blank(w):
         label.config(text="")
 
 def calcular_dobra(w):
-    '''
+    """
     Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
-    '''
+    """
     # Obter valores das dobras
     g.DOBRAS_VALORES = _obter_valores_dobras(w)
 
@@ -255,9 +255,9 @@ def calcular_dobra(w):
             verificar_aba_minima(g.DOBRAS_VALORES[i - 1][col - 1], i, col)
 
 def verificar_aba_minima(dobra, i, w):
-    '''
+    """
     Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
-    '''
+    """
     # Verificar se a dobra é menor que a aba mínima
     aba_minima = aba_minima_externa()
 
@@ -281,9 +281,9 @@ def verificar_aba_minima(dobra, i, w):
             print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
 
 def razao_ri_espessura():
-    '''
+    """
     Calcula a razão entre o raio interno e a espessura, atualizando o label correspondente.
-    '''
+    """
     if not g.RAZAO_RIE_LBL or not g.RAZAO_RIE_LBL.winfo_exists():
         return
 

@@ -1,11 +1,11 @@
-'''
+"""
 # Formulário de Autenticação
 # Este módulo implementa uma interface gráfica para autenticação de usuários no sistema.
 # As funcionalidades incluem login de usuários existentes e criação de novos usuários,
 # com a possibilidade de definir permissões administrativas. A interface é construída
 # com a biblioteca tkinter, utilizando o módulo globals para variáveis globais e o
 # módulo funcoes para operações auxiliares. O banco de dados é gerenciado com SQLAlchemy.
-'''
+"""
 import tkinter as tk
 from src.utils.banco_dados import session
 from src.models import Usuario
@@ -17,12 +17,12 @@ from src.utils.janelas import (desabilitar_janelas,
 from src.config import globals as g
 
 def main(root):
-    '''
+    """
     Função principal que cria a janela de autenticação.
     Se a janela já existir, ela é destruída antes de criar uma nova.
     A janela é configurada com campos para usuário e senha, e um botão para login ou
     criação de novo usuário, dependendo do estado atual do sistema.
-    '''
+    """
 
     if g.AUTEN_FORM:
         g.AUTEN_FORM.destroy()
