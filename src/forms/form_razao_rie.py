@@ -1,6 +1,6 @@
-'''
+"""
 Módulo para exibir o formulário de cálculo de razão raio interno / espessura.
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 from src.utils.janelas import (no_topo, posicionar_janela)
@@ -9,10 +9,10 @@ from src.utils.calculos import razao_ri_espessura
 from src.config import globals as g
 
 def main(root):
-    '''
+    """
     Inicializa e exibe o formulário de cálculo de razão raio interno / espessura.
     Configura a interface gráfica para exibir os valores e fatores K correspondentes.
-    '''
+    """
     if g.RIE_FORM:
         g.RIE_FORM.destroy()
 

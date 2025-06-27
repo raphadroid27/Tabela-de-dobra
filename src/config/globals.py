@@ -1,6 +1,6 @@
-'''
+"""
 Este módulo define variáveis globais para uso em diferentes partes da aplicação.
-'''
+"""
 #variáveis globais
 NO_TOPO_VAR = None
 TRANSP_VAR = None

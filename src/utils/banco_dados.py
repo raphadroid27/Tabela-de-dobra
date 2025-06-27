@@ -1,7 +1,7 @@
 
-'''
+"""
 Módulo utilitário para manipulação de banco de dados no aplicativo de cálculo de dobras.
-'''
+"""
 import os
 from tkinter import messagebox
 from sqlalchemy.orm import sessionmaker
@@ -18,9 +18,9 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 def obter_configuracoes():
-    '''
+    """
     Retorna um dicionário com as configurações de cada tipo de item.
-    '''
+    """
     return {
         'principal': {
             'form': g.PRINC_FORM,
@@ -112,9 +112,9 @@ def obter_configuracoes():
     }
 
 def salvar_no_banco(obj, tipo, detalhes):
-    '''
+    """
     Salva um objeto no banco de dados e registra o log.
-    '''
+    """
     session.add(obj)
     tratativa_erro()
     registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
@@ -126,9 +126,9 @@ def salvar_no_banco(obj, tipo, detalhes):
                         parent=config['form'])
 
 def tratativa_erro():
-    '''
+    """
     Trata erros de integridade e operacionais no banco de dados.
-    '''
+    """
     try:
         session.commit()
         print("Operação realizada com sucesso!")
@@ -145,9 +145,9 @@ def tratativa_erro():
 
 # Manipulação de logs
 def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
-    '''
+    """
     Registra uma ação no banco de dados.
-    '''
+    """
     log = Log(
         usuario_nome=usuario_nome,
         acao=acao,

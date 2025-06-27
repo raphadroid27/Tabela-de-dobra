@@ -1,10 +1,10 @@
-'''
+"""
 Módulo responsável por criar o frame de avisos na interface gráfica.
-'''
+"""
 import tkinter as tk
 
 def avisos(root):
-    '''
+    """
     Cria um frame contendo avisos para o usuário.
 
     Args:
@@ -12,7 +12,7 @@ def avisos(root):
 
     Returns:
         ttk.Frame: O frame contendo os avisos.
-    '''
+    """
     avisos_textos = [
         "1. Xadrez → Laser sempre corta com a face xadrez para Baixo ↓.",
         "2. Corrugado → Laser sempre corta com a face do corrugado para Cima ↑.",

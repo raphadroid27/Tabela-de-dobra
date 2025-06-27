@@ -1,4 +1,4 @@
-'''
+"""
 # Formulário "Sobre"
 # Este módulo implementa a janela "Sobre" do aplicativo.
 # Ele exibe informações como o nome do aplicativo, versão, autor,
@@ -6,7 +6,7 @@
 # A janela é criada como uma Toplevel do Tkinter, centralizada na tela,
 # e configurada para permanecer no topo das outras janelas.
 # O link para o GitHub abre o navegador padrão ao ser clicado.
-'''
+"""
 import tkinter as tk
 import webbrowser
 from src import __version__
@@ -15,9 +15,9 @@ from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 
 def main(root):
-    '''
+    """
     Função principal que cria a janela "Sobre".
-    '''
+    """
     g.SOBRE_FORM = tk.Toplevel(root)
     g.SOBRE_FORM.title("Sobre")
     g.SOBRE_FORM.geometry("300x210")

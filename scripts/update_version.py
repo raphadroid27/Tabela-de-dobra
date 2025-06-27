@@ -1,4 +1,4 @@
-'''
+"""
 Atualiza a versão do projeto, gera changelog e cria tag Git.
 Este script automatiza o processo de atualização de versão,
 geração de changelog e criação de tags Git para um projeto Python.
@@ -6,7 +6,7 @@ Ele lê as mensagens de commit desde a última tag, atualiza os
 arquivos relevantes com a nova versão e gera um changelog formatado.
 Além disso, permite ao usuário criar uma nova tag Git para a versão
 atualizada.
-'''
+"""
 import subprocess
 import re
 import os
@@ -14,7 +14,7 @@ import datetime
 from pathlib import Path
 
 def get_latest_tag():
-    '''Obtém a tag mais recente do repositório Git.'''
+    """Obtém a tag mais recente do repositório Git."""
     try:
         tags_raw = subprocess.check_output(
             ["git", "tag", "--sort=-v:refname"], text=True
@@ -31,19 +31,19 @@ def get_latest_tag():
         return "v0.0.0"
 
 def parse_version(version_str):
-    '''Converte uma string de versão em tupla (major, minor, patch).'''
+    """Converte uma string de versão em tupla (major, minor, patch)."""
     match = re.search(r'v?(\d+)\.(\d+)\.(\d+)(?:-.*)?', version_str)
     if match:
         return tuple(map(int, match.groups()))
     return (0, 0, 0)
 
 def generate_next_version(auto_increment="patch"):
-    '''
+    """
     Gera a próxima versão com base na tag mais recente.
     
     Parâmetro auto_increment pode ser "major", "minor" ou "patch" para 
     definir qual número incrementar automaticamente.
-    '''
+    """
     latest_tag = get_latest_tag()
     major, minor, patch = parse_version(latest_tag)
 
@@ -60,7 +60,7 @@ def generate_next_version(auto_increment="patch"):
     return f"{major}.{minor}.{patch}"
 
 def get_commit_messages_since_last_tag():
-    '''Obtém as mensagens de commit desde a última tag, sem número do commit e autor.'''
+    """Obtém as mensagens de commit desde a última tag, sem número do commit e autor."""
     try:
         latest_tag = get_latest_tag()
         output = subprocess.check_output(
@@ -76,7 +76,7 @@ def get_commit_messages_since_last_tag():
         return ["Erro ao obter mensagens de commit."]
 
 def create_git_tag(version, message=None):
-    '''Cria uma nova tag Git com a versão especificada.'''
+    """Cria uma nova tag Git com a versão especificada."""
     if not message:
         message = f"Versão {version}"
 
@@ -97,7 +97,7 @@ def create_git_tag(version, message=None):
         return False
 
 def update_version_info(version):
-    '''Atualiza o arquivo version_info.txt com a nova versão.'''
+    """Atualiza o arquivo version_info.txt com a nova versão."""
     version_info_path = "version_info.txt"
     try:
         with open(version_info_path, "r", encoding="utf-8") as f:
@@ -143,7 +143,7 @@ def update_version_info(version):
         return False
 
 def generate_changelog(version):
-    '''Gera ou atualiza o arquivo CHANGELOG.md com as alterações da nova versão.'''
+    """Gera ou atualiza o arquivo CHANGELOG.md com as alterações da nova versão."""
     commits = get_commit_messages_since_last_tag()
     changelog_path = os.path.join("docs", "CHANGELOG.md")
     today = datetime.datetime.now().strftime("%d/%m/%Y")
@@ -212,7 +212,7 @@ def generate_changelog(version):
         return False
 
 def main():
-    '''Função principal que executa todo o processo de atualização de versão.'''
+    """Função principal que executa todo o processo de atualização de versão."""
     print("=== Atualizador de Versão ===")
 
     # Obtém a próxima versão

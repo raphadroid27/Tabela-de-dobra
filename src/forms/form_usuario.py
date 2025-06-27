@@ -1,10 +1,10 @@
-'''
+"""
 # Formulário de Gerenciamento de Usuários
 # Este módulo implementa uma interface gráfica para gerenciar usuários do sistema.
 # As funcionalidades incluem redefinir senhas, alterar permissões e excluir usuários.
 # A interface é construída com a biblioteca tkinter, utilizando o módulo globals
 # para variáveis globais e o módulo funcoes para operações relacionadas ao banco de dados.
-'''
+"""
 import tkinter as tk
 from tkinter import ttk
 from src.utils.janelas import (no_topo, posicionar_janela)
@@ -19,10 +19,10 @@ from src.utils.usuarios import (tem_permissao,
 from src.config import globals as g
 
 def main(root):
-    '''
+    """
     Função principal para gerenciar usuários.
     Inicializa a interface gráfica para edição, exclusão e gerenciamento de permissões.
-    '''
+    """
     # Verificar se o usuário é administrador
     if not tem_permissao('usuario', 'admin'):
         return
