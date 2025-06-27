@@ -7,6 +7,7 @@ aplicativo de cálculo de dobras.
 """
 import tkinter as tk
 from tkinter import ttk
+from typing import cast
 import re
 import pyperclip
 from src.models.models import Espessura, Material, Canal, Deducao
@@ -23,14 +24,14 @@ import src.utils.classes.tooltip as tp
 def _atualizar_material():
     """Atualiza os valores do combobox de materiais."""
     if g.MAT_COMB and g.MAT_COMB.winfo_exists():
-        materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
-        g.MAT_COMB.configure(values=materiais)
+        materiais = [str(m.nome) for m in session.query(Material).order_by(Material.nome)]
+        cast(ttk.Combobox, g.MAT_COMB).configure(values=materiais)
 
     # Verifica se o combobox de dedução de material existe e atualiza seus valores
     if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
-        g.DED_MATER_COMB.configure(values=[m.nome for m in session
-                                           .query(Material)
-                                           .order_by(Material.nome).all()])
+        cast(ttk.Combobox, g.DED_MATER_COMB).configure(values=[str(m.nome) for m in session
+                                       .query(Material)
+                                       .order_by(Material.nome).all()])
 
 
 def _atualizar_espessura():
@@ -38,7 +39,7 @@ def _atualizar_espessura():
     if not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get'):
         return
 
-    material_nome = g.MAT_COMB.get()
+    material_nome = cast(ttk.Combobox, g.MAT_COMB).get()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
     if material_obj:
         espessuras = session.query(Espessura).join(Deducao).filter(
@@ -53,7 +54,7 @@ def _atualizar_espessura():
         valores_espessura = session.query(Espessura.valor).distinct().all()
         valores_limpos = [float(valor[0]) for valor in valores_espessura
                          if valor[0] is not None]
-        g.DED_ESPES_COMB.configure(values=sorted(valores_limpos))
+        g.DED_ESPES_COMB.configure(values=[str(v) for v in sorted(valores_limpos)])
 
 
 def _atualizar_canal():
@@ -62,8 +63,8 @@ def _atualizar_canal():
         not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get')):
         return
 
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
+    espessura_valor = cast(ttk.Combobox, g.ESP_COMB).get()
+    material_nome = cast(ttk.Combobox, g.MAT_COMB).get()
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
 
@@ -100,9 +101,9 @@ def _atualizar_deducao():
         if not widget or not hasattr(widget, metodo):
             return
 
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
-    canal_valor = g.CANAL_COMB.get()
+    espessura_valor = cast(ttk.Combobox, g.ESP_COMB).get()
+    material_nome = cast(ttk.Combobox, g.MAT_COMB).get()
+    canal_valor = cast(ttk.Combobox, g.CANAL_COMB).get()
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -117,7 +118,7 @@ def _atualizar_deducao():
 
         if deducao_obj:
             if g.DED_LBL and hasattr(g.DED_LBL, 'config'):
-                g.DED_LBL.config(text=deducao_obj.valor, fg="black")
+                cast(tk.Label, g.DED_LBL).config(text=str(deducao_obj.valor), fg="black")
             observacao = deducao_obj.observacao or 'Observações não encontradas'
             if g.OBS_LBL and hasattr(g.OBS_LBL, 'config'):
                 g.OBS_LBL.config(text=f'{observacao}')
@@ -158,12 +159,12 @@ def canal_tooltip():
     if not g.CANAL_COMB or not hasattr(g.CANAL_COMB, 'get'):
         return
 
-    if g.CANAL_COMB.get() == "":
+    if cast(ttk.Combobox, g.CANAL_COMB).get() == "":
         if hasattr(g.CANAL_COMB, 'set'):
-            g.CANAL_COMB.set("")
+            cast(ttk.Combobox, g.CANAL_COMB).set("")
         tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
     else:
-        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
+        canal_obj = session.query(Canal).filter_by(valor=cast(ttk.Combobox, g.CANAL_COMB).get()).first()
         if canal_obj:
             canal_obs = getattr(canal_obj, 'observacao', None) or "N/A."
             canal_comprimento_total = getattr(canal_obj, 'comprimento_total', None) or "N/A."
@@ -189,10 +190,10 @@ def atualizar_toneladas_m():
         if not widget or not hasattr(widget, metodo):
             return
 
-    comprimento = g.COMPR_ENTRY.get()
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
-    canal_valor = g.CANAL_COMB.get()
+    comprimento = cast(tk.Entry, g.COMPR_ENTRY).get()
+    espessura_valor = cast(ttk.Combobox, g.ESP_COMB).get()
+    material_nome = cast(ttk.Combobox, g.MAT_COMB).get()
+    canal_valor = cast(ttk.Combobox, g.CANAL_COMB).get()
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -216,7 +217,7 @@ def atualizar_toneladas_m():
 
     # Verificar se o comprimento é menor que o comprimento total do canal
     if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'get'):
-        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
+        canal_obj = session.query(Canal).filter_by(valor=cast(ttk.Combobox, g.CANAL_COMB).get()).first()
         comprimento_total = getattr(canal_obj, 'comprimento_total', None) if canal_obj else None
         comprimento = float(comprimento) if comprimento else None
 
@@ -256,12 +257,12 @@ def salvar_valores_cabecalho():
         g.CABECALHO_VALORES = {}
 
     g.CABECALHO_VALORES = {
-        'MAT_COMB': g.MAT_COMB.get() if g.MAT_COMB else '',
-        'ESP_COMB': g.ESP_COMB.get() if g.ESP_COMB else '',
-        'CANAL_COMB': g.CANAL_COMB.get() if g.CANAL_COMB else '',
-        'COMPR_ENTRY': g.COMPR_ENTRY.get() if g.COMPR_ENTRY else '',
-        'RI_ENTRY': g.RI_ENTRY.get() if g.RI_ENTRY else '',
-        'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.get() if g.DED_ESPEC_ENTRY else '',
+        'MAT_COMB': cast(ttk.Combobox, g.MAT_COMB).get() if g.MAT_COMB else '',
+        'ESP_COMB': cast(ttk.Combobox, g.ESP_COMB).get() if g.ESP_COMB else '',
+        'CANAL_COMB': cast(ttk.Combobox, g.CANAL_COMB).get() if g.CANAL_COMB else '',
+        'COMPR_ENTRY': cast(tk.Entry, g.COMPR_ENTRY).get() if g.COMPR_ENTRY else '',
+        'RI_ENTRY': cast(tk.Entry, g.RI_ENTRY).get() if g.RI_ENTRY else '',
+        'DED_ESPEC_ENTRY': cast(tk.Entry, g.DED_ESPEC_ENTRY).get() if g.DED_ESPEC_ENTRY else '',
     }
     print("Valores salvos:", g.CABECALHO_VALORES)
 

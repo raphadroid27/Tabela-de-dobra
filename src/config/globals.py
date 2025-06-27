@@ -3,14 +3,15 @@ Este módulo define variáveis globais para uso em diferentes partes da aplicaç
 """
 from typing import Optional
 import tkinter as tk
+from tkinter import ttk
 # Variáveis globais
-NO_TOPO_VAR = None
-TRANSP_VAR = None
+NO_TOPO_VAR: Optional[tk.IntVar] = None
+TRANSP_VAR: Optional[tk.StringVar] = None
 DOBRAS_VALORES = None
 CABECALHO_VALORES = None
 VALORES_W = [1,2]
-EXP_V = None
-EXP_H = None
+EXP_V: Optional[tk.StringVar] = None
+EXP_H: Optional[tk.StringVar] = None
 USUARIO_ID = None
 USUARIO_NOME = None
 
@@ -18,18 +19,18 @@ USUARIO_NOME = None
 CARREGAR_INTERFACE_FUNC = None
 
 # head.py widgets
-MAT_COMB = None
-ESP_COMB = None
-CANAL_COMB = None
-DED_LBL = None
-RI_ENTRY = None
-K_LBL = None
-OFFSET_LBL = None
-OBS_LBL = None
-FORCA_LBL = None
-COMPR_ENTRY = None
-ABA_EXT_LBL = None
-Z_EXT_LBL = None
+MAT_COMB: Optional[ttk.Combobox] = None
+ESP_COMB: Optional[ttk.Combobox] = None
+CANAL_COMB: Optional[ttk.Combobox] = None
+DED_LBL: Optional[tk.Label] = None
+RI_ENTRY: Optional[tk.Entry] = None
+K_LBL: Optional[tk.Label] = None
+OFFSET_LBL: Optional[tk.Label] = None
+OBS_LBL: Optional[tk.Label] = None
+FORCA_LBL: Optional[tk.Label] = None
+COMPR_ENTRY: Optional[tk.Entry] = None
+ABA_EXT_LBL: Optional[tk.Label] = None
+Z_EXT_LBL: Optional[tk.Label] = None
 
 # aba1.py widgets
 W = None
@@ -38,11 +39,11 @@ for i in range(1, N):
     globals()[f'aba{i}_entry_{W}'] = None
     globals()[f'medidadobra{i}_label_{W}'] = None
     globals()[f'metadedobra{i}_label_{W}'] = None
-DED_ESPEC_ENTRY = None
-FRAME_DOBRA = None  # Verificar se é necessário
+DED_ESPEC_ENTRY: Optional[tk.Entry] = None
+FRAME_DOBRA: Optional[tk.Frame] = None  # Verificar se é necessário
 
 # aba3.py widgets
-RAZAO_RIE_LBL = None
+RAZAO_RIE_LBL: Optional[tk.Label] = None
 
 # Dicionário de valores de raio interno
 RAIO_K = {
@@ -69,50 +70,50 @@ RAIO_K = {
     }
 
 # nova_espessura.py widgets
-ESP_VALOR_ENTRY = None
-LIST_ESP = None
-EDIT_ESP = None
-ESP_BUSCA_ENTRY = None
+ESP_VALOR_ENTRY: Optional[tk.Entry] = None
+LIST_ESP: Optional[ttk.Treeview] = None
+EDIT_ESP: Optional[tk.Button] = None
+ESP_BUSCA_ENTRY: Optional[tk.Entry] = None
 
 # deducao_form.py widgets
-DED_MATER_COMB = None
-DED_ESPES_COMB = None
-DED_CANAL_COMB = None
-DED_VALOR_ENTRY = None
-DED_OBSER_ENTRY = None
-DED_FORCA_ENTRY = None
-LIST_DED = None
-EDIT_DED = None
+DED_MATER_COMB: Optional[ttk.Combobox] = None
+DED_ESPES_COMB: Optional[ttk.Combobox] = None
+DED_CANAL_COMB: Optional[ttk.Combobox] = None
+DED_VALOR_ENTRY: Optional[tk.Entry] = None
+DED_OBSER_ENTRY: Optional[tk.Entry] = None
+DED_FORCA_ENTRY: Optional[tk.Entry] = None
+LIST_DED: Optional[ttk.Treeview] = None
+EDIT_DED: Optional[tk.Button] = None
 
 # material_form.py widgets
-MAT_NOME_ENTRY = None
-MAT_DENS_ENTRY = None
-MAT_ESCO_ENTRY = None
-MAT_ELAS_ENTRY = None
-LIST_MAT = None
-EDIT_MAT = None
-MAT_BUSCA_ENTRY = None
+MAT_NOME_ENTRY: Optional[tk.Entry] = None
+MAT_DENS_ENTRY: Optional[tk.Entry] = None
+MAT_ESCO_ENTRY: Optional[tk.Entry] = None
+MAT_ELAS_ENTRY: Optional[tk.Entry] = None
+LIST_MAT: Optional[ttk.Treeview] = None
+EDIT_MAT: Optional[tk.Button] = None
+MAT_BUSCA_ENTRY: Optional[tk.Entry] = None
 
 # canal_form.py widgets
-CANAL_VALOR_ENTRY = None
-CANAL_LARGU_ENTRY = None
-CANAL_ALTUR_ENTRY = None
-CANAL_COMPR_ENTRY = None
-CANAL_OBSER_ENTRY = None
-LIST_CANAL = None
-EDIT_CANAL = None
-CANAL_BUSCA_ENTRY = None
+CANAL_VALOR_ENTRY: Optional[tk.Entry] = None
+CANAL_LARGU_ENTRY: Optional[tk.Entry] = None
+CANAL_ALTUR_ENTRY: Optional[tk.Entry] = None
+CANAL_COMPR_ENTRY: Optional[tk.Entry] = None
+CANAL_OBSER_ENTRY: Optional[tk.Entry] = None
+LIST_CANAL: Optional[ttk.Treeview] = None
+EDIT_CANAL: Optional[tk.Button] = None
+CANAL_BUSCA_ENTRY: Optional[tk.Entry] = None
 
 # form_autenticacao.py widgets
-USUARIO_ENTRY = None
-SENHA_ENTRY = None
-ADMIN_VAR = None
-LOGIN = None
+USUARIO_ENTRY: Optional[tk.Entry] = None
+SENHA_ENTRY: Optional[tk.Entry] = None
+ADMIN_VAR: Optional[tk.StringVar] = None
+LOGIN: Optional[tk.Toplevel] = None
 
 # form_usuario.py widgets
-USUARIO_BUSCA_ENTRY = None
-LIST_USUARIO = None
-EDIT_USUARIO = None
+USUARIO_BUSCA_ENTRY: Optional[tk.Entry] = None
+LIST_USUARIO: Optional[ttk.Treeview] = None
+EDIT_USUARIO: Optional[tk.Button] = None
 
 # form_impressao.py widgets
 IMPRESSAO_FORM: Optional[tk.Toplevel] = None
@@ -123,12 +124,12 @@ IMPRESSAO_LISTA_TEXT: Optional[tk.Text] = None
 IMPRESSAO_RESULTADO_TEXT: Optional[tk.Text] = None
 
 # formularios
-PRINC_FORM = None
-DEDUC_FORM = None
-MATER_FORM = None
-CANAL_FORM = None
-ESPES_FORM = None
-SOBRE_FORM = None
-AUTEN_FORM = None
-USUAR_FORM = None
-RIE_FORM = None
+PRINC_FORM: Optional[tk.Tk] = None
+DEDUC_FORM: Optional[tk.Toplevel] = None
+MATER_FORM: Optional[tk.Toplevel] = None
+CANAL_FORM: Optional[tk.Toplevel] = None
+ESPES_FORM: Optional[tk.Toplevel] = None
+SOBRE_FORM: Optional[tk.Toplevel] = None
+AUTEN_FORM: Optional[tk.Toplevel] = None
+USUAR_FORM: Optional[tk.Toplevel] = None
+RIE_FORM: Optional[tk.Toplevel] = None
