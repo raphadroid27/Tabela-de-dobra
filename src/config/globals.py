@@ -1,7 +1,7 @@
 """
 Este módulo define variáveis globais para uso em diferentes partes da aplicação.
 """
-#variáveis globais
+# Variáveis globais
 NO_TOPO_VAR = None
 TRANSP_VAR = None
 DOBRAS_VALORES = None
@@ -37,9 +37,9 @@ for i in range(1, N):
     globals()[f'medidadobra{i}_label_{W}'] = None
     globals()[f'metadedobra{i}_label_{W}'] = None
 DED_ESPEC_ENTRY = None
-FRAME_DOBRA = None #Verificar se é necessário
+FRAME_DOBRA = None  # Verificar se é necessário
 
-#aba3.py widgets
+# aba3.py widgets
 RAZAO_RIE_LBL = None
 
 # Dicionário de valores de raio interno
@@ -82,7 +82,7 @@ DED_FORCA_ENTRY = None
 LIST_DED = None
 EDIT_DED = None
 
-#material_form.py widgets
+# material_form.py widgets
 MAT_NOME_ENTRY = None
 MAT_DENS_ENTRY = None
 MAT_ESCO_ENTRY = None

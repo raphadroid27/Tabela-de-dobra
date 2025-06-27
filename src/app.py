@@ -1,10 +1,10 @@
-"""
-# Formulário Principal do Aplicativo de Cálculo de Dobra
-# Este módulo implementa a interface principal do aplicativo, permitindo a
-# gestão de deduções, materiais, espessuras e canais. Ele utiliza a biblioteca
-# tkinter para a interface gráfica, o módulo globals para variáveis globais,
-# e outros módulos auxiliares para operações relacionadas ao banco de dados
-# e funcionalidades específicas.
+﻿"""
+Formulário Principal do Aplicativo de Cálculo de Dobra
+Este módulo implementa a interface principal do aplicativo, permitindo a
+gestão de deduções, materiais, espessuras e canais. Ele utiliza a biblioteca
+tkinter para a interface gráfica, o módulo globals para variáveis globais,
+e outros módulos auxiliares para operações relacionadas ao banco de dados
+e funcionalidades específicas.
 """
 
 import os
@@ -121,7 +121,9 @@ def configurar_menu():
         return
 
     menu_bar = tk.Menu(g.PRINC_FORM)
-    g.PRINC_FORM.config(menu=menu_bar)    # Menu Arquivo
+    g.PRINC_FORM.config(menu=menu_bar)
+
+    # Menu Arquivo
     file_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Arquivo", menu=file_menu)
 

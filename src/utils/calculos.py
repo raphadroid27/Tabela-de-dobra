@@ -62,8 +62,10 @@ def calcular_k_offset():
         # Limita o fator K a 0.5
         fator_k = min(fator_k, 0.5)
 
-        #Calcula o offset
-        offset = fator_k * espessura        # Atualiza o label com o valor calculado
+        # Calcula o offset
+        offset = fator_k * espessura
+
+        # Atualiza o label com o valor calculado
         if g.K_LBL is not None:
             g.K_LBL.config(text=f"{fator_k:.2f}", fg="blue"
                            if deducao_valor == deducao_espec else "black")

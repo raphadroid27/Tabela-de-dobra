@@ -22,7 +22,8 @@ def carregar_interface(var, frame_superior):
                    1 para apenas o cabeçalho principal.
                    2 para cabeçalho com avisos.
         frame_superior (tk.Frame): Frame onde os widgets serão adicionados.
-    """    # Salvar os valores dos widgets do cabeçalho
+    """
+    # Salvar os valores dos widgets do cabeçalho
     # Isso deve ser feito antes de recriar os widgets
     salvar_valores_cabecalho()
 
