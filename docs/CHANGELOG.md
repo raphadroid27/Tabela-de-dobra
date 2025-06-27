@@ -2,6 +2,15 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.1.4 (27/06/2025)
+
+- Adicionados novos campos numéricos (valor dedução, largura, altura, etc.) para aceitarem "," como separador de casas decimais.
+- Corrigidos erros de codificação e inconsistências em mensagens e comentários.
+- Melhorada a atualização dos comboboxes de dedução com valores distintos e filtrados.
+- Adicionadas verificações para evitar erros ao acessar widgets na atualização da interface principal.
+- Melhorada a verificação de inicialização de widgets e variáveis antes do acesso aos seus valores.
+- Reorganizada a lógica de carregamento da interface e move funções de limpeza para um novo módulo.
+
 ## 1.1.3 (27/05/2025)
 
 - Melhorada a clareza e funcionalidade dos eventos nos widgets do cabeçalho.
