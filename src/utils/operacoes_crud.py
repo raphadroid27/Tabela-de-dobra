@@ -213,7 +213,15 @@ def _processar_campo_edicao(obj, campo, entry, tipo):
     if valor_novo == "":
         valor_novo = None
     else:
-        campos_numericos = ["largura", "altura", "comprimento_total"]
+        campos_numericos = ["largura",
+                            "altura",
+                            "comprimento_total",
+                            "valor",
+                            "densidade",
+                            "escoamento",
+                            "elasticidade"
+                            ]
+
         if campo in campos_numericos:
             try:
                 valor_novo = float(valor_novo.replace(",", "."))
