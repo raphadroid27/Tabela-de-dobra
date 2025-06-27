@@ -1,0 +1,41 @@
+[MASTER]
+ignore=CVS
+jobs=1
+
+[MESSAGES CONTROL]
+# Disable specific warnings/errors
+disable=import-error,
+        E0401,
+        C0103,
+        R0903,
+        W0613,
+        W0612
+
+[REPORTS]
+output-format=text
+reports=no
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,g,w,x,y,z,id
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=5
+max-locals=15
+max-returns=6
+max-branches=12
+max-statements=50
+max-parents=7
+max-attributes=7
+min-public-methods=2
+max-public-methods=20
+max-bool-expr=5
+
+[TYPECHECK]
+ignore-mixin-members=yes
+ignore-on-opaque-inference=yes
+
+[VARIABLES]
+dummy-variables-rgx=(_+[a-zA-Z0-9]*?$)|dummy

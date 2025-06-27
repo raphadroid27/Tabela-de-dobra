@@ -1,6 +1,6 @@
-'''
+﻿"""
 Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
-'''
+"""
 from tkinter import messagebox, simpledialog
 import hashlib
 from src.config import globals as g
@@ -14,9 +14,9 @@ from src.utils.interface import listar
 
 
 def novo_usuario():
-    '''
+    """
     Cria um novo usuário com o nome e senha fornecidos.
-    '''
+    """
     # Verificar se os widgets foram inicializados
     if g.USUARIO_ENTRY is None or g.SENHA_ENTRY is None:
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
@@ -59,10 +59,10 @@ def novo_usuario():
 
 
 def login():
-    '''
+    """
     Realiza o login do usuário com o nome e senha fornecidos.
     Se o usuário não existir, cria um novo usuário.
-    '''
+    """
     # Verificar se os widgets foram inicializados
     if g.USUARIO_ENTRY is None or g.SENHA_ENTRY is None:
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
@@ -112,9 +112,9 @@ def login():
 
 
 def logado(tipo):
-    '''
+    """
     Verifica se o usuário está logado antes de permitir ações em formulários específicos.
-    '''
+    """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -125,9 +125,9 @@ def logado(tipo):
 
 
 def tem_permissao(tipo, role_requerida):
-    '''
+    """
     Verifica se o usuário tem permissão para realizar uma ação específica.
-    '''
+    """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -149,9 +149,9 @@ def tem_permissao(tipo, role_requerida):
 
 
 def logout():
-    '''
+    """
     Realiza o logout do usuário atual.
-    '''
+    """
     if g.USUARIO_ID is None:
         messagebox.showerror("Erro", "Nenhum usuário logado.")
         return
@@ -163,9 +163,9 @@ def logout():
 
 
 def resetar_senha():
-    '''
+    """
     Reseta a senha do usuário selecionado na lista de usuários.
-    '''
+    """
     if g.LIST_USUARIO is None:
         messagebox.showerror("Erro", "Lista de usuários não inicializada.")
         return
@@ -200,13 +200,11 @@ def resetar_senha():
 
 
 def excluir_usuario():
-    '''
+    """
     Exclui o usuário selecionado na lista de usuários.
-    '''
-    if not tem_permissao('usuario', 'admin'):
-        return
-
-    if g.LIST_USUARIO is None:
+    """
+    # Validações iniciais
+    if not tem_permissao('usuario', 'admin') or g.LIST_USUARIO is None:
         return
 
     selected_items = g.LIST_USUARIO.selection() if g.LIST_USUARIO else []
@@ -215,46 +213,41 @@ def excluir_usuario():
                                parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
+    # Obter dados do usuário selecionado
     selected_item = selected_items[0]
-    if g.LIST_USUARIO is None:
-        return
-
     item = g.LIST_USUARIO.item(selected_item)
     obj_id = item['values'][0]
     obj = session.query(Usuario).filter_by(id=obj_id).first()
+
+    erro_msg = None
     if obj is None:
-        messagebox.showerror("Erro", "Usuário não encontrado.",
+        erro_msg = "Usuário não encontrado."
+    elif getattr(obj, 'role', None) == "admin":
+        erro_msg = "Não é possível excluir um administrador."
+
+    if erro_msg:
+        messagebox.showerror("Erro", erro_msg,
                              parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
-    # Usar getattr para acessar o valor da coluna de forma segura
-    obj_role = getattr(obj, 'role', None)
-    if obj_role == "admin":
-        messagebox.showerror("Erro",
-                             "Não é possível excluir um administrador.",
-                             parent=g.USUAR_FORM if g.USUAR_FORM else None)
-        return
-
+    # Confirmar exclusão
     aviso = messagebox.askyesno("Atenção!",
                                 "Tem certeza que deseja excluir o usuário?",
                                 parent=g.USUAR_FORM if g.USUAR_FORM else None)
-    if not aviso:
-        return
-
-    session.delete(obj)
-    tratativa_erro()
-    if g.LIST_USUARIO is not None:
-        g.LIST_USUARIO.delete(selected_item)
-    messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!",
-                        parent=g.USUAR_FORM if g.USUAR_FORM else None)
-
-    listar('usuario')
+    if aviso:
+        session.delete(obj)
+        tratativa_erro()
+        if g.LIST_USUARIO is not None:
+            g.LIST_USUARIO.delete(selected_item)
+        messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!",
+                            parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        listar('usuario')
 
 
 def tornar_editor():
-    '''
+    """
     Promove o usuário selecionado a editor.
-    '''
+    """
     if g.LIST_USUARIO is None:
         messagebox.showerror("Erro", "Lista de usuários não disponível.")
         return
