@@ -9,12 +9,28 @@ import os
 import subprocess
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+from typing import cast
 from src.utils.janelas import (no_topo,
                                posicionar_janela,
                                habilitar_janelas,
                                desabilitar_janelas)
 from src.utils.utilitarios import obter_caminho_icone
 from src.config import globals as g
+
+def _verificar_widgets_inicializados():
+    """Verifica se todos os widgets necessários foram inicializados."""
+    widgets = [
+        ('IMPRESSAO_FORM', g.IMPRESSAO_FORM),
+        ('IMPRESSAO_DIRETORIO_ENTRY', g.IMPRESSAO_DIRETORIO_ENTRY),
+        ('IMPRESSAO_ARQUIVO_ENTRY', g.IMPRESSAO_ARQUIVO_ENTRY),
+        ('IMPRESSAO_LISTA_ARQUIVOS', g.IMPRESSAO_LISTA_ARQUIVOS),
+        ('IMPRESSAO_LISTA_TEXT', g.IMPRESSAO_LISTA_TEXT),
+        ('IMPRESSAO_RESULTADO_TEXT', g.IMPRESSAO_RESULTADO_TEXT)
+    ]
+    
+    for nome, widget in widgets:
+        if widget is None:
+            raise RuntimeError(f"Widget {nome} não foi inicializado. Chame main() primeiro.")
 
 def imprimir_pdf(diretorio, lista_arquivos):
     """
@@ -46,8 +62,8 @@ def imprimir_pdf(diretorio, lista_arquivos):
             for arquivo in arquivos_nao_encontrados:
                 resultado += f"  • {arquivo}\n"
         
-        g.IMPRESSAO_RESULTADO_TEXT.delete(1.0, tk.END)
-        g.IMPRESSAO_RESULTADO_TEXT.insert(1.0, resultado)
+        cast(tk.Text, g.IMPRESSAO_RESULTADO_TEXT).delete(1.0, tk.END)
+        cast(tk.Text, g.IMPRESSAO_RESULTADO_TEXT).insert(1.0, resultado)
         
         if arquivos_encontrados:
             resultado_impressao = "\n\nTentando imprimir arquivos...\n"
@@ -101,7 +117,7 @@ def imprimir_pdf(diretorio, lista_arquivos):
                     resultado_impressao += f"  ✗ Falha ao imprimir {nome_arquivo}\n"
             
             # Atualizar o campo de resultado com os detalhes da impressão
-            g.IMPRESSAO_RESULTADO_TEXT.insert(tk.END, resultado_impressao)
+            cast(tk.Text, g.IMPRESSAO_RESULTADO_TEXT).insert(tk.END, resultado_impressao)
             
             messagebox.showinfo("Impressão", f"Processo de impressão iniciado para {len(arquivos_encontrados)} arquivo(s)!\nVerifique os detalhes no campo 'Resultado da Impressão'.")
         else:
@@ -121,35 +137,33 @@ def selecionar_diretorio():
     habilitar_janelas()  # Sempre habilita DEPOIS que o diálogo for fechado
     
     if diretorio:  # Se selecionou um diretório, atualiza o campo
-        g.IMPRESSAO_DIRETORIO_ENTRY.delete(0, tk.END)
-        g.IMPRESSAO_DIRETORIO_ENTRY.insert(0, diretorio)
-    else:
-        habilitar_janelas()
+        cast(tk.Entry, g.IMPRESSAO_DIRETORIO_ENTRY).delete(0, tk.END)
+        cast(tk.Entry, g.IMPRESSAO_DIRETORIO_ENTRY).insert(0, diretorio)
 
 def adicionar_arquivo():
     """
     Adiciona um arquivo à lista de arquivos para impressão.
     """
-    arquivo = g.IMPRESSAO_ARQUIVO_ENTRY.get().strip()
+    arquivo = cast(tk.Entry, g.IMPRESSAO_ARQUIVO_ENTRY).get().strip()
     if arquivo:
-        g.IMPRESSAO_LISTA_ARQUIVOS.insert(tk.END, arquivo)
-        g.IMPRESSAO_ARQUIVO_ENTRY.delete(0, tk.END)
+        cast(tk.Listbox, g.IMPRESSAO_LISTA_ARQUIVOS).insert(tk.END, arquivo)
+        cast(tk.Entry, g.IMPRESSAO_ARQUIVO_ENTRY).delete(0, tk.END)
 
 def adicionar_lista_arquivos():
     """
     Adiciona múltiplos arquivos à lista a partir do campo de texto.
     """
-    texto = g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip()
+    texto = cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).get(1.0, tk.END).strip()
     if texto:
         # Divide o texto por quebras de linha e remove linhas vazias
         arquivos = [linha.strip() for linha in texto.split('\n') if linha.strip()]
         
         # Adiciona cada arquivo à lista
         for arquivo in arquivos:
-            g.IMPRESSAO_LISTA_ARQUIVOS.insert(tk.END, arquivo)
+            cast(tk.Listbox, g.IMPRESSAO_LISTA_ARQUIVOS).insert(tk.END, arquivo)
         
         # Limpa o campo de texto
-        g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
+        cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).delete(1.0, tk.END)
         
         messagebox.showinfo("Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
 
@@ -157,21 +171,21 @@ def remover_arquivo():
     """
     Remove o arquivo selecionado da lista.
     """
-    selection = g.IMPRESSAO_LISTA_ARQUIVOS.curselection()
+    selection = cast(tk.Listbox, g.IMPRESSAO_LISTA_ARQUIVOS).curselection()
     if selection:
-        g.IMPRESSAO_LISTA_ARQUIVOS.delete(selection[0])
+        cast(tk.Listbox, g.IMPRESSAO_LISTA_ARQUIVOS).delete(selection[0])
 
 def limpar_lista():
     """
     Limpa toda a lista de arquivos.
     """
-    g.IMPRESSAO_LISTA_ARQUIVOS.delete(0, tk.END)
+    cast(tk.Listbox, g.IMPRESSAO_LISTA_ARQUIVOS).delete(0, tk.END)
 
 def executar_impressao():
     """
     Executa a impressão dos arquivos selecionados.
     """
-    diretorio = g.IMPRESSAO_DIRETORIO_ENTRY.get().strip()
+    diretorio = cast(tk.Entry, g.IMPRESSAO_DIRETORIO_ENTRY).get().strip()
     if not diretorio:
         messagebox.showerror("Erro", "Por favor, selecione um diretório.")
         return
@@ -180,7 +194,7 @@ def executar_impressao():
         messagebox.showerror("Erro", "O diretório selecionado não existe.")
         return
     
-    lista_arquivos = list(g.IMPRESSAO_LISTA_ARQUIVOS.get(0, tk.END))
+    lista_arquivos = list(cast(tk.Listbox, g.IMPRESSAO_LISTA_ARQUIVOS).get(0, tk.END))
     if not lista_arquivos:
         messagebox.showerror("Erro", "Por favor, adicione pelo menos um arquivo à lista.")
         return
@@ -266,14 +280,14 @@ def criar_frame_arquivos(main_frame):
     g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
     
     def on_focus_in(event):
-        if g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip() == placeholder_text:
-            g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
-            g.IMPRESSAO_LISTA_TEXT.config(fg="black")
+        if cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).get(1.0, tk.END).strip() == placeholder_text:
+            cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).delete(1.0, tk.END)
+            cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).config(fg="black")
     
     def on_focus_out(event):
-        if not g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip():
-            g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text)
-            g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
+        if not cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).get(1.0, tk.END).strip():
+            cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).insert(1.0, placeholder_text)
+            cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).config(fg="gray")
     
     g.IMPRESSAO_LISTA_TEXT.bind("<FocusIn>", on_focus_in)
     g.IMPRESSAO_LISTA_TEXT.bind("<FocusOut>", on_focus_out)
@@ -292,9 +306,9 @@ def criar_frame_arquivos(main_frame):
     tk.Button(frame_botoes_texto,
               text="Limpar",
               width=10,
-              command=lambda: (g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END),
-                              g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text),
-                              g.IMPRESSAO_LISTA_TEXT.config(fg="gray"))).grid(row=1, column=0, sticky="ew", pady=(1, 0))
+              command=lambda: (cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).delete(1.0, tk.END),
+                              cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).insert(1.0, placeholder_text),
+                              cast(tk.Text, g.IMPRESSAO_LISTA_TEXT).config(fg="gray"))).grid(row=1, column=0, sticky="ew", pady=(1, 0))
     
     # Frame para a lista final e botões de controle
     frame_lista = tk.Frame(frame_arquivos)

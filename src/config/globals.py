@@ -1,6 +1,8 @@
 """
 Este módulo define variáveis globais para uso em diferentes partes da aplicação.
 """
+from typing import Optional
+import tkinter as tk
 # Variáveis globais
 NO_TOPO_VAR = None
 TRANSP_VAR = None
@@ -113,12 +115,12 @@ LIST_USUARIO = None
 EDIT_USUARIO = None
 
 # form_impressao.py widgets
-IMPRESSAO_FORM = None
-IMPRESSAO_DIRETORIO_ENTRY = None
-IMPRESSAO_ARQUIVO_ENTRY = None
-IMPRESSAO_LISTA_ARQUIVOS = None
-IMPRESSAO_LISTA_TEXT = None
-IMPRESSAO_RESULTADO_TEXT = None
+IMPRESSAO_FORM: Optional[tk.Toplevel] = None
+IMPRESSAO_DIRETORIO_ENTRY: Optional[tk.Entry] = None
+IMPRESSAO_ARQUIVO_ENTRY: Optional[tk.Entry] = None
+IMPRESSAO_LISTA_ARQUIVOS: Optional[tk.Listbox] = None
+IMPRESSAO_LISTA_TEXT: Optional[tk.Text] = None
+IMPRESSAO_RESULTADO_TEXT: Optional[tk.Text] = None
 
 # formularios
 PRINC_FORM = None
