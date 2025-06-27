@@ -1,4 +1,4 @@
-'''
+﻿'''
 Funções auxiliares para o aplicativo de cálculo de dobras.
 '''
 from math import pi
@@ -10,12 +10,12 @@ from src.utils.banco_dados import session
 def verificar_widget_inicializado(widget, metodo='get', default_value=''):
     '''
     Verifica se um widget está inicializado antes de chamar seus métodos.
-    
+
     Args:
         widget: O widget a ser verificado
         metodo: O método a ser chamado ('get', 'cget', 'config')
         default_value: Valor padrão caso o widget não esteja inicializado
-    
+
     Returns:
         O resultado do método ou o valor padrão
     '''
@@ -25,12 +25,11 @@ def verificar_widget_inicializado(widget, metodo='get', default_value=''):
     try:
         if metodo == 'get':
             return widget.get()
-        elif metodo == 'cget':
+        if metodo == 'cget':
             return widget.cget('text')
-        elif metodo == 'config':
+        if metodo == 'config':
             return widget.config
-        else:
-            return default_value
+        return default_value
     except (AttributeError, TypeError):
         return default_value
 
@@ -142,12 +141,9 @@ def z_minimo_externo():
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo do Z mínimo externo.")
 
-def calcular_dobra(w):
-    '''
-    Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
-    '''
-    # Criar uma lista de listas para armazenar os valores de linha i e coluna w
-    g.DOBRAS_VALORES = [
+def _obter_valores_dobras(w):
+    '''Obtém os valores das dobras dos widgets de entrada.'''
+    return [
         [
             getattr(g, f'aba{i}_entry_{col}').get() or ''
             if getattr(g, f'aba{i}_entry_{col}', None) is not None else ''
@@ -156,83 +152,106 @@ def calcular_dobra(w):
         for i in range(1, g.N)
     ]
 
+def _obter_valor_deducao():
+    '''Obtém o valor da dedução dos widgets correspondentes.'''
     deducao_valor = str(verificar_widget_inicializado(g.DED_LBL, 'cget', '')).replace(
         ' Copiado!', '')
     deducao_espec_str = verificar_widget_inicializado(g.DED_ESPEC_ENTRY, 'get', '') or ''
     deducao_espec = deducao_espec_str.replace(',', '.')
 
-    # Exibir a matriz de valores para depuração
-    print("Matriz de dobras (g.dobras_get):")
-    if g.DOBRAS_VALORES is not None:
-        for linha in g.DOBRAS_VALORES:
-            print(linha)    # Determinar o valor da dedução
     if deducao_espec != "":
-        deducao_valor = deducao_espec
+        return deducao_espec
+    return deducao_valor
 
-    if not deducao_valor:
-        return
+def _calcular_medida_dobra(dobra, deducao_valor, i):
+    '''Calcula a medida da dobra baseada na posição e valor de dedução.'''
+    if i in (1, g.N - 1):
+        return float(dobra) - float(deducao_valor) / 2
 
-    # Função auxiliar para calcular medidas
-    def calcular_medida(deducao_valor, i, w):
-        if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i - 1 or
-            len(g.DOBRAS_VALORES[i - 1]) <= w - 1):
-            return
+    if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i or
+        len(g.DOBRAS_VALORES[i]) <= 0 or
+        not g.DOBRAS_VALORES[i][0]):
+        return float(dobra) - float(deducao_valor) / 2
 
-        dobra = g.DOBRAS_VALORES[i - 1][w - 1].replace(',', '.')
+    return float(dobra) - float(deducao_valor)
 
-        if dobra == "":
-            widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
-            widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-            if widget_medida is not None:
-                widget_medida.config(text="")
-            if widget_metade is not None:
-                widget_metade.config(text="")
-        else:
-            if i in (1, g.N - 1):
-                medidadobra = float(dobra) - float(deducao_valor) / 2
-            else:
-                if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i or
-                    len(g.DOBRAS_VALORES[i]) <= w - 1 or
-                    g.DOBRAS_VALORES[i][w - 1] == ""):
-                    medidadobra = float(dobra) - float(deducao_valor) / 2
-                else:
-                    medidadobra = float(dobra) - float(deducao_valor)
+def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
+    '''Atualiza os widgets com os valores calculados de dobra.'''
+    widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
+    widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
+    if widget_medida is not None:
+        widget_medida.config(text=f'{medidadobra:.2f}', fg="black")
+    if widget_metade is not None:
+        widget_metade.config(text=f'{metade_dobra:.2f}', fg="black")
 
-            metade_dobra = medidadobra / 2
+def _limpar_widgets_dobra(i, w):
+    '''Limpa os widgets de dobra quando o valor está vazio.'''
+    widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
+    widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
+    if widget_medida is not None:
+        widget_medida.config(text="")
+    if widget_metade is not None:
+        widget_metade.config(text="")
 
-            # Atualizar os widgets com os valores calculados
-            widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
-            widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-            if widget_medida is not None:
-                widget_medida.config(text=f'{medidadobra:.2f}', fg="black")
-            if widget_metade is not None:
-                widget_metade.config(text=f'{metade_dobra:.2f}', fg="black")
-
-        blank = sum(
+def _calcular_e_atualizar_blank(w):
+    '''Calcula e atualiza os valores de blank para uma coluna.'''
+    blank = sum(
         float(getattr(g, f'medidadobra{row}_label_{w}').cget('text').replace(' Copiado!', ''))
         for row in range(1, g.N)
         if getattr(g, f'medidadobra{row}_label_{w}').cget('text')
     )
 
-        metade_blank = blank / 2
+    metade_blank = blank / 2
 
-        # Atualizar os widgets com os valores calculados
-        label = getattr(g, f'medida_blank_label_{w}')
-        if blank:
-            label.config(text=f"{blank:.2f}", fg="black")
-        else:
-            label.config(text="")
+    # Atualizar os widgets com os valores calculados
+    label = getattr(g, f'medida_blank_label_{w}')
+    if blank:
+        label.config(text=f"{blank:.2f}", fg="black")
+    else:
+        label.config(text="")
 
-        label = getattr(g, f'metade_blank_label_{w}')
-        if metade_blank:
-            label.config(text=f"{metade_blank:.2f}", fg="black")
-        else:
-            label.config(text="")
+    label = getattr(g, f'metade_blank_label_{w}')
+    if metade_blank:
+        label.config(text=f"{metade_blank:.2f}", fg="black")
+    else:
+        label.config(text="")
+
+def calcular_dobra(w):
+    '''
+    Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
+    '''
+    # Obter valores das dobras
+    g.DOBRAS_VALORES = _obter_valores_dobras(w)
+
+    # Exibir a matriz de valores para depuração
+    print("Matriz de dobras (g.dobras_get):")
+    if g.DOBRAS_VALORES is not None:
+        for linha in g.DOBRAS_VALORES:
+            print(linha)
+
+    # Obter valor da dedução
+    deducao_valor = _obter_valor_deducao()
+
+    if not deducao_valor:
+        return
 
     # Iterar pelas linhas e colunas para calcular as medidas
     for i in range(1, g.N):
         for col in range(1, w + 1):
-            calcular_medida(deducao_valor, i, col)
+            if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i - 1 or
+                len(g.DOBRAS_VALORES[i - 1]) <= col - 1):
+                continue
+
+            dobra = g.DOBRAS_VALORES[i - 1][col - 1].replace(',', '.')
+
+            if dobra == "":
+                _limpar_widgets_dobra(i, col)
+            else:
+                medidadobra = _calcular_medida_dobra(dobra, deducao_valor, i)
+                metade_dobra = medidadobra / 2
+                _atualizar_widgets_dobra(i, col, medidadobra, metade_dobra)
+
+            _calcular_e_atualizar_blank(col)
             verificar_aba_minima(g.DOBRAS_VALORES[i - 1][col - 1], i, col)
 
 def verificar_aba_minima(dobra, i, w):

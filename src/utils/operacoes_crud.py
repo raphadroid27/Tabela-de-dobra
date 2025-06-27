@@ -1,8 +1,8 @@
-'''
-Este módulo contém funções auxiliares para manipulação de dados no aplicativo de cálculo de dobras.
-Inclui operações CRUD (Criar, Ler, Atualizar, Excluir) para os tipos de dados: dedução, espessura, 
-material e canal.
-'''
+﻿"""
+Este módulo contém funções auxiliares para manipulação de dados no aplicativo de cálculo
+de dobras. Inclui operações CRUD (Criar, Ler, Atualizar, Excluir) para os tipos de dados:
+dedução, espessura, material e canal.
+"""
 import tkinter as tk
 from tkinter import messagebox
 import re
@@ -18,9 +18,9 @@ from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
 
 def adicionar(tipo):
-    '''
+    """
     Adiciona um novo item ao banco de dados com base no tipo especificado.
-    '''
+    """
     if not logado(tipo):
         return
 
@@ -39,9 +39,10 @@ def adicionar(tipo):
     buscar(tipo)
 
 def adicionar_deducao():
-    '''
+    """
     Lógica para adicionar uma nova dedução.
-    '''    # Verificar se os widgets foram inicializados
+    """
+    # Verificar se os widgets foram inicializados
     if (g.DED_ESPES_COMB is None or g.DED_CANAL_COMB is None or
         g.DED_MATER_COMB is None or g.DED_VALOR_ENTRY is None):
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
@@ -101,9 +102,9 @@ def adicionar_deducao():
                     f'valor: {nova_deducao_valor}')
 
 def adicionar_espessura():
-    '''
+    """
     Lógica para adicionar uma nova espessura.
-    '''
+    """
     if g.ESP_VALOR_ENTRY is None:
         messagebox.showerror("Erro", "Campo de espessura não inicializado.")
         return
@@ -126,9 +127,10 @@ def adicionar_espessura():
     salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}')
 
 def adicionar_material():
-    '''
+    """
     Lógica para adicionar um novo material.
-    '''    # Verificar se os widgets foram inicializados
+    """
+    # Verificar se os widgets foram inicializados
     if (g.MAT_NOME_ENTRY is None or g.MAT_DENS_ENTRY is None or
         g.MAT_ESCO_ENTRY is None or g.MAT_ELAS_ENTRY is None):
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
@@ -162,9 +164,10 @@ def adicionar_material():
                     f'elasticidade: {elasticidade_material}')
 
 def adicionar_canal():
-    '''
+    """
     Lógica para adicionar um novo canal.
-    '''    # Verificar se os widgets foram inicializados
+    """
+    # Verificar se os widgets foram inicializados
     if (g.CANAL_VALOR_ENTRY is None or g.CANAL_LARGU_ENTRY is None or
         g.CANAL_ALTUR_ENTRY is None or g.CANAL_COMPR_ENTRY is None or
         g.CANAL_OBSER_ENTRY is None):
@@ -201,16 +204,46 @@ def adicionar_canal():
                     f'comprimento_total: {comprimento_total_canal}, '
                     f'observacao: {observacao_canal}')
 
+def _processar_campo_edicao(obj, campo, entry, tipo):
+    """Processa a edição de um campo individual."""
+    if entry is None:
+        return []
+
+    valor_novo = entry.get().strip()
+    if valor_novo == "":
+        valor_novo = None
+    else:
+        campos_numericos = ["largura", "altura", "comprimento_total"]
+        if campo in campos_numericos:
+            try:
+                valor_novo = float(valor_novo.replace(",", "."))
+            except ValueError:
+                messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
+                return None  # Indica erro
+
+    valor_antigo = getattr(obj, campo)
+    if valor_antigo != valor_novo:
+        setattr(obj, campo, valor_novo)
+        return [f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'"]
+
+    return []
+
+def _limpar_campos_edicao(config, tipo):
+    """Limpa os campos após a edição."""
+    for entry in config['campos'].values():
+        if entry is not None:
+            entry.delete(0, tk.END)
+
 def editar(tipo):
-    '''
+    """
     Edita um item existente no banco de dados com base no tipo especificado.
     Os tipos disponíveis são:
     - dedução
     - espessura
     - material
     - canal
-    '''
-    if not tem_permissao(tipo, 'editor'):  # Permitir que editores realizem esta ação
+    """
+    if not tem_permissao(tipo, 'editor'):
         return
 
     if not messagebox.askyesno("Confirmação", f"Tem certeza que deseja editar o(a) {tipo}?"):
@@ -225,53 +258,38 @@ def editar(tipo):
         return
 
     obj_id = obj.id
-    if obj:
-        alteracoes = []  # Lista para armazenar as alterações
-        for campo, entry in config['campos'].items():
-            if entry is None:
-                continue
-            valor_novo = entry.get().strip()
-            if valor_novo == "":
-                valor_novo = None
-            else:
-                try:
-                    if campo in ["largura", "altura", "comprimento_total"]:
-                        valor_novo = float(valor_novo.replace(",", "."))
-                except ValueError:
-                    messagebox.showerror("Erro", f"Valor inválido para o campo '{campo}'.")
-                    return
+    alteracoes = []
 
-            valor_antigo = getattr(obj, campo)
-            if valor_antigo != valor_novo:  # Verifica se houve alteração
-                alteracoes.append(f"{tipo} {campo}: '{valor_antigo}' -> '{valor_novo}'")
-                setattr(obj, campo, valor_novo)
+    # Processar cada campo
+    for campo, entry in config['campos'].items():
+        resultado = _processar_campo_edicao(obj, campo, entry, tipo)
+        if resultado is None:  # Erro de validação
+            return
+        alteracoes.extend(resultado)
 
-        tratativa_erro()
-        detalhes = "; ".join(alteracoes)  # Concatena as alterações em uma string
-        # Registrar a edição com detalhes
-        registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
-        messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
-    else:
-        messagebox.showerror("Erro", f"{tipo.capitalize()} não encontrado(a).")
+    tratativa_erro()
+    detalhes = "; ".join(alteracoes)
 
-    # Limpar os campos após a edição
-    for entry in config['campos'].values():
-        entry.delete(0, tk.END)
+    # Registrar a edição com detalhes
+    registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
+    messagebox.showinfo("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
 
+    # Limpar campos e atualizar interface
+    _limpar_campos_edicao(config, tipo)
     limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
     buscar(tipo)
 
 def excluir(tipo):
-    '''
+    """
     Exclui um item do banco de dados com base no tipo especificado.
-    Os tipos disponíveis são:]
+    Os tipos disponíveis são:
     - dedução
     - espessura
     - material
     - canal
-    '''
+    """
     if not tem_permissao(tipo,'editor'):
         return
 
@@ -326,9 +344,9 @@ def excluir(tipo):
     atualizar_widgets(tipo)
 
 def preencher_campos(tipo):
-    '''
+    """
     Preenche os campos de entrada com os dados do item selecionado na lista.
-    '''
+    """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -343,14 +361,14 @@ def preencher_campos(tipo):
                 entry.insert(0, '')
 
 def limpar_campos(tipo):
-    '''
+    """
     Limpa os campos de entrada na aba correspondente ao tipo especificado.
     Os tipos disponíveis são:
     - dedução
     - espessura
     - material
     - canal
-    '''
+    """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -359,14 +377,14 @@ def limpar_campos(tipo):
 
 
 def item_selecionado(tipo):
-    '''
+    """
     Retorna o objeto selecionado na lista correspondente ao tipo especificado.
     Os tipos disponíveis são:
     - dedução
     - espessura
     - material
     - canal
-    '''
+    """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
@@ -382,9 +400,9 @@ def item_selecionado(tipo):
     return obj
 
 def buscar(tipo):
-    '''
+    """
     Realiza a busca de itens no banco de dados com base nos critérios especificados.
-    '''
+    """
     configuracoes = obter_configuracoes()
 
     try:
