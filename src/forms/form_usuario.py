@@ -85,7 +85,7 @@ def main(root):
     tk.Button(main_frame,
               text="Resetar Senha",
               command=resetar_senha,
-              bg="yellow",
+              bg="lightyellow",
               width=10).grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
     tk.Button(main_frame,
