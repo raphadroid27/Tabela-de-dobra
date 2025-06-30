@@ -359,6 +359,7 @@ def criar_frame_arquivos(main_frame):
     tk.Button(frame_botoes_texto,
               text="Limpar",
               width=10,
+              bg="lightyellow",
               command=limpar_texto_placeholder).grid(row=1, column=0, sticky="ew", pady=(1, 0))
 
     # Frame para a lista final e botões de controle
@@ -394,11 +395,13 @@ def criar_frame_arquivos(main_frame):
     tk.Button(frame_botoes,
               text="Remover",
               width=10,
+              bg="lightcoral",
               command=remover_arquivo).grid(row=0, column=0, sticky="ew", pady=(0, 1))
 
     tk.Button(frame_botoes,
               text="Limpar",
               width=10,
+              bg="lightyellow",
               command=limpar_lista).grid(row=1, column=0, sticky="ew", pady=1)
 
     tk.Button(frame_botoes,

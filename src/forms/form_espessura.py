@@ -56,6 +56,7 @@ def criar_frame_busca(main_frame):
 
     tk.Button(frame_busca,
               text="Limpar",
+              bg='lightyellow',
               command=lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
 def criar_lista_espessuras(main_frame):
@@ -88,7 +89,7 @@ def criar_frame_edicoes(main_frame):
     tk.Button(frame_edicoes,
               text="Adicionar",
               command=lambda: adicionar('espessura'),
-              bg="cyan").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+              bg="lightblue").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
 def configurar_botoes(main_frame):
     """
@@ -100,7 +101,7 @@ def configurar_botoes(main_frame):
             tk.Button(main_frame,
                       text="Excluir",
                       command=lambda: excluir('espessura'),
-                      bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+                      bg="lightcoral").grid(row=2, column=0, padx=5, pady=5, sticky="e")
         else:
             g.ESPES_FORM.title("Adicionar Espessura")
     else:

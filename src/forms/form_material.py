@@ -57,6 +57,7 @@ def criar_frame_busca(main_frame):
 
     tk.Button(frame_busca,
               text="Limpar",
+              bg='lightyellow',
               command=lambda: limpar_busca('material')).grid(row=0, column=2, padx=5, pady=5)
 
 def criar_lista_materiais(main_frame):
@@ -129,19 +130,19 @@ def configurar_botoes(main_frame, frame_edicoes):
             tk.Button(main_frame,
                       text="Excluir",
                       command=lambda: excluir('material'),
-                      bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+                      bg="lightcoral").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
             tk.Button(frame_edicoes,
                       text="Atualizar",
                       command=lambda: editar('material'),
-                      bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+                      bg="lightgreen").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
         else:
             g.MATER_FORM.title("Adicionar Material")
             frame_edicoes.config(text='Novo Material')
             tk.Button(frame_edicoes,
                       text="Adicionar",
                       command=lambda: adicionar('material'),
-                      bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+                      bg="lightblue").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
     else:
         print("Erro: g.MATER_FORM não foi inicializado.")
 

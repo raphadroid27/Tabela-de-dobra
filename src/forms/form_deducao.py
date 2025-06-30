@@ -68,6 +68,7 @@ def criar_frame_busca(main_frame):
     tk.Button(frame_busca,
               text="Limpar",
               width=10,
+              bg='lightyellow',
               command=lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
 
 def criar_lista_deducoes(main_frame):
@@ -130,7 +131,7 @@ def configurar_botoes(main_frame, frame_edicoes):
         tk.Button(
             frame_edicoes,
             text="Atualizar",
-            bg="green",
+            bg="lightgreen",
             width=10,
             command=lambda: editar('dedução')
         ).grid(
@@ -144,7 +145,7 @@ def configurar_botoes(main_frame, frame_edicoes):
         tk.Button(
             main_frame,
             text="Excluir",
-            bg="red",
+            bg="lightcoral",
             width=10,
             command=lambda: excluir('dedução')
         ).grid(
@@ -162,7 +163,7 @@ def configurar_botoes(main_frame, frame_edicoes):
         tk.Button(
             frame_edicoes,
             text="Adicionar",
-            bg="cyan",
+            bg="lightblue",
             width=10,
             command=lambda: adicionar('dedução')
         ).grid(

@@ -78,7 +78,7 @@ def main(root):
     tk.Button(main_frame,
              text="Tornar Editor",
              command=tornar_editor,
-             bg="green",
+             bg="lightgreen",
              width=10).grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
     tk.Button(main_frame,
@@ -90,7 +90,7 @@ def main(root):
     tk.Button(main_frame,
               text="Excluir",
               command=excluir_usuario,
-              bg="red",
+              bg="lightcoral",
               width=10).grid(row=2, column=2, padx=5, pady=5, sticky="e")
 
     listar('usuario')

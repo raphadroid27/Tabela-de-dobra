@@ -68,6 +68,7 @@ def main(root):
         g.AUTEN_FORM.title("Login")
         tk.Button(main_frame,
                 text="Login",
+                bg="lightblue",
                 command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
     else:
         if not admin_existente:
@@ -87,6 +88,7 @@ def main(root):
         g.AUTEN_FORM.title("Novo Usuário")
         tk.Button(main_frame,
                 text="Salvar",
+                bg="lightgreen",
                 # Na função novo_usuario, use g.ADMIN_VAR.get() para obter o valor
                 command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
 
