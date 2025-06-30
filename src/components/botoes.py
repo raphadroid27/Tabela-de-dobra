@@ -37,19 +37,15 @@ def criar_botoes(root):
             g.PRINC_FORM.geometry(f"{largura_atual}x500")
             for w in g.VALORES_W:
                 entradas_dobras(11, w)
-            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
-                g.CARREGAR_INTERFACE_FUNC(1, root)  # pylint: disable=not-callable
         else:
             g.PRINC_FORM.geometry(f"{largura_atual}x400")
             for w in g.VALORES_W:
                 entradas_dobras(6, w)
-            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
-                g.CARREGAR_INTERFACE_FUNC(1, root)  # pylint: disable=not-callable
 
-        # Verificar se avisos devem aparecer
-        if g.EXP_H is not None and g.EXP_H.get() == 1:
-            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
-                g.CARREGAR_INTERFACE_FUNC(2, root)  # pylint: disable=not-callable
+        # Recarregar a interface com base no estado da expansão horizontal
+        if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+            colunas = 2 if (g.EXP_H is not None and g.EXP_H.get() == 1) else 1
+            g.CARREGAR_INTERFACE_FUNC(colunas, root)  # pylint: disable=not-callable
 
     def expandir_h():
         if g.PRINC_FORM is None:
@@ -57,20 +53,16 @@ def criar_botoes(root):
 
         altura_atual = g.PRINC_FORM.winfo_height()
         if g.EXP_H is not None and g.EXP_H.get() == 1:
-            g.PRINC_FORM.geometry(f'680x{altura_atual}')  # Define a altura atual e a nova largura
+            g.PRINC_FORM.geometry(f'680x{altura_atual}')
             g.VALORES_W = [1, 2]
-            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
-                g.CARREGAR_INTERFACE_FUNC(2, root)  # pylint: disable=not-callable
         else:
-            g.PRINC_FORM.geometry(f'340x{altura_atual}')  # Define a altura atual e a nova largura
+            g.PRINC_FORM.geometry(f'340x{altura_atual}')
             g.VALORES_W = [1]
-            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
-                g.CARREGAR_INTERFACE_FUNC(1, root)  # pylint: disable=not-callable
 
-        # Verificar se avisos devem aparecer
-        if g.EXP_H is not None and g.EXP_H.get() == 1:
-            if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
-                g.CARREGAR_INTERFACE_FUNC(2, root)  # pylint: disable=not-callable
+        # Recarregar a interface com base no estado da expansão horizontal
+        if g.CARREGAR_INTERFACE_FUNC is not None and callable(g.CARREGAR_INTERFACE_FUNC):
+            colunas = 2 if (g.EXP_H is not None and g.EXP_H.get() == 1) else 1
+            g.CARREGAR_INTERFACE_FUNC(colunas, root)  # pylint: disable=not-callable
 
     # Verificar se as variáveis existem, se não, criar
     if g.EXP_V is None:

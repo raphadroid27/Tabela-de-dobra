@@ -221,6 +221,8 @@ def configurar_frames():
     g.VALORES_W = [1]
     g.EXP_V = tk.IntVar()
     g.EXP_H = tk.IntVar()
+    # Atribuir a função carregar_interface à variável global
+    g.CARREGAR_INTERFACE_FUNC = carregar_interface
     carregar_interface(1, frame_superior)
 
 
