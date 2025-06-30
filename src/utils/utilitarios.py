@@ -4,6 +4,7 @@ Funções utilitárias para o aplicativo de cálculo de dobras.
 import os
 import sys
 
+
 def obter_caminho_icone():
     """
     Retorna o caminho correto para o arquivo de ícone, 

@@ -32,7 +32,7 @@ def imprimir_pdf(diretorio, lista_arquivos):
 
             # Buscar arquivos que contenham esse nome base
             pesquisa = [f for f in os.listdir(diretorio)
-                       if nome_base.lower() in f.lower() and f.endswith('.pdf')]
+                        if nome_base.lower() in f.lower() and f.endswith('.pdf')]
             nome_do_arquivo = pesquisa[0] if pesquisa else None
 
             if pesquisa:

@@ -23,6 +23,7 @@ from src.utils.operacoes_crud import (buscar,
                                       )
 from src.config import globals as g
 
+
 def configurar_janela(root):
     """
     Configura a janela principal do formulário de deduções.
@@ -39,6 +40,7 @@ def configurar_janela(root):
 
     no_topo(g.DEDUC_FORM)
     posicionar_janela(g.DEDUC_FORM, None)
+
 
 def criar_frame_busca(main_frame):
     """
@@ -71,6 +73,7 @@ def criar_frame_busca(main_frame):
               bg='lightyellow',
               command=lambda: limpar_busca('dedução')).grid(row=1, column=3, padx=5, pady=5)
 
+
 def criar_lista_deducoes(main_frame):
     """
     Cria a lista de deduções.
@@ -92,6 +95,7 @@ def criar_lista_deducoes(main_frame):
 
     g.LIST_DED.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     listar('dedução')
+
 
 def criar_frame_edicoes(main_frame):
     """
@@ -116,6 +120,7 @@ def criar_frame_edicoes(main_frame):
     g.DED_FORCA_ENTRY.grid(row=1, column=2, padx=5, sticky="ew")
 
     return frame_edicoes
+
 
 def configurar_botoes(main_frame, frame_edicoes):
     """
@@ -174,6 +179,7 @@ def configurar_botoes(main_frame, frame_edicoes):
             sticky="eW"
         )
 
+
 def atualizar_comboboxes():
     """
     Atualiza os widgets de combobox.
@@ -181,6 +187,7 @@ def atualizar_comboboxes():
     tipos = ['material', 'espessura', 'canal']
     for tipo in tipos:
         atualizar_widgets(tipo)
+
 
 def main(root):
     """
@@ -193,6 +200,7 @@ def main(root):
     frame_edicoes = criar_frame_edicoes(main_frame)
     configurar_botoes(main_frame, frame_edicoes)
     atualizar_comboboxes()
+
 
 if __name__ == "__main__":
     main(None)

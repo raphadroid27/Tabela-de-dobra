@@ -14,6 +14,7 @@ from src.config import globals as g
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 
+
 def main(root):
     """
     Função principal que cria a janela "Sobre".
@@ -57,6 +58,7 @@ def main(root):
 
     link_github.pack(pady=5)
     link_github.bind("<Button-1>", lambda e: abrir_github())
+
 
 if __name__ == "__main__":
     main(None)

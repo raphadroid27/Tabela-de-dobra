@@ -17,7 +17,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-class Usuario(Base): # pylint: disable=too-few-public-methods
+
+class Usuario(Base):  # pylint: disable=too-few-public-methods
     """
     Representa a tabela de usuários no banco de dados.
     Contém informações sobre o nome, senha e o papel do usuário no sistema.
@@ -28,7 +29,8 @@ class Usuario(Base): # pylint: disable=too-few-public-methods
     senha = Column(String, nullable=False)
     role = Column(String, default="viewer")
 
-class Espessura(Base): # pylint: disable=too-few-public-methods
+
+class Espessura(Base):  # pylint: disable=too-few-public-methods
     """
     Representa a tabela de espessuras no banco de dados.
     Contém o valor da espessura em milímetros.
@@ -37,7 +39,8 @@ class Espessura(Base): # pylint: disable=too-few-public-methods
     id = Column(Integer, primary_key=True, autoincrement=True)
     valor = Column(Float, nullable=False)
 
-class Material(Base): # pylint: disable=too-few-public-methods
+
+class Material(Base):  # pylint: disable=too-few-public-methods
     """
     Representa a tabela de materiais no banco de dados.
     Contém informações como nome, densidade, limite de escoamento e módulo de elasticidade.
@@ -49,7 +52,8 @@ class Material(Base): # pylint: disable=too-few-public-methods
     escoamento = Column(Float)
     elasticidade = Column(Float)
 
-class Canal(Base): # pylint: disable=too-few-public-methods
+
+class Canal(Base):  # pylint: disable=too-few-public-methods
     """
     Representa a tabela de canais no banco de dados.
     Contém informações sobre as dimensões do canal e observações adicionais.
@@ -62,7 +66,8 @@ class Canal(Base): # pylint: disable=too-few-public-methods
     comprimento_total = Column(Float)
     observacao = Column(String)
 
-class Deducao(Base): # pylint: disable=too-few-public-methods
+
+class Deducao(Base):  # pylint: disable=too-few-public-methods
     """
     Representa a tabela de deduções no banco de dados.
     Relaciona canais, espessuras e materiais, armazenando o valor da dedução,
@@ -88,7 +93,8 @@ class Deducao(Base): # pylint: disable=too-few-public-methods
                          name='_canal_espessura_material_uc'),
     )
 
-class Log(Base): # pylint: disable=too-few-public-methods
+
+class Log(Base):  # pylint: disable=too-few-public-methods
     """
     Representa a tabela de logs no banco de dados.
     Armazena informações sobre ações realizadas no sistema, incluindo o nome do usuário,
@@ -102,6 +108,7 @@ class Log(Base): # pylint: disable=too-few-public-methods
     registro_id = Column(Integer, nullable=False)
     detalhes = Column(String)
     data_hora = Column(DateTime, default=datetime.utcnow)
+
 
 # Configuração do banco de dados
 DATABASE_DIR = os.path.abspath("database")

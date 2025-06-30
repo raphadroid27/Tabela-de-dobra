@@ -1,4 +1,4 @@
-﻿"""
+"""
 Módulo para criar os botões e checkbuttons na interface gráfica.
 Este módulo é responsável por criar os botões e checkbuttons que
 serão exibidos na parte inferior da interface gráfica. Os botões
@@ -10,6 +10,7 @@ from src.components.dobra_90 import entradas_dobras
 from src.utils.limpeza import limpar_dobras, limpar_tudo
 import src.config.globals as g
 import src.utils.classes.tooltip as tp
+
 
 def criar_botoes(root):
     """

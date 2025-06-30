@@ -13,6 +13,7 @@ from src.utils.interface import todas_funcoes
 
 LARGURA = 9  # Largura padrão para os widgets
 
+
 def criar_label(frame, texto, linha_coluna, **kwargs):
     """
     Cria um rótulo (Label) no frame especificado.
@@ -25,11 +26,12 @@ def criar_label(frame, texto, linha_coluna, **kwargs):
     """
     linha, coluna = linha_coluna
     label = tk.Label(frame, width=LARGURA,
-             text=texto,
-             anchor='w',
-             **kwargs)
+                     text=texto,
+                     anchor='w',
+                     **kwargs)
     label.grid(row=linha, column=coluna, sticky='w')
     return label
+
 
 def criar_widget(frame, tipo, var_global, linha_coluna, **kwargs):
     """
@@ -54,6 +56,7 @@ def criar_widget(frame, tipo, var_global, linha_coluna, **kwargs):
     widget = getattr(g, var_global)
     widget.grid(row=linha, column=coluna, padx=2, sticky='we')
     return widget
+
 
 def cabecalho(root):
     """
@@ -86,8 +89,8 @@ def cabecalho(root):
                  (1, 1),
                  justify="center"
                  ).bind("<<ComboboxSelected>>",
-                                        func=lambda event: todas_funcoes()
-                                        )
+                        func=lambda event: todas_funcoes()
+                        )
     tp.ToolTip(g.ESP_COMB, "Selecione a espessura da peça.")
 
     # Canal
@@ -141,8 +144,8 @@ def cabecalho(root):
                  'DED_LBL',
                  (3, 2)
                  ).bind("<Button-1>",
-                         func=lambda event: copiar('dedução')
-                         )
+                        func=lambda event: copiar('dedução')
+                        )
 
     # Offset
     criar_label(frame_cabecalho, "Offset:", (2, 3))

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Funções auxiliares para o aplicativo de cálculo de dobras.
 """
 from math import pi
@@ -6,6 +6,7 @@ import re
 from src.config import globals as g
 from src.models.models import Canal
 from src.utils.banco_dados import session
+
 
 def verificar_widget_inicializado(widget, metodo='get', default_value=''):
     """
@@ -33,6 +34,7 @@ def verificar_widget_inicializado(widget, metodo='get', default_value=''):
     except (AttributeError, TypeError):
         return default_value
 
+
 def calcular_k_offset():
     """
     Calcula o fator K com base nos valores de espessura, dedução e raio interno.
@@ -57,7 +59,7 @@ def calcular_k_offset():
 
         # Calcula o fator K
         fator_k = (4 * (espessura - (deducao_valor / 2) + raio_interno) -
-                     (pi * raio_interno)) / (pi * espessura)
+                   (pi * raio_interno)) / (pi * espessura)
 
         # Limita o fator K a 0.5
         fator_k = min(fator_k, 0.5)
@@ -77,6 +79,7 @@ def calcular_k_offset():
     except ValueError:
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo do fator K.")
+
 
 def aba_minima_externa():
     """
@@ -100,6 +103,7 @@ def aba_minima_externa():
             g.ABA_EXT_LBL.config(text="N/A", fg="red")
 
     return aba_minima_valor
+
 
 def z_minimo_externo():
     """
@@ -143,6 +147,7 @@ def z_minimo_externo():
         # Trata erros de conversão
         print("Erro: Valores inválidos fornecidos para o cálculo do Z mínimo externo.")
 
+
 def _obter_valores_dobras(w):
     """Obtém os valores das dobras dos widgets de entrada."""
     return [
@@ -153,6 +158,7 @@ def _obter_valores_dobras(w):
         ]
         for i in range(1, g.N)
     ]
+
 
 def _obter_valor_deducao():
     """Obtém o valor da dedução dos widgets correspondentes."""
@@ -165,6 +171,7 @@ def _obter_valor_deducao():
         return deducao_espec
     return deducao_valor
 
+
 def _calcular_medida_dobra(dobra, deducao_valor, i):
     """Calcula a medida da dobra baseada na posição e valor de dedução."""
     if i in (1, g.N - 1):
@@ -172,10 +179,11 @@ def _calcular_medida_dobra(dobra, deducao_valor, i):
 
     if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i or
         len(g.DOBRAS_VALORES[i]) <= 0 or
-        not g.DOBRAS_VALORES[i][0]):
+            not g.DOBRAS_VALORES[i][0]):
         return float(dobra) - float(deducao_valor) / 2
 
     return float(dobra) - float(deducao_valor)
+
 
 def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
     """Atualiza os widgets com os valores calculados de dobra."""
@@ -186,6 +194,7 @@ def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
     if widget_metade is not None:
         widget_metade.config(text=f'{metade_dobra:.2f}', fg="black")
 
+
 def _limpar_widgets_dobra(i, w):
     """Limpa os widgets de dobra quando o valor está vazio."""
     widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
@@ -194,6 +203,7 @@ def _limpar_widgets_dobra(i, w):
         widget_medida.config(text="")
     if widget_metade is not None:
         widget_metade.config(text="")
+
 
 def _calcular_e_atualizar_blank(w):
     """Calcula e atualiza os valores de blank para uma coluna."""
@@ -218,6 +228,7 @@ def _calcular_e_atualizar_blank(w):
     else:
         label.config(text="")
 
+
 def calcular_dobra(w):
     """
     Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
@@ -241,7 +252,7 @@ def calcular_dobra(w):
     for i in range(1, g.N):
         for col in range(1, w + 1):
             if (g.DOBRAS_VALORES is None or len(g.DOBRAS_VALORES) <= i - 1 or
-                len(g.DOBRAS_VALORES[i - 1]) <= col - 1):
+                    len(g.DOBRAS_VALORES[i - 1]) <= col - 1):
                 continue
 
             dobra = g.DOBRAS_VALORES[i - 1][col - 1].replace(',', '.')
@@ -255,6 +266,7 @@ def calcular_dobra(w):
 
             _calcular_e_atualizar_blank(col)
             verificar_aba_minima(g.DOBRAS_VALORES[i - 1][col - 1], i, col)
+
 
 def verificar_aba_minima(dobra, i, w):
     """
@@ -281,6 +293,7 @@ def verificar_aba_minima(dobra, i, w):
             # Tratar erros de conversão
             entry_widget.config(fg="black", bg="white")
             print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
+
 
 def razao_ri_espessura():
     """

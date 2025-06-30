@@ -1,4 +1,4 @@
-﻿"""
+"""
 Este módulo contém funções auxiliares para manipulação de dados no aplicativo de cálculo
 de dobras. Inclui operações CRUD (Criar, Ler, Atualizar, Excluir) para os tipos de dados:
 dedução, espessura, material e canal.
@@ -7,15 +7,16 @@ import tkinter as tk
 from tkinter import messagebox
 import re
 from src.utils.banco_dados import (session,
-                         salvar_no_banco,
-                         tratativa_erro,
-                         registrar_log,
-                         obter_configuracoes
-                         )
+                                   salvar_no_banco,
+                                   tratativa_erro,
+                                   registrar_log,
+                                   obter_configuracoes
+                                   )
 from src.utils.usuarios import logado, tem_permissao
 from src.config import globals as g
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
+
 
 def adicionar(tipo):
     """
@@ -38,13 +39,14 @@ def adicionar(tipo):
     atualizar_widgets(tipo)
     buscar(tipo)
 
+
 def adicionar_deducao():
     """
     Lógica para adicionar uma nova dedução.
     """
     # Verificar se os widgets foram inicializados
     if (g.DED_ESPES_COMB is None or g.DED_CANAL_COMB is None or
-        g.DED_MATER_COMB is None or g.DED_VALOR_ENTRY is None):
+            g.DED_MATER_COMB is None or g.DED_VALOR_ENTRY is None):
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
         return
 
@@ -101,6 +103,7 @@ def adicionar_deducao():
                     f'material: {material_nome}, '
                     f'valor: {nova_deducao_valor}')
 
+
 def adicionar_espessura():
     """
     Lógica para adicionar uma nova espessura.
@@ -126,13 +129,14 @@ def adicionar_espessura():
     nova_espessura = Espessura(valor=espessura_valor)
     salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}')
 
+
 def adicionar_material():
     """
     Lógica para adicionar um novo material.
     """
     # Verificar se os widgets foram inicializados
     if (g.MAT_NOME_ENTRY is None or g.MAT_DENS_ENTRY is None or
-        g.MAT_ESCO_ENTRY is None or g.MAT_ELAS_ENTRY is None):
+            g.MAT_ESCO_ENTRY is None or g.MAT_ELAS_ENTRY is None):
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
         return
 
@@ -163,6 +167,7 @@ def adicionar_material():
                     f'escoamento: {escoamento_material}, '
                     f'elasticidade: {elasticidade_material}')
 
+
 def adicionar_canal():
     """
     Lógica para adicionar um novo canal.
@@ -170,7 +175,7 @@ def adicionar_canal():
     # Verificar se os widgets foram inicializados
     if (g.CANAL_VALOR_ENTRY is None or g.CANAL_LARGU_ENTRY is None or
         g.CANAL_ALTUR_ENTRY is None or g.CANAL_COMPR_ENTRY is None or
-        g.CANAL_OBSER_ENTRY is None):
+            g.CANAL_OBSER_ENTRY is None):
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
         return
 
@@ -204,6 +209,7 @@ def adicionar_canal():
                     f'comprimento_total: {comprimento_total_canal}, '
                     f'observacao: {observacao_canal}')
 
+
 def _processar_campo_edicao(obj, campo, entry, tipo):
     """Processa a edição de um campo individual."""
     if entry is None:
@@ -236,11 +242,13 @@ def _processar_campo_edicao(obj, campo, entry, tipo):
 
     return []
 
+
 def _limpar_campos_edicao(config, tipo):
     """Limpa os campos após a edição."""
     for entry in config['campos'].values():
         if entry is not None:
             entry.delete(0, tk.END)
+
 
 def editar(tipo):
     """
@@ -289,6 +297,7 @@ def editar(tipo):
     atualizar_widgets(tipo)
     buscar(tipo)
 
+
 def excluir(tipo):
     """
     Exclui um item do banco de dados com base no tipo especificado.
@@ -298,7 +307,7 @@ def excluir(tipo):
     - material
     - canal
     """
-    if not tem_permissao(tipo,'editor'):
+    if not tem_permissao(tipo, 'editor'):
         return
 
     configuracoes = obter_configuracoes()
@@ -341,15 +350,16 @@ def excluir(tipo):
                   "excluir",
                   tipo,
                   obj_id,
-                  f"Excluído(a) {tipo} {(obj.nome) if tipo =='material' else obj.valor}")
+                  f"Excluído(a) {tipo} {(obj.nome) if tipo == 'material' else obj.valor}")
     config['lista'].delete(selected_item)
     messagebox.showinfo("Sucesso",
-                         f"{tipo.capitalize()} excluído(a) com sucesso!",
-                         parent=config['form'])
+                        f"{tipo.capitalize()} excluído(a) com sucesso!",
+                        parent=config['form'])
 
     limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
+
 
 def preencher_campos(tipo):
     """
@@ -367,6 +377,7 @@ def preencher_campos(tipo):
                 entry.insert(0, getattr(obj, campo))
             else:
                 entry.insert(0, '')
+
 
 def limpar_campos(tipo):
     """
@@ -406,6 +417,7 @@ def item_selecionado(tipo):
     obj = session.query(config['modelo']).filter_by(id=obj_id).first()
 
     return obj
+
 
 def buscar(tipo):
     """

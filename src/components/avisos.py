@@ -3,6 +3,7 @@ Módulo responsável por criar o frame de avisos na interface gráfica.
 """
 import tkinter as tk
 
+
 def avisos(root):
     """
     Cria um frame contendo avisos para o usuário.
