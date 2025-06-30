@@ -23,6 +23,7 @@ from src.utils.operacoes_crud import (buscar,
                                       )
 from src.config import globals as g
 
+
 def configurar_janela(root):
     """
     Configura a janela principal do formulário de materiais.
@@ -39,6 +40,7 @@ def configurar_janela(root):
 
     no_topo(g.MATER_FORM)
     posicionar_janela(g.MATER_FORM, None)
+
 
 def criar_frame_busca(main_frame):
     """
@@ -60,6 +62,7 @@ def criar_frame_busca(main_frame):
               bg='lightyellow',
               command=lambda: limpar_busca('material')).grid(row=0, column=2, padx=5, pady=5)
 
+
 def criar_lista_materiais(main_frame):
     """
     Cria a lista de materiais.
@@ -73,6 +76,7 @@ def criar_lista_materiais(main_frame):
 
     g.LIST_MAT.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     listar('material')
+
 
 def criar_frame_edicoes(main_frame):
     """
@@ -114,6 +118,7 @@ def criar_frame_edicoes(main_frame):
 
     return frame_edicoes
 
+
 def configurar_botoes(main_frame, frame_edicoes):
     """
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
@@ -146,6 +151,7 @@ def configurar_botoes(main_frame, frame_edicoes):
     else:
         print("Erro: g.MATER_FORM não foi inicializado.")
 
+
 def main(root):
     """
     Inicializa e exibe o formulário de gerenciamento de materiais.
@@ -156,6 +162,7 @@ def main(root):
     criar_lista_materiais(main_frame)
     frame_edicoes = criar_frame_edicoes(main_frame)
     configurar_botoes(main_frame, frame_edicoes)
+
 
 if __name__ == "__main__":
     main(None)

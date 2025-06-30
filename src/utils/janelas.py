@@ -3,17 +3,19 @@ Módulo com funções auxiliares para manipulação de janelas no aplicativo.
 """
 from src.config import globals as g
 
+
 def no_topo(form):
     """
     Define se a janela deve ficar sempre no topo ou não.
     """
     def set_topmost(window, on_top):
         if window and window.winfo_exists():
-            window.attributes("-topmost",on_top)
+            window.attributes("-topmost", on_top)
 
     if g.NO_TOPO_VAR is not None:
         on_top_valor = g.NO_TOPO_VAR.get() == 1
         set_topmost(form, on_top_valor)
+
 
 def posicionar_janela(form, posicao=None):
     """
@@ -54,6 +56,7 @@ def posicionar_janela(form, posicao=None):
 
     form.geometry(f"+{x}+{y}")
 
+
 def desabilitar_janelas():
     """
     Desabilita todas as janelas do aplicativo.
@@ -63,6 +66,7 @@ def desabilitar_janelas():
         if form is not None and form.winfo_exists():
             form.attributes('-disabled', True)
             form.focus_force()
+
 
 def habilitar_janelas():
     """

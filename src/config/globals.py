@@ -6,7 +6,7 @@ NO_TOPO_VAR = None
 TRANSP_VAR = None
 DOBRAS_VALORES = None
 CABECALHO_VALORES = None
-VALORES_W = [1,2]
+VALORES_W = [1, 2]
 EXP_V = None
 EXP_H = None
 USUARIO_ID = None
@@ -64,7 +64,7 @@ RAIO_K = {
     8.0: 0.49,
     9.0: 0.50,
     10.0: 0.50
-    }
+}
 
 # nova_espessura.py widgets
 ESP_VALOR_ENTRY = None

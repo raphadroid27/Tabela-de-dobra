@@ -11,10 +11,11 @@ from src.utils.banco_dados import session
 from src.models import Usuario
 from src.utils.usuarios import login, novo_usuario
 from src.utils.janelas import (desabilitar_janelas,
-                              habilitar_janelas,
-                              posicionar_janela
-                              )
+                               habilitar_janelas,
+                               posicionar_janela
+                               )
 from src.config import globals as g
+
 
 def main(root):
     """
@@ -47,18 +48,18 @@ def main(root):
     main_frame.columnconfigure(0, weight=1)
     main_frame.columnconfigure(1, weight=1)
 
-    main_frame.rowconfigure(0,weight=0)
-    main_frame.rowconfigure(1,weight=0)
-    main_frame.rowconfigure(2,weight=1)
-    main_frame.rowconfigure(3,weight=1)
+    main_frame.rowconfigure(0, weight=0)
+    main_frame.rowconfigure(1, weight=0)
+    main_frame.rowconfigure(2, weight=1)
+    main_frame.rowconfigure(3, weight=1)
 
-    tk.Label(main_frame, text="Usuário:").grid(row=0, column=0,padx=5, pady=5)
+    tk.Label(main_frame, text="Usuário:").grid(row=0, column=0, padx=5, pady=5)
     g.USUARIO_ENTRY = tk.Entry(main_frame)
     g.USUARIO_ENTRY.focus()
-    g.USUARIO_ENTRY.grid(row=0, column=1,padx=5, pady=5)
-    tk.Label(main_frame, text="Senha:").grid(row=1, column=0,padx=5, pady=5)
+    g.USUARIO_ENTRY.grid(row=0, column=1, padx=5, pady=5)
+    tk.Label(main_frame, text="Senha:").grid(row=1, column=0, padx=5, pady=5)
     g.SENHA_ENTRY = tk.Entry(main_frame, show="*")
-    g.SENHA_ENTRY.grid(row=1, column=1,padx=5, pady=5)
+    g.SENHA_ENTRY.grid(row=1, column=1, padx=5, pady=5)
 
     admin_existente = session.query(Usuario).filter(Usuario.role == 'admin').first()
 
@@ -67,15 +68,15 @@ def main(root):
     if g.LOGIN:
         g.AUTEN_FORM.title("Login")
         tk.Button(main_frame,
-                text="Login",
-                bg="lightblue",
-                command=login).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
+                  text="Login",
+                  bg="lightblue",
+                  command=login).grid(row=3, column=0, columnspan=2, padx=5, pady=5)
     else:
         if not admin_existente:
             g.AUTEN_FORM.geometry("200x150")
             tk.Label(main_frame, text="Admin:").grid(row=2, column=0, padx=5, pady=5)
             # Definir o valor inicial e os valores on/off
-            g.ADMIN_VAR.set('viewer') # Valor padrão quando desmarcado
+            g.ADMIN_VAR.set('viewer')  # Valor padrão quando desmarcado
             admin_checkbox = tk.Checkbutton(main_frame,
                                             variable=g.ADMIN_VAR,
                                             onvalue='admin',
@@ -87,10 +88,11 @@ def main(root):
 
         g.AUTEN_FORM.title("Novo Usuário")
         tk.Button(main_frame,
-                text="Salvar",
-                bg="lightgreen",
-                # Na função novo_usuario, use g.ADMIN_VAR.get() para obter o valor
-                command=novo_usuario).grid(row=3, column=0, columnspan=2,padx=5, pady=5)
+                  text="Salvar",
+                  bg="lightgreen",
+                  # Na função novo_usuario, use g.ADMIN_VAR.get() para obter o valor
+                  command=novo_usuario).grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+
 
 if __name__ == "__main__":
     main(None)

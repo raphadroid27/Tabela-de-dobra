@@ -13,7 +13,7 @@ from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.interface import (listar,
                                  limpar_busca,
                                  configurar_main_frame,
-                                configurar_frame_edicoes
+                                 configurar_frame_edicoes
                                  )
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import (buscar,
@@ -21,6 +21,7 @@ from src.utils.operacoes_crud import (buscar,
                                       adicionar
                                       )
 from src.config import globals as g
+
 
 def configurar_janela(root):
     """
@@ -38,6 +39,7 @@ def configurar_janela(root):
 
     no_topo(g.ESPES_FORM)
     posicionar_janela(g.ESPES_FORM, None)
+
 
 def criar_frame_busca(main_frame):
     """
@@ -59,6 +61,7 @@ def criar_frame_busca(main_frame):
               bg='lightyellow',
               command=lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
 
+
 def criar_lista_espessuras(main_frame):
     """
     Cria a lista de espessuras.
@@ -72,6 +75,7 @@ def criar_lista_espessuras(main_frame):
 
     g.LIST_ESP.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     listar('espessura')
+
 
 def criar_frame_edicoes(main_frame):
     """
@@ -91,6 +95,7 @@ def criar_frame_edicoes(main_frame):
               command=lambda: adicionar('espessura'),
               bg="lightblue").grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
+
 def configurar_botoes(main_frame):
     """
     Configura os botões de ação (Excluir).
@@ -107,6 +112,7 @@ def configurar_botoes(main_frame):
     else:
         print("Erro: g.ESPES_FORM não foi inicializado.")
 
+
 def main(root):
     """
     Inicializa e exibe o formulário de gerenciamento de espessuras.
@@ -118,6 +124,7 @@ def main(root):
     if not g.EDIT_ESP:
         criar_frame_edicoes(main_frame)
     configurar_botoes(main_frame)
+
 
 if __name__ == "__main__":
     main(None)

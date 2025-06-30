@@ -5,8 +5,10 @@ adicionando a funcionalidade de placeholder.
 """
 import tkinter as tk
 
+
 class PlaceholderEntry:
     """Classe para criar uma Entry com placeholder no tkinter."""
+
     def __init__(self, master, placeholder, placeholder_color="grey", text_color="black", **kwargs):
         """
         kwargs permite passar outros argumentos padrão do tkinter Entry (como width e justify).

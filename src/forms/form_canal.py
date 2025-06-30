@@ -22,6 +22,7 @@ from src.utils.operacoes_crud import (buscar,
                                       )
 from src.config import globals as g
 
+
 def configurar_janela(root):
     """
     Configura a janela principal do formulário.
@@ -38,6 +39,7 @@ def configurar_janela(root):
 
     no_topo(g.CANAL_FORM)
     posicionar_janela(g.CANAL_FORM, None)
+
 
 def criar_frame_busca(main_frame):
     """
@@ -59,6 +61,7 @@ def criar_frame_busca(main_frame):
               bg='lightyellow',
               command=lambda: limpar_busca('canal')).grid(row=0, column=2, padx=5, pady=5)
 
+
 def criar_lista_canais(main_frame):
     """
     Cria a lista de canais.
@@ -72,6 +75,7 @@ def criar_lista_canais(main_frame):
 
     g.LIST_CANAL.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     listar('canal')
+
 
 def criar_frame_edicoes(main_frame):
     """
@@ -111,6 +115,7 @@ def criar_frame_edicoes(main_frame):
 
     return frame_edicoes
 
+
 def configurar_botoes(main_frame, frame_edicoes):
     """
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
@@ -139,6 +144,7 @@ def configurar_botoes(main_frame, frame_edicoes):
                   command=lambda: adicionar('canal'),
                   bg="lightblue").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
 
+
 def main(root):
     """
     Inicializa e exibe o formulário de gerenciamento de canais.
@@ -149,6 +155,7 @@ def main(root):
     criar_lista_canais(main_frame)
     frame_edicoes = criar_frame_edicoes(main_frame)
     configurar_botoes(main_frame, frame_edicoes)
+
 
 if __name__ == "__main__":
     main(None)

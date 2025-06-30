@@ -17,6 +17,7 @@ engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 def obter_configuracoes():
     """
     Retorna um dicionário com as configurações de cada tipo de item.
@@ -36,12 +37,12 @@ def obter_configuracoes():
             },
             'item_id': Deducao.id,
             'valores': lambda d: (d.id,
-                                d.material.nome,
-                                d.espessura.valor,
-                                d.canal.valor,
-                                d.valor,
-                                d.observacao,
-                                d.forca),
+                                  d.material.nome,
+                                  d.espessura.valor,
+                                  d.canal.valor,
+                                  d.valor,
+                                  d.observacao,
+                                  d.forca),
             'ordem': Deducao.valor,
             'entries': {
                 'material_combo': g.DED_MATER_COMB,
@@ -111,6 +112,7 @@ def obter_configuracoes():
         }
     }
 
+
 def salvar_no_banco(obj, tipo, detalhes):
     """
     Salva um objeto no banco de dados e registra o log.
@@ -124,6 +126,7 @@ def salvar_no_banco(obj, tipo, detalhes):
 
     messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",
                         parent=config['form'])
+
 
 def tratativa_erro():
     """
@@ -144,6 +147,8 @@ def tratativa_erro():
         raise
 
 # Manipulação de logs
+
+
 def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
     """
     Registra uma ação no banco de dados.

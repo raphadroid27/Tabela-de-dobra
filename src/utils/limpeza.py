@@ -5,6 +5,7 @@ import tkinter as tk
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
 
+
 def limpar_dobras():
     """
     Limpa os valores das dobras e atualiza os labels correspondentes.

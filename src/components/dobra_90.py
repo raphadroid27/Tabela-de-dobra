@@ -12,6 +12,7 @@ from src.utils.classes import tooltip as tp
 
 LARGURA = 12
 
+
 def dobras(frame, w):
     """
     Cria o frame para as dobras, com base no valor de n.
@@ -24,6 +25,7 @@ def dobras(frame, w):
 
     entradas_dobras(g.N, w)
     return g.FRAME_DOBRA
+
 
 def entradas_dobras(valor, w):
     """
@@ -87,7 +89,7 @@ def entradas_dobras(valor, w):
     setattr(g, f'metade_blank_label_{w}', tk.Label(g.FRAME_DOBRA,
                                                    relief="sunken",
                                                    width=LARGURA))
-    metade_blank = getattr(g,f'metade_blank_label_{w}')
+    metade_blank = getattr(g, f'metade_blank_label_{w}')
     metade_blank.grid(row=i+1, column=3, sticky='we', padx=2)
     metade_blank.bind("<Button-1>", lambda event: copiar('metade_blank', i, w))
     tp.ToolTip(metade_blank, "Clique para copiar a metade do blank.")

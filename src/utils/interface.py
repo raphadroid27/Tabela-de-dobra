@@ -20,6 +20,7 @@ from src.utils.calculos import (calcular_dobra,
 from src.config import globals as g
 import src.utils.classes.tooltip as tp
 
+
 def _atualizar_material():
     """Atualiza os valores do combobox de materiais."""
     if g.MAT_COMB and g.MAT_COMB.winfo_exists():
@@ -52,14 +53,14 @@ def _atualizar_espessura():
     if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
         valores_espessura = session.query(Espessura.valor).distinct().all()
         valores_limpos = [float(valor[0]) for valor in valores_espessura
-                         if valor[0] is not None]
+                          if valor[0] is not None]
         g.DED_ESPES_COMB.configure(values=sorted(valores_limpos))
 
 
 def _atualizar_canal():
     """Atualiza os valores do combobox de canais."""
     if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
-        not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get')):
+            not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get')):
         return
 
     espessura_valor = g.ESP_COMB.get()
@@ -83,7 +84,7 @@ def _atualizar_canal():
     if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
         valores_canal = session.query(Canal.valor).distinct().all()
         valores_canal_limpos = [str(valor[0]) for valor in valores_canal
-                               if valor[0] is not None]
+                                if valor[0] is not None]
         g.DED_CANAL_COMB.configure(values=sorted(valores_canal_limpos))
 
 
@@ -150,6 +151,7 @@ def atualizar_widgets(tipo):
     if tipo in acoes:
         acoes[tipo]()
 
+
 def canal_tooltip():
     """
     Atualiza o tooltip do combobox de canais com as
@@ -172,6 +174,7 @@ def canal_tooltip():
                        f'Obs: {canal_obs}\n'
                        f'Comprimento total: {canal_comprimento_total}',
                        delay=0)
+
 
 def atualizar_toneladas_m():
     """
@@ -228,6 +231,7 @@ def atualizar_toneladas_m():
                 if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'config'):
                     g.COMPR_ENTRY.config(fg="red")
 
+
 def restaurar_valores_dobra(w):
     """
     Restaura os valores das dobras e os campos de cabeçalho
@@ -248,6 +252,7 @@ def restaurar_valores_dobra(w):
                     entry.delete(0, tk.END)
                     entry.insert(0, valor)
 
+
 def salvar_valores_cabecalho():
     """
     Salva os valores atuais dos widgets no cabeçalho em g.CABECALHO_VALORES.
@@ -264,6 +269,7 @@ def salvar_valores_cabecalho():
         'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.get() if g.DED_ESPEC_ENTRY else '',
     }
     print("Valores salvos:", g.CABECALHO_VALORES)
+
 
 def restaurar_valores_cabecalho():
     """
@@ -290,6 +296,7 @@ def restaurar_valores_cabecalho():
 
     print("Valores restaurados:", g.CABECALHO_VALORES)
 
+
 def copiar(tipo, numero=None, w=None):
     """
     Copia o valor do label correspondente ao tipo e 
@@ -298,17 +305,17 @@ def copiar(tipo, numero=None, w=None):
     configuracoes = {
         'dedução': {
             'label': g.DED_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
+            'funcao_calculo': lambda: (atualizar_widgets('dedução'),
                                        calcular_k_offset())
         },
         'fator_k': {
             'label': g.K_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
+            'funcao_calculo': lambda: (atualizar_widgets('dedução'),
                                        calcular_k_offset())
         },
         'offset': {
             'label': g.OFFSET_LBL,
-            'funcao_calculo': lambda: (atualizar_widgets('dedução'), 
+            'funcao_calculo': lambda: (atualizar_widgets('dedução'),
                                        calcular_k_offset())
         },
         'medida_dobra': {
@@ -384,6 +391,7 @@ def copiar(tipo, numero=None, w=None):
     if hasattr(label, 'after'):
         getattr(label, 'after')(2000, remover_copiado)
 
+
 def limpar_busca(tipo):
     """
     Limpa os campos de busca e atualiza a lista correspondente.
@@ -398,6 +406,7 @@ def limpar_busca(tipo):
 
     listar(tipo)
 
+
 def focus_next_entry(current_index, w):
     """
     Move o foco para o próximo campo de entrada na aba atual.
@@ -408,6 +417,7 @@ def focus_next_entry(current_index, w):
         if next_entry:
             next_entry.focus()
 
+
 def focus_previous_entry(current_index, w):
     """
     Move o foco para o campo de entrada anterior na aba atual.
@@ -417,6 +427,7 @@ def focus_previous_entry(current_index, w):
         previous_entry = getattr(g, f'aba{previous_index}_entry_{w}', None)
         if previous_entry:
             previous_entry.focus()
+
 
 def listar(tipo):
     """
@@ -442,6 +453,7 @@ def listar(tipo):
                 continue
         config['lista'].insert("", "end", values=config['valores'](item))
 
+
 def todas_funcoes():
     """
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
@@ -461,6 +473,7 @@ def todas_funcoes():
     # Atualizar tooltips
     canal_tooltip()
 
+
 def configurar_main_frame(parent, rows=4):
     """
     Configura o frame principal com colunas e linhas padrão.
@@ -473,6 +486,7 @@ def configurar_main_frame(parent, rows=4):
         main_frame.rowconfigure(i, weight=1 if i == 1 else 0)
 
     return main_frame
+
 
 def configurar_frame_edicoes(parent, text, columns=3, rows=4):
     """

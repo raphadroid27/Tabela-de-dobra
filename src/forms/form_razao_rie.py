@@ -8,6 +8,7 @@ from src.utils.utilitarios import obter_caminho_icone
 from src.utils.calculos import razao_ri_espessura
 from src.config import globals as g
 
+
 def main(root):
     """
     Inicializa e exibe o formulário de cálculo de razão raio interno / espessura.
@@ -26,7 +27,7 @@ def main(root):
     g.RIE_FORM.iconbitmap(icone_path)
 
     no_topo(g.RIE_FORM)
-    posicionar_janela(g.RIE_FORM,None)
+    posicionar_janela(g.RIE_FORM, None)
 
     main_frame = tk.Frame(g.RIE_FORM)
     main_frame.pack(pady=5, padx=5, fill='both', expand=True)
@@ -37,7 +38,7 @@ def main(root):
     main_frame.grid_columnconfigure(1, weight=1)
 
     tk.Label(main_frame, text='Razão Raio Interno / Espessura: ').grid(row=0, column=0, sticky='w')
-    g.RAZAO_RIE_LBL = tk.Label(main_frame, text="",relief="sunken", width=20)
+    g.RAZAO_RIE_LBL = tk.Label(main_frame, text="", relief="sunken", width=20)
     g.RAZAO_RIE_LBL.grid(row=0, column=1, sticky='e', padx=5, pady=5)
 
     def create_table(main_frame, data):
@@ -82,6 +83,7 @@ def main(root):
 
     razao_ri_espessura()
     create_table(main_frame, g.RAIO_K)
+
 
 if __name__ == "__main__":
     main(None)

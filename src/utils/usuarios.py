@@ -1,4 +1,4 @@
-﻿"""
+"""
 Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
 """
 from tkinter import messagebox, simpledialog
@@ -173,8 +173,8 @@ def resetar_senha():
     selected_item = g.LIST_USUARIO.selection() if g.LIST_USUARIO else []
     if not selected_item:
         messagebox.showwarning("Aviso",
-                              "Selecione um usuário para resetar a senha.",
-                              parent=g.USUAR_FORM if g.USUAR_FORM else None)
+                               "Selecione um usuário para resetar a senha.",
+                               parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
     if g.LIST_USUARIO is None:
@@ -255,8 +255,8 @@ def tornar_editor():
     selected_item = g.LIST_USUARIO.selection() if g.LIST_USUARIO else []
     if not selected_item:
         messagebox.showwarning("Aviso",
-                              "Selecione um usuário para promover a editor.",
-                              parent=g.USUAR_FORM if g.USUAR_FORM else None)
+                               "Selecione um usuário para promover a editor.",
+                               parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
     if g.LIST_USUARIO is None:
@@ -276,23 +276,23 @@ def tornar_editor():
         usuario_role = getattr(usuario_obj, 'role', None)
         if usuario_role == "admin":
             messagebox.showerror("Erro",
-                                "O usuário já é um administrador.",
-                                parent=g.USUAR_FORM if g.USUAR_FORM else None)
+                                 "O usuário já é um administrador.",
+                                 parent=g.USUAR_FORM if g.USUAR_FORM else None)
             return
         if usuario_role == "editor":
             messagebox.showinfo("Informação",
-                               "O usuário já é um editor.",
-                               parent=g.USUAR_FORM if g.USUAR_FORM else None)
+                                "O usuário já é um editor.",
+                                parent=g.USUAR_FORM if g.USUAR_FORM else None)
             return
 
         # Usar setattr para atribuir valor à coluna de forma segura
         setattr(usuario_obj, 'role', "editor")
         tratativa_erro()
         messagebox.showinfo("Sucesso",
-                           "Usuário promovido a editor com sucesso.",
-                           parent=g.USUAR_FORM if g.USUAR_FORM else None)
+                            "Usuário promovido a editor com sucesso.",
+                            parent=g.USUAR_FORM if g.USUAR_FORM else None)
         listar('usuario')  # Atualiza a lista de usuários na interface
     else:
         messagebox.showerror("Erro",
-                            "Usuário não encontrado.",
-                            parent=g.USUAR_FORM if g.USUAR_FORM else None)
+                             "Usuário não encontrado.",
+                             parent=g.USUAR_FORM if g.USUAR_FORM else None)

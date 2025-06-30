@@ -12,11 +12,12 @@ from src.utils.interface import (listar, limpar_busca)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar
 from src.utils.usuarios import (tem_permissao,
-                                 tornar_editor,
-                                 resetar_senha,
-                                 excluir_usuario
-                                 )
+                                tornar_editor,
+                                resetar_senha,
+                                excluir_usuario
+                                )
 from src.config import globals as g
+
 
 def main(root):
     """
@@ -57,16 +58,16 @@ def main(root):
     for i in range(3):
         frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
 
-    tk.Label(frame_busca, text="Usuário:").grid(row=0,column=0)
-    g.USUARIO_BUSCA_ENTRY=tk.Entry(frame_busca)
+    tk.Label(frame_busca, text="Usuário:").grid(row=0, column=0)
+    g.USUARIO_BUSCA_ENTRY = tk.Entry(frame_busca)
     g.USUARIO_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
     g.USUARIO_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('usuario'))
 
     tk.Button(frame_busca,
               text="Limpar",
-              command = lambda: limpar_busca('usuario')).grid(row=0, column=2, padx=5, pady=5)
+              command=lambda: limpar_busca('usuario')).grid(row=0, column=2, padx=5, pady=5)
 
-    columns = ("Id","Nome", "Permissões")
+    columns = ("Id", "Nome", "Permissões")
     g.LIST_USUARIO = ttk.Treeview(main_frame, columns=columns, show="headings")
     g.LIST_USUARIO["displaycolumns"] = ("Nome", "Permissões")
     for col in columns:
@@ -76,10 +77,10 @@ def main(root):
     g.LIST_USUARIO.grid(row=1, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
 
     tk.Button(main_frame,
-             text="Tornar Editor",
-             command=tornar_editor,
-             bg="lightgreen",
-             width=10).grid(row=2, column=0, padx=5, pady=5, sticky="w")
+              text="Tornar Editor",
+              command=tornar_editor,
+              bg="lightgreen",
+              width=10).grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
     tk.Button(main_frame,
               text="Resetar Senha",
@@ -94,6 +95,7 @@ def main(root):
               width=10).grid(row=2, column=2, padx=5, pady=5, sticky="e")
 
     listar('usuario')
+
 
 if __name__ == "__main__":
     main(None)
