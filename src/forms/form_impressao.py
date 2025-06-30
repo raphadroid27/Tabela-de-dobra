@@ -275,6 +275,7 @@ def criar_frame_diretorio(main_frame):
 
     tk.Button(frame_diretorio,
               text="Procurar",
+              bg="lightgray",
               command=selecionar_diretorio).grid(row=0, column=1, padx=3, pady=3)
 
 
