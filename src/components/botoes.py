@@ -100,14 +100,14 @@ def criar_botoes(root):
               text="Limpar Dobras",
               command=limpar_dobras,
               width=15,
-              bg='yellow').grid(row=1, column=0, sticky='we', padx=2)
+              bg='lightyellow').grid(row=1, column=0, sticky='we', padx=2)
 
     # Botão para limpar todos os valores
     tk.Button(frame_botoes,
               text="Limpar Tudo",
               command=limpar_tudo,
               width=15,
-              bg='red').grid(row=1, column=1, sticky='we', padx=2)
+              bg="lightcoral").grid(row=1, column=1, sticky='we', padx=2)
 
     tp.ToolTip(frame_botoes.grid_slaves(row=0, column=0)[0],
                text="Expande a interface verticalmente")

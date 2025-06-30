@@ -54,7 +54,9 @@ def criar_frame_busca(main_frame):
     g.CANAL_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
     g.CANAL_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('canal'))
 
-    tk.Button(frame_busca, text="Limpar",
+    tk.Button(frame_busca,
+              text="Limpar",
+              bg='lightyellow',
               command=lambda: limpar_busca('canal')).grid(row=0, column=2, padx=5, pady=5)
 
 def criar_lista_canais(main_frame):
@@ -122,12 +124,12 @@ def configurar_botoes(main_frame, frame_edicoes):
 
         tk.Button(main_frame, text="Excluir",
                   command=lambda: excluir('canal'),
-                  bg="red").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+                  bg="lightcoral").grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
         tk.Button(frame_edicoes,
                   text="Atualizar",
                   command=lambda: editar('canal'),
-                  bg="green").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
+                  bg="lightgreen").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
     else:
         if g.CANAL_FORM:
             g.CANAL_FORM.title("Novo Canal")
@@ -135,7 +137,7 @@ def configurar_botoes(main_frame, frame_edicoes):
         tk.Button(frame_edicoes,
                   text="Adicionar",
                   command=lambda: adicionar('canal'),
-                  bg="cyan").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
+                  bg="lightblue").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
 
 def main(root):
     """
