@@ -47,8 +47,10 @@ def imprimir_pdf(diretorio, lista_arquivos):
             for arquivo in arquivos_nao_encontrados:
                 resultado += f"  • {arquivo}\n"
 
-        g.IMPRESSAO_RESULTADO_TEXT.delete(1.0, tk.END)
-        g.IMPRESSAO_RESULTADO_TEXT.insert(1.0, resultado)
+        # Verificar se o widget existe antes de usar
+        if hasattr(g, 'IMPRESSAO_RESULTADO_TEXT') and g.IMPRESSAO_RESULTADO_TEXT:
+            g.IMPRESSAO_RESULTADO_TEXT.delete(1.0, tk.END)
+            g.IMPRESSAO_RESULTADO_TEXT.insert(1.0, resultado)
 
         if arquivos_encontrados:
             resultado_impressao = "\n\nTentando imprimir arquivos...\n"
@@ -61,7 +63,7 @@ def imprimir_pdf(diretorio, lista_arquivos):
                 # Método 1: Foxit PDF Reader
                 foxit_path = (
                     "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe"
-                    )
+                )
                 if os.path.exists(foxit_path):
                     try:
                         resultado_impressao += f"Imprimindo {nome_arquivo} com Foxit...\n"
@@ -78,7 +80,7 @@ def imprimir_pdf(diretorio, lista_arquivos):
                     try:
                         resultado_impressao += (
                             f"Imprimindo {nome_arquivo} com impressora padrão...\n"
-                            )
+                        )
                         os.startfile(caminho_completo, "print")
                         resultado_impressao += "  ✓ Sucesso com impressora padrão\n"
                         sucesso = True
@@ -111,7 +113,8 @@ def imprimir_pdf(diretorio, lista_arquivos):
                     resultado_impressao += f"  ✗ Falha ao imprimir {nome_arquivo}\n"
 
             # Atualizar o campo de resultado com os detalhes da impressão
-            g.IMPRESSAO_RESULTADO_TEXT.insert(tk.END, resultado_impressao)
+            if hasattr(g, 'IMPRESSAO_RESULTADO_TEXT') and g.IMPRESSAO_RESULTADO_TEXT:
+                g.IMPRESSAO_RESULTADO_TEXT.insert(tk.END, resultado_impressao)
 
             messagebox.showinfo(
                 "Impressão",
@@ -137,8 +140,9 @@ def selecionar_diretorio():
     habilitar_janelas()  # Sempre habilita DEPOIS que o diálogo for fechado
 
     if diretorio:  # Se selecionou um diretório, atualiza o campo
-        g.IMPRESSAO_DIRETORIO_ENTRY.delete(0, tk.END)
-        g.IMPRESSAO_DIRETORIO_ENTRY.insert(0, diretorio)
+        if hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY:
+            g.IMPRESSAO_DIRETORIO_ENTRY.delete(0, tk.END)
+            g.IMPRESSAO_DIRETORIO_ENTRY.insert(0, diretorio)
     else:
         habilitar_janelas()
 
@@ -147,8 +151,11 @@ def adicionar_arquivo():
     """
     Adiciona um arquivo à lista de arquivos para impressão.
     """
+    if not (hasattr(g, 'IMPRESSAO_ARQUIVO_ENTRY') and g.IMPRESSAO_ARQUIVO_ENTRY):
+        return
+
     arquivo = g.IMPRESSAO_ARQUIVO_ENTRY.get().strip()
-    if arquivo:
+    if arquivo and hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
         g.IMPRESSAO_LISTA_ARQUIVOS.insert(tk.END, arquivo)
         g.IMPRESSAO_ARQUIVO_ENTRY.delete(0, tk.END)
 
@@ -157,14 +164,23 @@ def adicionar_lista_arquivos():
     """
     Adiciona múltiplos arquivos à lista a partir do campo de texto.
     """
+    if not (hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT):
+        return
+
     texto = g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip()
     if texto:
         # Divide o texto por quebras de linha e remove linhas vazias
-        arquivos = [linha.strip() for linha in texto.split('\n') if linha.strip()]
+        if texto and isinstance(texto, str):
+            linhas = texto.split('\n')
+        else:
+            linhas = []  # ou trate o erro conforme necessário
+
+        arquivos = [linha.strip() for linha in linhas if linha.strip()]
 
         # Adiciona cada arquivo à lista
-        for arquivo in arquivos:
-            g.IMPRESSAO_LISTA_ARQUIVOS.insert(tk.END, arquivo)
+        if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
+            for arquivo in arquivos:
+                g.IMPRESSAO_LISTA_ARQUIVOS.insert(tk.END, arquivo)
 
         # Limpa o campo de texto
         g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
@@ -176,6 +192,9 @@ def remover_arquivo():
     """
     Remove o arquivo selecionado da lista.
     """
+    if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS):
+        return
+
     selection = g.IMPRESSAO_LISTA_ARQUIVOS.curselection()
     if selection:
         g.IMPRESSAO_LISTA_ARQUIVOS.delete(selection[0])
@@ -185,13 +204,18 @@ def limpar_lista():
     """
     Limpa toda a lista de arquivos.
     """
-    g.IMPRESSAO_LISTA_ARQUIVOS.delete(0, tk.END)
+    if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
+        g.IMPRESSAO_LISTA_ARQUIVOS.delete(0, tk.END)
 
 
 def executar_impressao():
     """
     Executa a impressão dos arquivos selecionados.
     """
+    if not (hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY):
+        messagebox.showerror("Erro", "Interface não inicializada corretamente.")
+        return
+
     diretorio = g.IMPRESSAO_DIRETORIO_ENTRY.get().strip()
     if not diretorio:
         messagebox.showerror("Erro", "Por favor, selecione um diretório.")
@@ -199,6 +223,10 @@ def executar_impressao():
 
     if not os.path.exists(diretorio):
         messagebox.showerror("Erro", "O diretório selecionado não existe.")
+        return
+
+    if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS):
+        messagebox.showerror("Erro", "Interface não inicializada corretamente.")
         return
 
     lista_arquivos = list(g.IMPRESSAO_LISTA_ARQUIVOS.get(0, tk.END))
@@ -291,12 +319,21 @@ def criar_frame_arquivos(main_frame):
     g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
 
     def on_focus_in(event):
-        if g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip() == placeholder_text:
-            g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
-            g.IMPRESSAO_LISTA_TEXT.config(fg="black")
+        if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
+            if g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip() == placeholder_text:
+                g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
+                g.IMPRESSAO_LISTA_TEXT.config(fg="black")
 
     def on_focus_out(event):
-        if not g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip():
+        if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
+            if not g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip():
+                g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text)
+                g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
+
+    def limpar_texto_placeholder():
+        """Limpa o campo de texto e restaura o placeholder."""
+        if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
+            g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
             g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text)
             g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
 
@@ -317,10 +354,7 @@ def criar_frame_arquivos(main_frame):
     tk.Button(frame_botoes_texto,
               text="Limpar",
               width=10,
-              command=lambda: (g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END),
-                               g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text),
-                               g.IMPRESSAO_LISTA_TEXT.config(fg="gray"))
-                               ).grid(row=1, column=0, sticky="ew", pady=(1, 0))
+              command=limpar_texto_placeholder).grid(row=1, column=0, sticky="ew", pady=(1, 0))
 
     # Frame para a lista final e botões de controle
     frame_lista = tk.Frame(frame_arquivos)
