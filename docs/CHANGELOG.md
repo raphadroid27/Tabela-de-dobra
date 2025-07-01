@@ -2,6 +2,13 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 1.2.0 (01/07/2025)
+
+- Adicionado formulário de impressão em lote com funcionalidades de seleção de diretório e lista de arquivos  
+- Melhorada a busca de arquivos PDF ao extrair a parte principal do nome
+- Alterada as cores dos botões para tons mais claros (botão "Resetar Senha" para amarelo claro, botão "Procurar" para cinza claro)
+- Melhorada a estabilidade geral da interface com correções de erros internos
+
 ## 1.1.4 (27/06/2025)
 
 - Adicionados novos campos numéricos (valor dedução, largura, altura, etc.) para aceitarem "," como separador de casas decimais.
