@@ -2,17 +2,25 @@
 # Formulário de Material
 # Este módulo contém a implementação do formulário de materiais, que permite
 # adicionar, editar e excluir materiais. O formulário é
-# construído usando a biblioteca tkinter e utiliza o módulo globals para
+# construído usando a biblioteca PySide6 e utiliza o módulo globals para
 # armazenar variáveis globais e o módulo funcoes para realizar operações
 # relacionadas ao banco de dados.
 """
-import tkinter as tk
-from tkinter import ttk
+try:
+    from PySide6.QtWidgets import (QDialog, QGridLayout, 
+                                   QGroupBox, QLabel, QPushButton, 
+                                   QTreeWidget, QLineEdit)
+    from PySide6.QtGui import QIcon
+except ImportError:
+    # Fallback para PyQt6 se PySide6 não estiver disponível
+    from PyQt6.QtWidgets import (QDialog, QGridLayout, 
+                                 QGroupBox, QLabel, QPushButton, 
+                                 QTreeWidget, QLineEdit)
+    from PyQt6.QtGui import QIcon
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.interface import (listar,
                                  limpar_busca,
-                                 configurar_main_frame,
-                                 configurar_frame_edicoes
+                                 configurar_main_frame
                                  )
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import (buscar,
@@ -29,14 +37,15 @@ def configurar_janela(root):
     Configura a janela principal do formulário de materiais.
     """
     if g.MATER_FORM:
-        g.MATER_FORM.destroy()
+        g.MATER_FORM.close()
 
-    g.MATER_FORM = tk.Toplevel(root)
-    g.MATER_FORM.geometry("340x420")
-    g.MATER_FORM.resizable(False, False)
+    g.MATER_FORM = QDialog(root)
+    g.MATER_FORM.setWindowTitle("Formulário de Materiais")
+    g.MATER_FORM.resize(340, 420)
+    g.MATER_FORM.setFixedSize(340, 420)
 
     icone_path = obter_caminho_icone()
-    g.MATER_FORM.iconbitmap(icone_path)
+    g.MATER_FORM.setWindowIcon(QIcon(icone_path))
 
     no_topo(g.MATER_FORM)
     posicionar_janela(g.MATER_FORM, None)
@@ -46,75 +55,73 @@ def criar_frame_busca(main_frame):
     """
     Cria o frame de busca.
     """
-    frame_busca = tk.LabelFrame(main_frame, text='Buscar Materiais', pady=5)
-    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+    frame_busca = QGroupBox('Buscar Materiais')
+    layout = QGridLayout(frame_busca)
 
-    for i in range(3):
-        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
+    # Nome
+    nome_label = QLabel("Nome:")
+    layout.addWidget(nome_label, 0, 0)
+    g.MAT_BUSCA_ENTRY = QLineEdit()
+    layout.addWidget(g.MAT_BUSCA_ENTRY, 0, 1)
+    g.MAT_BUSCA_ENTRY.textChanged.connect(lambda: buscar('material'))
 
-    tk.Label(frame_busca, text="Nome:").grid(row=0, column=0)
-    g.MAT_BUSCA_ENTRY = tk.Entry(frame_busca)
-    g.MAT_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
-    g.MAT_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('material'))
+    # Botão Limpar
+    limpar_btn = QPushButton("Limpar")
+    limpar_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_btn.clicked.connect(lambda: limpar_busca('material'))
+    layout.addWidget(limpar_btn, 0, 2)
 
-    tk.Button(frame_busca,
-              text="Limpar",
-              bg='lightyellow',
-              command=lambda: limpar_busca('material')).grid(row=0, column=2, padx=5, pady=5)
+    return frame_busca
 
 
 def criar_lista_materiais(main_frame):
     """
     Cria a lista de materiais.
     """
-    columns = ("Id", "Nome", "Densidade", "Escoamento", "Elasticidade")
-    g.LIST_MAT = ttk.Treeview(main_frame, columns=columns, show="headings")
-    g.LIST_MAT["displaycolumns"] = ("Nome", "Densidade", "Escoamento", "Elasticidade")
-    for col in columns:
-        g.LIST_MAT.heading(col, text=col)
-        g.LIST_MAT.column(col, anchor="center", width=20)
+    g.LIST_MAT = QTreeWidget()
+    g.LIST_MAT.setHeaderLabels(["Nome", "Densidade", "Escoamento", "Elasticidade"])
+    g.LIST_MAT.setRootIsDecorated(False)
+    
+    # Configurar larguras das colunas
+    g.LIST_MAT.setColumnWidth(0, 100)  # Nome
+    g.LIST_MAT.setColumnWidth(1, 80)   # Densidade
+    g.LIST_MAT.setColumnWidth(2, 80)   # Escoamento
+    g.LIST_MAT.setColumnWidth(3, 80)   # Elasticidade
 
-    g.LIST_MAT.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     listar('material')
+    return g.LIST_MAT
 
 
 def criar_frame_edicoes(main_frame):
     """
     Cria o frame de edições.
     """
-    frame_edicoes = configurar_frame_edicoes(main_frame,
-                                             text='Novo Material'
-                                             if not g.EDIT_MAT
-                                             else 'Editar Material',
-                                             )
+    frame_edicoes = QGroupBox('Novo Material' if not g.EDIT_MAT else 'Editar Material')
+    layout = QGridLayout(frame_edicoes)
 
-    tk.Label(frame_edicoes, text="Nome:", anchor="w").grid(row=0, column=0, padx=2, sticky='sw')
-    g.MAT_NOME_ENTRY = tk.Entry(frame_edicoes)
-    g.MAT_NOME_ENTRY.grid(row=1, column=0, padx=5, sticky="ew")
+    # Nome
+    nome_label = QLabel("Nome:")
+    layout.addWidget(nome_label, 0, 0)
+    g.MAT_NOME_ENTRY = QLineEdit()
+    layout.addWidget(g.MAT_NOME_ENTRY, 1, 0)
 
-    tk.Label(frame_edicoes, text="Densidade:", anchor="w").grid(row=0,
-                                                                column=1,
-                                                                padx=2,
-                                                                sticky='sw'
-                                                                )
-    g.MAT_DENS_ENTRY = tk.Entry(frame_edicoes)
-    g.MAT_DENS_ENTRY.grid(row=1, column=1, padx=5, sticky="ew")
+    # Densidade
+    densidade_label = QLabel("Densidade:")
+    layout.addWidget(densidade_label, 0, 1)
+    g.MAT_DENS_ENTRY = QLineEdit()
+    layout.addWidget(g.MAT_DENS_ENTRY, 1, 1)
 
-    tk.Label(frame_edicoes, text="Escoamento:", anchor="w").grid(row=2,
-                                                                 column=0,
-                                                                 padx=2,
-                                                                 sticky='sw'
-                                                                 )
-    g.MAT_ESCO_ENTRY = tk.Entry(frame_edicoes)
-    g.MAT_ESCO_ENTRY.grid(row=3, column=0, padx=5, sticky="ew")
+    # Escoamento
+    escoamento_label = QLabel("Escoamento:")
+    layout.addWidget(escoamento_label, 2, 0)
+    g.MAT_ESCO_ENTRY = QLineEdit()
+    layout.addWidget(g.MAT_ESCO_ENTRY, 3, 0)
 
-    tk.Label(frame_edicoes, text="Elasticidade:", anchor="w").grid(row=2,
-                                                                   column=1,
-                                                                   padx=2,
-                                                                   sticky='sw'
-                                                                   )
-    g.MAT_ELAS_ENTRY = tk.Entry(frame_edicoes)
-    g.MAT_ELAS_ENTRY.grid(row=3, column=1, padx=5, sticky="ew")
+    # Elasticidade
+    elasticidade_label = QLabel("Elasticidade:")
+    layout.addWidget(elasticidade_label, 2, 1)
+    g.MAT_ELAS_ENTRY = QLineEdit()
+    layout.addWidget(g.MAT_ELAS_ENTRY, 3, 1)
 
     return frame_edicoes
 
@@ -123,31 +130,38 @@ def configurar_botoes(main_frame, frame_edicoes):
     """
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
     """
+    layout = frame_edicoes.layout()
+    
     if g.MATER_FORM is not None:
         if g.EDIT_MAT:
-            g.MATER_FORM.title("Editar/Excluir Material")
+            g.MATER_FORM.setWindowTitle("Editar/Excluir Material")
             if g.LIST_MAT is not None:
-                g.LIST_MAT.bind("<ButtonRelease-1>", lambda event: preencher_campos('material'))
+                g.LIST_MAT.itemSelectionChanged.connect(lambda: preencher_campos('material'))
             else:
                 print("Erro: g.LIST_MAT não foi inicializado.")
-            frame_edicoes.config(text='Editar Material')
+            frame_edicoes.setTitle('Editar Material')
 
-            tk.Button(main_frame,
-                      text="Excluir",
-                      command=lambda: excluir('material'),
-                      bg="lightcoral").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+            # Botão Excluir
+            main_layout = main_frame.layout()
+            excluir_btn = QPushButton("Excluir")
+            excluir_btn.setStyleSheet("background-color: lightcoral;")
+            excluir_btn.clicked.connect(lambda: excluir('material'))
+            main_layout.addWidget(excluir_btn, main_layout.rowCount(), 0)
 
-            tk.Button(frame_edicoes,
-                      text="Atualizar",
-                      command=lambda: editar('material'),
-                      bg="lightgreen").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+            # Botão Atualizar
+            atualizar_btn = QPushButton("Atualizar")
+            atualizar_btn.setStyleSheet("background-color: lightgreen;")
+            atualizar_btn.clicked.connect(lambda: editar('material'))
+            layout.addWidget(atualizar_btn, 1, 2, 3, 1)  # rowspan=3
         else:
-            g.MATER_FORM.title("Adicionar Material")
-            frame_edicoes.config(text='Novo Material')
-            tk.Button(frame_edicoes,
-                      text="Adicionar",
-                      command=lambda: adicionar('material'),
-                      bg="lightblue").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=3)
+            g.MATER_FORM.setWindowTitle("Adicionar Material")
+            frame_edicoes.setTitle('Novo Material')
+            
+            # Botão Adicionar
+            adicionar_btn = QPushButton("Adicionar")
+            adicionar_btn.setStyleSheet("background-color: lightblue;")
+            adicionar_btn.clicked.connect(lambda: adicionar('material'))
+            layout.addWidget(adicionar_btn, 1, 2, 3, 1)  # rowspan=3
     else:
         print("Erro: g.MATER_FORM não foi inicializado.")
 
@@ -158,10 +172,22 @@ def main(root):
     """
     configurar_janela(root)
     main_frame = configurar_main_frame(g.MATER_FORM)
-    criar_frame_busca(main_frame)
-    criar_lista_materiais(main_frame)
+    
+    # Adicionar componentes ao layout principal
+    layout = main_frame.layout()
+    
+    frame_busca = criar_frame_busca(main_frame)
+    layout.addWidget(frame_busca, 0, 0)
+    
+    lista_materiais = criar_lista_materiais(main_frame)
+    layout.addWidget(lista_materiais, 1, 0)
+    
     frame_edicoes = criar_frame_edicoes(main_frame)
+    layout.addWidget(frame_edicoes, 2, 0)
+    
     configurar_botoes(main_frame, frame_edicoes)
+    
+    g.MATER_FORM.show()
 
 
 if __name__ == "__main__":

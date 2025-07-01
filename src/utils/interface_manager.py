@@ -11,50 +11,100 @@ from src.utils.interface import (salvar_valores_cabecalho,
                                  restaurar_valores_cabecalho,
                                  restaurar_valores_dobra,
                                  todas_funcoes)
+from src.utils.classes.tooltip import ToolTip
 
 
-def carregar_interface(var, frame_superior):
+def carregar_interface(var, layout):
     """
-    Atualiza o cabeçalho e recria os widgets no frame de dobras com base no valor de var.
+    Atualiza o cabeçalho e recria os widgets no layout com base no valor de var.
+    Nova versão com melhor gerenciamento de widgets órfãos.
 
     Args:
         var (int): Define o layout do cabeçalho.
                    1 para apenas o cabeçalho principal.
                    2 para cabeçalho com avisos.
-        frame_superior (tk.Frame): Frame onde os widgets serão adicionados.
+        layout: Layout onde os widgets serão adicionados.
     """
-    # Salvar os valores dos widgets do cabeçalho
-    # Isso deve ser feito antes de recriar os widgets
-    salvar_valores_cabecalho()
+    try:
+        # Limpar todos os tooltips ativos e widgets órfãos antes de recriar a interface
+        ToolTip.cleanup_all_tooltips()
+        
+        # Salvar os valores dos widgets do cabeçalho
+        # Isso deve ser feito antes de recriar os widgets
+        salvar_valores_cabecalho()
 
-    # Verificar se as variáveis estão inicializadas antes de usar .get()
-    exp_v_value = g.EXP_V.get() if g.EXP_V is not None else 'Não inicializado'
-    exp_h_value = g.EXP_H.get() if g.EXP_H is not None else 'Não inicializado'
+        print(f'Carregando interface: EXP_V={g.EXP_V}, EXP_H={g.EXP_H}')
 
-    print(f'g.EXP_V: {exp_v_value}')
-    print(f'g.EXP_H: {exp_h_value}')
+        # Limpar widgets antigos no layout de forma mais robusta
+        if hasattr(layout, 'count'):
+            while layout.count():
+                item = layout.takeAt(0)
+                if item:
+                    widget = item.widget()
+                    if widget:
+                        widget.setParent(None)
+                        widget.hide()
+                        widget.deleteLater()
 
-    # Limpar widgets antigos no frame superior
-    for widget in frame_superior.winfo_children():
-        widget.destroy()
+        # Forçar processamento de eventos para garantir limpeza
+        from PySide6.QtWidgets import QApplication
+        app = QApplication.instance()
+        if app:
+            app.processEvents()
 
-    # Adicionar o cabeçalho principal
-    cabecalho(frame_superior).grid(row=0, column=0, sticky='wens', ipadx=2, ipady=2)
-    if var == 2:
-        avisos(frame_superior).grid(row=0, column=1, sticky='wens', ipadx=2, ipady=2)
+        # Adicionar o cabeçalho principal
+        print("Carregando cabeçalho...")
+        cabecalho_widget = cabecalho(None)
+        layout.addWidget(cabecalho_widget, 0, 0)
+        
+        if var == 2:
+            print("Carregando avisos...")
+            avisos_widget = avisos(None)
+            layout.addWidget(avisos_widget, 0, 1)
 
-    for w in g.VALORES_W:
-        dobras(frame_superior, w).grid(row=1, column=w - 1, sticky='we', ipadx=2, ipady=2)
+        print(f"Carregando dobras para valores W: {g.VALORES_W}")
+        
+        # Determinar número de abas baseado na expansão vertical
+        num_abas = 10 if g.EXP_V else 5
+        g.N = num_abas + 1  # +1 porque a função cria abas de 1 até (N-1)
+        
+        for w in g.VALORES_W:
+            dobras_widget = dobras(None, w)
+            layout.addWidget(dobras_widget, 1, w - 1)
 
-    botoes.criar_botoes(frame_superior).grid(row=2,
-                                             column=0,
-                                             sticky='wens',
-                                             ipadx=2,
-                                             ipady=2,
-                                             columnspan=2)
+        print("Carregando botões...")
+        botoes_widget = botoes.criar_botoes(None)
+        layout.addWidget(botoes_widget, 2, 0, 1, 2)  # span 2 columns
 
-    for w in g.VALORES_W:
-        restaurar_valores_dobra(w)
+        print("Restaurando valores de dobra...")
+        for w in g.VALORES_W:
+            try:
+                restaurar_valores_dobra(w)
+            except Exception as e:
+                print(f"Erro ao restaurar valores dobra {w}: {e}")
 
-    restaurar_valores_cabecalho()
-    todas_funcoes()
+        print("Restaurando valores do cabeçalho...")
+        try:
+            restaurar_valores_cabecalho()
+        except Exception as e:
+            print(f"Erro ao restaurar valores do cabeçalho: {e}")
+            
+        print("Executando todas as funções...")
+        try:
+            todas_funcoes()
+        except Exception as e:
+            print(f"Erro ao executar todas as funções: {e}")
+            
+        print("Interface carregada com sucesso!")
+        
+        # Agendar limpeza final após carregar interface
+        from PySide6.QtCore import QTimer
+        def cleanup_final():
+            ToolTip.cleanup_all_tooltips()
+        QTimer.singleShot(100, cleanup_final)
+        
+    except Exception as e:
+        print(f"ERRO CRÍTICO no carregamento da interface: {e}")
+        import traceback
+        traceback.print_exc()
+        raise

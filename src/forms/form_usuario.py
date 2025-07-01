@@ -2,11 +2,12 @@
 # Formulário de Gerenciamento de Usuários
 # Este módulo implementa uma interface gráfica para gerenciar usuários do sistema.
 # As funcionalidades incluem redefinir senhas, alterar permissões e excluir usuários.
-# A interface é construída com a biblioteca tkinter, utilizando o módulo globals
+# A interface é construída com a biblioteca PySide6, utilizando o módulo globals
 # para variáveis globais e o módulo funcoes para operações relacionadas ao banco de dados.
 """
-import tkinter as tk
-from tkinter import ttk
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QTreeWidget, QTreeWidgetItem, QFrame, QGroupBox
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.interface import (listar, limpar_busca)
 from src.utils.utilitarios import obter_caminho_icone
@@ -29,70 +30,65 @@ def main(root):
         return
 
     if g.USUAR_FORM is not None:
-        g.USUAR_FORM.destroy()
+        g.USUAR_FORM.close()
 
-    g.USUAR_FORM = tk.Toplevel(root)
-    g.USUAR_FORM.title("Editar/Excluir Usuário")
-    g.USUAR_FORM.geometry("300x280")
-    g.USUAR_FORM.resizable(False, False)
+    g.USUAR_FORM = QDialog(root)
+    g.USUAR_FORM.setWindowTitle("Editar/Excluir Usuário")
+    g.USUAR_FORM.setFixedSize(300, 280)
 
     # Define o ícone
     icone_path = obter_caminho_icone()
-    g.USUAR_FORM.iconbitmap(icone_path)
+    g.USUAR_FORM.setWindowIcon(QIcon(icone_path))
 
     no_topo(g.USUAR_FORM)
     posicionar_janela(g.USUAR_FORM, 'centro')
 
-    main_frame = tk.Frame(g.USUAR_FORM)
-    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
+    main_layout = QGridLayout()
+    g.USUAR_FORM.setLayout(main_layout)
 
-    for i in range(3):
-        main_frame.columnconfigure(i, weight=1)
+    # Frame de busca
+    frame_busca = QGroupBox('Filtrar Usuários')
+    busca_layout = QGridLayout()
+    frame_busca.setLayout(busca_layout)
 
-    for i in range(3):
-        main_frame.rowconfigure(i, weight=1 if i == 1 else 0)
+    busca_layout.addWidget(QLabel("Usuário:"), 0, 0)
+    g.USUARIO_BUSCA_ENTRY = QLineEdit()
+    busca_layout.addWidget(g.USUARIO_BUSCA_ENTRY, 0, 1)
+    
+    def on_text_changed():
+        buscar('usuario')
+    g.USUARIO_BUSCA_ENTRY.textChanged.connect(on_text_changed)
 
-    frame_busca = tk.LabelFrame(main_frame, text='Filtrar Usuários', pady=5)
-    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
+    limpar_btn = QPushButton("Limpar")
+    limpar_btn.clicked.connect(lambda: limpar_busca('usuario'))
+    busca_layout.addWidget(limpar_btn, 0, 2)
 
-    for i in range(3):
-        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
+    main_layout.addWidget(frame_busca, 0, 0, 1, 3)
 
-    tk.Label(frame_busca, text="Usuário:").grid(row=0, column=0)
-    g.USUARIO_BUSCA_ENTRY = tk.Entry(frame_busca)
-    g.USUARIO_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
-    g.USUARIO_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('usuario'))
+    # TreeWidget para listar usuários
+    g.LIST_USUARIO = QTreeWidget()
+    g.LIST_USUARIO.setHeaderLabels(["Id", "Nome", "Permissões"])
+    g.LIST_USUARIO.setColumnHidden(0, True)  # Esconde a coluna Id
+    g.LIST_USUARIO.setColumnWidth(1, 150)
+    g.LIST_USUARIO.setColumnWidth(2, 100)
 
-    tk.Button(frame_busca,
-              text="Limpar",
-              command=lambda: limpar_busca('usuario')).grid(row=0, column=2, padx=5, pady=5)
+    main_layout.addWidget(g.LIST_USUARIO, 1, 0, 1, 3)
 
-    columns = ("Id", "Nome", "Permissões")
-    g.LIST_USUARIO = ttk.Treeview(main_frame, columns=columns, show="headings")
-    g.LIST_USUARIO["displaycolumns"] = ("Nome", "Permissões")
-    for col in columns:
-        g.LIST_USUARIO.heading(col, text=col)
-        g.LIST_USUARIO.column(col, anchor="center", width=20)
+    # Botões de ação
+    tornar_editor_btn = QPushButton("Tornar Editor")
+    tornar_editor_btn.setStyleSheet("background-color: lightgreen;")
+    tornar_editor_btn.clicked.connect(tornar_editor)
+    main_layout.addWidget(tornar_editor_btn, 2, 0)
 
-    g.LIST_USUARIO.grid(row=1, column=0, padx=5, pady=5, sticky="ew", columnspan=3)
+    resetar_senha_btn = QPushButton("Resetar Senha")
+    resetar_senha_btn.setStyleSheet("background-color: lightyellow;")
+    resetar_senha_btn.clicked.connect(resetar_senha)
+    main_layout.addWidget(resetar_senha_btn, 2, 1)
 
-    tk.Button(main_frame,
-              text="Tornar Editor",
-              command=tornar_editor,
-              bg="lightgreen",
-              width=10).grid(row=2, column=0, padx=5, pady=5, sticky="w")
-
-    tk.Button(main_frame,
-              text="Resetar Senha",
-              command=resetar_senha,
-              bg="lightyellow",
-              width=10).grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-
-    tk.Button(main_frame,
-              text="Excluir",
-              command=excluir_usuario,
-              bg="lightcoral",
-              width=10).grid(row=2, column=2, padx=5, pady=5, sticky="e")
+    excluir_btn = QPushButton("Excluir")
+    excluir_btn.setStyleSheet("background-color: lightcoral;")
+    excluir_btn.clicked.connect(excluir_usuario)
+    main_layout.addWidget(excluir_btn, 2, 2)
 
     listar('usuario')
 

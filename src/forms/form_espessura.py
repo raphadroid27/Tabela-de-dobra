@@ -2,18 +2,26 @@
 # Formulário de Espessura
 # Este módulo implementa a interface gráfica para gerenciar espessuras de materiais.
 # Ele permite adicionar, editar e excluir registros de espessuras, utilizando a
-# biblioteca tkinter para a construção da interface. As variáveis globais são
+# biblioteca PySide6 para a construção da interface. As variáveis globais são
 # gerenciadas pelo módulo `globals`, enquanto as operações de banco de dados
 # são realizadas pelo módulo `funcoes`.
 """
-import tkinter as tk
-from tkinter import ttk
+try:
+    from PySide6.QtWidgets import (QDialog, QGridLayout, 
+                                   QGroupBox, QLabel, QPushButton, 
+                                   QTreeWidget, QLineEdit)
+    from PySide6.QtGui import QIcon
+except ImportError:
+    # Fallback para PyQt6 se PySide6 não estiver disponível
+    from PyQt6.QtWidgets import (QDialog, QGridLayout, 
+                                 QGroupBox, QLabel, QPushButton, 
+                                 QTreeWidget, QLineEdit)
+    from PyQt6.QtGui import QIcon
 
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.interface import (listar,
                                  limpar_busca,
-                                 configurar_main_frame,
-                                 configurar_frame_edicoes
+                                 configurar_main_frame
                                  )
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import (buscar,
@@ -28,14 +36,15 @@ def configurar_janela(root):
     Configura a janela principal do formulário de espessuras.
     """
     if g.ESPES_FORM:
-        g.ESPES_FORM.destroy()
+        g.ESPES_FORM.close()
 
-    g.ESPES_FORM = tk.Toplevel(root)
-    g.ESPES_FORM.geometry("240x280")
-    g.ESPES_FORM.resizable(False, False)
+    g.ESPES_FORM = QDialog(root)
+    g.ESPES_FORM.setWindowTitle("Formulário de Espessuras")
+    g.ESPES_FORM.resize(240, 280)
+    g.ESPES_FORM.setFixedSize(240, 280)
 
     icone_path = obter_caminho_icone()
-    g.ESPES_FORM.iconbitmap(icone_path)
+    g.ESPES_FORM.setWindowIcon(QIcon(icone_path))
 
     no_topo(g.ESPES_FORM)
     posicionar_janela(g.ESPES_FORM, None)
@@ -45,55 +54,60 @@ def criar_frame_busca(main_frame):
     """
     Cria o frame de busca.
     """
-    frame_busca = tk.LabelFrame(main_frame, text='Buscar Espessuras', pady=5)
-    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+    frame_busca = QGroupBox('Buscar Espessuras')
+    layout = QGridLayout(frame_busca)
 
-    for i in range(3):
-        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
+    # Valor
+    valor_label = QLabel("Valor:")
+    layout.addWidget(valor_label, 0, 0)
+    g.ESP_BUSCA_ENTRY = QLineEdit()
+    layout.addWidget(g.ESP_BUSCA_ENTRY, 0, 1)
+    g.ESP_BUSCA_ENTRY.textChanged.connect(lambda: buscar('espessura'))
 
-    tk.Label(frame_busca, text="Valor:").grid(row=0, column=0)
-    g.ESP_BUSCA_ENTRY = tk.Entry(frame_busca)
-    g.ESP_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
-    g.ESP_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('espessura'))
+    # Botão Limpar
+    limpar_btn = QPushButton("Limpar")
+    limpar_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_btn.clicked.connect(lambda: limpar_busca('espessura'))
+    layout.addWidget(limpar_btn, 0, 2)
 
-    tk.Button(frame_busca,
-              text="Limpar",
-              bg='lightyellow',
-              command=lambda: limpar_busca('espessura')).grid(row=0, column=2, padx=5, pady=5)
+    return frame_busca
 
 
 def criar_lista_espessuras(main_frame):
     """
     Cria a lista de espessuras.
     """
-    columns = ("Id", "Valor")
-    g.LIST_ESP = ttk.Treeview(main_frame, columns=columns, show="headings")
-    g.LIST_ESP["displaycolumns"] = "Valor"
-    for col in columns:
-        g.LIST_ESP.heading(col, text=col)
-        g.LIST_ESP.column(col, anchor="center")
+    g.LIST_ESP = QTreeWidget()
+    g.LIST_ESP.setHeaderLabels(["Valor"])
+    g.LIST_ESP.setRootIsDecorated(False)
+    
+    # Configurar largura da coluna
+    g.LIST_ESP.setColumnWidth(0, 180)  # Valor
 
-    g.LIST_ESP.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     listar('espessura')
+    return g.LIST_ESP
 
 
 def criar_frame_edicoes(main_frame):
     """
     Cria o frame de edições.
     """
-    frame_edicoes = configurar_frame_edicoes(main_frame,
-                                             text='Adicionar Espessura'
-                                             if not g.EDIT_ESP
-                                             else 'Editar Espessura'
-                                             )
+    frame_edicoes = QGroupBox('Adicionar Espessura' if not g.EDIT_ESP else 'Editar Espessura')
+    layout = QGridLayout(frame_edicoes)
 
-    tk.Label(frame_edicoes, text="Valor:").grid(row=0, column=0, sticky="w", padx=5)
-    g.ESP_VALOR_ENTRY = tk.Entry(frame_edicoes)
-    g.ESP_VALOR_ENTRY.grid(row=0, column=1, sticky="ew")
-    tk.Button(frame_edicoes,
-              text="Adicionar",
-              command=lambda: adicionar('espessura'),
-              bg="lightblue").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+    # Valor
+    valor_label = QLabel("Valor:")
+    layout.addWidget(valor_label, 0, 0)
+    g.ESP_VALOR_ENTRY = QLineEdit()
+    layout.addWidget(g.ESP_VALOR_ENTRY, 0, 1)
+    
+    # Botão Adicionar
+    adicionar_btn = QPushButton("Adicionar")
+    adicionar_btn.setStyleSheet("background-color: lightblue;")
+    adicionar_btn.clicked.connect(lambda: adicionar('espessura'))
+    layout.addWidget(adicionar_btn, 0, 2)
+
+    return frame_edicoes
 
 
 def configurar_botoes(main_frame):
@@ -102,13 +116,16 @@ def configurar_botoes(main_frame):
     """
     if g.ESPES_FORM is not None:
         if g.EDIT_ESP:
-            g.ESPES_FORM.title("Editar/Excluir Espessura")
-            tk.Button(main_frame,
-                      text="Excluir",
-                      command=lambda: excluir('espessura'),
-                      bg="lightcoral").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+            g.ESPES_FORM.setWindowTitle("Editar/Excluir Espessura")
+            
+            # Botão Excluir
+            main_layout = main_frame.layout()
+            excluir_btn = QPushButton("Excluir")
+            excluir_btn.setStyleSheet("background-color: lightcoral;")
+            excluir_btn.clicked.connect(lambda: excluir('espessura'))
+            main_layout.addWidget(excluir_btn, main_layout.rowCount(), 0)
         else:
-            g.ESPES_FORM.title("Adicionar Espessura")
+            g.ESPES_FORM.setWindowTitle("Adicionar Espessura")
     else:
         print("Erro: g.ESPES_FORM não foi inicializado.")
 
@@ -119,11 +136,23 @@ def main(root):
     """
     configurar_janela(root)
     main_frame = configurar_main_frame(g.ESPES_FORM)
-    criar_frame_busca(main_frame)
-    criar_lista_espessuras(main_frame)
+    
+    # Adicionar componentes ao layout principal
+    layout = main_frame.layout()
+    
+    frame_busca = criar_frame_busca(main_frame)
+    layout.addWidget(frame_busca, 0, 0)
+    
+    lista_espessuras = criar_lista_espessuras(main_frame)
+    layout.addWidget(lista_espessuras, 1, 0)
+    
     if not g.EDIT_ESP:
-        criar_frame_edicoes(main_frame)
+        frame_edicoes = criar_frame_edicoes(main_frame)
+        layout.addWidget(frame_edicoes, 2, 0)
+    
     configurar_botoes(main_frame)
+    
+    g.ESPES_FORM.show()
 
 
 if __name__ == "__main__":

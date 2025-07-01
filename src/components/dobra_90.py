@@ -1,14 +1,15 @@
 """
 Este módulo contém funções para criar e gerenciar o frame de dobras
 """
-import tkinter as tk
+from PySide6.QtWidgets import QGroupBox, QLabel, QLineEdit, QGridLayout
+from PySide6.QtCore import Qt
 from src.config import globals as g
-from src.utils.interface import (calcular_dobra,
-                                 copiar,
-                                 focus_next_entry,
-                                 focus_previous_entry
-                                 )
-from src.utils.classes import tooltip as tp
+from src.utils.interface import (
+    calcular_dobra,
+    copiar,
+    focus_next_entry,
+    focus_previous_entry
+)
 
 LARGURA = 12
 
@@ -18,10 +19,9 @@ def dobras(frame, w):
     Cria o frame para as dobras, com base no valor de n.
     O frame é criado apenas uma vez, e os widgets são atualizados
     """
-    g.FRAME_DOBRA = tk.Frame(frame)
-
-    for i in range(4):
-        g.FRAME_DOBRA.columnconfigure(i, weight=1)
+    g.FRAME_DOBRA = QGroupBox()
+    layout = QGridLayout(g.FRAME_DOBRA)
+    g.FRAME_DOBRA.setLayout(layout)
 
     entradas_dobras(g.N, w)
     return g.FRAME_DOBRA
@@ -31,65 +31,65 @@ def entradas_dobras(valor, w):
     """
     Cria os widgets para as dobras, com base no valor de n.
     """
+    # Limpar layout antigo
+    if hasattr(g, 'FRAME_DOBRA') and g.FRAME_DOBRA.layout() is not None:
+        while g.FRAME_DOBRA.layout().count():
+            child = g.FRAME_DOBRA.layout().takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
     # Atualizar o valor de n
     g.N = valor
 
+    layout = g.FRAME_DOBRA.layout()
+
     # Adicionar widgets novamente
     labels = ['Medida Ext.', 'Medida Dobra', 'Metade Dobra']
-    for label in labels:
-        tk.Label(g.FRAME_DOBRA, text=label).grid(row=0, column=labels.index(label)+1)
+    for i, label_text in enumerate(labels):
+        layout.addWidget(QLabel(label_text), 0, i + 1)
 
     for i in range(1, g.N):
-        g.FRAME_DOBRA.rowconfigure(0, weight=0)
-        g.FRAME_DOBRA.rowconfigure(i, weight=0)
+        layout.addWidget(QLabel(f"Aba {i}:"), i, 0)
 
-        tk.Label(g.FRAME_DOBRA, text=f"Aba {i}:").grid(row=i, column=0)
+        entry = QLineEdit()
+        entry.setAlignment(Qt.AlignCenter)
+        setattr(g, f'aba{i}_entry_{w}', entry)
+        layout.addWidget(entry, i, 1)
+        entry.textChanged.connect(lambda text, w=w: calcular_dobra(w))
+        entry.setToolTip("Insira o valor da dobra.")
 
-        setattr(g, f'aba{i}_entry_{w}', tk.Entry(g.FRAME_DOBRA, width=LARGURA, justify="center"))
-        entry = getattr(g, f'aba{i}_entry_{w}')
-        entry.grid(row=i, column=1, sticky='we', padx=2)
-        entry.bind("<KeyRelease>", lambda event: calcular_dobra(w))
-        tp.ToolTip(entry, "Insira o valor da dobra.")
+        medida_dobra_label = QLabel()
+        medida_dobra_label.setFrameShape(QLabel.Shape.Panel)
+        medida_dobra_label.setFrameShadow(QLabel.Shadow.Sunken)
+        setattr(g, f'medidadobra{i}_label_{w}', medida_dobra_label)
+        layout.addWidget(medida_dobra_label, i, 2)
+        medida_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar('medida_dobra', i, w)
+        medida_dobra_label.setToolTip("Clique para copiar a medida da dobra.")
 
-        # Adicionar navegação com teclas direcionais
-        entry.bind("<Down>", lambda event, i=i: focus_next_entry(i, w))
-        entry.bind("<Up>", lambda event, i=i: focus_previous_entry(i, w))
-        entry.bind("<Return>", lambda event, i=i: focus_next_entry(i, w))
+        metade_dobra_label = QLabel()
+        metade_dobra_label.setFrameShape(QLabel.Shape.Panel)
+        metade_dobra_label.setFrameShadow(QLabel.Shadow.Sunken)
+        setattr(g, f'metadedobra{i}_label_{w}', metade_dobra_label)
+        layout.addWidget(metade_dobra_label, i, 3)
+        metade_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar('metade_dobra', i, w)
+        metade_dobra_label.setToolTip("Clique para copiar a metade da dobra.")
 
-        setattr(g, f'medidadobra{i}_label_{w}', tk.Label(g.FRAME_DOBRA,
-                                                         relief="sunken",
-                                                         width=LARGURA))
-        label = getattr(g, f'medidadobra{i}_label_{w}')
-        label.grid(row=i, column=2, sticky='we', padx=2)
-        label.bind("<Button-1>", lambda event, i=i: copiar('medida_dobra', i, w))
-        tp.ToolTip(label, "Clique para copiar a medida da dobra.")
+    blank_label = QLabel("Medida do Blank:")
+    blank_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+    layout.addWidget(blank_label, i + 1, 0, 1, 2)
 
-        setattr(g, f'metadedobra{i}_label_{w}', tk.Label(g.FRAME_DOBRA,
-                                                         relief="sunken",
-                                                         width=LARGURA))
-        label = getattr(g, f'metadedobra{i}_label_{w}')
-        label.grid(row=i, column=3, sticky='we', padx=2)
-        label.bind("<Button-1>", lambda event, i=i: copiar('metade_dobra', i, w))
-        tp.ToolTip(label, "Clique para copiar a metade da dobra.")
+    medida_blank = QLabel()
+    medida_blank.setFrameShape(QLabel.Shape.Panel)
+    medida_blank.setFrameShadow(QLabel.Shadow.Sunken)
+    setattr(g, f'medida_blank_label_{w}', medida_blank)
+    layout.addWidget(medida_blank, i + 1, 2)
+    medida_blank.mousePressEvent = lambda event, i=i, w=w: copiar('blank', i, w)
+    medida_blank.setToolTip("Clique para copiar a medida do blank.")
 
-    tk.Label(g.FRAME_DOBRA, text="Medida do Blank:").grid(row=i+1,
-                                                          column=0,
-                                                          columnspan=2,
-                                                          sticky='e',
-                                                          padx=2)
-
-    setattr(g, f'medida_blank_label_{w}', tk.Label(g.FRAME_DOBRA,
-                                                   relief="sunken",
-                                                   width=LARGURA))
-    medida_blank = getattr(g, f'medida_blank_label_{w}')
-    medida_blank.grid(row=i+1, column=2, sticky='we', padx=2)
-    medida_blank.bind("<Button-1>", lambda event: copiar('blank', i, w))
-    tp.ToolTip(medida_blank, "Clique para copiar a medida do blank.")
-
-    setattr(g, f'metade_blank_label_{w}', tk.Label(g.FRAME_DOBRA,
-                                                   relief="sunken",
-                                                   width=LARGURA))
-    metade_blank = getattr(g, f'metade_blank_label_{w}')
-    metade_blank.grid(row=i+1, column=3, sticky='we', padx=2)
-    metade_blank.bind("<Button-1>", lambda event: copiar('metade_blank', i, w))
-    tp.ToolTip(metade_blank, "Clique para copiar a metade do blank.")
+    metade_blank = QLabel()
+    metade_blank.setFrameShape(QLabel.Shape.Panel)
+    metade_blank.setFrameShadow(QLabel.Shadow.Sunken)
+    setattr(g, f'metade_blank_label_{w}', metade_blank)
+    layout.addWidget(metade_blank, i + 1, 3)
+    metade_blank.mousePressEvent = lambda event, i=i, w=w: copiar('metade_blank', i, w)
+    metade_blank.setToolTip("Clique para copiar a metade do blank.")

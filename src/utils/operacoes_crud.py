@@ -50,19 +50,19 @@ def adicionar_deducao():
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
         return
 
-    espessura_valor = g.DED_ESPES_COMB.get()
-    canal_valor = g.DED_CANAL_COMB.get()
-    material_nome = g.DED_MATER_COMB.get()
-    nova_observacao_valor = g.DED_OBSER_ENTRY.get() if g.DED_OBSER_ENTRY else ""
-    nova_forca_valor = g.DED_FORCA_ENTRY.get() if g.DED_FORCA_ENTRY else ""
+    espessura_valor = g.DED_ESPES_COMB.currentText()
+    canal_valor = g.DED_CANAL_COMB.currentText()
+    material_nome = g.DED_MATER_COMB.currentText()
+    nova_observacao_valor = g.DED_OBSER_ENTRY.text() if g.DED_OBSER_ENTRY else ""
+    nova_forca_valor = g.DED_FORCA_ENTRY.text() if g.DED_FORCA_ENTRY else ""
 
-    if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.get()]):
+    if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.text()]):
         messagebox.showerror("Erro",
                              "Material, espessura, canal e valor da dedução são obrigatórios.",
                              parent=g.DEDUC_FORM)
         return
 
-    nova_deducao_valor = float(g.DED_VALOR_ENTRY.get().replace(',', '.'))
+    nova_deducao_valor = float(g.DED_VALOR_ENTRY.text().replace(',', '.'))
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
@@ -112,7 +112,7 @@ def adicionar_espessura():
         messagebox.showerror("Erro", "Campo de espessura não inicializado.")
         return
 
-    espessura_valor = g.ESP_VALOR_ENTRY.get().replace(',', '.')
+    espessura_valor = g.ESP_VALOR_ENTRY.text().replace(',', '.')
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         messagebox.showwarning("Atenção!",
                                "A espessura deve conter apenas números ou números decimais.",
@@ -140,10 +140,10 @@ def adicionar_material():
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
         return
 
-    nome_material = g.MAT_NOME_ENTRY.get()
-    densidade_material = g.MAT_DENS_ENTRY.get()
-    escoamento_material = g.MAT_ESCO_ENTRY.get()
-    elasticidade_material = g.MAT_ELAS_ENTRY.get()
+    nome_material = g.MAT_NOME_ENTRY.text()
+    densidade_material = g.MAT_DENS_ENTRY.text()
+    escoamento_material = g.MAT_ESCO_ENTRY.text()
+    elasticidade_material = g.MAT_ELAS_ENTRY.text()
 
     if not nome_material:
         messagebox.showerror("Erro", "O campo Material é obrigatório.", parent=g.MATER_FORM)
@@ -179,10 +179,10 @@ def adicionar_canal():
         messagebox.showerror("Erro", "Interface não inicializada corretamente.")
         return
 
-    valor_canal = g.CANAL_VALOR_ENTRY.get()
-    largura_canal = g.CANAL_LARGU_ENTRY.get()
-    altura_canal = g.CANAL_ALTUR_ENTRY.get()
-    comprimento_total_canal = g.CANAL_COMPR_ENTRY.get()
+    valor_canal = g.CANAL_VALOR_ENTRY.text()
+    largura_canal = g.CANAL_LARGU_ENTRY.text()
+    altura_canal = g.CANAL_ALTUR_ENTRY.text()
+    comprimento_total_canal = g.CANAL_COMPR_ENTRY.text()
     observacao_canal = g.CANAL_OBSER_ENTRY.get()
 
     if not valor_canal:
@@ -439,7 +439,7 @@ def buscar(tipo):
     if tipo != 'dedução' and (config.get('busca') is None or not config['busca'].winfo_exists()):
         return
 
-    if config['lista'] is None or not config['lista'].winfo_exists():
+    if config['lista'] is None:
         return
 
     def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
@@ -455,12 +455,12 @@ def buscar(tipo):
         return query.all()
 
     if tipo == 'dedução':
-        material_nome = config['entries']['material_combo'].get()
-        espessura_valor = config['entries']['espessura_combo'].get()
-        canal_valor = config['entries']['canal_combo'].get()
+        material_nome = config['entries']['material_combo'].currentText()
+        espessura_valor = config['entries']['espessura_combo'].currentText()
+        canal_valor = config['entries']['canal_combo'].currentText()
         itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
     else:
-        item = config['busca'].get().replace(',', '.') if config.get('busca') else ""
+        item = config['busca'].text().replace(',', '.') if config.get('busca') else ""
         if not item:
             listar(tipo)
             return

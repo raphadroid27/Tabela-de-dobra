@@ -1,17 +1,26 @@
 """
 # Formulário de Canal
 # Este módulo implementa o formulário de canal, permitindo a adição, edição
-# e exclusão de canais. Ele utiliza a biblioteca tkinter para a interface
+# e exclusão de canais. Ele utiliza a biblioteca PySide6 para a interface
 # gráfica, o módulo globals para variáveis globais e o módulo funcoes para
 # operações relacionadas ao banco de dados.
 """
-import tkinter as tk
-from tkinter import ttk
+try:
+    from PySide6.QtWidgets import (QDialog, QGridLayout, 
+                                   QGroupBox, QLabel, QPushButton, 
+                                   QTreeWidget, QLineEdit)
+    from PySide6.QtGui import QIcon
+except ImportError:
+    # Fallback para PyQt6 se PySide6 não estiver disponível
+    from PyQt6.QtWidgets import (QDialog, QGridLayout, 
+                                 QGroupBox, QLabel, QPushButton, 
+                                 QTreeWidget, QLineEdit)
+    from PyQt6.QtGui import QIcon
+
 from src.utils.janelas import (no_topo, posicionar_janela)
 from src.utils.interface import (listar,
                                  limpar_busca,
-                                 configurar_main_frame,
-                                 configurar_frame_edicoes
+                                 configurar_main_frame
                                  )
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import (buscar,
@@ -28,14 +37,15 @@ def configurar_janela(root):
     Configura a janela principal do formulário.
     """
     if g.CANAL_FORM:
-        g.CANAL_FORM.destroy()
+        g.CANAL_FORM.close()
 
-    g.CANAL_FORM = tk.Toplevel(root)
-    g.CANAL_FORM.geometry("340x420")
-    g.CANAL_FORM.resizable(False, False)
+    g.CANAL_FORM = QDialog(root)
+    g.CANAL_FORM.setWindowTitle("Formulário de Canais")
+    g.CANAL_FORM.resize(340, 420)
+    g.CANAL_FORM.setFixedSize(340, 420)
 
     icone_path = obter_caminho_icone()
-    g.CANAL_FORM.iconbitmap(icone_path)
+    g.CANAL_FORM.setWindowIcon(QIcon(icone_path))
 
     no_topo(g.CANAL_FORM)
     posicionar_janela(g.CANAL_FORM, None)
@@ -45,73 +55,80 @@ def criar_frame_busca(main_frame):
     """
     Cria o frame de busca.
     """
-    frame_busca = tk.LabelFrame(main_frame, text='Buscar Canais', pady=5)
-    frame_busca.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+    frame_busca = QGroupBox('Buscar Canais')
+    layout = QGridLayout(frame_busca)
 
-    for i in range(3):
-        frame_busca.columnconfigure(i, weight=1 if i == 1 else 0)
+    # Valor
+    valor_label = QLabel("Valor:")
+    layout.addWidget(valor_label, 0, 0)
+    g.CANAL_BUSCA_ENTRY = QLineEdit()
+    layout.addWidget(g.CANAL_BUSCA_ENTRY, 0, 1)
+    g.CANAL_BUSCA_ENTRY.textChanged.connect(lambda: buscar('canal'))
 
-    tk.Label(frame_busca, text="Valor:").grid(row=0, column=0)
-    g.CANAL_BUSCA_ENTRY = tk.Entry(frame_busca)
-    g.CANAL_BUSCA_ENTRY.grid(row=0, column=1, sticky="ew")
-    g.CANAL_BUSCA_ENTRY.bind("<KeyRelease>", lambda event: buscar('canal'))
+    # Botão Limpar
+    limpar_btn = QPushButton("Limpar")
+    limpar_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_btn.clicked.connect(lambda: limpar_busca('canal'))
+    layout.addWidget(limpar_btn, 0, 2)
 
-    tk.Button(frame_busca,
-              text="Limpar",
-              bg='lightyellow',
-              command=lambda: limpar_busca('canal')).grid(row=0, column=2, padx=5, pady=5)
+    return frame_busca
 
 
 def criar_lista_canais(main_frame):
     """
     Cria a lista de canais.
     """
-    columns = ("Id", "Canal", "Largura", "Altura", "Compr.", "Obs.")
-    g.LIST_CANAL = ttk.Treeview(main_frame, columns=columns, show="headings")
-    g.LIST_CANAL["displaycolumns"] = ("Canal", "Largura", "Altura", "Compr.", "Obs.")
-    for col in columns:
-        g.LIST_CANAL.heading(col, text=col)
-        g.LIST_CANAL.column(col, anchor="center", width=20)
+    g.LIST_CANAL = QTreeWidget()
+    g.LIST_CANAL.setHeaderLabels(["Canal", "Largura", "Altura", "Compr.", "Obs."])
+    g.LIST_CANAL.setRootIsDecorated(False)
+    
+    # Configurar larguras das colunas
+    g.LIST_CANAL.setColumnWidth(0, 60)   # Canal
+    g.LIST_CANAL.setColumnWidth(1, 60)   # Largura
+    g.LIST_CANAL.setColumnWidth(2, 60)   # Altura
+    g.LIST_CANAL.setColumnWidth(3, 60)   # Compr.
+    g.LIST_CANAL.setColumnWidth(4, 100)  # Obs.
 
-    g.LIST_CANAL.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
     listar('canal')
+    return g.LIST_CANAL
 
 
 def criar_frame_edicoes(main_frame):
     """
     Cria o frame de edições.
     """
-    frame_edicoes = configurar_frame_edicoes(main_frame,
-                                             text='Novo Canal'
-                                             if not g.EDIT_CANAL
-                                             else 'Editar Canal'
-                                             )
+    frame_edicoes = QGroupBox('Novo Canal' if not g.EDIT_CANAL else 'Editar Canal')
+    layout = QGridLayout(frame_edicoes)
 
-    tk.Label(frame_edicoes, text="Valor:", anchor="w").grid(row=0, column=0, padx=2, sticky='sw')
-    g.CANAL_VALOR_ENTRY = tk.Entry(frame_edicoes)
-    g.CANAL_VALOR_ENTRY.grid(row=1, column=0, padx=5, sticky="ew")
+    # Valor
+    valor_label = QLabel("Valor:")
+    layout.addWidget(valor_label, 0, 0)
+    g.CANAL_VALOR_ENTRY = QLineEdit()
+    layout.addWidget(g.CANAL_VALOR_ENTRY, 1, 0)
 
-    tk.Label(frame_edicoes, text="Largura:", anchor="w").grid(row=0, padx=2, column=1, sticky='sw')
-    g.CANAL_LARGU_ENTRY = tk.Entry(frame_edicoes)
-    g.CANAL_LARGU_ENTRY.grid(row=1, column=1, padx=5, sticky="ew")
+    # Largura
+    largura_label = QLabel("Largura:")
+    layout.addWidget(largura_label, 0, 1)
+    g.CANAL_LARGU_ENTRY = QLineEdit()
+    layout.addWidget(g.CANAL_LARGU_ENTRY, 1, 1)
 
-    tk.Label(frame_edicoes, text="Altura:", anchor="w").grid(row=2, column=0, padx=2, sticky='sw')
-    g.CANAL_ALTUR_ENTRY = tk.Entry(frame_edicoes)
-    g.CANAL_ALTUR_ENTRY.grid(row=3, column=0, padx=5, sticky="ew")
+    # Altura
+    altura_label = QLabel("Altura:")
+    layout.addWidget(altura_label, 2, 0)
+    g.CANAL_ALTUR_ENTRY = QLineEdit()
+    layout.addWidget(g.CANAL_ALTUR_ENTRY, 3, 0)
 
-    tk.Label(frame_edicoes,
-             text="Comprimento total:",
-             anchor="w").grid(row=2, column=1, padx=2, sticky='sw')
+    # Comprimento total
+    comprimento_label = QLabel("Comprimento total:")
+    layout.addWidget(comprimento_label, 2, 1)
+    g.CANAL_COMPR_ENTRY = QLineEdit()
+    layout.addWidget(g.CANAL_COMPR_ENTRY, 3, 1)
 
-    g.CANAL_COMPR_ENTRY = tk.Entry(frame_edicoes)
-    g.CANAL_COMPR_ENTRY.grid(row=3, column=1, padx=5, sticky="ew")
-
-    tk.Label(frame_edicoes,
-             text="Observação:",
-             anchor="w").grid(row=4, column=0, padx=2, sticky='sw')
-
-    g.CANAL_OBSER_ENTRY = tk.Entry(frame_edicoes)
-    g.CANAL_OBSER_ENTRY.grid(row=5, column=0, columnspan=2, padx=5, sticky="ew")
+    # Observação
+    observacao_label = QLabel("Observação:")
+    layout.addWidget(observacao_label, 4, 0)
+    g.CANAL_OBSER_ENTRY = QLineEdit()
+    layout.addWidget(g.CANAL_OBSER_ENTRY, 5, 0, 1, 2)  # colspan=2
 
     return frame_edicoes
 
@@ -120,29 +137,37 @@ def configurar_botoes(main_frame, frame_edicoes):
     """
     Configura os botões de ação (Adicionar, Atualizar, Excluir).
     """
+    layout = frame_edicoes.layout()
+    
     if g.EDIT_CANAL:
         if g.CANAL_FORM:
-            g.CANAL_FORM.title("Editar/Excluir Canal")
+            g.CANAL_FORM.setWindowTitle("Editar/Excluir Canal")
         if g.LIST_CANAL:
-            g.LIST_CANAL.bind("<ButtonRelease-1>", lambda event: preencher_campos('canal'))
-        frame_edicoes.config(text='Editar Canal')
+            g.LIST_CANAL.itemSelectionChanged.connect(lambda: preencher_campos('canal'))
+        frame_edicoes.setTitle('Editar Canal')
 
-        tk.Button(main_frame, text="Excluir",
-                  command=lambda: excluir('canal'),
-                  bg="lightcoral").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        # Botão Excluir
+        main_layout = main_frame.layout()
+        excluir_btn = QPushButton("Excluir")
+        excluir_btn.setStyleSheet("background-color: lightcoral;")
+        excluir_btn.clicked.connect(lambda: excluir('canal'))
+        main_layout.addWidget(excluir_btn, main_layout.rowCount(), 0)
 
-        tk.Button(frame_edicoes,
-                  text="Atualizar",
-                  command=lambda: editar('canal'),
-                  bg="lightgreen").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
+        # Botão Atualizar
+        atualizar_btn = QPushButton("Atualizar")
+        atualizar_btn.setStyleSheet("background-color: lightgreen;")
+        atualizar_btn.clicked.connect(lambda: editar('canal'))
+        layout.addWidget(atualizar_btn, 1, 2, 5, 1)  # rowspan=5
     else:
         if g.CANAL_FORM:
-            g.CANAL_FORM.title("Novo Canal")
-        frame_edicoes.config(text='Novo Canal')
-        tk.Button(frame_edicoes,
-                  text="Adicionar",
-                  command=lambda: adicionar('canal'),
-                  bg="lightblue").grid(row=1, column=2, padx=5, pady=5, sticky="ew", rowspan=5)
+            g.CANAL_FORM.setWindowTitle("Novo Canal")
+        frame_edicoes.setTitle('Novo Canal')
+        
+        # Botão Adicionar
+        adicionar_btn = QPushButton("Adicionar")
+        adicionar_btn.setStyleSheet("background-color: lightblue;")
+        adicionar_btn.clicked.connect(lambda: adicionar('canal'))
+        layout.addWidget(adicionar_btn, 1, 2, 5, 1)  # rowspan=5
 
 
 def main(root):
@@ -151,10 +176,22 @@ def main(root):
     """
     configurar_janela(root)
     main_frame = configurar_main_frame(g.CANAL_FORM)
-    criar_frame_busca(main_frame)
-    criar_lista_canais(main_frame)
+    
+    # Adicionar componentes ao layout principal
+    layout = main_frame.layout()
+    
+    frame_busca = criar_frame_busca(main_frame)
+    layout.addWidget(frame_busca, 0, 0)
+    
+    lista_canais = criar_lista_canais(main_frame)
+    layout.addWidget(lista_canais, 1, 0)
+    
     frame_edicoes = criar_frame_edicoes(main_frame)
+    layout.addWidget(frame_edicoes, 2, 0)
+    
     configurar_botoes(main_frame, frame_edicoes)
+    
+    g.CANAL_FORM.show()
 
 
 if __name__ == "__main__":

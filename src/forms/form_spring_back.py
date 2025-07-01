@@ -1,25 +1,39 @@
 """
 Formulário para o cálculo de Spring Back
 """
-import tkinter as tk
-from tkinter import ttk
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QComboBox, QWidget
 from src.models.models import Material
 from src.utils.banco_dados import session
 from src.config import globals as g
 
 # Configuração do banco de dados
 
-spring_back_form = tk.Tk()
-spring_back_form.title("Cálculo de Spring Back")
+def create_spring_back_form():
+    """Cria o formulário de Spring Back usando PySide6"""
+    spring_back_form = QMainWindow()
+    spring_back_form.setWindowTitle("Cálculo de Spring Back")
 
-frame = tk.Frame(spring_back_form)
-frame.pack(pady=5, padx=5, fill='both', expand=True)
+    central_widget = QWidget()
+    spring_back_form.setCentralWidget(central_widget)
+    
+    layout = QGridLayout()
+    central_widget.setLayout(layout)
 
-# Obtém os nomes dos materiais como strings a partir da consulta
-materiais = [str(material.nome) for material in session.query(Material).all()]
+    # Obtém os nomes dos materiais como strings a partir da consulta
+    materiais = [str(material.nome) for material in session.query(Material).all()]
 
-tk.Label(frame, text="Material:").grid(row=0, column=0)
-g.MAT_COMB = ttk.Combobox(frame, values=materiais)
-g.MAT_COMB.grid(row=1, column=0)
+    layout.addWidget(QLabel("Material:"), 0, 0)
+    g.MAT_COMB = QComboBox()
+    g.MAT_COMB.addItems(materiais)
+    layout.addWidget(g.MAT_COMB, 1, 0)
 
-spring_back_form.mainloop()
+    return spring_back_form
+
+if __name__ == "__main__":
+    from PySide6.QtWidgets import QApplication
+    import sys
+    
+    app = QApplication(sys.argv)
+    form = create_spring_back_form()
+    form.show()
+    sys.exit(app.exec())
