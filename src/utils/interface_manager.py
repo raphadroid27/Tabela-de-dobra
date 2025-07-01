@@ -83,17 +83,17 @@ def carregar_interface(var, layout):
             except Exception as e:
                 print(f"Erro ao restaurar valores dobra {w}: {e}")
 
-        print("Restaurando valores do cabeçalho...")
-        try:
-            restaurar_valores_cabecalho()
-        except Exception as e:
-            print(f"Erro ao restaurar valores do cabeçalho: {e}")
-            
         print("Executando todas as funções...")
         try:
             todas_funcoes()
         except Exception as e:
             print(f"Erro ao executar todas as funções: {e}")
+
+        print("Restaurando valores do cabeçalho...")
+        try:
+            restaurar_valores_cabecalho()
+        except Exception as e:
+            print(f"Erro ao restaurar valores do cabeçalho: {e}")
             
         print("Interface carregada com sucesso!")
         
