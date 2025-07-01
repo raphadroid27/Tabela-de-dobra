@@ -11,8 +11,6 @@ from src.utils.interface import (
 )
 from src.utils.interface import todas_funcoes
 
-LARGURA = 9  # Largura padrão para os widgets
-
 
 def criar_label(layout, texto, linha_coluna, **kwargs):
     """
@@ -123,6 +121,14 @@ def cabecalho(parent):
     obs_widget = criar_widget(layout, 'label', 'OBS_LBL', (7, 0))
     layout.addWidget(obs_widget, 7, 0, 1, 4)  # columnspan 4
 
-    atualizar_widgets('material')
+    # Conectar eventos de mudança nas comboboxes após todos os widgets estarem criados
+    if mat_comb:
+        mat_comb.currentTextChanged.connect(lambda: atualizar_widgets('espessura'))
+    if esp_comb:
+        esp_comb.currentTextChanged.connect(lambda: atualizar_widgets('canal'))
+    if canal_comb:
+        canal_comb.currentTextChanged.connect(lambda: atualizar_widgets('dedução'))
+    if compr_entry:
+        compr_entry.textChanged.connect(atualizar_toneladas_m)
 
     return frame_cabecalho

@@ -22,118 +22,216 @@ import src.utils.classes.tooltip as tp
 
 
 def _atualizar_material():
-    """Atualiza os valores do combobox de materiais."""
-    if g.MAT_COMB and hasattr(g.MAT_COMB, 'clear'):
+    """
+    Atualiza os valores do combobox de materiais.
+    Exibe todos os materiais da tabela Material, ordenados por nome.
+    Inicia vazia para permitir seleção manual.
+    """
+    try:
+        if not hasattr(g, 'MAT_COMB') or g.MAT_COMB is None:
+            return
+            
+        if not hasattr(g.MAT_COMB, 'clear'):
+            return
+            
+        # Buscar todos os materiais da tabela Material, ordenados por nome
         materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
+        
         g.MAT_COMB.clear()
         g.MAT_COMB.addItems(materiais)
+        
+        # Configurar para não ter seleção inicial (-1 = nenhum item selecionado)
+        g.MAT_COMB.setCurrentIndex(-1)
 
-    # Verifica se o combobox de dedução de material existe e atualiza seus valores
-    if g.DED_MATER_COMB and hasattr(g.DED_MATER_COMB, 'clear'):
-        materiais = [m.nome for m in session.query(Material).order_by(Material.nome).all()]
-        g.DED_MATER_COMB.clear()
-        g.DED_MATER_COMB.addItems(materiais)
+        # Verifica se o combobox de dedução de material existe e atualiza seus valores
+        if hasattr(g, 'DED_MATER_COMB') and g.DED_MATER_COMB and hasattr(g.DED_MATER_COMB, 'clear'):
+            materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
+            g.DED_MATER_COMB.clear()
+            g.DED_MATER_COMB.addItems(materiais)
+            g.DED_MATER_COMB.setCurrentIndex(-1)
+            
+    except Exception as e:
+        print(f"Erro ao atualizar materiais: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def _atualizar_espessura():
-    """Atualiza os valores do combobox de espessuras."""
+    """
+    Atualiza os valores do combobox de espessuras.
+    Exibe apenas as espessuras relacionadas ao material selecionado através da tabela Deducao.
+    Só carrega quando um material válido for selecionado.
+    """
     if not g.MAT_COMB or not hasattr(g.MAT_COMB, 'currentText'):
         return
 
     material_nome = g.MAT_COMB.currentText()
+    
+    # Limpar espessuras sempre
+    if g.ESP_COMB and hasattr(g.ESP_COMB, 'clear'):
+        g.ESP_COMB.clear()
+        g.ESP_COMB.setCurrentIndex(-1)  # Nenhuma seleção
+        
+    if not material_nome or material_nome.strip() == "":
+        return
+        
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
-    if material_obj:
+    if material_obj and g.ESP_COMB:
+        # Buscar espessuras relacionadas ao material através da tabela Deducao
         espessuras = session.query(Espessura).join(Deducao).filter(
             Deducao.material_id == material_obj.id
-        ).order_by(Espessura.valor)
+        ).order_by(Espessura.valor).distinct()
 
-        if g.ESP_COMB and hasattr(g.ESP_COMB, 'clear'):
-            g.ESP_COMB.clear()
-            g.ESP_COMB.addItems([str(e.valor) for e in espessuras])
+        espessuras_valores = [str(e.valor) for e in espessuras]
+        g.ESP_COMB.addItems(espessuras_valores)
+        
+        # Manter sem seleção inicial
+        g.ESP_COMB.setCurrentIndex(-1)
 
     # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
-    if g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear'):
+    if hasattr(g, 'DED_ESPES_COMB') and g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear'):
         valores_espessura = session.query(Espessura.valor).distinct().all()
-        valores_limpos = [float(valor[0]) for valor in valores_espessura
-                          if valor[0] is not None]
+        valores_limpos = [float(valor[0]) for valor in valores_espessura if valor[0] is not None]
         g.DED_ESPES_COMB.clear()
         g.DED_ESPES_COMB.addItems([str(valor) for valor in sorted(valores_limpos)])
+        g.DED_ESPES_COMB.setCurrentIndex(-1)
 
 
 def _atualizar_canal():
-    """Atualiza os valores do combobox de canais."""
-    if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'get') or
-            not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get')):
+    """
+    Atualiza os valores do combobox de canais.
+    Exibe apenas os canais relacionados ao material e espessura selecionados através da tabela Deducao.
+    Só carrega quando material e espessura válidos forem selecionados.
+    """
+    if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'currentText') or
+            not g.MAT_COMB or not hasattr(g.MAT_COMB, 'currentText')):
         return
 
     espessura_valor = g.ESP_COMB.currentText()
     material_nome = g.MAT_COMB.currentText()
-    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
+    
+    # Limpar canais sempre
+    if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'clear'):
+        g.CANAL_COMB.clear()
+        g.CANAL_COMB.setCurrentIndex(-1)  # Nenhuma seleção
+    
+    # Só continuar se ambos material e espessura estiverem selecionados
+    if not espessura_valor or not material_nome or espessura_valor.strip() == "" or material_nome.strip() == "":
+        return
+        
+    try:
+        espessura_obj = session.query(Espessura).filter_by(valor=float(espessura_valor)).first()
+        material_obj = session.query(Material).filter_by(nome=material_nome).first()
 
-    if espessura_obj and material_obj:
-        canais = session.query(Canal).join(Deducao).filter(
-            Deducao.espessura_id == espessura_obj.id,
-            Deducao.material_id == material_obj.id
-        ).order_by(Canal.valor)
-        canais_valores = sorted(
-            [str(c.valor) for c in canais],
-            key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0])
-        )
-        if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'configure'):
-            g.CANAL_COMB.configure(values=canais_valores)
+        if espessura_obj and material_obj and g.CANAL_COMB:
+            # Buscar canais relacionados ao material e espessura através da tabela Deducao
+            canais = session.query(Canal).join(Deducao).filter(
+                Deducao.espessura_id == espessura_obj.id,
+                Deducao.material_id == material_obj.id
+            ).order_by(Canal.valor)
+            
+            canais_valores = sorted(
+                [str(c.valor) for c in canais],
+                key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]) if re.findall(r'\d+\.?\d*', x) else 0
+            )
+            
+            g.CANAL_COMB.addItems(canais_valores)
+            
+            # Manter sem seleção inicial
+            g.CANAL_COMB.setCurrentIndex(-1)
 
-    # Verifica se o combobox de dedução de canal existe e atualiza seus valores
-    if g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear'):
-        valores_canal = session.query(Canal.valor).distinct().all()
-        valores_canal_limpos = [str(valor[0]) for valor in valores_canal
-                                if valor[0] is not None]
-        g.DED_CANAL_COMB.clear()
-        g.DED_CANAL_COMB.addItems(sorted(valores_canal_limpos))
+        # Verifica se o combobox de dedução de canal existe e atualiza seus valores
+        if hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear'):
+            valores_canal = session.query(Canal.valor).distinct().all()
+            valores_canal_limpos = [str(valor[0]) for valor in valores_canal if valor[0] is not None]
+            g.DED_CANAL_COMB.clear()
+            g.DED_CANAL_COMB.addItems(sorted(valores_canal_limpos))
+            g.DED_CANAL_COMB.setCurrentIndex(-1)
+            
+    except ValueError as e:
+        print(f"Erro ao converter valor da espessura: {e}")
+    except Exception as e:
+        print(f"Erro ao atualizar canais: {e}")
 
 
 def _atualizar_deducao():
-    """Atualiza os valores de dedução com base nos widgets selecionados."""
+    """
+    Atualiza os valores de dedução com base nos widgets selecionados.
+    Só calcula quando todas as seleções forem válidas (não vazias).
+    """
     # Verificar se todos os widgets necessários estão disponíveis
     widgets_requeridos = [
-        (g.ESP_COMB, 'get'),
-        (g.MAT_COMB, 'get'),
-        (g.CANAL_COMB, 'get')
+        (g.ESP_COMB, 'currentText'),
+        (g.MAT_COMB, 'currentText'),
+        (g.CANAL_COMB, 'currentText')
     ]
 
     for widget, metodo in widgets_requeridos:
         if not widget or not hasattr(widget, metodo):
             return
 
+    # Verificar se alguma combobox não tem seleção (currentIndex == -1)
+    if (g.ESP_COMB.currentIndex() == -1 or 
+        g.MAT_COMB.currentIndex() == -1 or 
+        g.CANAL_COMB.currentIndex() == -1):
+        
+        # Limpar valores de dedução se alguma seleção estiver vazia
+        if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
+            g.DED_LBL.setText('')
+        if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
+            g.OBS_LBL.setText('')
+        return
+
     espessura_valor = g.ESP_COMB.currentText()
     material_nome = g.MAT_COMB.currentText()
     canal_valor = g.CANAL_COMB.currentText()
 
-    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
-    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+    # Verificar se todas as seleções são válidas (não vazias)
+    if (not espessura_valor or not material_nome or not canal_valor or
+        espessura_valor.strip() == "" or material_nome.strip() == "" or canal_valor.strip() == ""):
+        
+        # Limpar valores de dedução se alguma seleção estiver vazia
+        if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
+            g.DED_LBL.setText('')
+        if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
+            g.OBS_LBL.setText('')
+        return
 
-    if espessura_obj and material_obj and canal_obj:
-        deducao_obj = session.query(Deducao).filter(
-            Deducao.espessura_id == espessura_obj.id,
-            Deducao.material_id == material_obj.id,
-            Deducao.canal_id == canal_obj.id
-        ).first()
+    try:
+        espessura_obj = session.query(Espessura).filter_by(valor=float(espessura_valor)).first()
+        material_obj = session.query(Material).filter_by(nome=material_nome).first()
+        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
-        if deducao_obj:
-            if g.DED_LBL and hasattr(g.DED_LBL, 'config'):
-                g.DED_LBL.config(text=deducao_obj.valor, fg="black")
-            observacao = deducao_obj.observacao or 'Observações não encontradas'
-            if g.OBS_LBL and hasattr(g.OBS_LBL, 'config'):
-                g.OBS_LBL.config(text=f'{observacao}')
+        if espessura_obj and material_obj and canal_obj:
+            deducao_obj = session.query(Deducao).filter(
+                Deducao.espessura_id == espessura_obj.id,
+                Deducao.material_id == material_obj.id,
+                Deducao.canal_id == canal_obj.id
+            ).first()
+
+            if deducao_obj:
+                if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
+                    g.DED_LBL.setText(str(deducao_obj.valor))
+                    g.DED_LBL.setStyleSheet("color: black")
+                observacao = deducao_obj.observacao or 'Observações não encontradas'
+                if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
+                    g.OBS_LBL.setText(observacao)
+            else:
+                if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
+                    g.DED_LBL.setText('N/A')
+                    g.DED_LBL.setStyleSheet("color: red")
+                if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
+                    g.OBS_LBL.setText('Observações não encontradas')
         else:
-            if g.DED_LBL and hasattr(g.DED_LBL, 'config'):
-                g.DED_LBL.config(text='N/A', fg="red")
-            if g.OBS_LBL and hasattr(g.OBS_LBL, 'config'):
-                g.OBS_LBL.config(text='Observações não encontradas')
-
-    for tipo in ['material', 'espessura', 'canal']:
-        atualizar_widgets(tipo)
+            if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
+                g.DED_LBL.setText('')
+            if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
+                g.OBS_LBL.setText('')
+                
+    except ValueError as e:
+        print(f"Erro ao converter valor da espessura: {e}")
+    except Exception as e:
+        print(f"Erro ao atualizar dedução: {e}")
 
 
 def atualizar_widgets(tipo):
@@ -183,57 +281,85 @@ def canal_tooltip():
 def atualizar_toneladas_m():
     """
     Atualiza o valor de toneladas por metro com base no comprimento e na dedução selecionada.
+    Só calcula quando todas as seleções forem válidas (não vazias).
     """
     # Verificar se todos os widgets necessários estão disponíveis
     widgets_requeridos = [
-        (g.COMPR_ENTRY, 'get'),
-        (g.ESP_COMB, 'get'),
-        (g.MAT_COMB, 'get'),
-        (g.CANAL_COMB, 'get')
+        (g.COMPR_ENTRY, 'text'),
+        (g.ESP_COMB, 'currentText'),
+        (g.MAT_COMB, 'currentText'),
+        (g.CANAL_COMB, 'currentText')
     ]
 
     for widget, metodo in widgets_requeridos:
         if not widget or not hasattr(widget, metodo):
             return
 
+    # Verificar se alguma combobox não tem seleção (currentIndex == -1)
+    if (g.ESP_COMB.currentIndex() == -1 or 
+        g.MAT_COMB.currentIndex() == -1 or 
+        g.CANAL_COMB.currentIndex() == -1):
+        
+        # Limpar valor de força se alguma seleção estiver vazia
+        if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
+            g.FORCA_LBL.setText('')
+        return
+
     comprimento = g.COMPR_ENTRY.text()
     espessura_valor = g.ESP_COMB.currentText()
     material_nome = g.MAT_COMB.currentText()
     canal_valor = g.CANAL_COMB.currentText()
 
-    espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
-    canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+    # Verificar se todas as seleções são válidas (não vazias)
+    if (not espessura_valor or not material_nome or not canal_valor or
+        espessura_valor.strip() == "" or material_nome.strip() == "" or canal_valor.strip() == ""):
+        
+        # Limpar valor de força se alguma seleção estiver vazia
+        if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
+            g.FORCA_LBL.setText('')
+        return
 
-    if espessura_obj and material_obj and canal_obj:
-        deducao_obj = session.query(Deducao).filter(
-            Deducao.espessura_id == espessura_obj.id,
-            Deducao.material_id == material_obj.id,
-            Deducao.canal_id == canal_obj.id
-        ).first()
+    try:
+        espessura_obj = session.query(Espessura).filter_by(valor=float(espessura_valor)).first()
+        material_obj = session.query(Material).filter_by(nome=material_nome).first()
+        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
-        if deducao_obj and deducao_obj.forca is not None:
-            toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
-                           if comprimento else deducao_obj.forca)
-            if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'config'):
-                g.FORCA_LBL.config(text=f'{toneladas_m:.0f}', fg="black")
-        else:
-            if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'config'):
-                g.FORCA_LBL.config(text='N/A', fg="red")
+        if espessura_obj and material_obj and canal_obj:
+            deducao_obj = session.query(Deducao).filter(
+                Deducao.espessura_id == espessura_obj.id,
+                Deducao.material_id == material_obj.id,
+                Deducao.canal_id == canal_obj.id
+            ).first()
 
-    # Verificar se o comprimento é menor que o comprimento total do canal
-    if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'currentText'):
-        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.currentText()).first()
-        comprimento_total = getattr(canal_obj, 'comprimento_total', None) if canal_obj else None
-        comprimento = float(comprimento) if comprimento else None
+            if deducao_obj and deducao_obj.forca is not None:
+                toneladas_m = ((deducao_obj.forca * float(comprimento)) / 1000
+                               if comprimento else deducao_obj.forca)
+                if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
+                    g.FORCA_LBL.setText(f'{toneladas_m:.0f}')
+                    g.FORCA_LBL.setStyleSheet("color: black")
+            else:
+                if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
+                    g.FORCA_LBL.setText('N/A')
+                    g.FORCA_LBL.setStyleSheet("color: red")
 
-        if canal_obj and comprimento and comprimento_total:
-            if comprimento < comprimento_total:
-                if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'config'):
-                    g.COMPR_ENTRY.config(fg="black")
-            elif comprimento >= comprimento_total:
-                if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'config'):
-                    g.COMPR_ENTRY.config(fg="red")
+        # Verificar se o comprimento é menor que o comprimento total do canal
+        if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'currentText') and canal_valor.strip():
+            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+            comprimento_total = getattr(canal_obj, 'comprimento_total', None) if canal_obj else None
+            comprimento_float = float(comprimento) if comprimento else None
+
+            if canal_obj and comprimento_float and comprimento_total:
+                if comprimento_float < comprimento_total:
+                    if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'setStyleSheet'):
+                        g.COMPR_ENTRY.setStyleSheet("color: black")
+                elif comprimento_float >= comprimento_total:
+                    if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'setStyleSheet'):
+                        g.COMPR_ENTRY.setStyleSheet("color: red")
+                        
+    except ValueError as e:
+        print(f"Erro ao converter valores numéricos: {e}")
+    except Exception as e:
+        print(f"Erro ao atualizar toneladas/m: {e}")
 
 
 def restaurar_valores_dobra(w):
@@ -282,6 +408,7 @@ def restaurar_valores_cabecalho():
     """
     Restaura os valores dos widgets no cabeçalho
     com base nos valores armazenados em g.CABECALHO_VALORES.
+    Não restaura valores vazios para comboboxes que já possuem dados.
     """
     # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
     if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
@@ -292,14 +419,22 @@ def restaurar_valores_cabecalho():
         widget = getattr(g, widget_name, None)
         if widget and hasattr(widget, 'clear'):
             try:
-                widget.clear()
+                # Para comboboxes, não restaurar valores vazios se já há itens carregados
+                if (hasattr(widget, 'setCurrentText') and 
+                    hasattr(widget, 'count') and 
+                    widget.count() > 0 and 
+                    not valor.strip()):
+                    continue
+                    
                 if hasattr(widget, 'setText'):
                     widget.setText(valor)
                 elif hasattr(widget, 'setCurrentText'):
-                    widget.setCurrentText(valor)
+                    if valor.strip():  # Só restaurar se o valor não for vazio
+                        widget.setCurrentText(valor)
+                    # Se valor vazio e combobox tem itens, manter seleção atual
+                    
             except Exception as e:
                 print(f"Erro ao restaurar valor para {widget_name}: {e}")
-                raise
 
     print("Valores restaurados:", g.CABECALHO_VALORES)
 
@@ -468,7 +603,7 @@ def todas_funcoes():
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     """
     try:
-        for tipo in ['espessura', 'canal', 'dedução']:
+        for tipo in ['material', 'espessura', 'canal', 'dedução']:
             try:
                 atualizar_widgets(tipo)
             except Exception as e:
