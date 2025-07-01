@@ -2,7 +2,7 @@
 Formulário Principal do Aplicativo de Cálculo de Dobra
 Este módulo implementa a interface principal do aplicativo, permitindo a
 gestão de deduções, materiais, espessuras e canais. Ele utiliza a biblioteca
-tkinter para a interface gráfica, o módulo globals para variáveis globais,
+PySide6 para a interface gráfica, o módulo globals para variáveis globais,
 e outros módulos auxiliares para operações relacionadas ao banco de dados
 e funcionalidades específicas.
 """
@@ -10,7 +10,9 @@ e funcionalidades específicas.
 import json
 import os
 import sys
-import tkinter as tk
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QMenuBar, QLabel, QGridLayout
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QAction
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -93,28 +95,95 @@ def form_false(form, editar_attr, root):
 
 def configurar_janela_principal(config):
     """
-    Configura a janela principal do aplicativo.
+    Configura a janela principal do aplicativo com lógica melhorada.
     """
-    g.PRINC_FORM = tk.Tk()
-    g.PRINC_FORM.title("Cálculo de Dobra")
-    g.PRINC_FORM.geometry('340x400')
-    if 'geometry' in config:
-        g.PRINC_FORM.geometry(config['geometry'])
-    g.PRINC_FORM.resizable(False, False)
-    g.PRINC_FORM.update_idletasks()
+    # Garantir que existe apenas uma janela principal e limpar órfãs
+    cleanup_orphaned_windows()
+    
+    if g.PRINC_FORM is not None:
+        try:
+            g.PRINC_FORM.close()
+            g.PRINC_FORM.deleteLater()
+            g.PRINC_FORM = None
+        except:
+            pass
+    
+    g.PRINC_FORM = QMainWindow()
+    g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
+    g.PRINC_FORM.resize(340, 400)
+    
+    # Marcar como janela principal para identificação
+    g.PRINC_FORM._is_main_window = True
+    
+    # Definir tamanhos mínimos e máximos para garantir redimensionamento correto
+    g.PRINC_FORM.setMinimumSize(340, 400)  # Tamanho mínimo = tamanho sem expansão
+    g.PRINC_FORM.setMaximumSize(680, 500)  # Tamanho máximo = tamanho com ambas expansões
+    
+    # Garantir que a janela não fique sempre no topo desnecessariamente
+    g.PRINC_FORM.setWindowFlags(g.PRINC_FORM.windowFlags() & ~Qt.WindowStaysOnTopHint)
+    
+    if 'geometry' in config and isinstance(config['geometry'], str):
+        # Parse geometry string and apply
+        parts = config['geometry'].split('+')
+        if len(parts) >= 3:
+            try:
+                x, y = int(parts[1]), int(parts[2])
+                g.PRINC_FORM.move(x, y)
+            except (ValueError, IndexError):
+                # Se não conseguir fazer o parse, usa posição padrão
+                pass
 
     icone_path = obter_caminho_icone()
-    g.PRINC_FORM.iconbitmap(icone_path)
+    g.PRINC_FORM.setWindowIcon(QIcon(icone_path))
 
     def on_closing():
+        cleanup_orphaned_windows()
         if g.PRINC_FORM is not None:
-            geometry = g.PRINC_FORM.geometry()
-            position = geometry.split('+')[1:]
-            config['geometry'] = f"+{position[0]}+{position[1]}"
+            pos = g.PRINC_FORM.pos()
+            config['geometry'] = f"+{pos.x()}+{pos.y()}"
             salvar_configuracao(config)
-            g.PRINC_FORM.destroy()
 
-    g.PRINC_FORM.protocol("WM_DELETE_WINDOW", on_closing)
+    # Criar uma função personalizada para o evento de fechamento
+    def custom_close_event(event):
+        on_closing()
+        event.accept()
+
+    # Sobrescrever o closeEvent
+    g.PRINC_FORM.closeEvent = custom_close_event
+
+
+def cleanup_orphaned_windows():
+    """
+    Remove todas as janelas órfãs que possam estar abertas.
+    """
+    try:
+        app = QApplication.instance()
+        if not app:
+            return
+        
+        main_window = g.PRINC_FORM if hasattr(g, 'PRINC_FORM') else None
+        top_level_widgets = app.topLevelWidgets()
+        
+        for widget in top_level_widgets[:]:  # Cópia para iteração segura
+            if (widget != main_window and 
+                widget.isVisible() and 
+                not hasattr(widget, '_is_system_widget') and
+                not hasattr(widget, '_is_main_window')):
+                
+                widget_type = type(widget).__name__
+                if widget_type in ['QLabel', 'QFrame', 'QWidget', 'QDialog', 'QWindow', 'QMainWindow']:
+                    try:
+                        widget.hide()
+                        widget.close()
+                        widget.deleteLater()
+                    except:
+                        pass
+        
+        # Processar eventos para garantir limpeza
+        app.processEvents()
+        
+    except:
+        pass
 
 
 def configurar_menu():
@@ -124,120 +193,196 @@ def configurar_menu():
     if g.PRINC_FORM is None:
         return
 
-    menu_bar = tk.Menu(g.PRINC_FORM)
-    g.PRINC_FORM.config(menu=menu_bar)
+    menu_bar = g.PRINC_FORM.menuBar()
 
     # Menu Arquivo
-    file_menu = tk.Menu(menu_bar, tearoff=0)
-    menu_bar.add_cascade(label="Arquivo", menu=file_menu)
+    file_menu = menu_bar.addMenu("Arquivo")
 
-    file_menu.add_command(label="Nova Dedução", command=lambda: form_false(form_deducao,
-                                                                           'EDIT_DED',
-                                                                           g.PRINC_FORM))
+    nova_deducao_action = QAction("Nova Dedução", g.PRINC_FORM)
+    nova_deducao_action.triggered.connect(lambda: form_false(form_deducao, 'EDIT_DED', g.PRINC_FORM))
+    file_menu.addAction(nova_deducao_action)
 
-    file_menu.add_command(label="Novo Material", command=lambda: form_false(form_material,
-                                                                            'EDIT_MAT',
-                                                                            g.PRINC_FORM))
+    novo_material_action = QAction("Novo Material", g.PRINC_FORM)
+    novo_material_action.triggered.connect(lambda: form_false(form_material, 'EDIT_MAT', g.PRINC_FORM))
+    file_menu.addAction(novo_material_action)
 
-    file_menu.add_command(label="Nova Espessura", command=lambda: form_false(form_espessura,
-                                                                             'EDIT_ESP',
-                                                                             g.PRINC_FORM))
+    nova_espessura_action = QAction("Nova Espessura", g.PRINC_FORM)
+    nova_espessura_action.triggered.connect(lambda: form_false(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
+    file_menu.addAction(nova_espessura_action)
 
-    file_menu.add_command(label="Novo Canal", command=lambda: form_false(form_canal,
-                                                                         'EDIT_CANAL',
-                                                                         g.PRINC_FORM))
-    file_menu.add_separator()
-    file_menu.add_command(label="Sair",
-                          command=lambda: g.PRINC_FORM.destroy() if g.PRINC_FORM else None)
+    novo_canal_action = QAction("Novo Canal", g.PRINC_FORM)
+    novo_canal_action.triggered.connect(lambda: form_false(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
+    file_menu.addAction(novo_canal_action)
+
+    file_menu.addSeparator()
+    
+    sair_action = QAction("Sair", g.PRINC_FORM)
+    sair_action.triggered.connect(lambda: g.PRINC_FORM.close() if g.PRINC_FORM else None)
+    file_menu.addAction(sair_action)
 
     # Menu Editar
-    edit_menu = tk.Menu(menu_bar, tearoff=0)
-    menu_bar.add_cascade(label="Editar", menu=edit_menu)
-    edit_menu.add_command(label="Editar Dedução", command=lambda: form_true(form_deducao,
-                                                                            'EDIT_DED',
-                                                                            g.PRINC_FORM))
+    edit_menu = menu_bar.addMenu("Editar")
+    
+    editar_deducao_action = QAction("Editar Dedução", g.PRINC_FORM)
+    editar_deducao_action.triggered.connect(lambda: form_true(form_deducao, 'EDIT_DED', g.PRINC_FORM))
+    edit_menu.addAction(editar_deducao_action)
 
-    edit_menu.add_command(label="Editar Material", command=lambda: form_true(form_material,
-                                                                             'EDIT_MAT',
-                                                                             g.PRINC_FORM))
+    editar_material_action = QAction("Editar Material", g.PRINC_FORM)
+    editar_material_action.triggered.connect(lambda: form_true(form_material, 'EDIT_MAT', g.PRINC_FORM))
+    edit_menu.addAction(editar_material_action)
 
-    edit_menu.add_command(label="Editar Espessura", command=lambda: form_true(form_espessura,
-                                                                              'EDIT_ESP',
-                                                                              g.PRINC_FORM))
+    editar_espessura_action = QAction("Editar Espessura", g.PRINC_FORM)
+    editar_espessura_action.triggered.connect(lambda: form_true(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
+    edit_menu.addAction(editar_espessura_action)
 
-    edit_menu.add_command(label="Editar Canal", command=lambda: form_true(form_canal,
-                                                                          'EDIT_CANAL',
-                                                                          g.PRINC_FORM))
+    editar_canal_action = QAction("Editar Canal", g.PRINC_FORM)
+    editar_canal_action.triggered.connect(lambda: form_true(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
+    edit_menu.addAction(editar_canal_action)
 
     # Menu Opções
-    opcoes_menu = tk.Menu(menu_bar, tearoff=0)
-    menu_bar.add_cascade(label="Opções", menu=opcoes_menu)
-    g.NO_TOPO_VAR = tk.IntVar()
-    opcoes_menu.add_checkbutton(label="No topo", variable=g.NO_TOPO_VAR,
-                                command=lambda: no_topo(g.PRINC_FORM))
+    opcoes_menu = menu_bar.addMenu("Opções")
+    g.NO_TOPO_VAR = False  # Convertido de IntVar para bool
+    no_topo_action = QAction("No topo", g.PRINC_FORM)
+    no_topo_action.setCheckable(True)
+    no_topo_action.triggered.connect(lambda: no_topo(g.PRINC_FORM))
+    opcoes_menu.addAction(no_topo_action)
 
     # Menu ferramentas
-    ferramentas_menu = tk.Menu(menu_bar, tearoff=0)
-    menu_bar.add_cascade(label="Utilidades", menu=ferramentas_menu)
-    ferramentas_menu.add_command(label="Razão Raio/Espessura",
-                                 command=lambda: form_razao_rie.main(g.PRINC_FORM))
-    ferramentas_menu.add_command(label="Impressão em Lote",
-                                 command=lambda: form_impressao.main(g.PRINC_FORM))
+    ferramentas_menu = menu_bar.addMenu("Utilidades")
+    
+    razao_action = QAction("Razão Raio/Espessura", g.PRINC_FORM)
+    razao_action.triggered.connect(lambda: form_razao_rie.main(g.PRINC_FORM))
+    ferramentas_menu.addAction(razao_action)
+    
+    impressao_action = QAction("Impressão em Lote", g.PRINC_FORM)
+    impressao_action.triggered.connect(lambda: form_impressao.main(g.PRINC_FORM))
+    ferramentas_menu.addAction(impressao_action)
 
     # Menu Usuário
-    usuario_menu = tk.Menu(menu_bar, tearoff=0)
-    menu_bar.add_cascade(label="Usuário", menu=usuario_menu)
-    usuario_menu.add_command(label="Login", command=lambda: form_true(form_aut,
-                                                                      "LOGIN",
-                                                                      g.PRINC_FORM))
+    usuario_menu = menu_bar.addMenu("Usuário")
+    
+    login_action = QAction("Login", g.PRINC_FORM)
+    login_action.triggered.connect(lambda: form_true(form_aut, "LOGIN", g.PRINC_FORM))
+    usuario_menu.addAction(login_action)
 
-    usuario_menu.add_command(label="Novo Usuário", command=lambda: form_false(form_aut,
-                                                                              "LOGIN",
-                                                                              g.PRINC_FORM))
+    novo_usuario_action = QAction("Novo Usuário", g.PRINC_FORM)
+    novo_usuario_action.triggered.connect(lambda: form_false(form_aut, "LOGIN", g.PRINC_FORM))
+    usuario_menu.addAction(novo_usuario_action)
 
-    usuario_menu.add_command(label="Gerenciar Usuários",
-                             command=lambda: form_usuario.main(g.PRINC_FORM))
-    usuario_menu.add_separator()
-    usuario_menu.add_command(label="Sair", command=logout)
+    gerenciar_usuarios_action = QAction("Gerenciar Usuários", g.PRINC_FORM)
+    gerenciar_usuarios_action.triggered.connect(lambda: form_usuario.main(g.PRINC_FORM))
+    usuario_menu.addAction(gerenciar_usuarios_action)
+    
+    usuario_menu.addSeparator()
+    
+    sair_usuario_action = QAction("Sair", g.PRINC_FORM)
+    sair_usuario_action.triggered.connect(logout)
+    usuario_menu.addAction(sair_usuario_action)
 
     # Menu Ajuda
-    help_menu = tk.Menu(menu_bar, tearoff=0)
-    menu_bar.add_cascade(label="Ajuda", menu=help_menu)
-    help_menu.add_command(label="Sobre", command=lambda: form_sobre.main(g.PRINC_FORM))
+    help_menu = menu_bar.addMenu("Ajuda")
+    
+    sobre_action = QAction("Sobre", g.PRINC_FORM)
+    sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
+    help_menu.addAction(sobre_action)
 
 
 def configurar_frames():
     """
     Configura os frames principais da janela.
     """
-    frame_superior = tk.LabelFrame(g.PRINC_FORM)
-    frame_superior.pack(fill='both', expand=True, padx=10, pady=10)
-
-    frame_superior.columnconfigure(0, weight=1)
-    frame_superior.columnconfigure(1, weight=1)
-    frame_superior.rowconfigure(0, weight=1)
-    frame_superior.rowconfigure(1, weight=1)
+    central_widget = QWidget()
+    g.PRINC_FORM.setCentralWidget(central_widget)
+    
+    layout = QGridLayout(central_widget)  # Mudado para QGridLayout
+    layout.setContentsMargins(10, 10, 10, 10)
 
     g.VALORES_W = [1]
-    g.EXP_V = tk.IntVar()
-    g.EXP_H = tk.IntVar()
+    g.EXP_V = False  # Convertido de IntVar para bool
+    g.EXP_H = False  # Convertido de IntVar para bool
+    # Armazenar referência ao layout principal
+    g.MAIN_LAYOUT = layout
     # Atribuir a função carregar_interface à variável global
     g.CARREGAR_INTERFACE_FUNC = carregar_interface
-    carregar_interface(1, frame_superior)
+    carregar_interface(1, layout)
 
 
 def main():
     """
     Função principal que inicializa a interface gráfica do aplicativo.
     """
-    config = carregar_configuracao()
-    configurar_janela_principal(config)
-    configurar_menu()
-    configurar_frames()
-    verificar_admin_existente()
-    if g.PRINC_FORM is not None:
-        g.PRINC_FORM.mainloop()
+    app = None
+    try:
+        app = QApplication(sys.argv)
+        
+        # Configurar para capturar exceções não tratadas
+        import traceback
+        import signal
+        
+        def handle_exception(exc_type, exc_value, exc_traceback):
+            """Captura exceções não tratadas"""
+            if exc_type != KeyboardInterrupt:
+                print("ERRO NÃO TRATADO:")
+                print(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            
+        def signal_handler(signum, frame):
+            """Handler para sinais do sistema"""
+            print(f"Sinal recebido: {signum}")
+            if app:
+                app.quit()
+            sys.exit(0)
+            
+        sys.excepthook = handle_exception
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
+        print("Carregando configuração...")
+        config = carregar_configuracao()
+        
+        print("Configurando janela principal...")
+        configurar_janela_principal(config)
+        
+        print("Configurando menu...")
+        configurar_menu()
+        
+        print("Configurando frames...")
+        configurar_frames()
+        
+        print("Verificando admin existente...")
+        verificar_admin_existente()
+        
+        if g.PRINC_FORM is not None:
+            print("Exibindo janela principal...")
+            g.PRINC_FORM.show()
+            print("Aplicativo iniciado com sucesso!")
+            
+            # Adicionar uma função para capturar quando a janela é fechada
+            def on_app_exit():
+                print("Aplicativo sendo finalizado...")
+                
+            app.aboutToQuit.connect(on_app_exit)
+            
+            exit_code = app.exec()
+            print(f"Aplicativo finalizado com código: {exit_code}")
+            return exit_code
+        else:
+            print("ERRO: Janela principal não foi criada!")
+            return 1
+            
+    except KeyboardInterrupt:
+        print("Aplicativo interrompido pelo usuário")
+        if app:
+            app.quit()
+        return 0
+    except Exception as e:
+        print(f"ERRO CRÍTICO na inicialização: {e}")
+        import traceback
+        traceback.print_exc()
+        if app:
+            app.quit()
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)

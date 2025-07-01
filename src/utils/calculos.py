@@ -25,7 +25,13 @@ def verificar_widget_inicializado(widget, metodo='get', default_value=''):
 
     try:
         if metodo == 'get':
-            return widget.get()
+            # PySide6 QLineEdit usa text() em vez de get()
+            if hasattr(widget, 'text'):
+                return widget.text()
+            elif hasattr(widget, 'currentText'):
+                return widget.currentText()
+            elif hasattr(widget, 'get'):
+                return widget.get()
         if metodo == 'cget':
             return widget.cget('text')
         if metodo == 'config':
@@ -152,7 +158,7 @@ def _obter_valores_dobras(w):
     """Obtém os valores das dobras dos widgets de entrada."""
     return [
         [
-            getattr(g, f'aba{i}_entry_{col}').get() or ''
+            getattr(g, f'aba{i}_entry_{col}').text() or ''
             if getattr(g, f'aba{i}_entry_{col}', None) is not None else ''
             for col in range(1, w + 1)
         ]
@@ -236,8 +242,6 @@ def calcular_dobra(w):
     # Obter valores das dobras
     g.DOBRAS_VALORES = _obter_valores_dobras(w)
 
-    # Exibir a matriz de valores para depuração
-    print("Matriz de dobras (g.dobras_get):")
     if g.DOBRAS_VALORES is not None:
         for linha in g.DOBRAS_VALORES:
             print(linha)

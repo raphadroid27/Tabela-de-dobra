@@ -5,10 +5,10 @@ As funções incluem a atualização de widgets, manipulação de valores de dob
 restauração de valores, e outras operações relacionadas ao funcionamento do
 aplicativo de cálculo de dobras.
 """
-import tkinter as tk
-from tkinter import ttk
+# Imports temporários para compatibilidade
 import re
 import pyperclip
+from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QTreeWidgetItem
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.banco_dados import session, obter_configuracoes
 from src.utils.calculos import (calcular_dobra,
@@ -23,38 +23,41 @@ import src.utils.classes.tooltip as tp
 
 def _atualizar_material():
     """Atualiza os valores do combobox de materiais."""
-    if g.MAT_COMB and g.MAT_COMB.winfo_exists():
+    if g.MAT_COMB and hasattr(g.MAT_COMB, 'clear'):
         materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
-        g.MAT_COMB.configure(values=materiais)
+        g.MAT_COMB.clear()
+        g.MAT_COMB.addItems(materiais)
 
     # Verifica se o combobox de dedução de material existe e atualiza seus valores
-    if g.DED_MATER_COMB and g.DED_MATER_COMB.winfo_exists():
-        g.DED_MATER_COMB.configure(values=[m.nome for m in session
-                                           .query(Material)
-                                           .order_by(Material.nome).all()])
+    if g.DED_MATER_COMB and hasattr(g.DED_MATER_COMB, 'clear'):
+        materiais = [m.nome for m in session.query(Material).order_by(Material.nome).all()]
+        g.DED_MATER_COMB.clear()
+        g.DED_MATER_COMB.addItems(materiais)
 
 
 def _atualizar_espessura():
     """Atualiza os valores do combobox de espessuras."""
-    if not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get'):
+    if not g.MAT_COMB or not hasattr(g.MAT_COMB, 'currentText'):
         return
 
-    material_nome = g.MAT_COMB.get()
+    material_nome = g.MAT_COMB.currentText()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
     if material_obj:
         espessuras = session.query(Espessura).join(Deducao).filter(
             Deducao.material_id == material_obj.id
         ).order_by(Espessura.valor)
 
-        if g.ESP_COMB and hasattr(g.ESP_COMB, 'configure'):
-            g.ESP_COMB.configure(values=[str(e.valor) for e in espessuras])
+        if g.ESP_COMB and hasattr(g.ESP_COMB, 'clear'):
+            g.ESP_COMB.clear()
+            g.ESP_COMB.addItems([str(e.valor) for e in espessuras])
 
     # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
-    if g.DED_ESPES_COMB and g.DED_ESPES_COMB.winfo_exists():
+    if g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear'):
         valores_espessura = session.query(Espessura.valor).distinct().all()
         valores_limpos = [float(valor[0]) for valor in valores_espessura
                           if valor[0] is not None]
-        g.DED_ESPES_COMB.configure(values=sorted(valores_limpos))
+        g.DED_ESPES_COMB.clear()
+        g.DED_ESPES_COMB.addItems([str(valor) for valor in sorted(valores_limpos)])
 
 
 def _atualizar_canal():
@@ -63,8 +66,8 @@ def _atualizar_canal():
             not g.MAT_COMB or not hasattr(g.MAT_COMB, 'get')):
         return
 
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
+    espessura_valor = g.ESP_COMB.currentText()
+    material_nome = g.MAT_COMB.currentText()
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
 
@@ -81,11 +84,12 @@ def _atualizar_canal():
             g.CANAL_COMB.configure(values=canais_valores)
 
     # Verifica se o combobox de dedução de canal existe e atualiza seus valores
-    if g.DED_CANAL_COMB and g.DED_CANAL_COMB.winfo_exists():
+    if g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear'):
         valores_canal = session.query(Canal.valor).distinct().all()
         valores_canal_limpos = [str(valor[0]) for valor in valores_canal
                                 if valor[0] is not None]
-        g.DED_CANAL_COMB.configure(values=sorted(valores_canal_limpos))
+        g.DED_CANAL_COMB.clear()
+        g.DED_CANAL_COMB.addItems(sorted(valores_canal_limpos))
 
 
 def _atualizar_deducao():
@@ -101,9 +105,9 @@ def _atualizar_deducao():
         if not widget or not hasattr(widget, metodo):
             return
 
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
-    canal_valor = g.CANAL_COMB.get()
+    espessura_valor = g.ESP_COMB.currentText()
+    material_nome = g.MAT_COMB.currentText()
+    canal_valor = g.CANAL_COMB.currentText()
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -160,12 +164,12 @@ def canal_tooltip():
     if not g.CANAL_COMB or not hasattr(g.CANAL_COMB, 'get'):
         return
 
-    if g.CANAL_COMB.get() == "":
+    if g.CANAL_COMB.currentText() == "":
         if hasattr(g.CANAL_COMB, 'set'):
             g.CANAL_COMB.set("")
         tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
     else:
-        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
+        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.currentText()).first()
         if canal_obj:
             canal_obs = getattr(canal_obj, 'observacao', None) or "N/A."
             canal_comprimento_total = getattr(canal_obj, 'comprimento_total', None) or "N/A."
@@ -192,10 +196,10 @@ def atualizar_toneladas_m():
         if not widget or not hasattr(widget, metodo):
             return
 
-    comprimento = g.COMPR_ENTRY.get()
-    espessura_valor = g.ESP_COMB.get()
-    material_nome = g.MAT_COMB.get()
-    canal_valor = g.CANAL_COMB.get()
+    comprimento = g.COMPR_ENTRY.text()
+    espessura_valor = g.ESP_COMB.currentText()
+    material_nome = g.MAT_COMB.currentText()
+    canal_valor = g.CANAL_COMB.currentText()
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     material_obj = session.query(Material).filter_by(nome=material_nome).first()
@@ -218,8 +222,8 @@ def atualizar_toneladas_m():
                 g.FORCA_LBL.config(text='N/A', fg="red")
 
     # Verificar se o comprimento é menor que o comprimento total do canal
-    if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'get'):
-        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.get()).first()
+    if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'currentText'):
+        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.currentText()).first()
         comprimento_total = getattr(canal_obj, 'comprimento_total', None) if canal_obj else None
         comprimento = float(comprimento) if comprimento else None
 
@@ -249,8 +253,11 @@ def restaurar_valores_dobra(w):
                 print(f"Restaurando valor para aba{i}_entry_{col}: {valor}")
                 entry = getattr(g, f'aba{i}_entry_{col}', None)
                 if entry:
-                    entry.delete(0, tk.END)
-                    entry.insert(0, valor)
+                    entry.clear()
+                    if hasattr(entry, 'setText'):
+                        entry.setText(valor)
+                    elif hasattr(entry, 'setCurrentText'):
+                        entry.setCurrentText(valor)
 
 
 def salvar_valores_cabecalho():
@@ -261,12 +268,12 @@ def salvar_valores_cabecalho():
         g.CABECALHO_VALORES = {}
 
     g.CABECALHO_VALORES = {
-        'MAT_COMB': g.MAT_COMB.get() if g.MAT_COMB else '',
-        'ESP_COMB': g.ESP_COMB.get() if g.ESP_COMB else '',
-        'CANAL_COMB': g.CANAL_COMB.get() if g.CANAL_COMB else '',
-        'COMPR_ENTRY': g.COMPR_ENTRY.get() if g.COMPR_ENTRY else '',
-        'RI_ENTRY': g.RI_ENTRY.get() if g.RI_ENTRY else '',
-        'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.get() if g.DED_ESPEC_ENTRY else '',
+        'MAT_COMB': g.MAT_COMB.currentText() if g.MAT_COMB else '',
+        'ESP_COMB': g.ESP_COMB.currentText() if g.ESP_COMB else '',
+        'CANAL_COMB': g.CANAL_COMB.currentText() if g.CANAL_COMB else '',
+        'COMPR_ENTRY': g.COMPR_ENTRY.text() if g.COMPR_ENTRY else '',
+        'RI_ENTRY': g.RI_ENTRY.text() if g.RI_ENTRY else '',
+        'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.text() if g.DED_ESPEC_ENTRY else '',
     }
     print("Valores salvos:", g.CABECALHO_VALORES)
 
@@ -283,13 +290,13 @@ def restaurar_valores_cabecalho():
     # Restaura os valores nos widgets
     for widget_name, valor in g.CABECALHO_VALORES.items():
         widget = getattr(g, widget_name, None)
-        if widget and isinstance(widget, (tk.Entry, ttk.Combobox)):
+        if widget and hasattr(widget, 'clear'):
             try:
-                if isinstance(widget, tk.Entry):
-                    widget.delete(0, tk.END)
-                    widget.insert(0, valor)
-                elif isinstance(widget, ttk.Combobox):
-                    widget.set(valor)
+                widget.clear()
+                if hasattr(widget, 'setText'):
+                    widget.setText(valor)
+                elif hasattr(widget, 'setCurrentText'):
+                    widget.setCurrentText(valor)
             except Exception as e:
                 print(f"Erro ao restaurar valor para {widget_name}: {e}")
                 raise
@@ -355,7 +362,7 @@ def copiar(tipo, numero=None, w=None):
         texto_atual = str(texto_atual)
         if texto_atual == "":
             return
-    except (tk.TclError, AttributeError):
+    except (Exception, AttributeError):
         print(f"Erro: Não foi possível acessar o texto do widget para o tipo '{tipo}'.")
         return
 
@@ -374,7 +381,7 @@ def copiar(tipo, numero=None, w=None):
         texto_atualizado = str(texto_atualizado)
         if " Copiado!" in texto_atualizado:
             texto_atualizado = texto_atualizado.replace(" Copiado!", "")
-    except (tk.TclError, AttributeError):
+    except (Exception, AttributeError):
         texto_atualizado = texto_original
 
     pyperclip.copy(texto_atualizado)
@@ -385,7 +392,7 @@ def copiar(tipo, numero=None, w=None):
     def remover_copiado():
         try:
             getattr(label, 'config')(text=texto_atualizado, fg="black")
-        except (tk.TclError, AttributeError):
+        except (Exception, AttributeError):
             pass
 
     if hasattr(label, 'after'):
@@ -398,11 +405,11 @@ def limpar_busca(tipo):
     """
     configuracoes = obter_configuracoes()
     if tipo == 'dedução':
-        configuracoes[tipo]['entries']['material_combo'].delete(0, tk.END)
-        configuracoes[tipo]['entries']['espessura_combo'].delete(0, tk.END)
-        configuracoes[tipo]['entries']['canal_combo'].delete(0, tk.END)
+        configuracoes[tipo]['entries']['material_combo'].clear()
+        configuracoes[tipo]['entries']['espessura_combo'].clear()
+        configuracoes[tipo]['entries']['canal_combo'].clear()
     else:
-        configuracoes[tipo]['busca'].delete(0, tk.END)
+        configuracoes[tipo]['busca'].clear()
 
     listar(tipo)
 
@@ -436,11 +443,10 @@ def listar(tipo):
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    if config['lista'] is None or not config['lista'].winfo_exists():
+    if config['lista'] is None or not config['lista'].isVisible():
         return
 
-    for item in config['lista'].get_children():
-        config['lista'].delete(item)
+    config['lista'].clear()
 
     itens = session.query(config['modelo']).order_by(config['ordem']).all()
 
@@ -451,40 +457,81 @@ def listar(tipo):
         if tipo == 'dedução':
             if item.material is None or item.espessura is None or item.canal is None:
                 continue
-        config['lista'].insert("", "end", values=config['valores'](item))
+        
+        valores = config['valores'](item)
+        item_widget = QTreeWidgetItem(valores if isinstance(valores, list) else [str(valores)])
+        config['lista'].addTopLevelItem(item_widget)
 
 
 def todas_funcoes():
     """
     Executa todas as funções necessárias para atualizar os valores e labels do aplicativo.
     """
-    for tipo in ['espessura', 'canal', 'dedução']:
-        atualizar_widgets(tipo)
+    try:
+        for tipo in ['espessura', 'canal', 'dedução']:
+            try:
+                atualizar_widgets(tipo)
+            except Exception as e:
+                print(f"Erro ao atualizar widgets {tipo}: {e}")
 
-    atualizar_toneladas_m()
-    calcular_k_offset()
-    aba_minima_externa()
-    z_minimo_externo()
-    for w in g.VALORES_W:
-        calcular_dobra(w)
+        try:
+            atualizar_toneladas_m()
+        except Exception as e:
+            print(f"Erro ao atualizar toneladas/m: {e}")
+            
+        try:
+            calcular_k_offset()
+        except Exception as e:
+            print(f"Erro ao calcular k_offset: {e}")
+            
+        try:
+            aba_minima_externa()
+        except Exception as e:
+            print(f"Erro ao calcular aba mínima externa: {e}")
+            
+        try:
+            z_minimo_externo()
+        except Exception as e:
+            print(f"Erro ao calcular z mínimo externo: {e}")
+            
+        try:
+            for w in g.VALORES_W:
+                calcular_dobra(w)
+        except Exception as e:
+            print(f"Erro ao calcular dobras: {e}")
 
-    razao_ri_espessura()
+        try:
+            razao_ri_espessura()
+        except Exception as e:
+            print(f"Erro ao calcular razão ri/espessura: {e}")
 
-    # Atualizar tooltips
-    canal_tooltip()
+        try:
+            # Atualizar tooltips
+            canal_tooltip()
+        except Exception as e:
+            print(f"Erro ao atualizar tooltip do canal: {e}")
+            
+    except Exception as e:
+        print(f"Erro geral em todas_funcoes: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def configurar_main_frame(parent, rows=4):
     """
     Configura o frame principal com colunas e linhas padrão.
     """
-    main_frame = tk.Frame(parent)
-    main_frame.pack(pady=5, padx=5, fill='both', expand=True)
-
-    main_frame.columnconfigure(0, weight=1)
-    for i in range(rows):
-        main_frame.rowconfigure(i, weight=1 if i == 1 else 0)
-
+    main_frame = QWidget(parent)
+    layout = QGridLayout(main_frame)
+    main_frame.setLayout(layout)
+    
+    # Configurar o layout principal do parent para usar o main_frame
+    if not parent.layout():
+        parent_layout = QGridLayout(parent)
+        parent.setLayout(parent_layout)
+    
+    parent.layout().addWidget(main_frame)
+    
     return main_frame
 
 
@@ -492,13 +539,10 @@ def configurar_frame_edicoes(parent, text, columns=3, rows=4):
     """
     Cria um frame de edições com configuração padrão.
     """
-    frame_edicoes = tk.LabelFrame(parent, text=text, pady=5)
-    frame_edicoes.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
-
-    for i in range(columns):
-        frame_edicoes.columnconfigure(i, weight=1 if i < columns - 1 else 0)
-
-    for i in range(rows):
-        frame_edicoes.rowconfigure(i, weight=1)
-
+    frame_edicoes = QGroupBox(text, parent)
+    layout = QGridLayout(frame_edicoes)
+    frame_edicoes.setLayout(layout)
+    
     return frame_edicoes
+    # return frame_edicoes
+    return None

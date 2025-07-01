@@ -1,7 +1,9 @@
 """
 Módulo responsável por criar o frame de avisos na interface gráfica.
 """
-import tkinter as tk
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 
 
 def avisos(root):
@@ -12,7 +14,7 @@ def avisos(root):
         root: O widget pai onde o frame será inserido.
 
     Returns:
-        ttk.Frame: O frame contendo os avisos.
+        QWidget: O widget contendo os avisos.
     """
     avisos_textos = [
         "1. Xadrez → Laser sempre corta com a face xadrez para Baixo ↓.",
@@ -20,16 +22,20 @@ def avisos(root):
         "3. Ferramenta 'bigode': fazer alívio de dobra em abas maiores que 20mm."
     ]
 
-    frame_avisos = tk.Frame(root)
+    frame_avisos = QWidget()
+    layout = QVBoxLayout(frame_avisos)
+
+    font = QFont("Arial", 10)
 
     for aviso in avisos_textos:
-        aviso_label = tk.Label(frame_avisos,
-                               text=aviso,
-                               anchor='w',
-                               font=('Arial', 10),
-                               wraplength=300,
-                               justify='left'
-                               )
-        aviso_label.pack(anchor='w', padx=5, pady=2)
+        aviso_label = QLabel(aviso)
+        aviso_label.setAlignment(Qt.AlignLeft)
+        aviso_label.setFont(font)
+        aviso_label.setWordWrap(True)
+        aviso_label.setMaximumWidth(300)
+        layout.addWidget(aviso_label)
+
+    layout.setContentsMargins(5, 5, 5, 5)
+    layout.setSpacing(2)
 
     return frame_avisos

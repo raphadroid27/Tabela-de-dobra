@@ -1,6 +1,8 @@
 """
 Módulo com funções auxiliares para manipulação de janelas no aplicativo.
 """
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 from src.config import globals as g
 
 
@@ -9,11 +11,15 @@ def no_topo(form):
     Define se a janela deve ficar sempre no topo ou não.
     """
     def set_topmost(window, on_top):
-        if window and window.winfo_exists():
-            window.attributes("-topmost", on_top)
+        if window:
+            if on_top:
+                window.setWindowFlags(window.windowFlags() | Qt.WindowStaysOnTopHint)
+            else:
+                window.setWindowFlags(window.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            window.show()
 
     if g.NO_TOPO_VAR is not None:
-        on_top_valor = g.NO_TOPO_VAR.get() == 1
+        on_top_valor = g.NO_TOPO_VAR
         set_topmost(form, on_top_valor)
 
 
@@ -25,12 +31,11 @@ def posicionar_janela(form, posicao=None):
     if g.PRINC_FORM is None:
         return
 
-    form.update_idletasks()
-    g.PRINC_FORM.update_idletasks()
-    largura_monitor = g.PRINC_FORM.winfo_screenwidth()
-    posicao_x = g.PRINC_FORM.winfo_x()
-    largura_janela = g.PRINC_FORM.winfo_width()
-    largura_form = form.winfo_width()
+    screen = QApplication.primaryScreen()
+    largura_monitor = screen.size().width()
+    posicao_x = g.PRINC_FORM.x()
+    largura_janela = g.PRINC_FORM.width()
+    largura_form = form.width()
 
     if posicao is None:
         if posicao_x > largura_monitor / 2:
@@ -39,22 +44,22 @@ def posicionar_janela(form, posicao=None):
             posicao = 'direita'
 
     if posicao == 'centro':
-        x = g.PRINC_FORM.winfo_x() + ((g.PRINC_FORM.winfo_width() - largura_form) // 2)
-        y = g.PRINC_FORM.winfo_y() + ((g.PRINC_FORM.winfo_height() - form.winfo_height()) // 2)
+        x = g.PRINC_FORM.x() + ((g.PRINC_FORM.width() - largura_form) // 2)
+        y = g.PRINC_FORM.y() + ((g.PRINC_FORM.height() - form.height()) // 2)
     elif posicao == 'direita':
-        x = g.PRINC_FORM.winfo_x() + largura_janela + 10
-        y = g.PRINC_FORM.winfo_y()
+        x = g.PRINC_FORM.x() + largura_janela + 10
+        y = g.PRINC_FORM.y()
         if x + largura_form > largura_monitor:
-            x = g.PRINC_FORM.winfo_x() - largura_form - 10
+            x = g.PRINC_FORM.x() - largura_form - 10
     elif posicao == 'esquerda':
-        x = g.PRINC_FORM.winfo_x() - largura_form - 10
-        y = g.PRINC_FORM.winfo_y()
+        x = g.PRINC_FORM.x() - largura_form - 10
+        y = g.PRINC_FORM.y()
         if x < 0:
-            x = g.PRINC_FORM.winfo_x() + largura_janela + 10
+            x = g.PRINC_FORM.x() + largura_janela + 10
     else:
         return
 
-    form.geometry(f"+{x}+{y}")
+    form.move(x, y)
 
 
 def desabilitar_janelas():
@@ -63,9 +68,8 @@ def desabilitar_janelas():
     """
     forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
     for form in forms:
-        if form is not None and form.winfo_exists():
-            form.attributes('-disabled', True)
-            form.focus_force()
+        if form is not None:
+            form.setEnabled(False)
 
 
 def habilitar_janelas():
@@ -74,6 +78,5 @@ def habilitar_janelas():
     """
     forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
     for form in forms:
-        if form is not None and form.winfo_exists():
-            form.attributes('-disabled', False)
-            form.focus_force()
+        if form is not None:
+            form.setEnabled(True)

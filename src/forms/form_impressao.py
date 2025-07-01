@@ -2,13 +2,16 @@
 # Formulário de Impressão
 # Este módulo contém a implementação do formulário de impressão em lote,
 # que permite selecionar um diretório e uma lista de arquivos PDF para impressão.
-# O formulário é construído usando a biblioteca tkinter e segue o padrão
+# O formulário é construído usando a biblioteca PySide6 e segue o padrão
 # dos demais formulários do aplicativo.
 """
 import os
 import subprocess
-import tkinter as tk
-from tkinter import filedialog, messagebox
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, 
+                               QLineEdit, QPushButton, QTextEdit, QListWidget, QFrame, 
+                               QGroupBox, QScrollArea, QFileDialog, QMessageBox)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from src.utils.janelas import (no_topo,
                                posicionar_janela,
                                habilitar_janelas,
@@ -54,8 +57,8 @@ def imprimir_pdf(diretorio, lista_arquivos):
 
         # Verificar se o widget existe antes de usar
         if hasattr(g, 'IMPRESSAO_RESULTADO_TEXT') and g.IMPRESSAO_RESULTADO_TEXT:
-            g.IMPRESSAO_RESULTADO_TEXT.delete(1.0, tk.END)
-            g.IMPRESSAO_RESULTADO_TEXT.insert(1.0, resultado)
+            g.IMPRESSAO_RESULTADO_TEXT.clear()
+            g.IMPRESSAO_RESULTADO_TEXT.setText(resultado)
 
         if arquivos_encontrados:
             resultado_impressao = "\n\nTentando imprimir arquivos...\n"
@@ -119,18 +122,20 @@ def imprimir_pdf(diretorio, lista_arquivos):
 
             # Atualizar o campo de resultado com os detalhes da impressão
             if hasattr(g, 'IMPRESSAO_RESULTADO_TEXT') and g.IMPRESSAO_RESULTADO_TEXT:
-                g.IMPRESSAO_RESULTADO_TEXT.insert(tk.END, resultado_impressao)
+                current_text = g.IMPRESSAO_RESULTADO_TEXT.toPlainText()
+                g.IMPRESSAO_RESULTADO_TEXT.setText(current_text + resultado_impressao)
 
-            messagebox.showinfo(
+            QMessageBox.information(
+                g.IMPRESSAO_FORM,
                 "Impressão",
                 f"Processo de impressão iniciado para {len(arquivos_encontrados)} arquivo(s)!\n"
                 "Verifique os detalhes no campo 'Resultado da Impressão'."
             )
         else:
-            messagebox.showwarning("Aviso", "Nenhum arquivo foi encontrado para impressão.")
+            QMessageBox.warning(g.IMPRESSAO_FORM, "Aviso", "Nenhum arquivo foi encontrado para impressão.")
 
     except (OSError, PermissionError, FileNotFoundError, ValueError) as e:
-        messagebox.showerror("Erro", f"Erro ao processar impressão: {str(e)}")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", f"Erro ao processar impressão: {str(e)}")
 
 
 def selecionar_diretorio():
@@ -139,15 +144,15 @@ def selecionar_diretorio():
     """
     desabilitar_janelas()  # Desabilita ANTES de abrir o diálogo
 
-    diretorio = filedialog.askdirectory(
-        title="Selecionar Diretório dos PDFs", parent=g.IMPRESSAO_FORM)
+    diretorio = QFileDialog.getExistingDirectory(
+        g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs")
 
     habilitar_janelas()  # Sempre habilita DEPOIS que o diálogo for fechado
 
     if diretorio:  # Se selecionou um diretório, atualiza o campo
         if hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY:
-            g.IMPRESSAO_DIRETORIO_ENTRY.delete(0, tk.END)
-            g.IMPRESSAO_DIRETORIO_ENTRY.insert(0, diretorio)
+            g.IMPRESSAO_DIRETORIO_ENTRY.clear()
+            g.IMPRESSAO_DIRETORIO_ENTRY.setText(diretorio)
     else:
         habilitar_janelas()
 
@@ -159,10 +164,10 @@ def adicionar_arquivo():
     if not (hasattr(g, 'IMPRESSAO_ARQUIVO_ENTRY') and g.IMPRESSAO_ARQUIVO_ENTRY):
         return
 
-    arquivo = g.IMPRESSAO_ARQUIVO_ENTRY.get().strip()
+    arquivo = g.IMPRESSAO_ARQUIVO_ENTRY.text().strip()
     if arquivo and hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
-        g.IMPRESSAO_LISTA_ARQUIVOS.insert(tk.END, arquivo)
-        g.IMPRESSAO_ARQUIVO_ENTRY.delete(0, tk.END)
+        g.IMPRESSAO_LISTA_ARQUIVOS.addItem(arquivo)
+        g.IMPRESSAO_ARQUIVO_ENTRY.clear()
 
 
 def adicionar_lista_arquivos():
@@ -172,7 +177,7 @@ def adicionar_lista_arquivos():
     if not (hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT):
         return
 
-    texto = g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip()
+    texto = g.IMPRESSAO_LISTA_TEXT.toPlainText().strip()
     if texto:
         # Divide o texto por quebras de linha e remove linhas vazias
         if texto and isinstance(texto, str):
@@ -180,17 +185,20 @@ def adicionar_lista_arquivos():
         else:
             linhas = []  # ou trate o erro conforme necessário
 
-        arquivos = [linha.strip() for linha in linhas if linha.strip()]
+        # Filtrar linhas que não são placeholder
+        placeholder_text = "Exemplo:\n010464516\n010464519"
+        if texto != placeholder_text:
+            arquivos = [linha.strip() for linha in linhas if linha.strip() and not linha.startswith("Exemplo:")]
 
-        # Adiciona cada arquivo à lista
-        if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
-            for arquivo in arquivos:
-                g.IMPRESSAO_LISTA_ARQUIVOS.insert(tk.END, arquivo)
+            # Adiciona cada arquivo à lista
+            if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS and arquivos:
+                for arquivo in arquivos:
+                    g.IMPRESSAO_LISTA_ARQUIVOS.addItem(arquivo)
 
-        # Limpa o campo de texto
-        g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
+                # Limpa o campo de texto
+                g.IMPRESSAO_LISTA_TEXT.clear()
 
-        messagebox.showinfo("Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
+                QMessageBox.information(g.IMPRESSAO_FORM, "Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
 
 
 def remover_arquivo():
@@ -200,9 +208,9 @@ def remover_arquivo():
     if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS):
         return
 
-    selection = g.IMPRESSAO_LISTA_ARQUIVOS.curselection()
-    if selection:
-        g.IMPRESSAO_LISTA_ARQUIVOS.delete(selection[0])
+    current_row = g.IMPRESSAO_LISTA_ARQUIVOS.currentRow()
+    if current_row >= 0:
+        g.IMPRESSAO_LISTA_ARQUIVOS.takeItem(current_row)
 
 
 def limpar_lista():
@@ -210,7 +218,15 @@ def limpar_lista():
     Limpa toda a lista de arquivos.
     """
     if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
-        g.IMPRESSAO_LISTA_ARQUIVOS.delete(0, tk.END)
+        g.IMPRESSAO_LISTA_ARQUIVOS.clear()
+
+
+def limpar_texto_placeholder():
+    """Limpa o campo de texto e restaura o placeholder."""
+    if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
+        placeholder_text = "Exemplo:\n010464516\n010464519"
+        g.IMPRESSAO_LISTA_TEXT.clear()
+        g.IMPRESSAO_LISTA_TEXT.setPlainText(placeholder_text)
 
 
 def executar_impressao():
@@ -218,236 +234,149 @@ def executar_impressao():
     Executa a impressão dos arquivos selecionados.
     """
     if not (hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY):
-        messagebox.showerror("Erro", "Interface não inicializada corretamente.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Interface não inicializada corretamente.")
         return
 
-    diretorio = g.IMPRESSAO_DIRETORIO_ENTRY.get().strip()
+    diretorio = g.IMPRESSAO_DIRETORIO_ENTRY.text().strip()
     if not diretorio:
-        messagebox.showerror("Erro", "Por favor, selecione um diretório.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Por favor, selecione um diretório.")
         return
 
     if not os.path.exists(diretorio):
-        messagebox.showerror("Erro", "O diretório selecionado não existe.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "O diretório selecionado não existe.")
         return
 
     if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS):
-        messagebox.showerror("Erro", "Interface não inicializada corretamente.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Interface não inicializada corretamente.")
         return
 
-    lista_arquivos = list(g.IMPRESSAO_LISTA_ARQUIVOS.get(0, tk.END))
+    lista_arquivos = []
+    for i in range(g.IMPRESSAO_LISTA_ARQUIVOS.count()):
+        lista_arquivos.append(g.IMPRESSAO_LISTA_ARQUIVOS.item(i).text())
+        
     if not lista_arquivos:
-        messagebox.showerror("Erro", "Por favor, adicione pelo menos um arquivo à lista.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Por favor, adicione pelo menos um arquivo à lista.")
         return
 
     imprimir_pdf(diretorio, lista_arquivos)
-
-
-def configurar_janela(root):
-    """
-    Configura a janela principal do formulário de impressão.
-    """
-    if hasattr(g, 'IMPRESSAO_FORM') and g.IMPRESSAO_FORM:
-        g.IMPRESSAO_FORM.destroy()
-
-    g.IMPRESSAO_FORM = tk.Toplevel(root)
-    g.IMPRESSAO_FORM.title("Impressão em Lote de PDFs")
-    g.IMPRESSAO_FORM.geometry("500x420")
-    g.IMPRESSAO_FORM.resizable(False, False)
-
-    icone_path = obter_caminho_icone()
-    g.IMPRESSAO_FORM.iconbitmap(icone_path)
-
-    no_topo(g.IMPRESSAO_FORM)
-    posicionar_janela(g.IMPRESSAO_FORM, None)
-
-
-def criar_frame_diretorio(main_frame):
-    """
-    Cria o frame para seleção do diretório.
-    """
-    frame_diretorio = tk.LabelFrame(main_frame, text='Diretório dos PDFs', pady=2)
-    frame_diretorio.grid(row=0, column=0, padx=3, pady=2, sticky="ew")
-
-    frame_diretorio.columnconfigure(0, weight=1)
-
-    g.IMPRESSAO_DIRETORIO_ENTRY = tk.Entry(frame_diretorio)
-    g.IMPRESSAO_DIRETORIO_ENTRY.grid(row=0, column=0, padx=3, pady=3, sticky="ew")
-
-    tk.Button(frame_diretorio,
-              text="Procurar",
-              bg="lightgray",
-              command=selecionar_diretorio).grid(row=0, column=1, padx=3, pady=3)
-
-
-def criar_frame_arquivos(main_frame):
-    """
-    Cria o frame para gerenciamento da lista de arquivos.
-    """
-    frame_arquivos = tk.LabelFrame(main_frame, text='Lista de Arquivos para Impressão', pady=2)
-    frame_arquivos.grid(row=1, column=0, padx=3, pady=2, sticky="nsew")
-
-    frame_arquivos.columnconfigure(0, weight=1)
-    frame_arquivos.rowconfigure(0, weight=0)  # Label
-    frame_arquivos.rowconfigure(1, weight=0)  # Campo de texto
-    frame_arquivos.rowconfigure(2, weight=0)  # Entrada múltiplos
-    frame_arquivos.rowconfigure(3, weight=1)  # Lista final
-
-    # Frame para entrada de múltiplos arquivos
-    frame_entrada_multiplos = tk.Frame(frame_arquivos)
-    frame_entrada_multiplos.grid(row=2, column=0, sticky="ew", padx=3, pady=2)
-    frame_entrada_multiplos.columnconfigure(0, weight=1)  # Campo de texto
-    frame_entrada_multiplos.columnconfigure(1, weight=0)  # Botões
-    frame_entrada_multiplos.rowconfigure(0, weight=0)     # Label
-    frame_entrada_multiplos.rowconfigure(1, weight=1)     # Texto e botões
-
-    tk.Label(frame_entrada_multiplos, text="Lista de arquivos (um por linha):",
-             font=("Arial", 8, "bold")).grid(row=0, column=0, columnspan=2, sticky="w")
-
-    # Frame para o campo de texto com scrollbar
-    frame_text = tk.Frame(frame_entrada_multiplos)
-    frame_text.grid(row=1, column=0, sticky="nsew", pady=(2, 0), padx=(0, 3))
-    frame_text.columnconfigure(0, weight=1)
-    frame_text.rowconfigure(0, weight=1)
-
-    g.IMPRESSAO_LISTA_TEXT = tk.Text(frame_text, height=4, width=40, wrap=tk.WORD)
-    g.IMPRESSAO_LISTA_TEXT.grid(row=0, column=0, sticky="nsew")
-
-    scrollbar_text = tk.Scrollbar(frame_text, orient="vertical")
-    scrollbar_text.grid(row=0, column=1, sticky="ns")
-    g.IMPRESSAO_LISTA_TEXT.config(yscrollcommand=scrollbar_text.set)
-    scrollbar_text.config(command=g.IMPRESSAO_LISTA_TEXT.yview)
-
-    # Placeholder de exemplo
-    placeholder_text = """Exemplo:
-010464516
-010464519"""
-    g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text)
-    g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
-
-    def on_focus_in(event):
-        if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
-            if g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip() == placeholder_text:
-                g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
-                g.IMPRESSAO_LISTA_TEXT.config(fg="black")
-
-    def on_focus_out(event):
-        if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
-            if not g.IMPRESSAO_LISTA_TEXT.get(1.0, tk.END).strip():
-                g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text)
-                g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
-
-    def limpar_texto_placeholder():
-        """Limpa o campo de texto e restaura o placeholder."""
-        if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
-            g.IMPRESSAO_LISTA_TEXT.delete(1.0, tk.END)
-            g.IMPRESSAO_LISTA_TEXT.insert(1.0, placeholder_text)
-            g.IMPRESSAO_LISTA_TEXT.config(fg="gray")
-
-    g.IMPRESSAO_LISTA_TEXT.bind("<FocusIn>", on_focus_in)
-    g.IMPRESSAO_LISTA_TEXT.bind("<FocusOut>", on_focus_out)
-
-    # Frame para botões ao lado do campo de texto
-    frame_botoes_texto = tk.Frame(frame_entrada_multiplos)
-    frame_botoes_texto.grid(row=1, column=1, sticky="ns", pady=(2, 0))
-
-    # Botões para campo de múltiplos arquivos (verticais ao lado do texto)
-    tk.Button(frame_botoes_texto,
-              text="Adicionar",
-              command=adicionar_lista_arquivos,
-              bg="lightblue",
-              width=10).grid(row=0, column=0, sticky="ew", pady=(0, 1))
-
-    tk.Button(frame_botoes_texto,
-              text="Limpar",
-              width=10,
-              bg="lightyellow",
-              command=limpar_texto_placeholder).grid(row=1, column=0, sticky="ew", pady=(1, 0))
-
-    # Frame para a lista final e botões de controle
-    frame_lista = tk.Frame(frame_arquivos)
-    frame_lista.grid(row=3, column=0, sticky="nsew", padx=3, pady=2)
-    frame_lista.columnconfigure(0, weight=1)  # Lista
-    frame_lista.columnconfigure(1, weight=0)  # Botões
-    frame_lista.rowconfigure(0, weight=0)     # Label
-    frame_lista.rowconfigure(1, weight=1)     # Lista e botões
-
-    tk.Label(frame_lista, text="Arquivos na lista:", font=("Arial", 8, "bold")).grid(
-        row=0, column=0, columnspan=2, sticky="w", pady=(0, 2))
-
-    # Listbox com scrollbar
-    frame_listbox = tk.Frame(frame_lista)
-    frame_listbox.grid(row=1, column=0, sticky="nsew", pady=(0, 0), padx=(0, 3))
-    frame_listbox.columnconfigure(0, weight=1)
-    frame_listbox.rowconfigure(0, weight=1)
-
-    g.IMPRESSAO_LISTA_ARQUIVOS = tk.Listbox(frame_listbox, height=6, width=40)
-    g.IMPRESSAO_LISTA_ARQUIVOS.grid(row=0, column=0, sticky="nsew")
-
-    scrollbar = tk.Scrollbar(frame_listbox, orient="vertical")
-    scrollbar.grid(row=0, column=1, sticky="ns")
-    g.IMPRESSAO_LISTA_ARQUIVOS.config(yscrollcommand=scrollbar.set)
-    scrollbar.config(command=g.IMPRESSAO_LISTA_ARQUIVOS.yview)
-
-    # Frame para botões ao lado da lista
-    frame_botoes = tk.Frame(frame_lista)
-    frame_botoes.grid(row=1, column=1, sticky="ns", pady=(0, 0))
-
-    # Botões de controle da lista (verticais ao lado da lista)
-    tk.Button(frame_botoes,
-              text="Remover",
-              width=10,
-              bg="lightcoral",
-              command=remover_arquivo).grid(row=0, column=0, sticky="ew", pady=(0, 1))
-
-    tk.Button(frame_botoes,
-              text="Limpar",
-              width=10,
-              bg="lightyellow",
-              command=limpar_lista).grid(row=1, column=0, sticky="ew", pady=1)
-
-    tk.Button(frame_botoes,
-              text="Imprimir",
-              width=10,
-              command=executar_impressao,
-              bg="lightgreen").grid(row=2, column=0, sticky="ew", pady=(1, 0))
-
-
-def criar_frame_resultado(main_frame):
-    """
-    Cria o frame para exibir os resultados da impressão.
-    """
-    frame_resultado = tk.LabelFrame(main_frame, text='Resultado da Impressão', pady=2)
-    frame_resultado.grid(row=2, column=0, padx=3, pady=2, sticky="ew")
-
-    frame_resultado.columnconfigure(0, weight=1)
-
-    g.IMPRESSAO_RESULTADO_TEXT = tk.Text(frame_resultado, height=5, wrap=tk.WORD)
-    g.IMPRESSAO_RESULTADO_TEXT.grid(row=0, column=0, padx=3, pady=3, sticky="ew")
-
-    scrollbar_resultado = tk.Scrollbar(frame_resultado, orient="vertical")
-    scrollbar_resultado.grid(row=0, column=1, sticky="ns")
-    g.IMPRESSAO_RESULTADO_TEXT.config(yscrollcommand=scrollbar_resultado.set)
-    scrollbar_resultado.config(command=g.IMPRESSAO_RESULTADO_TEXT.yview)
 
 
 def main(root):
     """
     Inicializa e exibe o formulário de impressão em lote.
     """
-    configurar_janela(root)
+    if hasattr(g, 'IMPRESSAO_FORM') and g.IMPRESSAO_FORM:
+        g.IMPRESSAO_FORM.close()
 
-    # Configurar o main frame com padding reduzido
-    main_frame = tk.Frame(g.IMPRESSAO_FORM)
-    main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-    main_frame.columnconfigure(0, weight=1)
+    g.IMPRESSAO_FORM = QDialog(root)
+    g.IMPRESSAO_FORM.setWindowTitle("Impressão em Lote de PDFs")
+    g.IMPRESSAO_FORM.setFixedSize(500, 420)
 
-    main_frame.rowconfigure(0, weight=0)  # Diretório - tamanho fixo
-    main_frame.rowconfigure(1, weight=1)  # Lista de arquivos - expansível
-    main_frame.rowconfigure(2, weight=0)  # Resultado - tamanho fixo
+    icone_path = obter_caminho_icone()
+    g.IMPRESSAO_FORM.setWindowIcon(QIcon(icone_path))
 
-    criar_frame_diretorio(main_frame)
-    criar_frame_arquivos(main_frame)
-    criar_frame_resultado(main_frame)
+    no_topo(g.IMPRESSAO_FORM)
+    posicionar_janela(g.IMPRESSAO_FORM, None)
+
+    # Layout principal
+    main_layout = QVBoxLayout()
+    g.IMPRESSAO_FORM.setLayout(main_layout)
+
+    # Frame do diretório
+    frame_diretorio = QGroupBox('Diretório dos PDFs')
+    dir_layout = QHBoxLayout()
+    frame_diretorio.setLayout(dir_layout)
+
+    g.IMPRESSAO_DIRETORIO_ENTRY = QLineEdit()
+    dir_layout.addWidget(g.IMPRESSAO_DIRETORIO_ENTRY)
+
+    procurar_btn = QPushButton("Procurar")
+    procurar_btn.setStyleSheet("background-color: lightgray;")
+    procurar_btn.clicked.connect(selecionar_diretorio)
+    dir_layout.addWidget(procurar_btn)
+
+    main_layout.addWidget(frame_diretorio)
+
+    # Frame dos arquivos
+    frame_arquivos = QGroupBox('Lista de Arquivos para Impressão')
+    arquivos_layout = QVBoxLayout()
+    frame_arquivos.setLayout(arquivos_layout)
+
+    # Campo de texto para múltiplos arquivos
+    lista_label = QLabel("Lista de arquivos (um por linha):")
+    lista_label.setStyleSheet("font-weight: bold; font-size: 8pt;")
+    arquivos_layout.addWidget(lista_label)
+
+    # Layout horizontal para texto e botões
+    text_layout = QHBoxLayout()
+    
+    g.IMPRESSAO_LISTA_TEXT = QTextEdit()
+    g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(100)
+    placeholder_text = "Exemplo:\n010464516\n010464519"
+    g.IMPRESSAO_LISTA_TEXT.setPlainText(placeholder_text)
+    text_layout.addWidget(g.IMPRESSAO_LISTA_TEXT)
+
+    # Botões ao lado do texto
+    text_buttons_layout = QVBoxLayout()
+    
+    adicionar_btn = QPushButton("Adicionar")
+    adicionar_btn.setStyleSheet("background-color: lightblue;")
+    adicionar_btn.clicked.connect(adicionar_lista_arquivos)
+    text_buttons_layout.addWidget(adicionar_btn)
+
+    limpar_text_btn = QPushButton("Limpar")
+    limpar_text_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_text_btn.clicked.connect(limpar_texto_placeholder)
+    text_buttons_layout.addWidget(limpar_text_btn)
+
+    text_layout.addLayout(text_buttons_layout)
+    arquivos_layout.addLayout(text_layout)
+
+    # Lista de arquivos
+    lista_arquivos_label = QLabel("Arquivos na lista:")
+    lista_arquivos_label.setStyleSheet("font-weight: bold; font-size: 8pt;")
+    arquivos_layout.addWidget(lista_arquivos_label)
+
+    # Layout horizontal para lista e botões
+    lista_layout = QHBoxLayout()
+
+    g.IMPRESSAO_LISTA_ARQUIVOS = QListWidget()
+    g.IMPRESSAO_LISTA_ARQUIVOS.setMaximumHeight(120)
+    lista_layout.addWidget(g.IMPRESSAO_LISTA_ARQUIVOS)
+
+    # Botões ao lado da lista
+    lista_buttons_layout = QVBoxLayout()
+
+    remover_btn = QPushButton("Remover")
+    remover_btn.setStyleSheet("background-color: lightcoral;")
+    remover_btn.clicked.connect(remover_arquivo)
+    lista_buttons_layout.addWidget(remover_btn)
+
+    limpar_lista_btn = QPushButton("Limpar")
+    limpar_lista_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_lista_btn.clicked.connect(limpar_lista)
+    lista_buttons_layout.addWidget(limpar_lista_btn)
+
+    imprimir_btn = QPushButton("Imprimir")
+    imprimir_btn.setStyleSheet("background-color: lightgreen;")
+    imprimir_btn.clicked.connect(executar_impressao)
+    lista_buttons_layout.addWidget(imprimir_btn)
+
+    lista_layout.addLayout(lista_buttons_layout)
+    arquivos_layout.addLayout(lista_layout)
+
+    main_layout.addWidget(frame_arquivos)
+
+    # Frame do resultado
+    frame_resultado = QGroupBox('Resultado da Impressão')
+    resultado_layout = QVBoxLayout()
+    frame_resultado.setLayout(resultado_layout)
+
+    g.IMPRESSAO_RESULTADO_TEXT = QTextEdit()
+    g.IMPRESSAO_RESULTADO_TEXT.setMaximumHeight(100)
+    resultado_layout.addWidget(g.IMPRESSAO_RESULTADO_TEXT)
+
+    main_layout.addWidget(frame_resultado)
 
 
 if __name__ == "__main__":
