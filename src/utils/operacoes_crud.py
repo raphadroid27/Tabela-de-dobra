@@ -183,7 +183,7 @@ def adicionar_canal():
     largura_canal = g.CANAL_LARGU_ENTRY.text()
     altura_canal = g.CANAL_ALTUR_ENTRY.text()
     comprimento_total_canal = g.CANAL_COMPR_ENTRY.text()
-    observacao_canal = g.CANAL_OBSER_ENTRY.get()
+    observacao_canal = g.CANAL_OBSER_ENTRY.text()
 
     if not valor_canal:
         messagebox.showerror("Erro", "O campo Canal é obrigatório.")
@@ -215,7 +215,7 @@ def _processar_campo_edicao(obj, campo, entry, tipo):
     if entry is None:
         return []
 
-    valor_novo = entry.get().strip()
+    valor_novo = entry.text().strip() if hasattr(entry, 'text') else entry.get().strip()
     if valor_novo == "":
         valor_novo = None
     else:
@@ -460,7 +460,7 @@ def buscar(tipo):
         canal_valor = config['entries']['canal_combo'].currentText()
         itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
     else:
-        item = config['busca'].text().replace(',', '.') if config.get('busca') else ""
+        item = config['busca'].text().replace(',', '.') if config.get('busca') and hasattr(config['busca'], 'text') else ""
         if not item:
             listar(tipo)
             return

@@ -55,7 +55,7 @@ def main(root):
     main_layout.addWidget(razao_label, 0, 0)
     
     g.RAZAO_RIE_LBL = QLabel("")
-    g.RAZAO_RIE_LBL.setStyleSheet("border: 1px solid gray; background-color: white;")
+    g.RAZAO_RIE_LBL.setStyleSheet("border: 1px solid gray; background-color: white")
     g.RAZAO_RIE_LBL.setMinimumWidth(100)
     main_layout.addWidget(g.RAZAO_RIE_LBL, 0, 1)
 
