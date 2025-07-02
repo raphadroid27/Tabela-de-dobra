@@ -126,10 +126,10 @@ def login():
                                 parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
             g.USUARIO_ID = usuario_obj.id
             if g.AUTEN_FORM is not None:
-                g.AUTEN_FORM.destroy()
+                g.AUTEN_FORM.close()
             if g.PRINC_FORM is not None:
                 titulo = f"Cálculo de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
-                g.PRINC_FORM.title(titulo)
+                g.PRINC_FORM.setWindowTitle(titulo)
         else:
             show_error("Erro", "Usuário ou senha incorretos.",
                                  parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
@@ -187,7 +187,7 @@ def logout():
 
     g.USUARIO_ID = None
     if g.PRINC_FORM is not None:
-        g.PRINC_FORM.title("Cálculo de Dobra")
+        g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
     show_info("Logout", "Logout efetuado com sucesso.")
 
 
@@ -199,21 +199,12 @@ def resetar_senha():
         show_error("Erro", "Lista de usuários não inicializada.")
         return
 
-    selected_item = g.LIST_USUARIO.selection() if g.LIST_USUARIO else []
-    if not selected_item:
+    # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
+    user_id = item_selecionado_usuario()
+    if user_id is None:
         show_warning("Aviso",
                                "Selecione um usuário para resetar a senha.",
                                parent=g.USUAR_FORM if g.USUAR_FORM else None)
-        return
-
-    if g.LIST_USUARIO is None:
-        show_error("Erro", "Lista de usuários não disponível.")
-        return
-
-    user_id = g.LIST_USUARIO.item(selected_item, "values")[0] if g.LIST_USUARIO else None
-    if user_id is None:
-        show_error("Erro", "Erro ao obter ID do usuário.",
-                             parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
     novo_password = "nova_senha"  # Defina a nova senha padrão aqui
@@ -236,16 +227,14 @@ def excluir_usuario():
     if not tem_permissao('usuario', 'admin') or g.LIST_USUARIO is None:
         return
 
-    selected_items = g.LIST_USUARIO.selection() if g.LIST_USUARIO else []
-    if not selected_items:
+    # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
+    obj_id = item_selecionado_usuario()
+    if obj_id is None:
         show_warning("Aviso", "Selecione um usuário para excluir.",
                                parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
     # Obter dados do usuário selecionado
-    selected_item = selected_items[0]
-    item = g.LIST_USUARIO.item(selected_item)
-    obj_id = item['values'][0]
     obj = session.query(Usuario).filter_by(id=obj_id).first()
 
     erro_msg = None
@@ -267,11 +256,10 @@ def excluir_usuario():
     if aviso == QMessageBox.Yes:
         session.delete(obj)
         tratativa_erro()
-        if g.LIST_USUARIO is not None:
-            g.LIST_USUARIO.delete(selected_item)
+        # Atualizar a lista após exclusão
+        listar('usuario')
         show_info("Sucesso", "Usuário excluído com sucesso!",
                             parent=g.USUAR_FORM if g.USUAR_FORM else None)
-        listar('usuario')
 
 
 def tornar_editor():
@@ -282,21 +270,12 @@ def tornar_editor():
         show_error("Erro", "Lista de usuários não disponível.")
         return
 
-    selected_item = g.LIST_USUARIO.selection() if g.LIST_USUARIO else []
-    if not selected_item:
+    # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
+    user_id = item_selecionado_usuario()
+    if user_id is None:
         show_warning("Aviso",
                                "Selecione um usuário para promover a editor.",
                                parent=g.USUAR_FORM if g.USUAR_FORM else None)
-        return
-
-    if g.LIST_USUARIO is None:
-        show_error("Erro", "Lista de usuários não disponível.")
-        return
-
-    user_id = g.LIST_USUARIO.item(selected_item, "values")[0] if g.LIST_USUARIO else None
-    if user_id is None:
-        show_error("Erro", "Erro ao obter ID do usuário.",
-                             parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
@@ -326,3 +305,23 @@ def tornar_editor():
         show_error("Erro",
                              "Usuário não encontrado.",
                              parent=g.USUAR_FORM if g.USUAR_FORM else None)
+
+
+def item_selecionado_usuario():
+    """
+    Retorna o ID do usuário selecionado na lista de usuários.
+    """
+    if g.LIST_USUARIO is None:
+        return None
+
+    selected_items = g.LIST_USUARIO.selectedItems()
+    if not selected_items:
+        return None
+
+    selected_item = selected_items[0]
+    try:
+        # Para lista de usuários, o ID está na primeira coluna (ID, Nome, Role)
+        user_id = selected_item.text(0)
+        return int(user_id)
+    except (ValueError, IndexError):
+        return None
