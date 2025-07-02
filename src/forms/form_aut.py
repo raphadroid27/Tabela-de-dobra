@@ -25,31 +25,26 @@ def main(root):
     A janela é configurada com campos para usuário e senha, e um botão para login ou
     criação de novo usuário, dependendo do estado atual do sistema.
     """
-
     if g.AUTEN_FORM:
         g.AUTEN_FORM.close()
+        g.AUTEN_FORM = None
 
     g.AUTEN_FORM = QDialog(root)
     g.AUTEN_FORM.setFixedSize(200, 120)
-    g.AUTEN_FORM.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
-    g.AUTEN_FORM.setFocus()
-    desabilitar_janelas()
+    g.AUTEN_FORM.setModal(True)  # Definir como modal
+    g.AUTEN_FORM.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
     
-    def close_event():
+    def close_event(event):
         habilitar_janelas()
-        if g.AUTEN_FORM:
-            g.AUTEN_FORM.close()
+        event.accept()
     
-    g.AUTEN_FORM.closeEvent = lambda event: [close_event(), event.accept()]
-
-    posicionar_janela(g.AUTEN_FORM, 'centro')
+    g.AUTEN_FORM.closeEvent = close_event
 
     main_layout = QGridLayout()
     g.AUTEN_FORM.setLayout(main_layout)
 
     main_layout.addWidget(QLabel("Usuário:"), 0, 0)
     g.USUARIO_ENTRY = QLineEdit()
-    g.USUARIO_ENTRY.setFocus()
     main_layout.addWidget(g.USUARIO_ENTRY, 0, 1)
     
     main_layout.addWidget(QLabel("Senha:"), 1, 0)
@@ -65,7 +60,25 @@ def main(root):
     if g.LOGIN:
         g.AUTEN_FORM.setWindowTitle("Login")
         login_btn = QPushButton("Login")
-        login_btn.setStyleSheet("background-color: lightblue;")
+        # Estilo moderno para o botão de login
+        login_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                font-size: 12px;
+                font-weight: bold;
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #3d8b40;
+            }
+        """)
         login_btn.clicked.connect(login)
         main_layout.addWidget(login_btn, 3, 0, 1, 2)
     else:
@@ -86,9 +99,37 @@ def main(root):
 
         g.AUTEN_FORM.setWindowTitle("Novo Usuário")
         save_btn = QPushButton("Salvar")
-        save_btn.setStyleSheet("background-color: lightgreen;")
+        # Estilo moderno para o botão de salvar
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                font-size: 12px;
+                font-weight: bold;
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            QPushButton:hover {
+                background-color: #1976D2;
+            }
+            QPushButton:pressed {
+                background-color: #1565C0;
+            }
+        """)
         save_btn.clicked.connect(novo_usuario)
         main_layout.addWidget(save_btn, 3, 0, 1, 2)
+
+    # Posicionar e exibir a janela
+    posicionar_janela(g.AUTEN_FORM, 'centro')
+    g.AUTEN_FORM.show()
+    g.AUTEN_FORM.raise_()
+    g.AUTEN_FORM.activateWindow()
+    
+    # Dar foco ao campo de usuário
+    if g.USUARIO_ENTRY:
+        g.USUARIO_ENTRY.setFocus()
 
 
 if __name__ == "__main__":
