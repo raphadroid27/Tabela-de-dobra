@@ -6,10 +6,9 @@ from PySide6.QtCore import Qt
 from src.config import globals as g
 from src.utils.interface import (
     atualizar_widgets,
-    atualizar_toneladas_m,
+    calcular_valores,
     copiar
 )
-from src.utils.interface import todas_funcoes
 
 
 def criar_label(layout, texto, linha_coluna, **kwargs):
@@ -80,6 +79,7 @@ def cabecalho(parent):
     esp_comb = criar_widget(layout, 'combobox', 'ESP_COMB', (1, 1))
     canal_comb = criar_widget(layout, 'combobox', 'CANAL_COMB', (1, 2))
     compr_entry = criar_widget(layout, 'entry', 'COMPR_ENTRY', (1, 3), justify="center")
+    compr_entry.setToolTip("Digite o comprimento da peça em milímetros.")
 
 
     # Labels da Linha 2
@@ -91,6 +91,8 @@ def cabecalho(parent):
 
     # Widgets da Linha 2
     ri_entry = criar_widget(layout, 'entry', 'RI_ENTRY', (3, 0), justify="center")
+    ri_entry.textChanged.connect(calcular_valores)
+    ri_entry.setToolTip("Digite o raio interno da dobra em milímetros.")
     k_lbl = criar_widget(layout, 'label', 'K_LBL', (3, 1))
     k_lbl.mousePressEvent = lambda event: copiar('fator_k')
     ded_lbl = criar_widget(layout, 'label', 'DED_LBL', (3, 2))
@@ -103,12 +105,12 @@ def cabecalho(parent):
     criar_label(layout, "Ded. Espec.", (4, 0))
     criar_label(layout, "Aba Mín.", (4, 1))
     criar_label(layout, "Ext. Z90°", (4, 2))
-    criar_label(layout, "Offset", (4, 3))
+    criar_label(layout, "Força", (4, 3))
 
 
     # Widgets da Linha 3
-    ded_espec_entry = criar_widget(layout, 'entry', 'DED_ESPEC_ENTRY', (5, 0), styleSheet="color: blue", justify="center")
-    ded_espec_entry.textChanged.connect(todas_funcoes)
+    ded_espec_entry = criar_widget(layout, 'entry', 'DED_ESPEC_ENTRY', (5, 0), justify="center")
+    ded_espec_entry.textChanged.connect(calcular_valores)
     ded_espec_entry.setToolTip("Digite a dedução específica da peça em milímetros.")
     criar_widget(layout, 'label', 'ABA_EXT_LBL', (5, 1))
     criar_widget(layout, 'label', 'Z_EXT_LBL', (5, 2))
@@ -129,6 +131,6 @@ def cabecalho(parent):
     if canal_comb:
         canal_comb.currentTextChanged.connect(lambda: atualizar_widgets('dedução'))
     if compr_entry:
-        compr_entry.textChanged.connect(atualizar_toneladas_m)
+        compr_entry.textChanged.connect(calcular_valores)
 
     return frame_cabecalho

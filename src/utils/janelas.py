@@ -12,10 +12,23 @@ def no_topo(form):
     """
     def set_topmost(window, on_top):
         if window:
+            # Preservar as flags originais e apenas alterar o WindowStaysOnTopHint
+            current_flags = window.windowFlags()
             if on_top:
-                window.setWindowFlags(window.windowFlags() | Qt.WindowStaysOnTopHint)
+                new_flags = current_flags | Qt.WindowStaysOnTopHint
             else:
-                window.setWindowFlags(window.windowFlags() & ~Qt.WindowStaysOnTopHint)
+                new_flags = current_flags & ~Qt.WindowStaysOnTopHint
+            
+            # Garantir que os botões de controle da janela permaneçam habilitados
+            essential_flags = (Qt.Window | 
+                             Qt.WindowTitleHint | 
+                             Qt.WindowSystemMenuHint | 
+                             Qt.WindowMinimizeButtonHint | 
+                             Qt.WindowMaximizeButtonHint | 
+                             Qt.WindowCloseButtonHint)
+            
+            new_flags = new_flags | essential_flags
+            window.setWindowFlags(new_flags)
             window.show()
 
     if g.NO_TOPO_VAR is not None:

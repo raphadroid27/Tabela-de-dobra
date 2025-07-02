@@ -93,6 +93,24 @@ def form_false(form, editar_attr, root):
     form.main(root)
 
 
+def fechar_aplicativo():
+    """
+    Fecha o aplicativo de forma segura.
+    """
+    try:
+        if g.PRINC_FORM is not None:
+            g.PRINC_FORM.close()
+        
+        app = QApplication.instance()
+        if app:
+            app.quit()
+            
+    except Exception as e:
+        print(f"Erro ao fechar aplicativo: {e}")
+        # Forçar o fechamento se necessário
+        sys.exit(0)
+
+
 def configurar_janela_principal(config):
     """
     Configura a janela principal do aplicativo com lógica melhorada.
@@ -119,8 +137,15 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.setMinimumSize(340, 400)  # Tamanho mínimo = tamanho sem expansão
     g.PRINC_FORM.setMaximumSize(680, 500)  # Tamanho máximo = tamanho com ambas expansões
     
-    # Garantir que a janela não fique sempre no topo desnecessariamente
-    g.PRINC_FORM.setWindowFlags(g.PRINC_FORM.windowFlags() & ~Qt.WindowStaysOnTopHint)
+    # Configurar flags da janela corretamente
+    # Garantir que todos os botões da barra de título estejam habilitados
+    window_flags = (Qt.Window | 
+                   Qt.WindowTitleHint | 
+                   Qt.WindowSystemMenuHint | 
+                   Qt.WindowMinimizeButtonHint | 
+                   Qt.WindowMaximizeButtonHint | 
+                   Qt.WindowCloseButtonHint)
+    g.PRINC_FORM.setWindowFlags(window_flags)
     
     if 'geometry' in config and isinstance(config['geometry'], str):
         # Parse geometry string and apply
@@ -145,11 +170,20 @@ def configurar_janela_principal(config):
 
     # Criar uma função personalizada para o evento de fechamento
     def custom_close_event(event):
-        on_closing()
-        event.accept()
+        try:
+            on_closing()
+            # Garantir que a aplicação seja encerrada quando a janela principal for fechada
+            QApplication.instance().quit()
+        except Exception as e:
+            print(f"Erro ao fechar aplicativo: {e}")
+        finally:
+            event.accept()
 
     # Sobrescrever o closeEvent
     g.PRINC_FORM.closeEvent = custom_close_event
+    
+    # Configurar para encerrar a aplicação quando a janela principal for fechada
+    g.PRINC_FORM.setAttribute(Qt.WA_QuitOnClose, True)
 
 
 def cleanup_orphaned_windows():
@@ -217,7 +251,7 @@ def configurar_menu():
     file_menu.addSeparator()
     
     sair_action = QAction("Sair", g.PRINC_FORM)
-    sair_action.triggered.connect(lambda: g.PRINC_FORM.close() if g.PRINC_FORM else None)
+    sair_action.triggered.connect(fechar_aplicativo)
     file_menu.addAction(sair_action)
 
     # Menu Editar
