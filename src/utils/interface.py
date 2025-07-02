@@ -212,7 +212,7 @@ def _atualizar_deducao():
             if deducao_obj:
                 if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
                     g.DED_LBL.setText(str(deducao_obj.valor))
-                    g.DED_LBL.setStyleSheet("color: black")
+                    g.DED_LBL.setStyleSheet("")
                 observacao = deducao_obj.observacao or 'Observações não encontradas'
                 if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
                     g.OBS_LBL.setText(observacao)
@@ -237,21 +237,47 @@ def _atualizar_deducao():
 def atualizar_widgets(tipo):
     """
     Atualiza os valores de comboboxes com base no tipo especificado.
+    Preserva o estado dos widgets que podem ser afetados pela atualização.
 
     Args:
         tipo (str): O tipo de combobox a ser atualizado.
     """
-    # Mapeamento de tipos para funções
-    acoes = {
-        'material': _atualizar_material,
-        'espessura': _atualizar_espessura,
-        'canal': _atualizar_canal,
-        'dedução': _atualizar_deducao
-    }
+    try:
+        # Mapeamento de tipos para funções
+        acoes = {
+            'material': _atualizar_material,
+            'espessura': _atualizar_espessura,
+            'canal': _atualizar_canal,
+            'dedução': _atualizar_deducao
+        }
 
-    # Executa a ação correspondente ao tipo
-    if tipo in acoes:
-        acoes[tipo]()
+        # Executa a ação correspondente ao tipo
+        if tipo in acoes:
+            # Capturar valores atuais antes da atualização (apenas comboboxes afetados)
+            valores_preservar = {}
+            
+            # Preservar seleções que podem ser perdidas pela atualização
+            if tipo == 'material' and hasattr(g, 'ESP_COMB') and g.ESP_COMB:
+                valores_preservar['ESP_COMB'] = g.ESP_COMB.currentText()
+                valores_preservar['CANAL_COMB'] = getattr(g, 'CANAL_COMB', None) and g.CANAL_COMB.currentText()
+            elif tipo == 'espessura' and hasattr(g, 'CANAL_COMB') and g.CANAL_COMB:
+                valores_preservar['CANAL_COMB'] = g.CANAL_COMB.currentText()
+            
+            # Executar a atualização
+            acoes[tipo]()
+            
+            # Tentar restaurar valores preservados quando possível
+            for widget_name, valor in valores_preservar.items():
+                if valor:  # Só restaurar se havia um valor
+                    widget = getattr(g, widget_name, None)
+                    if widget and hasattr(widget, 'setCurrentText'):
+                        try:
+                            widget.setCurrentText(valor)
+                        except Exception as e:
+                            print(f"Não foi possível restaurar {widget_name}: {e}")
+    
+    except Exception as e:
+        print(f"Erro em atualizar_widgets({tipo}): {e}")
 
 
 def canal_tooltip():
@@ -263,8 +289,8 @@ def canal_tooltip():
         return
 
     if g.CANAL_COMB.currentText() == "":
-        if hasattr(g.CANAL_COMB, 'set'):
-            g.CANAL_COMB.set("")
+        if hasattr(g.CANAL_COMB, 'setCurrentText'):
+            g.CANAL_COMB.setCurrentText("")
         tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
     else:
         canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.currentText()).first()
@@ -336,7 +362,7 @@ def atualizar_toneladas_m():
                                if comprimento else deducao_obj.forca)
                 if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
                     g.FORCA_LBL.setText(f'{toneladas_m:.0f}')
-                    g.FORCA_LBL.setStyleSheet("color: black")
+                    g.FORCA_LBL.setStyleSheet("")
             else:
                 if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
                     g.FORCA_LBL.setText('N/A')
@@ -351,7 +377,7 @@ def atualizar_toneladas_m():
             if canal_obj and comprimento_float and comprimento_total:
                 if comprimento_float < comprimento_total:
                     if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'setStyleSheet'):
-                        g.COMPR_ENTRY.setStyleSheet("color: black")
+                        g.COMPR_ENTRY.setStyleSheet("")
                 elif comprimento_float >= comprimento_total:
                     if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'setStyleSheet'):
                         g.COMPR_ENTRY.setStyleSheet("color: red")
@@ -360,83 +386,6 @@ def atualizar_toneladas_m():
         print(f"Erro ao converter valores numéricos: {e}")
     except Exception as e:
         print(f"Erro ao atualizar toneladas/m: {e}")
-
-
-def restaurar_valores_dobra(w):
-    """
-    Restaura os valores das dobras e os campos de cabeçalho
-    a partir de g.DOBRAS_VALORES e g.CABECALHO_VALORES.
-    """
-    # Verificar se g.DOBRAS_VALORES foi inicializada
-    if not hasattr(g, 'DOBRAS_VALORES') or g.DOBRAS_VALORES is None:
-        return
-
-    # Restaurar os valores das dobras
-    for i in range(1, g.N):
-        for col in range(1, w + 1):
-            if i - 1 < len(g.DOBRAS_VALORES) and col - 1 < len(g.DOBRAS_VALORES[i - 1]):
-                valor = g.DOBRAS_VALORES[i - 1][col - 1]
-                print(f"Restaurando valor para aba{i}_entry_{col}: {valor}")
-                entry = getattr(g, f'aba{i}_entry_{col}', None)
-                if entry:
-                    entry.clear()
-                    if hasattr(entry, 'setText'):
-                        entry.setText(valor)
-                    elif hasattr(entry, 'setCurrentText'):
-                        entry.setCurrentText(valor)
-
-
-def salvar_valores_cabecalho():
-    """
-    Salva os valores atuais dos widgets no cabeçalho em g.CABECALHO_VALORES.
-    """
-    if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
-        g.CABECALHO_VALORES = {}
-
-    g.CABECALHO_VALORES = {
-        'MAT_COMB': g.MAT_COMB.currentText() if g.MAT_COMB else '',
-        'ESP_COMB': g.ESP_COMB.currentText() if g.ESP_COMB else '',
-        'CANAL_COMB': g.CANAL_COMB.currentText() if g.CANAL_COMB else '',
-        'COMPR_ENTRY': g.COMPR_ENTRY.text() if g.COMPR_ENTRY else '',
-        'RI_ENTRY': g.RI_ENTRY.text() if g.RI_ENTRY else '',
-        'DED_ESPEC_ENTRY': g.DED_ESPEC_ENTRY.text() if g.DED_ESPEC_ENTRY else '',
-    }
-    print("Valores salvos:", g.CABECALHO_VALORES)
-
-
-def restaurar_valores_cabecalho():
-    """
-    Restaura os valores dos widgets no cabeçalho
-    com base nos valores armazenados em g.CABECALHO_VALORES.
-    Não restaura valores vazios para comboboxes que já possuem dados.
-    """
-    # Verifica se g.CABECALHO_VALORES já foi inicializado como um dicionário
-    if not hasattr(g, 'CABECALHO_VALORES') or not isinstance(g.CABECALHO_VALORES, dict):
-        g.CABECALHO_VALORES = {}
-
-    # Restaura os valores nos widgets
-    for widget_name, valor in g.CABECALHO_VALORES.items():
-        widget = getattr(g, widget_name, None)
-        if widget and hasattr(widget, 'clear'):
-            try:
-                # Para comboboxes, não restaurar valores vazios se já há itens carregados
-                if (hasattr(widget, 'setCurrentText') and 
-                    hasattr(widget, 'count') and 
-                    widget.count() > 0 and 
-                    not valor.strip()):
-                    continue
-                    
-                if hasattr(widget, 'setText'):
-                    widget.setText(valor)
-                elif hasattr(widget, 'setCurrentText'):
-                    if valor.strip():  # Só restaurar se o valor não for vazio
-                        widget.setCurrentText(valor)
-                    # Se valor vazio e combobox tem itens, manter seleção atual
-                    
-            except Exception as e:
-                print(f"Erro ao restaurar valor para {widget_name}: {e}")
-
-    print("Valores restaurados:", g.CABECALHO_VALORES)
 
 
 def copiar(tipo, numero=None, w=None):
@@ -650,6 +599,47 @@ def todas_funcoes():
         print(f"Erro geral em todas_funcoes: {e}")
         import traceback
         traceback.print_exc()
+
+
+def calcular_valores():
+    """
+    Executa apenas os cálculos necessários sem atualizar os comboboxes.
+    Usada quando apenas valores de entrada mudam, não seleções de combobox.
+    """
+    try:
+        try:
+            calcular_k_offset()
+        except Exception as e:
+            print(f"Erro ao calcular k_offset: {e}")
+            
+        try:
+            aba_minima_externa()
+        except Exception as e:
+            print(f"Erro ao calcular aba mínima externa: {e}")
+            
+        try:
+            z_minimo_externo()
+        except Exception as e:
+            print(f"Erro ao calcular z mínimo externo: {e}")
+            
+        try:
+            for w in g.VALORES_W:
+                calcular_dobra(w)
+        except Exception as e:
+            print(f"Erro ao calcular dobras: {e}")
+
+        try:
+            razao_ri_espessura()
+        except Exception as e:
+            print(f"Erro ao calcular razão ri/espessura: {e}")
+
+        try:
+            atualizar_toneladas_m()
+        except Exception as e:
+            print(f"Erro ao atualizar toneladas/m: {e}")
+            
+    except Exception as e:
+        print(f"Erro geral em calcular_valores: {e}")
 
 
 def configurar_main_frame(parent, rows=4):
