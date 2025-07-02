@@ -217,17 +217,47 @@ def criar_botoes(root):
     layout.addWidget(exp_h_check, 0, 1)
 
     # Botão para limpar valores de dobras
-    limpar_dobras_btn = QPushButton("Limpar Dobras")
+    limpar_dobras_btn = QPushButton("🧹 Limpar Dobras")
     limpar_dobras_btn.clicked.connect(limpar_dobras)
     limpar_dobras_btn.setFixedHeight(20)  # Altura fixa
-    limpar_dobras_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_dobras_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #ffd93d;
+            color: #333;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #ffcc02;
+        }
+        QPushButton:pressed {
+            background-color: #e6b800;
+        }
+    """)
     layout.addWidget(limpar_dobras_btn, 1, 0)
 
     # Botão para limpar todos os valores
-    limpar_tudo_btn = QPushButton("Limpar Tudo")
+    limpar_tudo_btn = QPushButton("🗑️ Limpar Tudo")
     limpar_tudo_btn.clicked.connect(limpar_tudo)
     limpar_tudo_btn.setFixedHeight(20)  # Altura fixa
-    limpar_tudo_btn.setStyleSheet("background-color: lightcoral;")
+    limpar_tudo_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #ff5252;
+        }
+        QPushButton:pressed {
+            background-color: #e53935;
+        }
+    """)
     layout.addWidget(limpar_tudo_btn, 1, 1)
 
     # Configurar tooltips
