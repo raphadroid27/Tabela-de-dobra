@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, Q
                                QGroupBox, QScrollArea, QFileDialog, QMessageBox)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from src.utils.janelas import (no_topo,
+from src.utils.janelas import (aplicar_no_topo,
                                posicionar_janela,
                                habilitar_janelas,
                                desabilitar_janelas)
@@ -275,7 +275,7 @@ def main(root):
     icone_path = obter_caminho_icone()
     g.IMPRESSAO_FORM.setWindowIcon(QIcon(icone_path))
 
-    no_topo(g.IMPRESSAO_FORM)
+    aplicar_no_topo(g.IMPRESSAO_FORM)
     posicionar_janela(g.IMPRESSAO_FORM, None)
 
     # Layout principal

@@ -273,10 +273,21 @@ def configurar_menu():
 
     # Menu Opções
     opcoes_menu = menu_bar.addMenu("Opções")
-    g.NO_TOPO_VAR = False  # Convertido de IntVar para bool
+    
+    # Inicializar NO_TOPO_VAR se não existir
+    if not hasattr(g, 'NO_TOPO_VAR') or g.NO_TOPO_VAR is None:
+        g.NO_TOPO_VAR = False
+    
     no_topo_action = QAction("No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
-    no_topo_action.triggered.connect(lambda: no_topo(g.PRINC_FORM))
+    no_topo_action.setChecked(g.NO_TOPO_VAR)  # Sincronizar com o estado atual
+    
+    def toggle_no_topo():
+        """Função para alternar o estado 'no topo' e sincronizar o checkbox"""
+        no_topo(g.PRINC_FORM)
+        no_topo_action.setChecked(g.NO_TOPO_VAR)  # Atualizar checkbox após mudança
+    
+    no_topo_action.triggered.connect(toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
 
     # Menu ferramentas

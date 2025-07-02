@@ -15,7 +15,7 @@ except ImportError:
     from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QIcon, QFont
 
-from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.calculos import razao_ri_espessura
 from src.config import globals as g
@@ -38,7 +38,7 @@ def main(root):
     icone_path = obter_caminho_icone()
     g.RIE_FORM.setWindowIcon(QIcon(icone_path))
 
-    no_topo(g.RIE_FORM)
+    aplicar_no_topo(g.RIE_FORM)
     posicionar_janela(g.RIE_FORM, None)
 
     # Layout principal

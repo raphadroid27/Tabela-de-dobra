@@ -20,7 +20,7 @@ except ImportError:
 import webbrowser
 from src import __version__
 from src.config import globals as g
-from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 
 
@@ -38,7 +38,7 @@ def main(root):
     icone_path = obter_caminho_icone()
     g.SOBRE_FORM.setWindowIcon(QIcon(icone_path))
 
-    no_topo(g.SOBRE_FORM)
+    aplicar_no_topo(g.SOBRE_FORM)
     posicionar_janela(g.SOBRE_FORM, 'centro')
 
     # Layout principal
