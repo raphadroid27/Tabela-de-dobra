@@ -7,17 +7,15 @@ from src.components.avisos import avisos
 from src.components.dobra_90 import dobras
 from src.components import botoes
 from src.config import globals as g
-from src.utils.interface import (salvar_valores_cabecalho,
-                                 restaurar_valores_cabecalho,
-                                 restaurar_valores_dobra,
-                                 todas_funcoes)
+from src.utils.interface import todas_funcoes
 from src.utils.classes.tooltip import ToolTip
+from src.utils.widget_state_manager import widget_state_manager
 
 
 def carregar_interface(var, layout):
     """
     Atualiza o cabeçalho e recria os widgets no layout com base no valor de var.
-    Nova versão com melhor gerenciamento de widgets órfãos.
+    Nova versão com gerenciamento robusto de estado dos widgets.
 
     Args:
         var (int): Define o layout do cabeçalho.
@@ -29,9 +27,12 @@ def carregar_interface(var, layout):
         # Limpar todos os tooltips ativos e widgets órfãos antes de recriar a interface
         ToolTip.cleanup_all_tooltips()
         
-        # Salvar os valores dos widgets do cabeçalho
-        # Isso deve ser feito antes de recriar os widgets
-        salvar_valores_cabecalho()
+        # Capturar o estado atual dos widgets antes da recriação (apenas se há widgets para capturar)
+        if hasattr(g, 'MAT_COMB') and g.MAT_COMB is not None:
+            print("Capturando estado atual dos widgets...")
+            widget_state_manager.capture_current_state()
+        else:
+            print("Primeira execução - não há widgets para capturar")
 
         print(f'Carregando interface: EXP_V={g.EXP_V}, EXP_H={g.EXP_H}')
 
@@ -76,26 +77,32 @@ def carregar_interface(var, layout):
         botoes_widget = botoes.criar_botoes(None)
         layout.addWidget(botoes_widget, 2, 0, 1, 2)  # span 2 columns
 
-        print("Restaurando valores de dobra...")
-        for w in g.VALORES_W:
-            try:
-                restaurar_valores_dobra(w)
-            except Exception as e:
-                print(f"Erro ao restaurar valores dobra {w}: {e}")
+        # Forçar processamento de eventos para garantir que os widgets estejam prontos
+        if app:
+            app.processEvents()
 
+        # Temporariamente desabilitar o sistema durante todas_funcoes para evitar capturas desnecessárias
+        widget_state_manager.disable()
+        
         print("Executando todas as funções...")
         try:
             todas_funcoes()
         except Exception as e:
             print(f"Erro ao executar todas as funções: {e}")
 
-        print("Restaurando valores do cabeçalho...")
-        try:
-            restaurar_valores_cabecalho()
-        except Exception as e:
-            print(f"Erro ao restaurar valores do cabeçalho: {e}")
+        # Reabilitar o sistema e restaurar o estado
+        widget_state_manager.enable()
+        
+        # Restaurar o estado dos widgets após a criação completa
+        print("Restaurando estado dos widgets...")
+        widget_state_manager.restore_widget_state()
+
+        # Forçar processamento de eventos após restauração
+        if app:
+            app.processEvents()
             
         print("Interface carregada com sucesso!")
+        print(widget_state_manager.get_cache_info())
         
         # Agendar limpeza final após carregar interface
         from PySide6.QtCore import QTimer
@@ -104,6 +111,8 @@ def carregar_interface(var, layout):
         QTimer.singleShot(100, cleanup_final)
         
     except Exception as e:
+        # Garantir que o sistema seja reabilitado mesmo em caso de erro
+        widget_state_manager.enable()
         print(f"ERRO CRÍTICO no carregamento da interface: {e}")
         import traceback
         traceback.print_exc()
