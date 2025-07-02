@@ -3,7 +3,7 @@
 Módulo utilitário para manipulação de banco de dados no aplicativo de cálculo de dobras.
 """
 import os
-from tkinter import messagebox
+from PySide6.QtWidgets import QMessageBox
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -36,8 +36,7 @@ def obter_configuracoes():
                 'forca': g.DED_FORCA_ENTRY
             },
             'item_id': Deducao.id,
-            'valores': lambda d: (d.id,
-                                  d.material.nome,
+            'valores': lambda d: (d.material.nome,
                                   d.espessura.valor,
                                   d.canal.valor,
                                   d.valor,
@@ -61,7 +60,7 @@ def obter_configuracoes():
                 'elasticidade': g.MAT_ELAS_ENTRY
             },
             'item_id': Material.id,  # Corrigido de Deducao.material_id
-            'valores': lambda m: (m.id, m.nome, m.densidade, m.escoamento, m.elasticidade),
+            'valores': lambda m: (m.nome, m.densidade, m.escoamento, m.elasticidade),
             'ordem': Material.id,
             'entry': g.MAT_NOME_ENTRY,
             'busca': g.MAT_BUSCA_ENTRY,
@@ -72,7 +71,7 @@ def obter_configuracoes():
             'lista': g.LIST_ESP,
             'modelo': Espessura,
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
-            'valores': lambda e: (e.id, e.valor),
+            'valores': lambda e: (e.valor,),
             'ordem': Espessura.valor,
             'entry': g.ESP_VALOR_ENTRY,
             'busca': g.ESP_BUSCA_ENTRY,
@@ -90,8 +89,7 @@ def obter_configuracoes():
                 'observacao': g.CANAL_OBSER_ENTRY
             },
             'item_id': Canal.id,  # Corrigido de deducao.canal_id
-            'valores': lambda c: (c.id,
-                                  c.valor,
+            'valores': lambda c: (c.valor,
                                   c.largura,
                                   c.altura,
                                   c.comprimento_total,
@@ -124,8 +122,12 @@ def salvar_no_banco(obj, tipo, detalhes):
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    messagebox.showinfo("Sucesso", f"Novo(a) {tipo} adicionado(a) com sucesso!",
-                        parent=config['form'])
+    # Usar QMessageBox em vez do módulo messagebox do Tkinter
+    msg = QMessageBox(config['form'])
+    msg.setIcon(QMessageBox.Information)
+    msg.setWindowTitle("Sucesso")
+    msg.setText(f"Novo(a) {tipo} adicionado(a) com sucesso!")
+    msg.exec()
 
 
 def tratativa_erro():
