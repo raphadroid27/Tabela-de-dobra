@@ -53,15 +53,12 @@ def limpar_dobras():
     if g.DED_ESPEC_ENTRY and isinstance(g.DED_ESPEC_ENTRY, QLineEdit):
         g.DED_ESPEC_ENTRY.clear()
 
-    # Resetar valores globais
-    g.DOBRAS_VALORES = []
-
     # Alterar a cor de fundo das entradas de dobras para branco
     for i in range(1, g.N):
         for col in g.VALORES_W:
             entry = getattr(g, f'aba{i}_entry_{col}', None)
             if entry and isinstance(entry, QLineEdit):
-                entry.setStyleSheet("background-color: white;")
+                entry.setStyleSheet("")
 
     # Verifique se o atributo existe antes de usá-lo
     aba1_entry = getattr(g, "aba1_entry_1", None)
