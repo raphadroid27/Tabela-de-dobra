@@ -76,6 +76,18 @@ def carregar_interface(var, layout):
         print("Carregando botões...")
         botoes_widget = botoes.criar_botoes(None)
         layout.addWidget(botoes_widget, 2, 0, 1, 2)  # span 2 columns
+        
+        # Configurar espaçamento entre os componentes principais
+        layout.setRowStretch(0, 0)  # Cabeçalho: tamanho fixo
+        layout.setRowStretch(1, 1)  # Dobras: expansível
+        layout.setRowStretch(2, 0)  # Botões: tamanho fixo
+        
+        # Configurar espaçamento
+        layout.setSpacing(5)
+        
+        # Configurar larguras das colunas principais (para expansão horizontal)
+        for col in range(len(g.VALORES_W)):
+            layout.setColumnStretch(col, 1)  # Colunas com largura igual na expansão
 
         # Forçar processamento de eventos para garantir que os widgets estejam prontos
         if app:

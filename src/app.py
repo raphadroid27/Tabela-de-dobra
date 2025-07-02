@@ -329,7 +329,8 @@ def configurar_frames():
     g.PRINC_FORM.setCentralWidget(central_widget)
     
     layout = QGridLayout(central_widget)  # Mudado para QGridLayout
-    layout.setContentsMargins(10, 10, 10, 10)
+    layout.setContentsMargins(5, 5, 5, 5)  # Margens menores
+    layout.setSpacing(5)  # Espaçamento padrão entre componentes
 
     g.VALORES_W = [1]
     g.EXP_V = False  # Convertido de IntVar para bool

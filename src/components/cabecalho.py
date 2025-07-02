@@ -38,13 +38,16 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
         widget = QLabel(kwargs.pop('text', ''))
         widget.setFrameShape(QLabel.Shape.Panel)
         widget.setFrameShadow(QLabel.Shadow.Sunken)
+        widget.setFixedHeight(20)  # Altura fixa
     elif tipo == 'combobox':
         widget = QComboBox(**kwargs)
+        widget.setFixedHeight(20)  # Altura fixa
         # QComboBox não tem uma propriedade 'justify' simples.
         # A centralização pode ser feita se for editável ou com um delegate.
         # Por enquanto, vamos usar o alinhamento padrão.
     elif tipo == 'entry':
         widget = QLineEdit(**kwargs)
+        widget.setFixedHeight(20)  # Altura fixa
         if justify == 'center':
             widget.setAlignment(Qt.AlignCenter)
         elif justify == 'right':
@@ -65,6 +68,15 @@ def cabecalho(parent):
     """
     frame_cabecalho = QGroupBox()
     layout = QGridLayout(frame_cabecalho)
+    
+    # Configurar espaçamento e margens
+    layout.setSpacing(5)  # Espaçamento entre widgets
+    layout.setContentsMargins(5, 5, 5, 5)  # Margens internas
+    
+    # Configurar larguras das colunas para alinhamento com dobras
+    # Colunas 0, 1, 2, 3: Larguras iguais e expansíveis (Material, Espessura, Canal, Comprimento)
+    for col in range(0, 4):
+        layout.setColumnStretch(col, 1)  # Expande igualmente
 
 
     # Labels da Linha 1
