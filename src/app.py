@@ -21,11 +21,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # pylint: disable=wrong-import-position
 
 from src.config import globals as g
-from src.forms import (
+from src.forms.form_wrappers import (
     form_espessura,
     form_deducao,
     form_material,
-    form_canal,
+    form_canal
+)
+from src.forms import (
     form_sobre,
     form_aut,
     form_usuario,
