@@ -434,14 +434,15 @@ def copiar(tipo, numero=None, w=None):
         print(f"Erro: Label não encontrado para o tipo '{tipo}' com numero={numero} e w={w}.")
         return
 
-    # Verificar se o label é um widget válido do tkinter
-    if not hasattr(label, 'cget') or not hasattr(label, 'config'):
-        print(f"Erro: O objeto para o tipo '{tipo}' não é um widget válido do tkinter.")
+    # Verificar se o label é um widget válido do PySide6
+    if not hasattr(label, 'text') and not hasattr(label, 'setText'):
+        print(f"Erro: O objeto para o tipo '{tipo}' não é um widget válido do PySide6.")
         return
 
     # Verificar se o texto está vazio
     try:
-        texto_atual = getattr(label, 'cget')('text')
+        # Para widgets PySide6, usar text() para obter o texto
+        texto_atual = label.text() if hasattr(label, 'text') else str(label.text)
         # Converter para string para garantir compatibilidade
         texto_atual = str(texto_atual)
         if texto_atual == "":
@@ -460,7 +461,7 @@ def copiar(tipo, numero=None, w=None):
 
     # Obter o texto atualizado após o cálculo
     try:
-        texto_atualizado = getattr(label, 'cget')('text')
+        texto_atualizado = label.text() if hasattr(label, 'text') else str(label.text)
         # Converter para string e remover " Copiado!" se já estiver presente
         texto_atualizado = str(texto_atualizado)
         if " Copiado!" in texto_atualizado:
@@ -470,17 +471,33 @@ def copiar(tipo, numero=None, w=None):
 
     pyperclip.copy(texto_atualizado)
     print(f'Valor copiado {texto_atualizado}')
-    getattr(label, 'config')(text=f'{texto_atualizado} Copiado!', fg="green")
+    
+    # Para widgets PySide6, usar setText() e setStyleSheet() para alterar cor
+    if hasattr(label, 'setText'):
+        label.setText(f'{texto_atualizado} Copiado!')
+        if hasattr(label, 'setStyleSheet'):
+            label.setStyleSheet("color: green;")
 
-    # Agendar a remoção do "Copiado!" após 2 segundos
+    # Agendar a remoção do "Copiado!" após 2 segundos usando QTimer
     def remover_copiado():
         try:
-            getattr(label, 'config')(text=texto_atualizado, fg="black")
+            if hasattr(label, 'setText'):
+                label.setText(texto_atualizado)
+                if hasattr(label, 'setStyleSheet'):
+                    label.setStyleSheet("color: black;")
         except (Exception, AttributeError):
             pass
 
-    if hasattr(label, 'after'):
-        getattr(label, 'after')(2000, remover_copiado)
+    # Usar QTimer em vez de after() do Tkinter
+    try:
+        from PySide6.QtCore import QTimer
+        timer = QTimer()
+        timer.timeout.connect(remover_copiado)
+        timer.setSingleShot(True)
+        timer.start(2000)  # 2 segundos
+    except ImportError:
+        # Fallback se QTimer não estiver disponível
+        print("QTimer não disponível, texto 'Copiado!' não será removido automaticamente")
 
 
 def limpar_busca(tipo):
@@ -524,27 +541,33 @@ def listar(tipo):
     """
     Lista os itens do banco de dados na interface gráfica.
     """
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
+    try:
+        configuracoes = obter_configuracoes()
+        config = configuracoes[tipo]
 
-    if config['lista'] is None or not config['lista'].isVisible():
-        return
+        if config['lista'] is None:
+            return
 
-    config['lista'].clear()
+        config['lista'].clear()
 
-    itens = session.query(config['modelo']).order_by(config['ordem']).all()
+        itens = session.query(config['modelo']).order_by(config['ordem']).all()
 
-    if tipo == 'material':
-        itens = sorted(itens, key=lambda x: x.nome)
+        if tipo == 'material':
+            itens = sorted(itens, key=lambda x: x.nome)
 
-    for item in itens:
-        if tipo == 'dedução':
-            if item.material is None or item.espessura is None or item.canal is None:
-                continue
-        
-        valores = config['valores'](item)
-        item_widget = QTreeWidgetItem(valores if isinstance(valores, list) else [str(valores)])
-        config['lista'].addTopLevelItem(item_widget)
+        for item in itens:
+            if tipo == 'dedução':
+                if item.material is None or item.espessura is None or item.canal is None:
+                    continue
+            
+            valores = config['valores'](item)
+            # Garantir que todos os valores sejam strings
+            valores_str = [str(v) if v is not None else '' for v in valores]
+            item_widget = QTreeWidgetItem(valores_str)
+            config['lista'].addTopLevelItem(item_widget)
+            
+    except Exception as e:
+        print(f"Erro ao listar {tipo}: {e}")
 
 
 def todas_funcoes():
