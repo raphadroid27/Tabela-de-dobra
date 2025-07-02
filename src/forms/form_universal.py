@@ -17,7 +17,7 @@ except ImportError:
     from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QIcon
 
-from src.utils.janelas import no_topo, posicionar_janela
+from src.utils.janelas import no_topo, posicionar_janela, aplicar_no_topo
 from src.utils.interface import listar, limpar_busca, configurar_main_frame, atualizar_widgets
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
@@ -388,7 +388,7 @@ def main(tipo, root):
     icone_path = obter_caminho_icone()
     new_form.setWindowIcon(QIcon(icone_path))
     
-    no_topo(new_form)
+    aplicar_no_topo(new_form)
     posicionar_janela(new_form, None)
     
     setattr(g, form_attr, new_form)

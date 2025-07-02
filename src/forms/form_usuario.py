@@ -8,7 +8,7 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QTreeWidget, QTreeWidgetItem, QFrame, QGroupBox
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from src.utils.janelas import (no_topo, posicionar_janela)
+from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.interface import (listar, limpar_busca)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar
@@ -40,7 +40,7 @@ def main(root):
     icone_path = obter_caminho_icone()
     g.USUAR_FORM.setWindowIcon(QIcon(icone_path))
 
-    no_topo(g.USUAR_FORM)
+    aplicar_no_topo(g.USUAR_FORM)
     posicionar_janela(g.USUAR_FORM, 'centro')
 
     main_layout = QGridLayout()
