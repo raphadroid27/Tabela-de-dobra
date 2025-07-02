@@ -5,13 +5,15 @@ e facilitando manutenção através de configurações centralizadas.
 """
 try:
     from PySide6.QtWidgets import (QDialog, QGridLayout, QGroupBox, QLabel, 
-                                   QPushButton, QTreeWidget, QLineEdit, QComboBox)
+                                   QPushButton, QTreeWidget, QLineEdit, QComboBox,
+                                   QHBoxLayout, QWidget)
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QIcon
 except ImportError:
     # Fallback para PyQt6 se PySide6 não estiver disponível
     from PyQt6.QtWidgets import (QDialog, QGridLayout, QGroupBox, QLabel, 
-                                 QPushButton, QTreeWidget, QLineEdit, QComboBox)
+                                 QPushButton, QTreeWidget, QLineEdit, QComboBox,
+                                 QHBoxLayout, QWidget)
     from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QIcon
 
@@ -313,13 +315,6 @@ def configurar_botoes(config, main_frame, frame_edicoes, tipo):
         if frame_edicoes:
             frame_edicoes.setTitle(config['edicao']['titulo_edit'])
         
-        # Botão Excluir (no layout principal)
-        main_layout = main_frame.layout()
-        excluir_btn = QPushButton("Excluir")
-        excluir_btn.setStyleSheet("background-color: lightcoral;")
-        excluir_btn.clicked.connect(lambda: excluir(tipo_operacao))
-        main_layout.addWidget(excluir_btn, main_layout.rowCount(), 0)
-        
         # Botão Atualizar (no frame de edições, se existir)
         if layout:
             atualizar_btn = QPushButton("Atualizar")
@@ -410,13 +405,50 @@ def main(tipo, root):
     lista_widget = criar_lista(config, tipo)
     layout.addWidget(lista_widget, 1, 0)
     
-    # Frame de edições (só para não-edição em espessuras ou sempre para outros)
+    # Botão Excluir (apenas no modo edição, embaixo da lista)
     is_edit = getattr(g, config['global_edit'], False)
+    excluir_btn = None
+    if is_edit:
+        # Criar container para centralizar o botão
+        excluir_container = QWidget()
+        excluir_layout = QHBoxLayout(excluir_container)
+        excluir_layout.setContentsMargins(5, 5, 5, 5)
+        
+        excluir_btn = QPushButton("🗑️ Excluir")
+        excluir_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ff6b6b;
+                color: white;
+                border: none;
+                padding: 4px 8px;
+                font-weight: bold;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #ff5252;
+            }
+            QPushButton:pressed {
+                background-color: #e53935;
+            }
+        """)
+        excluir_btn.setFixedHeight(25)
+        excluir_btn.setMinimumWidth(20)
+        
+        tipo_operacao = config.get('tipo_busca', tipo)
+        excluir_btn.clicked.connect(lambda: excluir(tipo_operacao))
+        
+        # Adicionar o botão no layout centralizado
+        excluir_layout.addWidget(excluir_btn)
+        layout.addWidget(excluir_container, 2, 0)
+    
+    # Frame de edições (só para não-edição em espessuras ou sempre para outros)
     frame_edicoes = None
     
     if not is_edit or tipo != 'espessura':
         frame_edicoes = criar_frame_edicoes(config, tipo)
-        layout.addWidget(frame_edicoes, 2, 0)
+        # Se tem botão excluir, frame de edições vai na linha 3, senão na linha 2
+        row_frame_edicoes = 3 if is_edit else 2
+        layout.addWidget(frame_edicoes, row_frame_edicoes, 0)
     
     # Configurar botões
     configurar_botoes(config, main_frame, frame_edicoes, tipo)
@@ -424,6 +456,10 @@ def main(tipo, root):
     # Executar pós-inicialização se necessário
     if 'post_init' in config:
         config['post_init']()
+    
+    # Garantir que a lista seja carregada após a criação completa do formulário
+    tipo_lista = config.get('tipo_busca', tipo)
+    listar(tipo_lista)
     
     new_form.show()
 
