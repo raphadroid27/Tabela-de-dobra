@@ -130,15 +130,11 @@ def configurar_janela_principal(config):
     
     g.PRINC_FORM = QMainWindow()
     g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
-    g.PRINC_FORM.resize(340, 400)
-    
+    g.PRINC_FORM.setFixedSize(340, 460)  # Redimensionar para tamanho padrão sem expansões
+
     # Marcar como janela principal para identificação
     g.PRINC_FORM._is_main_window = True
-    
-    # Definir tamanhos mínimos e máximos para garantir redimensionamento correto
-    g.PRINC_FORM.setMinimumSize(340, 400)  # Tamanho mínimo = tamanho sem expansão
-    g.PRINC_FORM.setMaximumSize(680, 500)  # Tamanho máximo = tamanho com ambas expansões
-    
+        
     # Configurar flags da janela corretamente
     # Garantir que todos os botões da barra de título estejam habilitados
     window_flags = (Qt.Window | 

@@ -85,7 +85,14 @@ def carregar_interface(var, layout):
         # Configurar espaçamento
         layout.setSpacing(5)
         
-        # Configurar larguras das colunas principais (para expansão horizontal)
+        # Configurar larguras das colunas de forma mais conservadora
+        # Primeiro limpar apenas as colunas que realmente usamos
+        max_cols = max(2, len(g.VALORES_W))  # No máximo 2 colunas
+        for col in range(max_cols + 1):  # +1 para garantir limpeza
+            layout.setColumnStretch(col, 0)
+            layout.setColumnMinimumWidth(col, 0)
+        
+        # Configurar apenas as colunas que vamos usar
         for col in range(len(g.VALORES_W)):
             layout.setColumnStretch(col, 1)  # Colunas com largura igual na expansão
 

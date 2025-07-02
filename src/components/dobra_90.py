@@ -80,6 +80,7 @@ def entradas_dobras(valor, w):
         medida_dobra_label.setFrameShape(QLabel.Shape.Panel)
         medida_dobra_label.setFrameShadow(QLabel.Shadow.Sunken)
         medida_dobra_label.setFixedHeight(20)  # Altura fixa
+        medida_dobra_label.setAlignment(Qt.AlignCenter)
         setattr(g, f'medidadobra{i}_label_{w}', medida_dobra_label)
         layout.addWidget(medida_dobra_label, i, 2)
         medida_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar('medida_dobra', i, w)
@@ -89,13 +90,14 @@ def entradas_dobras(valor, w):
         metade_dobra_label.setFrameShape(QLabel.Shape.Panel)
         metade_dobra_label.setFrameShadow(QLabel.Shadow.Sunken)
         metade_dobra_label.setFixedHeight(20)  # Altura fixa
+        metade_dobra_label.setAlignment(Qt.AlignCenter)
         setattr(g, f'metadedobra{i}_label_{w}', metade_dobra_label)
         layout.addWidget(metade_dobra_label, i, 3)
         metade_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar('metade_dobra', i, w)
         metade_dobra_label.setToolTip("Clique para copiar a metade da dobra.")
 
     blank_label = QLabel("Medida do Blank:")
-    blank_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+    blank_label.setAlignment(Qt.AlignCenter)
     blank_label.setFixedHeight(20)  # Altura fixa
     layout.addWidget(blank_label, i + 1, 0, 1, 2)
 
@@ -103,6 +105,7 @@ def entradas_dobras(valor, w):
     medida_blank.setFrameShape(QLabel.Shape.Panel)
     medida_blank.setFrameShadow(QLabel.Shadow.Sunken)
     medida_blank.setFixedHeight(20)  # Altura fixa
+    medida_blank.setAlignment(Qt.AlignCenter)
     setattr(g, f'medida_blank_label_{w}', medida_blank)
     layout.addWidget(medida_blank, i + 1, 2)
     medida_blank.mousePressEvent = lambda event, i=i, w=w: copiar('blank', i, w)
@@ -112,6 +115,7 @@ def entradas_dobras(valor, w):
     metade_blank.setFrameShape(QLabel.Shape.Panel)
     metade_blank.setFrameShadow(QLabel.Shadow.Sunken)
     metade_blank.setFixedHeight(20)  # Altura fixa
+    metade_blank.setAlignment(Qt.AlignCenter)
     setattr(g, f'metade_blank_label_{w}', metade_blank)
     layout.addWidget(metade_blank, i + 1, 3)
     metade_blank.mousePressEvent = lambda event, i=i, w=w: copiar('metade_blank', i, w)
