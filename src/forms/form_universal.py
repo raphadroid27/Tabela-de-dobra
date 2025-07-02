@@ -28,7 +28,7 @@ from src.config import globals as g
 FORM_CONFIGS = {
     'deducao': {
         'titulo': 'Formulário de Deduções',
-        'size': (500, 420),
+        'size': (500, 460),
         'global_form': 'DEDUC_FORM',
         'global_edit': 'EDIT_DED',
         'busca': {
@@ -60,7 +60,7 @@ FORM_CONFIGS = {
     
     'material': {
         'titulo': 'Formulário de Materiais',
-        'size': (340, 420),
+        'size': (340, 460),
         'global_form': 'MATER_FORM',
         'global_edit': 'EDIT_MAT',
         'busca': {
@@ -90,7 +90,7 @@ FORM_CONFIGS = {
     
     'canal': {
         'titulo': 'Formulário de Canais',
-        'size': (340, 420),
+        'size': (340, 460),
         'global_form': 'CANAL_FORM',
         'global_edit': 'EDIT_CANAL',
         'busca': {

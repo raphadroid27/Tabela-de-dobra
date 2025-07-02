@@ -39,12 +39,15 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
         widget.setFrameShape(QLabel.Shape.Panel)
         widget.setFrameShadow(QLabel.Shadow.Sunken)
         widget.setFixedHeight(20)  # Altura fixa
+        widget.setAlignment(Qt.AlignCenter)
+    
     elif tipo == 'combobox':
         widget = QComboBox(**kwargs)
         widget.setFixedHeight(20)  # Altura fixa
         # QComboBox não tem uma propriedade 'justify' simples.
         # A centralização pode ser feita se for editável ou com um delegate.
         # Por enquanto, vamos usar o alinhamento padrão.
+    
     elif tipo == 'entry':
         widget = QLineEdit(**kwargs)
         widget.setFixedHeight(20)  # Altura fixa
