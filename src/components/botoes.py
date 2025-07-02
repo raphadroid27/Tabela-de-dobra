@@ -21,6 +21,10 @@ def criar_botoes(root):
     """
     frame_botoes = QWidget()
     layout = QGridLayout(frame_botoes)
+    
+    # Configurar espaçamento e margens
+    layout.setSpacing(5)  # Espaçamento entre widgets
+    layout.setContentsMargins(5, 5, 5, 5)  # Margens internas
 
     class ExpansionManager:
         """Gerencia a expansão da interface de forma robusta"""
@@ -145,24 +149,28 @@ def criar_botoes(root):
     # Checkbox para expandir vertical
     exp_v_check = QCheckBox("Expandir Vertical")
     exp_v_check.setChecked(g.EXP_V)
+    exp_v_check.setFixedHeight(20)  # Altura fixa
     exp_v_check.toggled.connect(on_expandir_v)
     layout.addWidget(exp_v_check, 0, 0)
 
     # Checkbox para expandir horizontal
     exp_h_check = QCheckBox("Expandir Horizontal")
     exp_h_check.setChecked(g.EXP_H)
+    exp_h_check.setFixedHeight(20)  # Altura fixa
     exp_h_check.toggled.connect(on_expandir_h)
     layout.addWidget(exp_h_check, 0, 1)
 
     # Botão para limpar valores de dobras
     limpar_dobras_btn = QPushButton("Limpar Dobras")
     limpar_dobras_btn.clicked.connect(limpar_dobras)
+    limpar_dobras_btn.setFixedHeight(20)  # Altura fixa
     limpar_dobras_btn.setStyleSheet("background-color: lightyellow;")
     layout.addWidget(limpar_dobras_btn, 1, 0)
 
     # Botão para limpar todos os valores
     limpar_tudo_btn = QPushButton("Limpar Tudo")
     limpar_tudo_btn.clicked.connect(limpar_tudo)
+    limpar_tudo_btn.setFixedHeight(20)  # Altura fixa
     limpar_tudo_btn.setStyleSheet("background-color: lightcoral;")
     layout.addWidget(limpar_tudo_btn, 1, 1)
 
