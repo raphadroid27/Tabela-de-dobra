@@ -226,8 +226,23 @@ def criar_frame_busca(config, tipo):
         col += 1
     
     # Botão Limpar
-    limpar_btn = QPushButton("Limpar")
-    limpar_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_btn = QPushButton("🧹 Limpar")
+    limpar_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #ffd93d;
+            color: #333;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #ffcc02;
+        }
+        QPushButton:pressed {
+            background-color: #e6b800;
+        }
+    """)
     tipo_busca = config.get('tipo_busca', tipo)
     limpar_btn.clicked.connect(lambda: limpar_busca(tipo_busca))
     layout.addWidget(limpar_btn, 1, col)
@@ -317,8 +332,23 @@ def configurar_botoes(config, main_frame, frame_edicoes, tipo):
         
         # Botão Atualizar (no frame de edições, se existir)
         if layout:
-            atualizar_btn = QPushButton("Atualizar")
-            atualizar_btn.setStyleSheet("background-color: lightgreen;")
+            atualizar_btn = QPushButton("✏️ Atualizar")
+            atualizar_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #4caf50;
+                    color: white;
+                    border: none;
+                    padding: 4px 8px;
+                    font-weight: bold;
+                    border-radius: 4px;
+                }
+                QPushButton:hover {
+                    background-color: #45a049;
+                }
+                QPushButton:pressed {
+                    background-color: #3d8b40;
+                }
+            """)
             atualizar_btn.clicked.connect(lambda: editar(tipo_operacao))
             
             button_pos = config['edicao']['button_pos']
@@ -341,8 +371,23 @@ def configurar_botoes(config, main_frame, frame_edicoes, tipo):
         
         # Botão Adicionar (no frame de edições, se existir)
         if layout:
-            adicionar_btn = QPushButton("Adicionar")
-            adicionar_btn.setStyleSheet("background-color: lightblue;")
+            adicionar_btn = QPushButton("➕ Adicionar")
+            adicionar_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #2196f3;
+                    color: white;
+                    border: none;
+                    padding: 4px 8px;
+                    font-weight: bold;
+                    border-radius: 4px;
+                }
+                QPushButton:hover {
+                    background-color: #1976d2;
+                }
+                QPushButton:pressed {
+                    background-color: #1565c0;
+                }
+            """)
             adicionar_btn.clicked.connect(lambda: adicionar(tipo_operacao))
             
             button_pos = config['edicao']['button_pos']

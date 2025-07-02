@@ -290,8 +290,23 @@ def main(root):
     g.IMPRESSAO_DIRETORIO_ENTRY = QLineEdit()
     dir_layout.addWidget(g.IMPRESSAO_DIRETORIO_ENTRY)
 
-    procurar_btn = QPushButton("Procurar")
-    procurar_btn.setStyleSheet("background-color: lightgray;")
+    procurar_btn = QPushButton("📁 Procurar")
+    procurar_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #9e9e9e;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #757575;
+        }
+        QPushButton:pressed {
+            background-color: #616161;
+        }
+    """)
     procurar_btn.clicked.connect(selecionar_diretorio)
     dir_layout.addWidget(procurar_btn)
 
@@ -319,13 +334,43 @@ def main(root):
     # Botões ao lado do texto
     text_buttons_layout = QVBoxLayout()
     
-    adicionar_btn = QPushButton("Adicionar")
-    adicionar_btn.setStyleSheet("background-color: lightblue;")
+    adicionar_btn = QPushButton("➕ Adicionar")
+    adicionar_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #1976d2;
+        }
+        QPushButton:pressed {
+            background-color: #1565c0;
+        }
+    """)
     adicionar_btn.clicked.connect(adicionar_lista_arquivos)
     text_buttons_layout.addWidget(adicionar_btn)
 
-    limpar_text_btn = QPushButton("Limpar")
-    limpar_text_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_text_btn = QPushButton("🧹 Limpar")
+    limpar_text_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #ffd93d;
+            color: #333;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #ffcc02;
+        }
+        QPushButton:pressed {
+            background-color: #e6b800;
+        }
+    """)
     limpar_text_btn.clicked.connect(limpar_texto_placeholder)
     text_buttons_layout.addWidget(limpar_text_btn)
 
@@ -347,18 +392,63 @@ def main(root):
     # Botões ao lado da lista
     lista_buttons_layout = QVBoxLayout()
 
-    remover_btn = QPushButton("Remover")
-    remover_btn.setStyleSheet("background-color: lightcoral;")
+    remover_btn = QPushButton("🗑️ Remover")
+    remover_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #ff5252;
+        }
+        QPushButton:pressed {
+            background-color: #e53935;
+        }
+    """)
     remover_btn.clicked.connect(remover_arquivo)
     lista_buttons_layout.addWidget(remover_btn)
 
-    limpar_lista_btn = QPushButton("Limpar")
-    limpar_lista_btn.setStyleSheet("background-color: lightyellow;")
+    limpar_lista_btn = QPushButton("🧹 Limpar")
+    limpar_lista_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #ffd93d;
+            color: #333;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #ffcc02;
+        }
+        QPushButton:pressed {
+            background-color: #e6b800;
+        }
+    """)
     limpar_lista_btn.clicked.connect(limpar_lista)
     lista_buttons_layout.addWidget(limpar_lista_btn)
 
-    imprimir_btn = QPushButton("Imprimir")
-    imprimir_btn.setStyleSheet("background-color: lightgreen;")
+    imprimir_btn = QPushButton("🖨️ Imprimir")
+    imprimir_btn.setStyleSheet("""
+        QPushButton {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #45a049;
+        }
+        QPushButton:pressed {
+            background-color: #3d8b40;
+        }
+    """)
     imprimir_btn.clicked.connect(executar_impressao)
     lista_buttons_layout.addWidget(imprimir_btn)
 

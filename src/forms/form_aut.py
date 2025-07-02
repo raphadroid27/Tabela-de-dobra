@@ -59,18 +59,16 @@ def main(root):
 
     if g.LOGIN:
         g.AUTEN_FORM.setWindowTitle("Login")
-        login_btn = QPushButton("Login")
+        login_btn = QPushButton("🔐 Login")
         # Estilo moderno para o botão de login
         login_btn.setStyleSheet("""
             QPushButton {
-                background-color: #4CAF50;
-                border: none;
+                background-color: #4caf50;
                 color: white;
-                padding: 8px 16px;
-                font-size: 12px;
+                border: none;
+                padding: 4px 8px;
                 font-weight: bold;
                 border-radius: 4px;
-                min-height: 20px;
             }
             QPushButton:hover {
                 background-color: #45a049;
@@ -98,24 +96,22 @@ def main(root):
             g.ADMIN_VAR = 'viewer'
 
         g.AUTEN_FORM.setWindowTitle("Novo Usuário")
-        save_btn = QPushButton("Salvar")
+        save_btn = QPushButton("💾 Salvar")
         # Estilo moderno para o botão de salvar
         save_btn.setStyleSheet("""
             QPushButton {
-                background-color: #2196F3;
-                border: none;
+                background-color: #2196f3;
                 color: white;
-                padding: 8px 16px;
-                font-size: 12px;
+                border: none;
+                padding: 4px 8px;
                 font-weight: bold;
                 border-radius: 4px;
-                min-height: 20px;
             }
             QPushButton:hover {
-                background-color: #1976D2;
+                background-color: #1976d2;
             }
             QPushButton:pressed {
-                background-color: #1565C0;
+                background-color: #1565c0;
             }
         """)
         save_btn.clicked.connect(novo_usuario)
