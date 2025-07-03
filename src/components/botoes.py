@@ -36,50 +36,13 @@ def criar_botoes(root):
             self.cleanup_timer.timeout.connect(self.force_cleanup_orphans)
         
         def force_cleanup_orphans(self):
-            """Remove todas as janelas órfãs que possam ter sido criadas, mas preserva formulários ativos"""
+            """Remove todas as janelas órfãs - usa função centralizada"""
             try:
-                app = QApplication.instance()
-                if not app:
-                    return
-                
-                main_window = g.PRINC_FORM
-                
-                # Lista de formulários ativos que devem ser preservados
-                active_forms = []
-                form_vars = ['DEDUC_FORM', 'MATER_FORM', 'CANAL_FORM', 'ESPES_FORM', 
-                            'SOBRE_FORM', 'AUTEN_FORM', 'USUAR_FORM', 'RIE_FORM', 'IMPRESSAO_FORM']
-                
-                for form_var in form_vars:
-                    if hasattr(g, form_var):
-                        form = getattr(g, form_var)
-                        if form is not None and hasattr(form, 'isVisible') and form.isVisible():
-                            active_forms.append(form)
-                
-                top_level_widgets = app.topLevelWidgets()
-                
-                for widget in top_level_widgets[:]:  # Cópia para iteração segura
-                    if (widget != main_window and 
-                        widget not in active_forms and
-                        widget.isVisible() and 
-                        not hasattr(widget, '_is_system_widget')):
-                        
-                        widget_type = type(widget).__name__
-                        if widget_type in ['QLabel', 'QFrame', 'QWidget', 'QDialog', 'QWindow']:
-                            try:
-                                widget.hide()
-                                widget.close()
-                                widget.deleteLater()
-                            except:
-                                pass
-                
-                # Limpar tooltips nativos
-                try:
-                    from PySide6.QtWidgets import QToolTip
-                    QToolTip.hideText()
-                except (ImportError, AttributeError):
-                    pass
-                
-                app.processEvents()
+                # Importar e usar a função centralizada de limpeza
+                from src.app import cleanup_orphaned_windows
+                cleanup_orphaned_windows()
+            except ImportError:
+                pass
                 
             except:
                 pass
