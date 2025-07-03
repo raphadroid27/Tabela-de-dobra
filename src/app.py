@@ -186,7 +186,8 @@ def configurar_janela_principal(config):
 
 def cleanup_orphaned_windows():
     """
-    Remove todas as janelas órfãs que possam estar abertas.
+    Remove todas as janelas órfãs que possam estar abertas,
+    mas preserva formulários ativos.
     """
     try:
         app = QApplication.instance()
@@ -194,10 +195,23 @@ def cleanup_orphaned_windows():
             return
         
         main_window = g.PRINC_FORM if hasattr(g, 'PRINC_FORM') else None
+        
+        # Lista de formulários ativos que devem ser preservados
+        active_forms = []
+        form_vars = ['DEDUC_FORM', 'MATER_FORM', 'CANAL_FORM', 'ESPES_FORM', 
+                    'SOBRE_FORM', 'AUTEN_FORM', 'USUAR_FORM', 'RIE_FORM', 'IMPRESSAO_FORM']
+        
+        for form_var in form_vars:
+            if hasattr(g, form_var):
+                form = getattr(g, form_var)
+                if form is not None and hasattr(form, 'isVisible') and form.isVisible():
+                    active_forms.append(form)
+        
         top_level_widgets = app.topLevelWidgets()
         
         for widget in top_level_widgets[:]:  # Cópia para iteração segura
             if (widget != main_window and 
+                widget not in active_forms and
                 widget.isVisible() and 
                 not hasattr(widget, '_is_system_widget') and
                 not hasattr(widget, '_is_main_window')):
