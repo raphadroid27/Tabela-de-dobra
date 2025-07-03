@@ -18,7 +18,6 @@ from src.utils.calculos import (calcular_dobra,
                                 razao_ri_espessura
                                 )
 from src.config import globals as g
-import src.utils.classes.tooltip as tp
 
 
 def _atualizar_material():
@@ -285,23 +284,21 @@ def canal_tooltip():
     Atualiza o tooltip do combobox de canais com as
     observações e comprimento total do canal selecionado.
     """
-    if not g.CANAL_COMB or not hasattr(g.CANAL_COMB, 'get'):
+    if not g.CANAL_COMB:
         return
 
     if g.CANAL_COMB.currentText() == "":
-        if hasattr(g.CANAL_COMB, 'setCurrentText'):
-            g.CANAL_COMB.setCurrentText("")
-        tp.ToolTip(g.CANAL_COMB, "Selecione o canal de dobra.")
+        g.CANAL_COMB.setToolTip("Selecione o canal de dobra.")
     else:
         canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.currentText()).first()
         if canal_obj:
             canal_obs = getattr(canal_obj, 'observacao', None) or "N/A."
             canal_comprimento_total = getattr(canal_obj, 'comprimento_total', None) or "N/A."
 
-            tp.ToolTip(g.CANAL_COMB,
-                       f'Obs: {canal_obs}\n'
-                       f'Comprimento total: {canal_comprimento_total}',
-                       delay=0)
+            tooltip_text = f'Obs: {canal_obs}\nComprimento total: {canal_comprimento_total}'
+            g.CANAL_COMB.setToolTip(tooltip_text)
+        else:
+            g.CANAL_COMB.setToolTip("Canal não encontrado.")
 
 
 def atualizar_toneladas_m():
@@ -580,11 +577,6 @@ def todas_funcoes():
                 atualizar_widgets(tipo)
             except Exception as e:
                 print(f"Erro ao atualizar widgets {tipo}: {e}")
-
-        try:
-            atualizar_toneladas_m()
-        except Exception as e:
-            print(f"Erro ao atualizar toneladas/m: {e}")
             
         try:
             calcular_k_offset()
@@ -611,12 +603,6 @@ def todas_funcoes():
             razao_ri_espessura()
         except Exception as e:
             print(f"Erro ao calcular razão ri/espessura: {e}")
-
-        try:
-            # Atualizar tooltips
-            canal_tooltip()
-        except Exception as e:
-            print(f"Erro ao atualizar tooltip do canal: {e}")
             
     except Exception as e:
         print(f"Erro geral em todas_funcoes: {e}")
