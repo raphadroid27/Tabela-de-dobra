@@ -19,7 +19,7 @@ Este projeto tem como objetivo fornecer uma ferramenta para cálculos de dobra, 
    ```
 3. Execute o programa principal:
    ```bash
-   python form_principal.py
+   python src/app.py
    ```
 
 ## Contribuição
