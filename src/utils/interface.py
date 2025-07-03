@@ -5,7 +5,6 @@ As funções incluem a atualização de widgets, manipulação de valores de dob
 restauração de valores, e outras operações relacionadas ao funcionamento do
 aplicativo de cálculo de dobras.
 """
-# Imports temporários para compatibilidade
 import re
 import pyperclip
 from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QTreeWidgetItem
@@ -27,30 +26,23 @@ def _atualizar_material():
     Inicia vazia para permitir seleção manual.
     """
     try:
-        if not hasattr(g, 'MAT_COMB') or g.MAT_COMB is None:
-            return
-            
-        if not hasattr(g.MAT_COMB, 'clear'):
-            return
-            
-        # Buscar todos os materiais da tabela Material, ordenados por nome
-        materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
+        # Função auxiliar para atualizar combobox de materiais
+        def atualizar_combobox_material(combo):
+            if combo and hasattr(combo, 'clear'):
+                materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
+                combo.clear()
+                combo.addItems(materiais)
+                combo.setCurrentIndex(-1)
         
-        g.MAT_COMB.clear()
-        g.MAT_COMB.addItems(materiais)
-        
-        # Configurar para não ter seleção inicial (-1 = nenhum item selecionado)
-        g.MAT_COMB.setCurrentIndex(-1)
+        # Atualizar combobox principal
+        if hasattr(g, 'MAT_COMB') and g.MAT_COMB:
+            atualizar_combobox_material(g.MAT_COMB)
 
-        # Verifica se o combobox de dedução de material existe e atualiza seus valores
-        if hasattr(g, 'DED_MATER_COMB') and g.DED_MATER_COMB and hasattr(g.DED_MATER_COMB, 'clear'):
-            materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
-            g.DED_MATER_COMB.clear()
-            g.DED_MATER_COMB.addItems(materiais)
-            g.DED_MATER_COMB.setCurrentIndex(-1)
+        # Atualizar combobox de dedução
+        if hasattr(g, 'DED_MATER_COMB') and g.DED_MATER_COMB:
+            atualizar_combobox_material(g.DED_MATER_COMB)
             
-        # Chamar calcular_valores após atualizar material para garantir que 
-        # os cálculos sejam atualizados
+        # Chamar calcular_valores após atualizar material
         calcular_valores()
             
     except Exception as e:
@@ -677,14 +669,4 @@ def configurar_main_frame(parent, rows=4):
     return main_frame
 
 
-def configurar_frame_edicoes(parent, text, columns=3, rows=4):
-    """
-    Cria um frame de edições com configuração padrão.
-    """
-    frame_edicoes = QGroupBox(text, parent)
-    layout = QGridLayout(frame_edicoes)
-    frame_edicoes.setLayout(layout)
-    
-    return frame_edicoes
-    # return frame_edicoes
-    return None
+
