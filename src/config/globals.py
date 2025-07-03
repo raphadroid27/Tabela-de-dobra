@@ -10,6 +10,9 @@ EXP_H = None
 USUARIO_ID = None
 USUARIO_NOME = None
 
+# Flag para controlar quando a interface está sendo recarregada
+INTERFACE_RELOADING = False
+
 # Função para carregar interface (definida dinamicamente para evitar importação cíclica)
 CARREGAR_INTERFACE_FUNC = None
 

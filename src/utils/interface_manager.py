@@ -24,6 +24,9 @@ def carregar_interface(var, layout):
         layout: Layout onde os widgets serão adicionados.
     """
     try:
+        # Definir flag para indicar que a interface está sendo recarregada
+        g.INTERFACE_RELOADING = True
+        
         # Limpar todos os tooltips ativos e widgets órfãos antes de recriar a interface
         ToolTip.cleanup_all_tooltips()
         
@@ -127,11 +130,15 @@ def carregar_interface(var, layout):
         from PySide6.QtCore import QTimer
         def cleanup_final():
             ToolTip.cleanup_all_tooltips()
+            # Limpar flag de recarregamento após conclusão
+            g.INTERFACE_RELOADING = False
         QTimer.singleShot(100, cleanup_final)
         
     except Exception as e:
         # Garantir que o sistema seja reabilitado mesmo em caso de erro
         widget_state_manager.enable()
+        # Limpar flag mesmo em caso de erro
+        g.INTERFACE_RELOADING = False
         print(f"ERRO CRÍTICO no carregamento da interface: {e}")
         import traceback
         traceback.print_exc()
