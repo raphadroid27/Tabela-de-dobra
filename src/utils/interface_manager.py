@@ -8,7 +8,6 @@ from src.components.dobra_90 import dobras
 from src.components import botoes
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
-from src.utils.classes.tooltip import ToolTip
 from src.utils.widget_state_manager import widget_state_manager
 
 
@@ -26,9 +25,6 @@ def carregar_interface(var, layout):
     try:
         # Definir flag para indicar que a interface está sendo recarregada
         g.INTERFACE_RELOADING = True
-        
-        # Limpar todos os tooltips ativos e widgets órfãos antes de recriar a interface
-        ToolTip.cleanup_all_tooltips()
         
         # Capturar o estado atual dos widgets antes da recriação (apenas se há widgets para capturar)
         if hasattr(g, 'MAT_COMB') and g.MAT_COMB is not None:
@@ -129,7 +125,6 @@ def carregar_interface(var, layout):
         # Agendar limpeza final após carregar interface
         from PySide6.QtCore import QTimer
         def cleanup_final():
-            ToolTip.cleanup_all_tooltips()
             # Limpar flag de recarregamento após conclusão
             g.INTERFACE_RELOADING = False
         QTimer.singleShot(100, cleanup_final)

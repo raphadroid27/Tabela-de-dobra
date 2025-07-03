@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QCheckBox, QPushButton, QApp
 from PySide6.QtCore import Qt, QTimer
 from src.utils.limpeza import limpar_dobras, limpar_tudo
 import src.config.globals as g
-import src.utils.classes.tooltip as tp
 
 
 def criar_botoes(root):
@@ -55,8 +54,7 @@ def criar_botoes(root):
             self.is_updating = True
             
             try:
-                # Limpar tooltips e widgets órfãos antes da atualização
-                tp.ToolTip.cleanup_all_tooltips()
+                # Limpar widgets órfãos antes da atualização
                 self.force_cleanup_orphans()
                 
                 # Calcular novo tamanho e configuração conforme especificado
@@ -236,10 +234,10 @@ def criar_botoes(root):
     """)
     layout.addWidget(limpar_tudo_btn, 1, 1)
 
-    # Configurar tooltips
-    tp.ToolTip(exp_v_check, "Expande a interface verticalmente")
-    tp.ToolTip(exp_h_check, "Expande a interface horizontalmente")
-    tp.ToolTip(limpar_dobras_btn, "Limpa as dobras")
-    tp.ToolTip(limpar_tudo_btn, "Limpa todos os valores")
+    # Configurar tooltips nativos do PySide6
+    exp_v_check.setToolTip("Expande a interface verticalmente")
+    exp_h_check.setToolTip("Expande a interface horizontalmente")
+    limpar_dobras_btn.setToolTip("Limpa as dobras")
+    limpar_tudo_btn.setToolTip("Limpa todos os valores")
 
     return frame_botoes
