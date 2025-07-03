@@ -520,7 +520,7 @@ def focus_next_entry(current_index, w):
     if next_index < g.N:
         next_entry = getattr(g, f'aba{next_index}_entry_{w}', None)
         if next_entry:
-            next_entry.focus()
+            next_entry.setFocus()
 
 
 def focus_previous_entry(current_index, w):
@@ -531,7 +531,7 @@ def focus_previous_entry(current_index, w):
     if previous_index > 0:
         previous_entry = getattr(g, f'aba{previous_index}_entry_{w}', None)
         if previous_entry:
-            previous_entry.focus()
+            previous_entry.setFocus()
 
 
 def listar(tipo):
