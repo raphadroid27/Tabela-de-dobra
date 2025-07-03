@@ -74,6 +74,15 @@ def entradas_dobras(valor, w):
         setattr(g, f'aba{i}_entry_{w}', entry)
         layout.addWidget(entry, i, 1)
         entry.textChanged.connect(lambda text, w=w: calcular_dobra(w))
+        entry.returnPressed.connect(lambda i=i, w=w: focus_next_entry(i, w))
+        # Substituir keyPressEvent para lidar com UP/DOWN sem criar uma função separada
+        entry.keyPressEvent = (lambda entry=entry, i=i, w=w: 
+            lambda event: (
+            focus_next_entry(i, w) if event.key() == Qt.Key_Down else
+            focus_previous_entry(i, w) if event.key() == Qt.Key_Up else
+            QLineEdit.keyPressEvent(entry, event)
+            )
+        )(entry, i, w)
         entry.setToolTip("Insira o valor da dobra.")
 
         medida_dobra_label = QLabel()
