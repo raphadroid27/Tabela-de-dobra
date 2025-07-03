@@ -26,8 +26,6 @@ class WidgetStateManager:
             return
             
         try:
-            print("[STATE] Capturando estado atual dos widgets...")
-            
             # Capturar valores do cabeçalho
             cabecalho_state = {}
             widget_names = ['MAT_COMB', 'ESP_COMB', 'CANAL_COMB', 'COMPR_ENTRY', 'RI_ENTRY', 'DED_ESPEC_ENTRY']
