@@ -41,7 +41,7 @@ for i in range(1, N):
     globals()[f'medidadobra{i}_label_{W}'] = None
     globals()[f'metadedobra{i}_label_{W}'] = None
 DED_ESPEC_ENTRY = None
-FRAME_DOBRA = None  # Verificar se é necessário
+FRAME_DOBRA = None
 
 # aba3.py widgets
 RAZAO_RIE_LBL = None

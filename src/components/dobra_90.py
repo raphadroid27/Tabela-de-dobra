@@ -24,8 +24,8 @@ def dobras(frame, w):
     g.FRAME_DOBRA.setLayout(layout)
     
     # Configurar espaçamento e margens
-    layout.setSpacing(5)  # Espaçamento entre widgets
-    layout.setContentsMargins(5, 5, 5, 5)  # Margens internas
+    layout.setSpacing(5)
+    layout.setContentsMargins(5, 5, 5, 5)
     
     # Configurar larguras das colunas para alinhamento com cabeçalho
     # Coluna 0: Labels "Aba:" - largura fixa
