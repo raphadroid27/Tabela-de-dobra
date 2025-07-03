@@ -33,7 +33,6 @@ def avisos(root):
         aviso_label.setFont(font)
         aviso_label.setWordWrap(True)
         aviso_label.setMaximumWidth(300)
-        aviso_label.setFixedHeight(20)  # Altura fixa
         layout.addWidget(aviso_label)
 
     layout.setContentsMargins(5, 5, 5, 5)  # Margens menores
