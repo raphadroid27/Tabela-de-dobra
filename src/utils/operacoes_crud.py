@@ -560,6 +560,11 @@ def buscar(tipo):
     """
     Realiza a busca de itens no banco de dados com base nos critérios especificados.
     """
+    # Evitar busca durante recarregamento da interface
+    from src.config import globals as g
+    if hasattr(g, 'INTERFACE_RELOADING') and g.INTERFACE_RELOADING:
+        return
+    
     configuracoes = obter_configuracoes()
 
     try:
