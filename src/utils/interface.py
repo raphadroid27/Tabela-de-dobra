@@ -73,7 +73,6 @@ def _atualizar_espessura():
     # Limpar espessuras sempre
     if g.ESP_COMB and hasattr(g.ESP_COMB, 'clear'):
         g.ESP_COMB.clear()
-        g.ESP_COMB.setCurrentIndex(-1)  # Nenhuma seleção
         
     if not material_nome or material_nome.strip() == "":
         return
@@ -87,9 +86,6 @@ def _atualizar_espessura():
 
         espessuras_valores = [str(e.valor) for e in espessuras]
         g.ESP_COMB.addItems(espessuras_valores)
-        
-        # Manter sem seleção inicial
-        g.ESP_COMB.setCurrentIndex(-1)
 
     # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
     if hasattr(g, 'DED_ESPES_COMB') and g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear'):
@@ -120,7 +116,6 @@ def _atualizar_canal():
     # Limpar canais sempre
     if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'clear'):
         g.CANAL_COMB.clear()
-        g.CANAL_COMB.setCurrentIndex(-1)  # Nenhuma seleção
     
     # Só continuar se ambos material e espessura estiverem selecionados
     if not espessura_valor or not material_nome or espessura_valor.strip() == "" or material_nome.strip() == "":
@@ -143,9 +138,6 @@ def _atualizar_canal():
             )
             
             g.CANAL_COMB.addItems(canais_valores)
-            
-            # Manter sem seleção inicial
-            g.CANAL_COMB.setCurrentIndex(-1)
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
         if hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear'):
