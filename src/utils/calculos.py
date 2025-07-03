@@ -105,7 +105,7 @@ def calcular_k_offset():
 
         # Atualiza os labels com os valores calculados
         if g.K_LBL and hasattr(g.K_LBL, 'setText'):
-            g.K_LBL.setText(f"{fator_k:.3f}")
+            g.K_LBL.setText(f"{fator_k:.2f}")
             # Aplica cor diferente se usando dedução específica
             if hasattr(g.K_LBL, 'setStyleSheet'):
                 if usa_deducao_especifica:
@@ -198,7 +198,7 @@ def aba_minima_externa():
                 aba_minima_valor = canal_valor_num / 2 + espessura + 2
                 
                 if g.ABA_EXT_LBL and hasattr(g.ABA_EXT_LBL, 'setText'):
-                    g.ABA_EXT_LBL.setText(f"{aba_minima_valor:.1f}")
+                    g.ABA_EXT_LBL.setText(f"{aba_minima_valor:.0f}")
                     if hasattr(g.ABA_EXT_LBL, 'setStyleSheet'):
                         g.ABA_EXT_LBL.setStyleSheet("")
             else:
@@ -278,7 +278,7 @@ def z_minimo_externo():
             valor_z_min_ext = espessura + (deducao_valor / 2) + (largura_canal / 2) + 2
             
             if g.Z_EXT_LBL and hasattr(g.Z_EXT_LBL, 'setText'):
-                g.Z_EXT_LBL.setText(f'{valor_z_min_ext:.1f}')
+                g.Z_EXT_LBL.setText(f'{valor_z_min_ext:.0f}')
                 if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
                     g.Z_EXT_LBL.setStyleSheet("")
         else:
