@@ -299,13 +299,10 @@ def z_minimo_externo():
 
 
 def _obter_valores_dobras(w):
-    """Obtém os valores das dobras dos widgets de entrada."""
+    """Obtém os valores das dobras dos widgets de entrada para uma coluna específica."""
     return [
-        [
-            getattr(g, f'aba{i}_entry_{col}').text() or ''
-            if getattr(g, f'aba{i}_entry_{col}', None) is not None else ''
-            for col in range(1, w + 1)
-        ]
+        getattr(g, f'aba{i}_entry_{w}').text() or ''
+        if getattr(g, f'aba{i}_entry_{w}', None) is not None else ''
         for i in range(1, g.N)
     ]
 
@@ -324,40 +321,57 @@ def _obter_valor_deducao():
 
 def _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras):
     """Calcula a medida da dobra baseada na posição e valor de dedução."""
-    if i in (1, g.N - 1):
+    # Encontrar as posições das abas com valores (primeira e última)
+    posicoes_com_valores = []
+    for idx, valor in enumerate(valores_dobras):
+        if valor.strip():  # Se não está vazio
+            posicoes_com_valores.append(idx + 1)  # Converter para índice baseado em 1
+    
+    if len(posicoes_com_valores) == 0:
         return float(dobra) - float(deducao_valor) / 2
-
-    # Verificar se há dobra na linha anterior para decidir a dedução
-    if (valores_dobras is None or len(valores_dobras) <= i or
-        len(valores_dobras[i]) <= 0 or
-            not valores_dobras[i][0]):
-        return float(dobra) - float(deducao_valor) / 2
-
-    return float(dobra) - float(deducao_valor)
+    
+    primeira_posicao = posicoes_com_valores[0]
+    ultima_posicao = posicoes_com_valores[-1]
+    
+    # Aplicar lógica baseada na posição
+    if i == primeira_posicao or i == ultima_posicao:
+        # Primeira ou última aba com valor usa dedução/2
+        resultado = float(dobra) - float(deducao_valor) / 2
+    else:
+        # Abas intermediárias usam dedução completa
+        resultado = float(dobra) - float(deducao_valor)
+    
+    return resultado
 
 
 def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
     """Atualiza os widgets com os valores calculados de dobra."""
+    def atualizar_widget_seguro(widget, valor):
+        """Atualiza um widget de forma segura"""
+        if widget is not None and hasattr(widget, 'setText'):
+            widget.setText(f"{valor:.2f}")
+            if hasattr(widget, 'setStyleSheet'):
+                widget.setStyleSheet("")
+    
     widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
     widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-    if widget_medida is not None and hasattr(widget_medida, 'setText'):
-        widget_medida.setText(f'{medidadobra:.2f}')
-        if hasattr(widget_medida, 'setStyleSheet'):
-            widget_medida.setStyleSheet("")
-    if widget_metade is not None and hasattr(widget_metade, 'setText'):
-        widget_metade.setText(f'{metade_dobra:.2f}')
-        if hasattr(widget_metade, 'setStyleSheet'):
-            widget_metade.setStyleSheet("")
+    
+    atualizar_widget_seguro(widget_medida, medidadobra)
+    atualizar_widget_seguro(widget_metade, metade_dobra)
 
 
 def _limpar_widgets_dobra(i, w):
     """Limpa os widgets de dobra quando o valor está vazio."""
+    def limpar_widget_seguro(widget):
+        """Limpa um widget de forma segura"""
+        if widget is not None and hasattr(widget, 'setText'):
+            widget.setText("")
+    
     widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
     widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-    if widget_medida is not None and hasattr(widget_medida, 'setText'):
-        widget_medida.setText("")
-    if widget_metade is not None and hasattr(widget_metade, 'setText'):
-        widget_metade.setText("")
+    
+    limpar_widget_seguro(widget_medida)
+    limpar_widget_seguro(widget_metade)
 
 
 def _calcular_e_atualizar_blank(w):
@@ -396,12 +410,8 @@ def calcular_dobra(w):
     """
     Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
     """
-    # Obter valores das dobras diretamente dos widgets
+    # Obter valores das dobras diretamente dos widgets para a coluna específica
     valores_dobras = _obter_valores_dobras(w)
-
-    if valores_dobras is not None:
-        for linha in valores_dobras:
-            print(linha)
 
     # Obter valor da dedução
     deducao_valor = _obter_valor_deducao()
@@ -409,28 +419,29 @@ def calcular_dobra(w):
     if not deducao_valor:
         return
 
-    # Iterar pelas linhas e colunas para calcular as medidas
+    # Iterar pelas linhas para calcular as medidas
     for i in range(1, g.N):
-        for col in range(1, w + 1):
-            if (valores_dobras is None or len(valores_dobras) <= i - 1 or
-                    len(valores_dobras[i - 1]) <= col - 1):
-                continue
+        # Índice na lista valores_dobras (base 0)
+        indice_lista = i - 1
+        
+        if indice_lista >= len(valores_dobras):
+            continue
 
-            dobra = valores_dobras[i - 1][col - 1].replace(',', '.')
+        dobra = valores_dobras[indice_lista].replace(',', '.')
 
-            if dobra == "":
-                _limpar_widgets_dobra(i, col)
-            else:
-                medidadobra = _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras)
-                metade_dobra = medidadobra / 2
-                _atualizar_widgets_dobra(i, col, medidadobra, metade_dobra)
+        if dobra == "":
+            _limpar_widgets_dobra(i, w)
+        else:
+            medidadobra = _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras)
+            metade_dobra = medidadobra / 2
+            _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra)
 
-            _calcular_e_atualizar_blank(col)
-            # Usar valor atual do widget em vez da variável global
-            valor_atual = valores_dobras[i - 1][col - 1] if (valores_dobras and 
-                                                           len(valores_dobras) > i - 1 and 
-                                                           len(valores_dobras[i - 1]) > col - 1) else ""
-            verificar_aba_minima(valor_atual, i, col)
+        # Verificar aba mínima usando o valor atual
+        valor_atual = valores_dobras[indice_lista] if indice_lista < len(valores_dobras) else ""
+        verificar_aba_minima(valor_atual, i, w)
+    
+    # Calcular e atualizar blank para esta coluna (fora do loop)
+    _calcular_e_atualizar_blank(w)
 
 
 def verificar_aba_minima(dobra, i, w):
@@ -450,7 +461,6 @@ def verificar_aba_minima(dobra, i, w):
     if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
         if hasattr(entry_widget, 'setStyleSheet'):
             entry_widget.setStyleSheet("")
-        print(f"Valor vazio na aba {i}, coluna {w}.")
     else:
         try:
             # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
