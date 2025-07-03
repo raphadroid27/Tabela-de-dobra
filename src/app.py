@@ -2,7 +2,20 @@
 Formulário Principal do Aplicativo de Cálculo de Dobra
 Este módulo implementa a interface principal do aplicativo, permitindo a
 gestão de deduções, materiais, espessuras e canais. Ele utiliza a biblioteca
-PySide6 para a interface gráfica, o módulo globals para variáveis globais,
+PySide6 pa    nova_deducao_action = QAction("Nova Dedução", g.PRINC_FORM)
+    nova_deducao_action.triggered.connect(lambda: (setattr(g, 'EDIT_DED', False), form_deducao.main(g.PRINC_FORM)))
+    file_menu.addAction(nova_deducao_action)
+
+    novo_material_action = QAction("Novo Material", g.PRINC_FORM)
+    novo_material_action.triggered.connect(lambda: (setattr(g, 'EDIT_MAT', False), form_material.main(g.PRINC_FORM)))
+    file_menu.addAction(novo_material_action)
+
+    nova_espessura_action = QAction("Nova Espessura", g.PRINC_FORM)
+    nova_espessura_action.triggered.connect(lambda: (setattr(g, 'EDIT_ESP', False), form_espessura.main(g.PRINC_FORM)))
+    file_menu.addAction(nova_espessura_action)
+
+    novo_canal_action = QAction("Novo Canal", g.PRINC_FORM)
+    novo_canal_action.triggered.connect(lambda: (setattr(g, 'EDIT_CANAL', False), form_canal.main(g.PRINC_FORM))) gráfica, o módulo globals para variáveis globais,
 e outros módulos auxiliares para operações relacionadas ao banco de dados
 e funcionalidades específicas.
 """
@@ -16,9 +29,6 @@ from PySide6.QtGui import QIcon, QAction
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Desativa o aviso do pylint para importações fora de ordem
-# pylint: disable=wrong-import-position
 
 from src.config import globals as g
 from src.forms.form_wrappers import (
@@ -40,8 +50,6 @@ from src.utils.interface_manager import carregar_interface
 from src.utils.janelas import no_topo
 from src.utils.usuarios import logout
 from src.utils.utilitarios import obter_caminho_icone
-
-# pylint: enable=wrong-import-position
 
 DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
 CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
@@ -75,24 +83,6 @@ def salvar_configuracao(config):
     """
     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(config, f)
-
-
-def form_true(form, editar_attr, root):
-    """
-    Abre o formulário de edição de um item específico
-    (dedução, material, espessura ou canal).
-    """
-    setattr(g, editar_attr, True)
-    form.main(root)
-
-
-def form_false(form, editar_attr, root):
-    """
-    Fecha o formulário de edição de um item específico
-    (dedução, material, espessura ou canal).
-    """
-    setattr(g, editar_attr, False)
-    form.main(root)
 
 
 def fechar_aplicativo():
@@ -270,19 +260,19 @@ def configurar_menu():
     edit_menu = menu_bar.addMenu("Editar")
     
     editar_deducao_action = QAction("Editar Dedução", g.PRINC_FORM)
-    editar_deducao_action.triggered.connect(lambda: form_true(form_deducao, 'EDIT_DED', g.PRINC_FORM))
+    editar_deducao_action.triggered.connect(lambda: (setattr(g, 'EDIT_DED', True), form_deducao.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_deducao_action)
 
     editar_material_action = QAction("Editar Material", g.PRINC_FORM)
-    editar_material_action.triggered.connect(lambda: form_true(form_material, 'EDIT_MAT', g.PRINC_FORM))
+    editar_material_action.triggered.connect(lambda: (setattr(g, 'EDIT_MAT', True), form_material.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_material_action)
 
     editar_espessura_action = QAction("Editar Espessura", g.PRINC_FORM)
-    editar_espessura_action.triggered.connect(lambda: form_true(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
+    editar_espessura_action.triggered.connect(lambda: (setattr(g, 'EDIT_ESP', True), form_espessura.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_espessura_action)
 
     editar_canal_action = QAction("Editar Canal", g.PRINC_FORM)
-    editar_canal_action.triggered.connect(lambda: form_true(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
+    editar_canal_action.triggered.connect(lambda: (setattr(g, 'EDIT_CANAL', True), form_canal.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_canal_action)
 
     # Menu Opções
@@ -319,11 +309,11 @@ def configurar_menu():
     usuario_menu = menu_bar.addMenu("Usuário")
     
     login_action = QAction("Login", g.PRINC_FORM)
-    login_action.triggered.connect(lambda: form_true(form_aut, "LOGIN", g.PRINC_FORM))
+    login_action.triggered.connect(lambda: (setattr(g, "LOGIN", True), form_aut.main(g.PRINC_FORM)))
     usuario_menu.addAction(login_action)
 
     novo_usuario_action = QAction("Novo Usuário", g.PRINC_FORM)
-    novo_usuario_action.triggered.connect(lambda: form_false(form_aut, "LOGIN", g.PRINC_FORM))
+    novo_usuario_action.triggered.connect(lambda: (setattr(g, "LOGIN", False), form_aut.main(g.PRINC_FORM)))
     usuario_menu.addAction(novo_usuario_action)
 
     gerenciar_usuarios_action = QAction("Gerenciar Usuários", g.PRINC_FORM)
@@ -416,12 +406,13 @@ def main():
             
             # Adicionar uma função para capturar quando a janela é fechada
             def on_app_exit():
-                print("Aplicativo sendo finalizado...")
+                # Removido print de debug
+                pass
                 
             app.aboutToQuit.connect(on_app_exit)
             
             exit_code = app.exec()
-            print(f"Aplicativo finalizado com código: {exit_code}")
+            # Removido print de debug
             return exit_code
         else:
             print("ERRO: Janela principal não foi criada!")
