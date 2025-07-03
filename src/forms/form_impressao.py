@@ -8,7 +8,7 @@
 import os
 import subprocess
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, 
-                               QLineEdit, QPushButton, QTextEdit, QListWidget, QFrame, 
+                               QLineEdit, QPushButton, QTextEdit, QTextBrowser, QListWidget, QFrame, 
                                QGroupBox, QScrollArea, QFileDialog, QMessageBox)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -183,22 +183,20 @@ def adicionar_lista_arquivos():
         if texto and isinstance(texto, str):
             linhas = texto.split('\n')
         else:
-            linhas = []  # ou trate o erro conforme necessário
+            linhas = []
 
-        # Filtrar linhas que não são placeholder
-        placeholder_text = "Exemplo:\n010464516\n010464519"
-        if texto != placeholder_text:
-            arquivos = [linha.strip() for linha in linhas if linha.strip() and not linha.startswith("Exemplo:")]
+        # Filtrar linhas vazias e criar lista de arquivos
+        arquivos = [linha.strip() for linha in linhas if linha.strip()]
 
-            # Adiciona cada arquivo à lista
-            if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS and arquivos:
-                for arquivo in arquivos:
-                    g.IMPRESSAO_LISTA_ARQUIVOS.addItem(arquivo)
+        # Adiciona cada arquivo à lista
+        if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS and arquivos:
+            for arquivo in arquivos:
+                g.IMPRESSAO_LISTA_ARQUIVOS.addItem(arquivo)
 
-                # Limpa o campo de texto
-                g.IMPRESSAO_LISTA_TEXT.clear()
+            # Limpa o campo de texto
+            g.IMPRESSAO_LISTA_TEXT.clear()
 
-                QMessageBox.information(g.IMPRESSAO_FORM, "Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
+            QMessageBox.information(g.IMPRESSAO_FORM, "Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
 
 
 def remover_arquivo():
@@ -222,11 +220,9 @@ def limpar_lista():
 
 
 def limpar_texto_placeholder():
-    """Limpa o campo de texto e restaura o placeholder."""
+    """Limpa o campo de texto."""
     if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
-        placeholder_text = "Exemplo:\n010464516\n010464519"
         g.IMPRESSAO_LISTA_TEXT.clear()
-        g.IMPRESSAO_LISTA_TEXT.setPlainText(placeholder_text)
 
 
 def executar_impressao():
@@ -270,7 +266,7 @@ def main(root):
 
     g.IMPRESSAO_FORM = QDialog(root)
     g.IMPRESSAO_FORM.setWindowTitle("Impressão em Lote de PDFs")
-    g.IMPRESSAO_FORM.setFixedSize(500, 420)
+    g.IMPRESSAO_FORM.setFixedSize(500, 460)
 
     icone_path = obter_caminho_icone()
     g.IMPRESSAO_FORM.setWindowIcon(QIcon(icone_path))
@@ -327,8 +323,7 @@ def main(root):
     
     g.IMPRESSAO_LISTA_TEXT = QTextEdit()
     g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(100)
-    placeholder_text = "Exemplo:\n010464516\n010464519"
-    g.IMPRESSAO_LISTA_TEXT.setPlainText(placeholder_text)
+    g.IMPRESSAO_LISTA_TEXT.setPlaceholderText("Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519")
     text_layout.addWidget(g.IMPRESSAO_LISTA_TEXT)
 
     # Botões ao lado do texto
@@ -462,7 +457,7 @@ def main(root):
     resultado_layout = QVBoxLayout()
     frame_resultado.setLayout(resultado_layout)
 
-    g.IMPRESSAO_RESULTADO_TEXT = QTextEdit()
+    g.IMPRESSAO_RESULTADO_TEXT = QTextBrowser()
     g.IMPRESSAO_RESULTADO_TEXT.setMaximumHeight(100)
     resultado_layout.addWidget(g.IMPRESSAO_RESULTADO_TEXT)
 
