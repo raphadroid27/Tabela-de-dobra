@@ -49,6 +49,10 @@ def _atualizar_material():
             g.DED_MATER_COMB.addItems(materiais)
             g.DED_MATER_COMB.setCurrentIndex(-1)
             
+        # Chamar calcular_valores após atualizar material para garantir que 
+        # os cálculos sejam atualizados
+        calcular_valores()
+            
     except Exception as e:
         print(f"Erro ao atualizar materiais: {e}")
         import traceback
@@ -94,6 +98,10 @@ def _atualizar_espessura():
         g.DED_ESPES_COMB.clear()
         g.DED_ESPES_COMB.addItems([str(valor) for valor in sorted(valores_limpos)])
         g.DED_ESPES_COMB.setCurrentIndex(-1)
+        
+    # Chamar calcular_valores após atualizar espessura para garantir que 
+    # os cálculos sejam atualizados
+    calcular_valores()
 
 
 def _atualizar_canal():
@@ -146,6 +154,10 @@ def _atualizar_canal():
             g.DED_CANAL_COMB.clear()
             g.DED_CANAL_COMB.addItems(sorted(valores_canal_limpos))
             g.DED_CANAL_COMB.setCurrentIndex(-1)
+            
+        # Chamar calcular_valores após atualizar canal para garantir que 
+        # os cálculos sejam atualizados
+        calcular_valores()
             
     except ValueError as e:
         print(f"Erro ao converter valor da espessura: {e}")
@@ -226,6 +238,10 @@ def _atualizar_deducao():
                 g.DED_LBL.setText('')
             if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
                 g.OBS_LBL.setText('')
+                
+        # Chamar calcular_valores após atualizar a dedução para garantir que 
+        # os cálculos das dobras usem a dedução correta
+        calcular_valores()
                 
     except ValueError as e:
         print(f"Erro ao converter valor da espessura: {e}")

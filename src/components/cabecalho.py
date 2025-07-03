@@ -96,9 +96,7 @@ def cabecalho(parent):
     compr_entry.setToolTip("Digite o comprimento.")
 
     # Conectar eventos de mudança nas comboboxes
-    mat_comb.currentTextChanged.connect(calcular_valores)
-    esp_comb.currentTextChanged.connect(calcular_valores)
-    canal_comb.currentTextChanged.connect(calcular_valores)
+    # Removidas as conexões diretas para calcular_valores - agora é feito após atualizar widgets
     compr_entry.textChanged.connect(calcular_valores)
 
 
