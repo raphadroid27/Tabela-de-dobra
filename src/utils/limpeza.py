@@ -4,100 +4,67 @@ Módulo com funções utilitárias para limpeza da interface.
 from PySide6.QtWidgets import QLineEdit, QLabel, QComboBox
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
+from src.utils.widget_manager import WidgetManager
 
 
 def limpar_dobras():
     """
     Limpa os valores das dobras e atualiza os labels correspondentes.
+    Versão otimizada usando o WidgetManager.
     """
-    def limpar_widgets(widgets, metodo, valor=""):
-        """
-        Limpa ou redefine widgets com base no método fornecido.
-
-        Args:
-            widgets (list): Lista de widgets a serem limpos.
-            metodo (str): Método a ser chamado no widget (ex.: 'clear', 'setText').
-            valor (str): Valor a ser usado no método (se aplicável).
-        """
-        for widget in widgets:
-            if widget:
-                if metodo == "clear":
-                    if isinstance(widget, QLineEdit):
-                        widget.clear()
-                    elif isinstance(widget, QComboBox):
-                        widget.clear()
-                elif metodo == "setText":
-                    if isinstance(widget, QLabel):
-                        widget.setText(valor)
-
-    # Obter widgets dinamicamente
-    def obter_widgets(prefixo):
-        return [
-            getattr(g, f"{prefixo}{i}_label_{col}", None)
-            for i in range(1, g.N)
-            for col in g.VALORES_W
-        ]
-
-    # Limpar entradas e labels
-    dobras = [getattr(g, f"aba{i}_entry_{col}", None) for i in range(1, g.N) for col in g.VALORES_W]
-    medidas = obter_widgets("medidadobra")
-    metades = obter_widgets("metadedobra")
-    blanks = [getattr(g, f"medida_blank_label_{col}", None) for col in g.VALORES_W]
-    metades_blanks = [getattr(g, f"metade_blank_label_{col}", None) for col in g.VALORES_W]
-
-    # Limpar widgets
-    limpar_widgets(dobras, "clear")
-    limpar_widgets(medidas + metades + blanks + metades_blanks, "setText", "")
+    # Limpar todos os widgets de dobra para cada valor W
+    if hasattr(g, 'VALORES_W'):
+        for w in g.VALORES_W:
+            WidgetManager.clear_dobra_widgets(w)
 
     # Limpar dedução específica
-    if g.DED_ESPEC_ENTRY and isinstance(g.DED_ESPEC_ENTRY, QLineEdit):
-        g.DED_ESPEC_ENTRY.clear()
+    ded_espec_entry = WidgetManager.safe_get_widget('DED_ESPEC_ENTRY')
+    WidgetManager.clear_widget(ded_espec_entry)
 
-    # Alterar a cor de fundo das entradas de dobras para branco
-    for i in range(1, g.N):
-        for col in g.VALORES_W:
-            entry = getattr(g, f'aba{i}_entry_{col}', None)
-            if entry and isinstance(entry, QLineEdit):
-                entry.setStyleSheet("")
-
-    # Verifique se o atributo existe antes de usá-lo
-    aba1_entry = getattr(g, "aba1_entry_1", None)
-    if aba1_entry and isinstance(aba1_entry, QLineEdit):
-        aba1_entry.setFocus()
+    # Focar no primeiro campo de entrada se existir
+    primeiro_entry = WidgetManager.safe_get_widget("aba1_entry_1")
+    if primeiro_entry and hasattr(primeiro_entry, 'setFocus'):
+        primeiro_entry.setFocus()
 
 
 def limpar_tudo():
     """
     Limpa todos os campos e labels do aplicativo.
+    Versão otimizada usando o WidgetManager.
     """
-    campos = [
-        g.MAT_COMB, g.ESP_COMB, g.CANAL_COMB
-    ]
-    for campo in campos:
-        if campo is not None and isinstance(campo, QComboBox):
-            campo.setCurrentText('')  # Limpa o valor selecionado
-            if campo != g.MAT_COMB:
-                campo.clear()  # Limpa os valores disponíveis
+    # Limpar comboboxes do cabeçalho
+    cabecalho_widgets = WidgetManager.get_cabecalho_widgets()
+    
+    # Limpar comboboxes principais (preservar material para último)
+    combobox_names = ['ESP_COMB', 'CANAL_COMB']
+    for name in combobox_names:
+        widget = cabecalho_widgets.get(name)
+        if widget and isinstance(widget, QComboBox):
+            WidgetManager.set_widget_value(widget, '')  # Limpa seleção
+            widget.clear()  # Limpa itens
+    
+    # Limpar material por último (só a seleção, não os itens)
+    mat_comb = cabecalho_widgets.get('MAT_COMB')
+    if mat_comb and isinstance(mat_comb, QComboBox):
+        WidgetManager.set_widget_value(mat_comb, '')
 
-    entradas = [
-        g.RI_ENTRY, g.COMPR_ENTRY
-    ]
-    for entrada in entradas:
-        if entrada is not None and isinstance(entrada, QLineEdit):
-            entrada.clear()
+    # Limpar campos de entrada
+    entrada_names = ['RI_ENTRY', 'COMPR_ENTRY']
+    for name in entrada_names:
+        widget = cabecalho_widgets.get(name)
+        WidgetManager.clear_widget(widget)
 
-    etiquetas = {
-        g.K_LBL: "",
-        g.DED_LBL: "",
-        g.OFFSET_LBL: "",
-        g.OBS_LBL: "",
-        g.FORCA_LBL: "",
-        g.ABA_EXT_LBL: "",
-        g.Z_EXT_LBL: ""
+    # Limpar labels com valores específicos
+    label_values = {
+        'K_LBL': "",
+        'DED_LBL': "",
+        'OFFSET_LBL': "",
+        'OBS_LBL': "",
+        'FORCA_LBL': "",
+        'ABA_EXT_LBL': "",
+        'Z_EXT_LBL': ""
     }
-    for etiqueta, texto in etiquetas.items():
-        if etiqueta is not None and isinstance(etiqueta, QLabel):
-            etiqueta.setText(texto)
+    WidgetManager.batch_set_widgets(label_values)
 
     limpar_dobras()
     todas_funcoes()

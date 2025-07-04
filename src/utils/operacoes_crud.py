@@ -83,26 +83,23 @@ def adicionar(tipo):
 def adicionar_deducao():
     """
     Lógica para adicionar uma nova dedução.
+    Versão refatorada usando WidgetValidator.
     """
-    # Verificar se os widgets foram inicializados
-    if (g.DED_ESPES_COMB is None or g.DED_CANAL_COMB is None or
-            g.DED_MATER_COMB is None or g.DED_VALOR_ENTRY is None):
-        show_error("Erro", "Interface não inicializada corretamente.")
+    from src.utils.widget_validator import OperationHelper
+    
+    # Validar widgets e obter valores
+    is_valid, values = OperationHelper.validate_deducao_operation()
+    if not is_valid:
+        show_error("Erro", "Interface não inicializada corretamente ou campos obrigatórios vazios.", parent=g.DEDUC_FORM)
         return
 
-    espessura_valor = g.DED_ESPES_COMB.currentText()
-    canal_valor = g.DED_CANAL_COMB.currentText()
-    material_nome = g.DED_MATER_COMB.currentText()
-    nova_observacao_valor = g.DED_OBSER_ENTRY.text() if g.DED_OBSER_ENTRY else ""
-    nova_forca_valor = g.DED_FORCA_ENTRY.text() if g.DED_FORCA_ENTRY else ""
-
-    if not all([espessura_valor, canal_valor, material_nome, g.DED_VALOR_ENTRY.text()]):
-        show_error("Erro",
-                             "Material, espessura, canal e valor da dedução são obrigatórios.",
-                             parent=g.DEDUC_FORM)
-        return
-
-    nova_deducao_valor = float(g.DED_VALOR_ENTRY.text().replace(',', '.'))
+    # Extrair valores
+    espessura_valor = values['DED_ESPES_COMB']
+    canal_valor = values['DED_CANAL_COMB']
+    material_nome = values['DED_MATER_COMB']
+    nova_deducao_valor = float(values['DED_VALOR_ENTRY'].replace(',', '.'))
+    nova_observacao_valor = values.get('DED_OBSER_ENTRY', '')
+    nova_forca_valor = values.get('DED_FORCA_ENTRY', '')
 
     espessura_obj = session.query(Espessura).filter_by(valor=espessura_valor).first()
     canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
@@ -152,17 +149,24 @@ def adicionar_deducao():
 def adicionar_espessura():
     """
     Lógica para adicionar uma nova espessura.
+    Versão refatorada usando WidgetValidator.
     """
-    if g.ESP_VALOR_ENTRY is None:
-        show_error("Erro", "Campo de espessura não inicializado.")
+    from src.utils.widget_validator import OperationHelper
+    
+    # Validar widgets e obter valores
+    is_valid, values = OperationHelper.validate_espessura_operation()
+    if not is_valid:
+        show_error("Erro", "Campo de espessura não inicializado ou vazio.")
         return
 
-    espessura_valor = g.ESP_VALOR_ENTRY.text().replace(',', '.')
+    espessura_valor = values['ESP_VALOR_ENTRY'].replace(',', '.')
     if not re.match(r'^\d+(\.\d+)?$', espessura_valor):
         show_warning("Atenção!",
                                "A espessura deve conter apenas números ou números decimais.",
                                parent=g.ESPES_FORM)
-        g.ESP_VALOR_ENTRY.clear()
+        from src.utils.widget_manager import WidgetManager
+        esp_entry = WidgetManager.safe_get_widget('ESP_VALOR_ENTRY')
+        WidgetManager.clear_widget(esp_entry)
         return
 
     espessura_existente = session.query(Espessura).filter_by(valor=espessura_valor).first()
@@ -183,21 +187,20 @@ def adicionar_espessura():
 def adicionar_material():
     """
     Lógica para adicionar um novo material.
+    Versão refatorada usando WidgetValidator.
     """
-    # Verificar se os widgets foram inicializados
-    if (g.MAT_NOME_ENTRY is None or g.MAT_DENS_ENTRY is None or
-            g.MAT_ESCO_ENTRY is None or g.MAT_ELAS_ENTRY is None):
-        show_error("Erro", "Interface não inicializada corretamente.")
+    from src.utils.widget_validator import OperationHelper
+    
+    # Validar widgets e obter valores
+    is_valid, values = OperationHelper.validate_material_operation()
+    if not is_valid:
+        show_error("Erro", "Interface não inicializada corretamente ou campos obrigatórios vazios.")
         return
 
-    nome_material = g.MAT_NOME_ENTRY.text()
-    densidade_material = g.MAT_DENS_ENTRY.text()
-    escoamento_material = g.MAT_ESCO_ENTRY.text()
-    elasticidade_material = g.MAT_ELAS_ENTRY.text()
-
-    if not nome_material:
-        show_error("Erro", "O campo Material é obrigatório.", parent=g.MATER_FORM)
-        return
+    nome_material = values['MAT_NOME_ENTRY']
+    densidade_material = values.get('MAT_DENS_ENTRY', '')
+    escoamento_material = values.get('MAT_ESCO_ENTRY', '')
+    elasticidade_material = values.get('MAT_ELAS_ENTRY', '')
 
     material_existente = session.query(Material).filter_by(nome=nome_material).first()
     if material_existente:
