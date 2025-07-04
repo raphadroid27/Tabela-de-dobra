@@ -210,7 +210,7 @@ Histórico de mudanças do aplicativo Cálculo de Dobras
 
 ## v0.1.0 - Lançamento Inicial (18/12/2024)
 
-- Commit inicial do projeto de cálculo de dobras
+- Commit inicial do projeto de Cálculo de Dobras
 - Configuração básica de diretórios e arquivos
 - Implementação inicial do banco de dados SQLite
 - Estruturação de módulos para funcionamento básico da aplicação

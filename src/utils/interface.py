@@ -1,9 +1,9 @@
 """
-Este módulo contém funções auxiliares para o aplicativo de cálculo de dobras.
+Este módulo contém funções auxiliares para o aplicativo de Cálculo de Dobras.
 
 As funções incluem a atualização de widgets, manipulação de valores de dobras,
 restauração de valores, e outras operações relacionadas ao funcionamento do
-aplicativo de cálculo de dobras.
+aplicativo de Cálculo de Dobras.
 """
 import re
 import traceback

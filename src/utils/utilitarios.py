@@ -1,5 +1,5 @@
 """
-Funções utilitárias para o aplicativo de cálculo de dobras.
+Funções utilitárias para o aplicativo de Cálculo de Dobras.
 """
 import os
 import sys

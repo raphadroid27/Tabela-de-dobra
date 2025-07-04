@@ -1,6 +1,6 @@
 
 """
-Módulo utilitário para manipulação de banco de dados no aplicativo de cálculo de dobras.
+Módulo utilitário para manipulação de banco de dados no aplicativo de Cálculo de Dobras.
 """
 import os
 from PySide6.QtWidgets import QMessageBox
@@ -13,7 +13,8 @@ from src.config import globals as g
 # Configuração do banco de dados
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
-engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
+engine = create_engine(
+    f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -117,7 +118,8 @@ def salvar_no_banco(obj, tipo, detalhes):
     """
     session.add(obj)
     tratativa_erro()
-    registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
+    registrar_log(g.USUARIO_NOME, 'adicionar', tipo,
+                  obj.id, f'{tipo} {detalhes}')
 
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]

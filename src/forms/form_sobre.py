@@ -32,7 +32,8 @@ def main(root):
     g.SOBRE_FORM.setWindowTitle("Sobre")
     g.SOBRE_FORM.resize(300, 210)
     g.SOBRE_FORM.setFixedSize(300, 210)
-    g.SOBRE_FORM.setWindowFlags(g.SOBRE_FORM.windowFlags() | Qt.WindowStaysOnTopHint)
+    g.SOBRE_FORM.setWindowFlags(
+        g.SOBRE_FORM.windowFlags() | Qt.WindowStaysOnTopHint)
 
     # Define o ícone
     icone_path = obter_caminho_icone()
@@ -68,7 +69,7 @@ def main(root):
     layout.addWidget(label_autor)
 
     # Descrição
-    label_descricao = QLabel("Aplicativo para cálculo de dobras.")
+    label_descricao = QLabel("Aplicativo para Cálculo de Dobras.")
     label_descricao.setFont(font_normal)
     label_descricao.setAlignment(Qt.AlignCenter)
     layout.addWidget(label_descricao)

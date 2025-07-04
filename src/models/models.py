@@ -1,5 +1,5 @@
 """
-Modelo de dados para o sistema de cálculo de dobra de chapas. Este módulo define as classes que 
+Modelo de dados para o sistema de Cálculo de Dobra de chapas. Este módulo define as classes que 
 representam as tabelas do banco de dados, utilizando SQLAlchemy para ORM.
 As classes definem os atributos e relacionamentos entre as tabelas, permitindo a manipulação dos 
 dados de forma orientada a objetos. As tabelas incluem informações sobre usuários, espessuras, 

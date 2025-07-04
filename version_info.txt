@@ -15,7 +15,7 @@ VSVersionInfo(
                 StringTable(
                     u'041604E4',  # Código de idioma e página de código (Português do Brasil, Unicode)
                     [
-                        StringStruct(u'FileDescription', u'Aplicativo para cálculo de dobras'),
+                        StringStruct(u'FileDescription', u'Aplicativo para Cálculo de Dobras'),
                         StringStruct(u'InternalName', u'Cálculo de Dobra'),
                         StringStruct(u'LegalCopyright', u'Copyright (C) 2025 raphadroid27'),
                         StringStruct(u'OriginalFilename', u'Cálculo de Dobra.exe'),
