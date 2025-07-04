@@ -4,9 +4,7 @@ de dobras. Inclui operações CRUD (Criar, Ler, Atualizar, Excluir) para os tipo
 dedução, espessura, material e canal.
 """
 import re
-
 from PySide6.QtWidgets import QMessageBox, QTreeWidgetItem
-
 from src.utils.banco_dados import (session,
                                    salvar_no_banco,
                                    tratativa_erro,
@@ -78,6 +76,7 @@ def adicionar(tipo):
     limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
+    buscar(tipo)
 
 
 def adicionar_deducao():
@@ -446,6 +445,7 @@ def excluir(tipo):
     limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
+    buscar(tipo)
 
 
 def preencher_campos(tipo):
@@ -580,7 +580,7 @@ def buscar(tipo):
     Realiza a busca de itens no banco de dados com base nos critérios especificados.
     """
     # Evitar busca durante recarregamento da interface
-    if hasattr(globals.g, 'INTERFACE_RELOADING') and globals.g.INTERFACE_RELOADING:
+    if hasattr(g, 'INTERFACE_RELOADING') and g.INTERFACE_RELOADING:
         return
 
     # Evitar busca automática durante atualização dos comboboxes de dedução
