@@ -52,10 +52,7 @@ def _atualizar_material():
                 # Tentar restaurar o valor anterior se ainda existir na lista
                 if valor_atual and valor_atual.strip():
                     index = g.DED_MATER_COMB.findText(valor_atual)
-                    if index >= 0:
-                        g.DED_MATER_COMB.setCurrentIndex(index)
-                    else:
-                        g.DED_MATER_COMB.setCurrentIndex(-1)
+                    g.DED_MATER_COMB.setCurrentIndex(index if index >= 0 else -1)
             finally:
                 g.UPDATING_DEDUCAO_COMBOS = False
             
@@ -114,10 +111,7 @@ def _atualizar_espessura():
             # Tentar restaurar o valor anterior se ainda existir na lista
             if valor_atual and valor_atual.strip():
                 index = g.DED_ESPES_COMB.findText(valor_atual)
-                if index >= 0:
-                    g.DED_ESPES_COMB.setCurrentIndex(index)
-                else:
-                    g.DED_ESPES_COMB.setCurrentIndex(-1)
+                g.DED_ESPES_COMB.setCurrentIndex(index if index >= 0 else -1)
             else:
                 g.DED_ESPES_COMB.setCurrentIndex(-1)
         finally:
@@ -185,10 +179,7 @@ def _atualizar_canal():
                 # Tentar restaurar o valor anterior se ainda existir na lista
                 if valor_atual and valor_atual.strip():
                     index = g.DED_CANAL_COMB.findText(valor_atual)
-                    if index >= 0:
-                        g.DED_CANAL_COMB.setCurrentIndex(index)
-                    else:
-                        g.DED_CANAL_COMB.setCurrentIndex(-1)
+                    g.DED_CANAL_COMB.setCurrentIndex(index if index >= 0 else -1)
                 else:
                     g.DED_CANAL_COMB.setCurrentIndex(-1)
             finally:
@@ -291,7 +282,7 @@ def _atualizar_deducao():
 def atualizar_widgets(tipo):
     """
     Atualiza os valores de comboboxes com base no tipo especificado.
-    Preserva o estado dos widgets que podem ser afetados pela atualização.
+    Preserva o estado dos widgets do cabeçalho principal que podem ser afetados pela atualização.
 
     Args:
         tipo (str): O tipo de combobox a ser atualizado.
@@ -307,10 +298,10 @@ def atualizar_widgets(tipo):
 
         # Executa a ação correspondente ao tipo
         if tipo in acoes:
-            # Capturar valores atuais antes da atualização (apenas comboboxes afetados)
+            # Capturar valores atuais dos comboboxes do cabeçalho principal antes da atualização
             valores_preservar = {}
             
-            # Preservar seleções que podem ser perdidas pela atualização
+            # Preservar seleções do cabeçalho principal que podem ser perdidas pela atualização
             if tipo == 'material' and hasattr(g, 'ESP_COMB') and g.ESP_COMB:
                 valores_preservar['ESP_COMB'] = g.ESP_COMB.currentText()
                 valores_preservar['CANAL_COMB'] = getattr(g, 'CANAL_COMB', None) and g.CANAL_COMB.currentText()
@@ -320,7 +311,7 @@ def atualizar_widgets(tipo):
             # Executar a atualização
             acoes[tipo]()
             
-            # Tentar restaurar valores preservados quando possível
+            # Tentar restaurar valores preservados do cabeçalho principal quando possível
             for widget_name, valor in valores_preservar.items():
                 if valor:  # Só restaurar se havia um valor
                     widget = getattr(g, widget_name, None)
