@@ -11,6 +11,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Função para obter caminho das atualizações
+
+
+def obter_caminho_updates_local():
+    """Retorna o caminho da pasta updates relativa ao projeto."""
+    projeto_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(projeto_root, "updates")
+
 
 def obter_versao_atual():
     """Obtém a versão atual do arquivo src/__init__.py"""
@@ -130,14 +138,12 @@ def atualizar_arquivos_locais(nova_versao):
 
 def criar_version_json_servidor(nova_versao, changelog, obrigatoria=False):
     """Cria/atualiza o version.json do servidor"""
-    servidor_updates = r"Y:\0-DESENHO\Cálculo de dobra\updates"
+    # Usar pasta 'updates' relativa ao projeto
+    servidor_updates = obter_caminho_updates_local()
 
-    # Para teste local, usar diretório alternativo
-    if not os.path.exists(servidor_updates):
-        servidor_updates = os.path.join(os.getcwd(), "test_updates")
-        print(f"📁 Usando diretório de teste: {servidor_updates}")
-
+    # Criar a pasta se não existir
     os.makedirs(servidor_updates, exist_ok=True)
+    print(f"📁 Usando diretório: {servidor_updates}")
 
     version_json_path = os.path.join(servidor_updates, "version.json")
     executavel_path = os.path.join(

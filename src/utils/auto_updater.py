@@ -10,6 +10,7 @@ import sys
 import time
 from PySide6.QtWidgets import QMessageBox, QProgressDialog
 from PySide6.QtCore import QThread, pyqtSignal, QTimer
+from .update_paths import obter_caminho_updates, obter_caminho_executavel, obter_diretorio_aplicativo
 
 
 class UpdateChecker(QThread):
@@ -68,10 +69,12 @@ class AutoUpdater:
 
     def __init__(self, current_version="1.0.0"):
         self.current_version = current_version
-        self.update_server_path = r"Y:\0-DESENHO\Cálculo de dobra\updates"
-        self.app_path = sys.executable if getattr(
-            sys, 'frozen', False) else __file__
-        self.app_dir = os.path.dirname(self.app_path)
+        # Usar funções utilitárias para obter caminhos
+        self.update_server_path = obter_caminho_updates()
+        self.app_path = obter_caminho_executavel()
+        self.app_dir = obter_diretorio_aplicativo()
+        self.show_no_update_message = False  # Inicializar aqui
+
         self.check_timer = QTimer()
         self.check_timer.timeout.connect(self.check_for_updates)
         self.checker = None  # Inicializar como None

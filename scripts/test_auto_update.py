@@ -7,16 +7,18 @@ import os
 from datetime import datetime
 
 
+def obter_caminho_updates_local():
+    """Retorna o caminho da pasta updates relativa ao projeto."""
+    projeto_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(projeto_root, "updates")
+
+
 def criar_teste_rapido():
     """Cria uma versão de teste rapidamente."""
-    update_dir = r"Y:\0-DESENHO\Cálculo de dobra\updates"
-
-    # Para teste local
-    if not os.path.exists(update_dir):
-        update_dir = "test_updates"
-        print(f"📁 Usando diretório local: {update_dir}")
-
+    # Usar pasta 'updates' relativa ao projeto
+    update_dir = obter_caminho_updates_local()
     os.makedirs(update_dir, exist_ok=True)
+    print(f"📁 Usando diretório: {update_dir}")
 
     # Versão de teste simples
     version_info = {
@@ -42,17 +44,17 @@ def criar_teste_rapido():
 
 def limpar_teste():
     """Remove teste."""
-    dirs_teste = [r"Y:\0-DESENHO\Cálculo de dobra\updates", "test_updates"]
+    # Usar a mesma função para obter o caminho
+    update_dir = obter_caminho_updates_local()
 
-    for test_dir in dirs_teste:
-        if os.path.exists(test_dir):
-            import shutil
-            try:
-                shutil.rmtree(test_dir)
-                print(f"✅ Removido: {test_dir}")
-                return
-            except OSError as e:
-                print(f"⚠️ Erro ao remover {test_dir}: {e}")
+    if os.path.exists(update_dir):
+        import shutil
+        try:
+            shutil.rmtree(update_dir)
+            print(f"✅ Removido: {update_dir}")
+            return
+        except OSError as e:
+            print(f"⚠️ Erro ao remover {update_dir}: {e}")
 
     print("ℹ️ Nenhum diretório de teste encontrado")
 
