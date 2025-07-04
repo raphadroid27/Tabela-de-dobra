@@ -36,6 +36,11 @@ from src.forms.form_wrappers import (
 )
 from src.config import globals as g
 
+# Configurações do aplicativo
+APP_VERSION = "2.0.0"  # Versão atual do aplicativo
+
+# Variável global para armazenar a instância do auto-updater
+_auto_updater = None
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -217,6 +222,22 @@ def cleanup_orphaned_windows():
         pass
 
 
+def verificar_atualizacao_manual():
+    """Função para verificar atualizações manualmente através do menu."""
+    from PySide6.QtWidgets import QMessageBox
+
+    if _auto_updater is None:
+        QMessageBox.warning(
+            g.PRINC_FORM,
+            "Sistema de Atualização",
+            "Sistema de auto-update não está disponível."
+        )
+        return
+
+    # Verificação direta - mais simples
+    _auto_updater.check_for_updates_manual()
+
+
 def configurar_menu():
     """
     Configura o menu superior da janela principal.
@@ -309,6 +330,14 @@ def configurar_menu():
     impressao_action.triggered.connect(
         lambda: form_impressao.main(g.PRINC_FORM))
     ferramentas_menu.addAction(impressao_action)
+
+    ferramentas_menu.addSeparator()
+
+    verificar_atualizacao_action = QAction(
+        "Verificar Atualizações", g.PRINC_FORM)
+    verificar_atualizacao_action.triggered.connect(
+        verificar_atualizacao_manual)
+    ferramentas_menu.addAction(verificar_atualizacao_action)
 
     # Menu Usuário
     usuario_menu = menu_bar.addMenu("Usuário")
@@ -405,6 +434,18 @@ def main():
 
         print("Verificando admin existente...")
         verificar_admin_existente()
+
+        # Configurar sistema de auto-update
+        print("Configurando sistema de atualizações...")
+        global _auto_updater
+        try:
+            from src.utils.auto_updater import setup_auto_updater
+            _auto_updater = setup_auto_updater(APP_VERSION)
+            print("Sistema de auto-update configurado com sucesso!")
+        except (ImportError, RuntimeError, AttributeError) as e:
+            print(
+                f"Aviso: Sistema de auto-update não pôde ser configurado: {e}")
+            _auto_updater = None
 
         if g.PRINC_FORM is not None:
             print("Exibindo janela principal...")
