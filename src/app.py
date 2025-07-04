@@ -235,19 +235,19 @@ def configurar_menu():
     file_menu = menu_bar.addMenu("Arquivo")
 
     nova_deducao_action = QAction("Nova Dedução", g.PRINC_FORM)
-    nova_deducao_action.triggered.connect(lambda: form_false(form_deducao, 'EDIT_DED', g.PRINC_FORM))
+    nova_deducao_action.triggered.connect(lambda: (setattr(g, 'EDIT_DED', False), form_deducao.main(g.PRINC_FORM)))
     file_menu.addAction(nova_deducao_action)
 
     novo_material_action = QAction("Novo Material", g.PRINC_FORM)
-    novo_material_action.triggered.connect(lambda: form_false(form_material, 'EDIT_MAT', g.PRINC_FORM))
+    novo_material_action.triggered.connect(lambda: (setattr(g, 'EDIT_MAT', False), form_material.main(g.PRINC_FORM)))
     file_menu.addAction(novo_material_action)
 
     nova_espessura_action = QAction("Nova Espessura", g.PRINC_FORM)
-    nova_espessura_action.triggered.connect(lambda: form_false(form_espessura, 'EDIT_ESP', g.PRINC_FORM))
+    nova_espessura_action.triggered.connect(lambda: (setattr(g, 'EDIT_ESP', False), form_espessura.main(g.PRINC_FORM)))
     file_menu.addAction(nova_espessura_action)
 
     novo_canal_action = QAction("Novo Canal", g.PRINC_FORM)
-    novo_canal_action.triggered.connect(lambda: form_false(form_canal, 'EDIT_CANAL', g.PRINC_FORM))
+    novo_canal_action.triggered.connect(lambda: (setattr(g, 'EDIT_CANAL', False), form_canal.main(g.PRINC_FORM)))
     file_menu.addAction(novo_canal_action)
 
     file_menu.addSeparator()
