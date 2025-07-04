@@ -2,6 +2,81 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 2.0.0 (04/07/2025)
+
+- melhora: adiciona chamada à função buscar nas operações de adicionar e excluir
+- melhora: refatora o código para melhorar a legibilidade e a estrutura das funções de adição e exclusão
+- melhora: refatora o código para melhorar a legibilidade e tratamento de exceções nas funções de atualização de widgets
+- melhora: refatora o código para melhorar a legibilidade e a estrutura do aplicativo
+- melhora: adiciona desativação de avisos específicos no pylint e configurações de formatação no VSCode
+- recurso: implementa análise e otimização de uso de widgets globais
+- melhora: simplifica a lógica de atualização dos comboboxes e melhora a preservação de estados
+- melhora: adiciona controle para atualização automática dos comboboxes de dedução e evita buscas desnecessárias
+- melhora: atualiza ações do menu para usar setattr em vez de form_false
+- melhora: remove uso de tooltips personalizados e substitui por tooltips nativos do PySide6
+- melhora: remove altura fixa dos avisos para permitir ajuste dinâmico
+- melhora: corrige o comando de execução do programa principal no README.md
+- melhora: refatora ações do menu para simplificar a lógica de edição e remove prints de debug
+- melhora: aprimora funções de cálculo de dobras, adicionando segurança na atualização de widgets e refinando a lógica de dedução
+- melhora: refatora atualização de comboboxes de materiais e dedução, removendo código redundante
+- melhora: remove mensagens de log desnecessárias ao capturar estado dos widgets
+- melhora: remove comentários desnecessários
+- melhora: centraliza a limpeza de janelas órfãs utilizando função dedicada
+- remove: exclui formulários obsoletos de canal, dedução, espessura e material
+- melhora: remove seleção inicial dos comboboxes de espessura e canal ao atualizar
+- melhora: atualiza chamadas para calcular_valores após alterações em materiais, espessuras, canais e deduções
+- melhora: adiciona navegação por teclado nas entradas de dobras e corrige foco para setFocus
+- melhora: evita execução de busca CRUD durante recarregamento da interface usando flag de controle
+- refatora: migra canal_tooltip para tooltip nativo do PySide6 e remove chamadas redundantes em todas_funcoes
+- organiza: centraliza tooltips do cabeçalho e implementa tooltip automático para combobox de canais
+- melhora: aprimora aviso do formulário de razão R/E com QTextBrowser justificado e sem barras de rolagem
+- refatora: substitui placeholder manual por nativo e usa QTextBrowser para exibição somente leitura no formulário de impressão
+- melhora: aprimora limpeza de janelas órfãs preservando formulários ativos durante expansão da interface
+- adiciona: implementa flag INTERFACE_RELOADING para evitar recarregamentos indesejados durante expansão da interface
+- refatora: atualiza botões com ícones e estilos modernos para melhorar a interface
+- refatora: substitui função no_topo por aplicar_no_topo e aprimora lógica de gerenciamento de janelas
+- remove: exclui arquivos de teste obsoletos após reorganização do projeto
+- corrige: corrige layout quebrado após expansão/contração da interface
+- refatora: melhora a função de autenticação com novos estilos de botão e ajustes na janela modal
+- refatora: aprimora função copiar e integração com formulário universal
+- corrige: migra sistema CRUD completamente para PySide6 e resolve problemas de adição de itens
+- refatora: ajusta formulários em uma estrutura universal para melhorar a manutenção e organização
+- refatora: ajusta margens, espaçamentos e alturas fixas nos componentes da interface
+- refatora: atualiza e remove arquivos de banco de dados obsoletos
+- refatora: migração completa para pyside6
+- corrige: fórmula do fator k e atualiza lógica de aplicação
+- refatora: remove sistema legado de salvamento/restauração de widgets
+- recurso: integrar sistema de estado de widgets no gerenciador de interface
+- recurso: implementa sistema centralizado de gerenciamento de estado de widgets
+- refatora: reescreve logica de exibicao das comboboxes do cabecalho
+- refatora: otimiza estrutura do projeto e melhora organização
+- inicial
+- build: lançamento da versão 1.2.0 com novas funcionalidades e melhorias
+- corrige: resolve problema das funções expandir vertical e horizontal não funcionarem
+- refatora: altera a cor do botão "Resetar Senha" para amarelo claro na interface gráfica
+- refatora: altera a cor do botão "Procurar" para cinza claro na interface gráfica
+- refatora: adiciona limpeza de formatação de código e melhoria da legibilidade em múltiplos arquivos
+- refatora: altera cores dos botões para tons mais claros na interface gráfica
+- refatora: melhora a busca de arquivos PDF ao extrair a parte principal do nome
+- refatora: adiciona verificações de existência para widgets antes de manipulação no formulário de impressão
+- refatora: atualiza o arquivo tabela_de_dobra.db com novas alterações
+- refatora: remove importações desnecessárias e melhora a formatação do código no formulário de impressão
+- refatora: melhora a função de seleção de diretório com habilitação e desabilitação de janelas
+- recurso: adiciona formulário de impressão em lote com funcionalidades de seleção de diretório e lista de arquivos
+- build: atualiza para a versão 1.1.4 com novas funcionalidades e melhorias
+- refatora: adiciona novos campos numéricos na função de processamento de edição
+- corrige: ajusta erros de codificação e inconsistências em mensagens e comentários
+- refatora docstrings para usar aspas duplas para consistência em todos os módulos
+- corrige: corrigir erros de Pylint e problemas de encoding
+- refatora: melhora a atualização dos comboboxes de dedução com valores distintos e filtrados
+- refatora: adiciona verificações para evitar erros ao acessar widgets na atualização da interface
+- refatora: adiciona verificações para evitar erros ao acessar a interface principal
+- refatora: melhora a verificação de inicialização de widgets e atualiza o cálculo de valores
+- refatora: melhora a verificação de inicialização das variáveis antes de acessar seus valores
+- corrige: ajusta erros de acesso a atributos None e problemas de formatação
+- refatora: reorganiza a lógica de carregamento da interface e move funções de limpeza para um novo módulo
+- refatora: atualiza os arquivos da tabela de dobra no banco de dados
+
 ## 1.2.0 (01/07/2025)
 
 - Adicionado formulário de impressão em lote com funcionalidades de seleção de diretório e lista de arquivos  
