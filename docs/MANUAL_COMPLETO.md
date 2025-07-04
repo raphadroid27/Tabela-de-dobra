@@ -4,6 +4,20 @@
 
 Sistema completo para atualizar automaticamente o executável do **Cálculo de Dobra** usando **pasta relativa**, funcionando independente de onde o aplicativo estiver localizado. O sistema não depende mais de caminhos de rede fixos.
 
+## 🔧 Correções de Encoding Implementadas
+
+### ✅ Problemas Resolvidos
+- **Nomes de arquivos com acentos**: Sistema agora funciona corretamente com "Cálculo de Dobra.exe"
+- **Encoding Windows**: Scripts batch usam CP1252 (padrão Windows brasileiro)
+- **Detecção de processos**: Busca robusta que funciona independente de acentos
+- **Compatibilidade**: Não depende mais de win32api ou bibliotecas externas
+
+### 🛠️ Tecnologias Aplicadas
+- Script batch com variáveis de ambiente para caminhos seguros
+- Encoding CP1252 para máxima compatibilidade
+- Normalização automática de caminhos com múltiplos fallbacks
+- Detecção de processos usando findstr com busca genérica
+
 ---
 
 ## 👨‍💻 Para Administradores
@@ -178,7 +192,7 @@ python scripts/listar_commits.py  # Listar commits git
 Se você usava o sistema anterior com `Y:\0-DESENHO\...`:
 
 1. **Automático:** O novo sistema detecta automaticamente onde está
-2. **Manual (se necessário):** Copie arquivos de `Y:\0-DESENHO\Cálculo de dobra\updates\` para a pasta `updates` local
+2. **Manual (se necessário):** Copie arquivos de `Y:\0-DESENHO\Cálculo de Dobra\updates\` para a pasta `updates` local
 3. **Compatibilidade:** Funciona tanto local quanto em rede
 
 ---
