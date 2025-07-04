@@ -9,16 +9,16 @@ import subprocess
 import sys
 import time
 from PySide6.QtWidgets import QMessageBox, QProgressDialog
-from PySide6.QtCore import QThread, pyqtSignal, QTimer
+from PySide6.QtCore import QThread, Signal, QTimer
 from .update_paths import obter_caminho_updates, obter_caminho_executavel, obter_diretorio_aplicativo
 
 
 class UpdateChecker(QThread):
     """Thread para verificar atualizações sem bloquear a interface."""
 
-    update_available = pyqtSignal(dict)  # Sinal com info da atualização
-    no_update = pyqtSignal()
-    error_occurred = pyqtSignal(str)
+    update_available = Signal(dict)  # Sinal com info da atualização
+    no_update = Signal()
+    error_occurred = Signal(str)
 
     def __init__(self, current_version, update_server_path):
         super().__init__()
@@ -242,38 +242,97 @@ class AutoUpdater:
 
     def _create_update_script(self, source_path, target_path, backup_path):
         """Cria script batch para atualização."""
+        from .update_paths import normalizar_caminho
+
+        # Normalizar todos os caminhos para evitar problemas de encoding
+        source_path = normalizar_caminho(source_path)
+        target_path = normalizar_caminho(target_path)
+        backup_path = normalizar_caminho(backup_path)
+
+        # Usar variáveis no script para evitar problemas com caminhos longos
         script_content = f"""@echo off
-echo Iniciando atualizacao do Calculo de Dobra...
-timeout /t 2 /nobreak > nul
+setlocal enabledelayedexpansion
+chcp 1252 > nul
+
+REM Definir variáveis de caminhos
+set "SOURCE_PATH={source_path}"
+set "TARGET_PATH={target_path}"
+set "BACKUP_PATH={backup_path}"
+set "TEMP_BACKUP=%TARGET_PATH%.bak"
+
+echo Iniciando atualizacao do aplicativo...
+timeout /t 3 /nobreak > nul
 
 REM Aguardar o processo principal fechar
+echo Aguardando fechamento do aplicativo...
 :wait_loop
-tasklist /FI "IMAGENAME eq Cálculo de Dobra.exe" 2>NUL | find /I /N "Cálculo de Dobra.exe">NUL
-if "%ERRORLEVEL%"=="0" (
+tasklist 2>NUL | findstr /I "Calculo" >NUL 2>&1
+if not errorlevel 1 (
     timeout /t 1 /nobreak > nul
     goto wait_loop
 )
 
-echo Aplicando atualizacao...
-copy /Y "{source_path}" "{target_path}"
+echo Processo fechado. Aplicando atualizacao...
+
+REM Criar backup adicional se necessário
+if exist "%TARGET_PATH%" (
+    echo Criando backup de seguranca...
+    copy "%TARGET_PATH%" "%TEMP_BACKUP%" > nul
+)
+
+REM Aplicar atualização
+echo Copiando nova versao...
+copy /Y "%SOURCE_PATH%" "%TARGET_PATH%"
 
 if %ERRORLEVEL% EQU 0 (
     echo Atualizacao aplicada com sucesso!
+    echo Aguardando para reiniciar...
+    timeout /t 3 /nobreak > nul
+    
     REM Reiniciar aplicativo
-    start "" "{target_path}"
+    echo Reiniciando aplicativo...
+    start "" "%TARGET_PATH%"
+    
+    REM Remover backup temporário após sucesso
+    if exist "%TEMP_BACKUP%" del "%TEMP_BACKUP%" > nul
+    
 ) else (
     echo Erro na atualizacao! Restaurando backup...
-    copy /Y "{backup_path}" "{target_path}"
-    start "" "{target_path}"
+    
+    REM Tentar restaurar backup principal
+    if exist "%BACKUP_PATH%" (
+        copy /Y "%BACKUP_PATH%" "%TARGET_PATH%" > nul
+        echo Backup principal restaurado.
+    ) else if exist "%TEMP_BACKUP%" (
+        copy /Y "%TEMP_BACKUP%" "%TARGET_PATH%" > nul
+        echo Backup de seguranca restaurado.
+    )
+    
+    timeout /t 3 /nobreak > nul
+    start "" "%TARGET_PATH%"
 )
 
-REM Limpar script temporário
-del "%~f0"
+REM Limpeza final
+echo Limpando arquivos temporarios...
+if exist "%TEMP_BACKUP%" del "%TEMP_BACKUP%" > nul
+
+REM Auto-destruir script
+del "%~f0" > nul 2>&1
 """
 
-        script_path = os.path.join(self.app_dir, 'update_temp.bat')
-        with open(script_path, 'w', encoding='utf-8') as f:
-            f.write(script_content)
+        # Usar nome de arquivo seguro (sem acentos)
+        script_path = os.path.join(self.app_dir, 'update_script.bat')
+
+        # Usar encoding CP1252 que é padrão do Windows brasileiro
+        try:
+            with open(script_path, 'w', encoding='cp1252') as f:
+                f.write(script_content)
+            print(f"Script criado com encoding CP1252: {script_path}")
+        except UnicodeEncodeError:
+            # Fallback para latin-1
+            with open(script_path, 'w', encoding='latin-1') as f:
+                f.write(script_content)
+            print(f"Script criado com encoding latin-1: {script_path}")
 
         return script_path
 
@@ -323,11 +382,29 @@ del "%~f0"
 # Função para integrar no app principal
 def setup_auto_updater(app_version="1.0.0"):
     """Configura o sistema de auto-update."""
-    updater = AutoUpdater(app_version)
+    try:
+        updater = AutoUpdater(app_version)
 
-    # Verificar atualização pendente no startup
-    if not updater.check_pending_update():
-        # Iniciar verificação periódica
-        updater.start_periodic_check(interval_minutes=30)
+        # Verificar se o sistema está funcional
+        updates_path = updater.update_server_path
+        if not os.path.exists(updates_path):
+            print(f"Pasta updates não encontrada: {updates_path}")
+            # Tentar criar a pasta
+            try:
+                os.makedirs(updates_path, exist_ok=True)
+                print(f"Pasta updates criada: {updates_path}")
+            except Exception as e:
+                print(f"Erro ao criar pasta updates: {e}")
+                return None
 
-    return updater
+        # Verificar atualização pendente no startup
+        if not updater.check_pending_update():
+            # Iniciar verificação periódica
+            updater.start_periodic_check(interval_minutes=30)
+
+        return updater
+    except Exception as e:
+        print(f"Erro ao configurar auto-updater: {e}")
+        import traceback
+        traceback.print_exc()
+        return None

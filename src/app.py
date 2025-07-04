@@ -230,7 +230,12 @@ def verificar_atualizacao_manual():
         QMessageBox.warning(
             g.PRINC_FORM,
             "Sistema de Atualização",
-            "Sistema de auto-update não está disponível."
+            "Sistema de auto-update não está disponível.\n\n"
+            "Possíveis causas:\n"
+            "- Pasta 'updates' não encontrada ao lado do executável\n"
+            "- Erro na inicialização do sistema\n"
+            "- Problema de permissões\n\n"
+            "Verifique se existe a pasta 'updates' no mesmo diretório do executável."
         )
         return
 
@@ -442,9 +447,23 @@ def main():
             from src.utils.auto_updater import setup_auto_updater
             _auto_updater = setup_auto_updater(APP_VERSION)
             print("Sistema de auto-update configurado com sucesso!")
-        except (ImportError, RuntimeError, AttributeError) as e:
+        except ImportError as e:
+            print(f"Erro de importação no auto-updater: {e}")
+            try:
+                # Tentar importação alternativa para executável
+                sys.path.insert(0, os.path.join(
+                    os.path.dirname(__file__), 'utils'))
+                from auto_updater import setup_auto_updater
+                _auto_updater = setup_auto_updater(APP_VERSION)
+                print("Sistema de auto-update configurado com importação alternativa!")
+            except Exception as e2:
+                print(f"Falha na importação alternativa: {e2}")
+                _auto_updater = None
+        except (RuntimeError, AttributeError, Exception) as e:
             print(
                 f"Aviso: Sistema de auto-update não pôde ser configurado: {e}")
+            import traceback
+            traceback.print_exc()
             _auto_updater = None
 
         if g.PRINC_FORM is not None:
@@ -487,5 +506,6 @@ def main():
 if __name__ == "__main__":
     exit_code = main()
     sys.exit(exit_code)
+
 
 
