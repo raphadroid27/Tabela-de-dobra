@@ -565,6 +565,12 @@ def buscar(tipo):
     if hasattr(g, 'INTERFACE_RELOADING') and g.INTERFACE_RELOADING:
         return
     
+    # Evitar busca se for do tipo dedução e estiver sendo chamada por atualização automática dos comboboxes
+    # do cabeçalho (quando o formulário de dedução está aberto mas a atualização vem do cabeçalho principal)
+    if (tipo == 'dedução' and hasattr(g, 'DEDUC_FORM') and g.DEDUC_FORM and 
+        g.DEDUC_FORM.isVisible() and hasattr(g, 'UPDATING_DEDUCAO_COMBOS') and g.UPDATING_DEDUCAO_COMBOS):
+        return
+    
     configuracoes = obter_configuracoes()
 
     try:

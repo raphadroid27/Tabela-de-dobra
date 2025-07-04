@@ -38,9 +38,26 @@ def _atualizar_material():
         if hasattr(g, 'MAT_COMB') and g.MAT_COMB:
             atualizar_combobox_material(g.MAT_COMB)
 
-        # Atualizar combobox de dedução
-        if hasattr(g, 'DED_MATER_COMB') and g.DED_MATER_COMB:
-            atualizar_combobox_material(g.DED_MATER_COMB)
+        # Atualizar combobox de dedução apenas se não estiver em recarregamento da interface
+        if (hasattr(g, 'DED_MATER_COMB') and g.DED_MATER_COMB and
+            (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
+            # Definir flag para indicar que estamos atualizando os comboboxes de dedução automaticamente
+            g.UPDATING_DEDUCAO_COMBOS = True
+            try:
+                # Capturar valor atual antes de limpar
+                valor_atual = g.DED_MATER_COMB.currentText()
+                
+                atualizar_combobox_material(g.DED_MATER_COMB)
+                
+                # Tentar restaurar o valor anterior se ainda existir na lista
+                if valor_atual and valor_atual.strip():
+                    index = g.DED_MATER_COMB.findText(valor_atual)
+                    if index >= 0:
+                        g.DED_MATER_COMB.setCurrentIndex(index)
+                    else:
+                        g.DED_MATER_COMB.setCurrentIndex(-1)
+            finally:
+                g.UPDATING_DEDUCAO_COMBOS = False
             
         # Chamar calcular_valores após atualizar material
         calcular_valores()
@@ -80,12 +97,31 @@ def _atualizar_espessura():
         g.ESP_COMB.addItems(espessuras_valores)
 
     # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
-    if hasattr(g, 'DED_ESPES_COMB') and g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear'):
-        valores_espessura = session.query(Espessura.valor).distinct().all()
-        valores_limpos = [float(valor[0]) for valor in valores_espessura if valor[0] is not None]
-        g.DED_ESPES_COMB.clear()
-        g.DED_ESPES_COMB.addItems([str(valor) for valor in sorted(valores_limpos)])
-        g.DED_ESPES_COMB.setCurrentIndex(-1)
+    # Apenas se não estiver em recarregamento da interface
+    if (hasattr(g, 'DED_ESPES_COMB') and g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear') and
+        (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
+        # Definir flag para indicar que estamos atualizando os comboboxes de dedução automaticamente
+        g.UPDATING_DEDUCAO_COMBOS = True
+        try:
+            # Capturar valor atual antes de limpar
+            valor_atual = g.DED_ESPES_COMB.currentText()
+            
+            valores_espessura = session.query(Espessura.valor).distinct().all()
+            valores_limpos = [float(valor[0]) for valor in valores_espessura if valor[0] is not None]
+            g.DED_ESPES_COMB.clear()
+            g.DED_ESPES_COMB.addItems([str(valor) for valor in sorted(valores_limpos)])
+            
+            # Tentar restaurar o valor anterior se ainda existir na lista
+            if valor_atual and valor_atual.strip():
+                index = g.DED_ESPES_COMB.findText(valor_atual)
+                if index >= 0:
+                    g.DED_ESPES_COMB.setCurrentIndex(index)
+                else:
+                    g.DED_ESPES_COMB.setCurrentIndex(-1)
+            else:
+                g.DED_ESPES_COMB.setCurrentIndex(-1)
+        finally:
+            g.UPDATING_DEDUCAO_COMBOS = False
         
     # Chamar calcular_valores após atualizar espessura para garantir que 
     # os cálculos sejam atualizados
@@ -132,12 +168,31 @@ def _atualizar_canal():
             g.CANAL_COMB.addItems(canais_valores)
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
-        if hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear'):
-            valores_canal = session.query(Canal.valor).distinct().all()
-            valores_canal_limpos = [str(valor[0]) for valor in valores_canal if valor[0] is not None]
-            g.DED_CANAL_COMB.clear()
-            g.DED_CANAL_COMB.addItems(sorted(valores_canal_limpos))
-            g.DED_CANAL_COMB.setCurrentIndex(-1)
+        # Apenas se não estiver em recarregamento da interface
+        if (hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear') and
+            (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
+            # Definir flag para indicar que estamos atualizando os comboboxes de dedução automaticamente
+            g.UPDATING_DEDUCAO_COMBOS = True
+            try:
+                # Capturar valor atual antes de limpar
+                valor_atual = g.DED_CANAL_COMB.currentText()
+                
+                valores_canal = session.query(Canal.valor).distinct().all()
+                valores_canal_limpos = [str(valor[0]) for valor in valores_canal if valor[0] is not None]
+                g.DED_CANAL_COMB.clear()
+                g.DED_CANAL_COMB.addItems(sorted(valores_canal_limpos))
+                
+                # Tentar restaurar o valor anterior se ainda existir na lista
+                if valor_atual and valor_atual.strip():
+                    index = g.DED_CANAL_COMB.findText(valor_atual)
+                    if index >= 0:
+                        g.DED_CANAL_COMB.setCurrentIndex(index)
+                    else:
+                        g.DED_CANAL_COMB.setCurrentIndex(-1)
+                else:
+                    g.DED_CANAL_COMB.setCurrentIndex(-1)
+            finally:
+                g.UPDATING_DEDUCAO_COMBOS = False
             
         # Chamar calcular_valores após atualizar canal para garantir que 
         # os cálculos sejam atualizados
@@ -503,9 +558,13 @@ def limpar_busca(tipo):
     """
     configuracoes = obter_configuracoes()
     if tipo == 'dedução':
-        configuracoes[tipo]['entries']['material_combo'].clear()
-        configuracoes[tipo]['entries']['espessura_combo'].clear()
-        configuracoes[tipo]['entries']['canal_combo'].clear()
+        # Limpar apenas a seleção, mantendo os itens disponíveis
+        if configuracoes[tipo]['entries']['material_combo']:
+            configuracoes[tipo]['entries']['material_combo'].setCurrentIndex(-1)
+        if configuracoes[tipo]['entries']['espessura_combo']:
+            configuracoes[tipo]['entries']['espessura_combo'].setCurrentIndex(-1)
+        if configuracoes[tipo]['entries']['canal_combo']:
+            configuracoes[tipo]['entries']['canal_combo'].setCurrentIndex(-1)
     else:
         configuracoes[tipo]['busca'].clear()
 
