@@ -1,42 +1,26 @@
 """
-Formulário Principal do Aplicativo de Cálculo de Dobra
-Este módulo implementa a interface principal do aplicativo, permitindo a
-gestão de deduções, materiais, espessuras e canais. Ele utiliza a biblioteca
-PySide6 pa    nova_deducao_action = QAction("Nova Dedução", g.PRINC_FORM)
-    nova_deducao_action.triggered.connect(lambda: (setattr(g, 'EDIT_DED', False), form_deducao.main(g.PRINC_FORM)))
-    file_menu.addAction(nova_deducao_action)
+Formulário Principal do Aplicativo de Cálculo de Dobra.
 
-    novo_material_action = QAction("Novo Material", g.PRINC_FORM)
-    novo_material_action.triggered.connect(lambda: (setattr(g, 'EDIT_MAT', False), form_material.main(g.PRINC_FORM)))
-    file_menu.addAction(novo_material_action)
-
-    nova_espessura_action = QAction("Nova Espessura", g.PRINC_FORM)
-    nova_espessura_action.triggered.connect(lambda: (setattr(g, 'EDIT_ESP', False), form_espessura.main(g.PRINC_FORM)))
-    file_menu.addAction(nova_espessura_action)
-
-    novo_canal_action = QAction("Novo Canal", g.PRINC_FORM)
-    novo_canal_action.triggered.connect(lambda: (setattr(g, 'EDIT_CANAL', False), form_canal.main(g.PRINC_FORM))) gráfica, o módulo globals para variáveis globais,
-e outros módulos auxiliares para operações relacionadas ao banco de dados
-e funcionalidades específicas.
+Este módulo implementa a interface principal do aplicativo, permitindo a gestão
+de deduções, materiais, espessuras e canais. Utiliza PySide6 para a interface
+gráfica, além de módulos auxiliares para banco de dados, variáveis globais e
+funcionalidades específicas.
 """
 
 import json
 import os
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QMenuBar, QLabel, QGridLayout
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QAction
-
-# Adiciona o diretório raiz do projeto ao sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.config import globals as g
-from src.forms.form_wrappers import (
-    form_espessura,
-    form_deducao,
-    form_material,
-    form_canal
-)
+import traceback
+import signal
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout  # type: ignore
+from PySide6.QtCore import Qt  # type: ignore
+from PySide6.QtGui import QIcon, QAction  # type: ignore
+from src.utils.utilitarios import obter_caminho_icone
+from src.utils.usuarios import logout
+from src.utils.janelas import no_topo
+from src.utils.interface_manager import carregar_interface
+from src.utils.banco_dados import session
+from src.models import Usuario
 from src.forms import (
     form_sobre,
     form_aut,
@@ -44,12 +28,18 @@ from src.forms import (
     form_razao_rie,
     form_impressao
 )
-from src.models import Usuario
-from src.utils.banco_dados import session
-from src.utils.interface_manager import carregar_interface
-from src.utils.janelas import no_topo
-from src.utils.usuarios import logout
-from src.utils.utilitarios import obter_caminho_icone
+from src.forms.form_wrappers import (
+    form_espessura,
+    form_deducao,
+    form_material,
+    form_canal
+)
+from src.config import globals as g
+
+
+# Adiciona o diretório raiz do projeto ao sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 
 DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
 CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
@@ -62,7 +52,8 @@ def verificar_admin_existente():
     Verifica se existe um administrador cadastrado no banco de dados.
     Caso contrário, abre a tela de autenticação para criar um.
     """
-    admin_existente = session.query(Usuario).filter(Usuario.role == "admin").first()
+    admin_existente = session.query(Usuario).filter(
+        Usuario.role == "admin").first()
     if not admin_existente:
         form_aut.main(g.PRINC_FORM)
 
@@ -92,12 +83,12 @@ def fechar_aplicativo():
     try:
         if g.PRINC_FORM is not None:
             g.PRINC_FORM.close()
-        
+
         app = QApplication.instance()
         if app:
             app.quit()
-            
-    except Exception as e:
+
+    except (RuntimeError, AttributeError) as e:
         print(f"Erro ao fechar aplicativo: {e}")
         # Forçar o fechamento se necessário
         sys.exit(0)
@@ -109,32 +100,31 @@ def configurar_janela_principal(config):
     """
     # Garantir que existe apenas uma janela principal e limpar órfãs
     cleanup_orphaned_windows()
-    
+
     if g.PRINC_FORM is not None:
         try:
             g.PRINC_FORM.close()
             g.PRINC_FORM.deleteLater()
             g.PRINC_FORM = None
-        except:
+        except (RuntimeError, AttributeError):
             pass
-    
+
     g.PRINC_FORM = QMainWindow()
     g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
-    g.PRINC_FORM.setFixedSize(340, 460)  # Redimensionar para tamanho padrão sem expansões
+    g.PRINC_FORM.setFixedSize(340, 460)
 
-    # Marcar como janela principal para identificação
-    g.PRINC_FORM._is_main_window = True
-        
+    g.PRINC_FORM.is_main_window = True
+
     # Configurar flags da janela corretamente
     # Garantir que todos os botões da barra de título estejam habilitados
-    window_flags = (Qt.Window | 
-                   Qt.WindowTitleHint | 
-                   Qt.WindowSystemMenuHint | 
-                   Qt.WindowMinimizeButtonHint | 
-                   Qt.WindowMaximizeButtonHint | 
-                   Qt.WindowCloseButtonHint)
+    window_flags = (Qt.Window |
+                    Qt.WindowTitleHint |
+                    Qt.WindowSystemMenuHint |
+                    Qt.WindowMinimizeButtonHint |
+                    Qt.WindowMaximizeButtonHint |
+                    Qt.WindowCloseButtonHint)
     g.PRINC_FORM.setWindowFlags(window_flags)
-    
+
     if 'geometry' in config and isinstance(config['geometry'], str):
         # Parse geometry string and apply
         parts = config['geometry'].split('+')
@@ -162,14 +152,14 @@ def configurar_janela_principal(config):
             on_closing()
             # Garantir que a aplicação seja encerrada quando a janela principal for fechada
             QApplication.instance().quit()
-        except Exception as e:
+        except (RuntimeError, AttributeError) as e:
             print(f"Erro ao fechar aplicativo: {e}")
         finally:
             event.accept()
 
     # Sobrescrever o closeEvent
     g.PRINC_FORM.closeEvent = custom_close_event
-    
+
     # Configurar para encerrar a aplicação quando a janela principal for fechada
     g.PRINC_FORM.setAttribute(Qt.WA_QuitOnClose, True)
 
@@ -183,42 +173,47 @@ def cleanup_orphaned_windows():
         app = QApplication.instance()
         if not app:
             return
-        
+
         main_window = g.PRINC_FORM if hasattr(g, 'PRINC_FORM') else None
-        
+
         # Lista de formulários ativos que devem ser preservados
         active_forms = []
-        form_vars = ['DEDUC_FORM', 'MATER_FORM', 'CANAL_FORM', 'ESPES_FORM', 
-                    'SOBRE_FORM', 'AUTEN_FORM', 'USUAR_FORM', 'RIE_FORM', 'IMPRESSAO_FORM']
-        
+        form_vars = ['DEDUC_FORM', 'MATER_FORM', 'CANAL_FORM', 'ESPES_FORM',
+                     'SOBRE_FORM', 'AUTEN_FORM', 'USUAR_FORM', 'RIE_FORM', 'IMPRESSAO_FORM']
+
         for form_var in form_vars:
             if hasattr(g, form_var):
                 form = getattr(g, form_var)
                 if form is not None and hasattr(form, 'isVisible') and form.isVisible():
                     active_forms.append(form)
-        
+
         top_level_widgets = app.topLevelWidgets()
-        
+
         for widget in top_level_widgets[:]:  # Cópia para iteração segura
-            if (widget != main_window and 
+            if (widget != main_window and
                 widget not in active_forms and
-                widget.isVisible() and 
+                widget.isVisible() and
                 not hasattr(widget, '_is_system_widget') and
-                not hasattr(widget, '_is_main_window')):
-                
+                    not hasattr(widget, '_is_main_window')):
+
                 widget_type = type(widget).__name__
-                if widget_type in ['QLabel', 'QFrame', 'QWidget', 'QDialog', 'QWindow', 'QMainWindow']:
+                if widget_type in ['QLabel',
+                                   'QFrame',
+                                   'QWidget',
+                                   'QDialog',
+                                   'QWindow',
+                                   'QMainWindow']:
                     try:
                         widget.hide()
                         widget.close()
                         widget.deleteLater()
-                    except:
+                    except (RuntimeError, AttributeError):
                         pass
-        
+
         # Processar eventos para garantir limpeza
         app.processEvents()
-        
-    except:
+
+    except (RuntimeError, AttributeError):
         pass
 
 
@@ -235,100 +230,113 @@ def configurar_menu():
     file_menu = menu_bar.addMenu("Arquivo")
 
     nova_deducao_action = QAction("Nova Dedução", g.PRINC_FORM)
-    nova_deducao_action.triggered.connect(lambda: (setattr(g, 'EDIT_DED', False), form_deducao.main(g.PRINC_FORM)))
+    nova_deducao_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_DED', False), form_deducao.main(g.PRINC_FORM)))
     file_menu.addAction(nova_deducao_action)
 
     novo_material_action = QAction("Novo Material", g.PRINC_FORM)
-    novo_material_action.triggered.connect(lambda: (setattr(g, 'EDIT_MAT', False), form_material.main(g.PRINC_FORM)))
+    novo_material_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_MAT', False), form_material.main(g.PRINC_FORM)))
     file_menu.addAction(novo_material_action)
 
     nova_espessura_action = QAction("Nova Espessura", g.PRINC_FORM)
-    nova_espessura_action.triggered.connect(lambda: (setattr(g, 'EDIT_ESP', False), form_espessura.main(g.PRINC_FORM)))
+    nova_espessura_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_ESP', False), form_espessura.main(g.PRINC_FORM)))
     file_menu.addAction(nova_espessura_action)
 
     novo_canal_action = QAction("Novo Canal", g.PRINC_FORM)
-    novo_canal_action.triggered.connect(lambda: (setattr(g, 'EDIT_CANAL', False), form_canal.main(g.PRINC_FORM)))
+    novo_canal_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_CANAL', False), form_canal.main(g.PRINC_FORM)))
     file_menu.addAction(novo_canal_action)
 
     file_menu.addSeparator()
-    
+
     sair_action = QAction("Sair", g.PRINC_FORM)
     sair_action.triggered.connect(fechar_aplicativo)
     file_menu.addAction(sair_action)
 
     # Menu Editar
     edit_menu = menu_bar.addMenu("Editar")
-    
+
     editar_deducao_action = QAction("Editar Dedução", g.PRINC_FORM)
-    editar_deducao_action.triggered.connect(lambda: (setattr(g, 'EDIT_DED', True), form_deducao.main(g.PRINC_FORM)))
+    editar_deducao_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_DED', True), form_deducao.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_deducao_action)
 
     editar_material_action = QAction("Editar Material", g.PRINC_FORM)
-    editar_material_action.triggered.connect(lambda: (setattr(g, 'EDIT_MAT', True), form_material.main(g.PRINC_FORM)))
+    editar_material_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_MAT', True), form_material.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_material_action)
 
     editar_espessura_action = QAction("Editar Espessura", g.PRINC_FORM)
-    editar_espessura_action.triggered.connect(lambda: (setattr(g, 'EDIT_ESP', True), form_espessura.main(g.PRINC_FORM)))
+    editar_espessura_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_ESP', True), form_espessura.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_espessura_action)
 
     editar_canal_action = QAction("Editar Canal", g.PRINC_FORM)
-    editar_canal_action.triggered.connect(lambda: (setattr(g, 'EDIT_CANAL', True), form_canal.main(g.PRINC_FORM)))
+    editar_canal_action.triggered.connect(
+        lambda: (setattr(g, 'EDIT_CANAL', True), form_canal.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_canal_action)
 
     # Menu Opções
     opcoes_menu = menu_bar.addMenu("Opções")
-    
+
     # Inicializar NO_TOPO_VAR se não existir
     if not hasattr(g, 'NO_TOPO_VAR') or g.NO_TOPO_VAR is None:
         g.NO_TOPO_VAR = False
-    
+
     no_topo_action = QAction("No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
     no_topo_action.setChecked(g.NO_TOPO_VAR)  # Sincronizar com o estado atual
-    
+
     def toggle_no_topo():
         """Função para alternar o estado 'no topo' e sincronizar o checkbox"""
         no_topo(g.PRINC_FORM)
-        no_topo_action.setChecked(g.NO_TOPO_VAR)  # Atualizar checkbox após mudança
-    
+        # Atualizar checkbox após mudança
+        no_topo_action.setChecked(g.NO_TOPO_VAR)
+
     no_topo_action.triggered.connect(toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
 
     # Menu ferramentas
     ferramentas_menu = menu_bar.addMenu("Utilidades")
-    
+
     razao_action = QAction("Razão Raio/Espessura", g.PRINC_FORM)
     razao_action.triggered.connect(lambda: form_razao_rie.main(g.PRINC_FORM))
     ferramentas_menu.addAction(razao_action)
-    
+
     impressao_action = QAction("Impressão em Lote", g.PRINC_FORM)
-    impressao_action.triggered.connect(lambda: form_impressao.main(g.PRINC_FORM))
+    impressao_action.triggered.connect(
+        lambda: form_impressao.main(g.PRINC_FORM))
     ferramentas_menu.addAction(impressao_action)
 
     # Menu Usuário
     usuario_menu = menu_bar.addMenu("Usuário")
-    
+
     login_action = QAction("Login", g.PRINC_FORM)
-    login_action.triggered.connect(lambda: (setattr(g, "LOGIN", True), form_aut.main(g.PRINC_FORM)))
+    login_action.triggered.connect(
+        lambda: (setattr(g, "LOGIN", True), form_aut.main(g.PRINC_FORM)))
     usuario_menu.addAction(login_action)
 
     novo_usuario_action = QAction("Novo Usuário", g.PRINC_FORM)
-    novo_usuario_action.triggered.connect(lambda: (setattr(g, "LOGIN", False), form_aut.main(g.PRINC_FORM)))
+    novo_usuario_action.triggered.connect(
+        lambda: (setattr(g, "LOGIN", False), form_aut.main(g.PRINC_FORM)))
     usuario_menu.addAction(novo_usuario_action)
 
     gerenciar_usuarios_action = QAction("Gerenciar Usuários", g.PRINC_FORM)
-    gerenciar_usuarios_action.triggered.connect(lambda: form_usuario.main(g.PRINC_FORM))
+    gerenciar_usuarios_action.triggered.connect(
+        lambda: form_usuario.main(g.PRINC_FORM))
     usuario_menu.addAction(gerenciar_usuarios_action)
-    
+
     usuario_menu.addSeparator()
-    
+
     sair_usuario_action = QAction("Sair", g.PRINC_FORM)
     sair_usuario_action.triggered.connect(logout)
     usuario_menu.addAction(sair_usuario_action)
 
     # Menu Ajuda
     help_menu = menu_bar.addMenu("Ajuda")
-    
+
     sobre_action = QAction("Sobre", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
     help_menu.addAction(sobre_action)
@@ -340,7 +348,7 @@ def configurar_frames():
     """
     central_widget = QWidget()
     g.PRINC_FORM.setCentralWidget(central_widget)
-    
+
     layout = QGridLayout(central_widget)  # Mudado para QGridLayout
     layout.setContentsMargins(5, 5, 5, 5)  # Margens menores
     layout.setSpacing(5)  # Espaçamento padrão entre componentes
@@ -362,70 +370,73 @@ def main():
     app = None
     try:
         app = QApplication(sys.argv)
-        
+
         # Configurar para capturar exceções não tratadas
-        import traceback
-        import signal
-        
+
         def handle_exception(exc_type, exc_value, exc_traceback):
             """Captura exceções não tratadas"""
             if exc_type != KeyboardInterrupt:
                 print("ERRO NÃO TRATADO:")
-                print(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            
+                print(''.join(traceback.format_exception(
+                    exc_type, exc_value, exc_traceback)))
+
         def signal_handler(signum, frame):
             """Handler para sinais do sistema"""
             print(f"Sinal recebido: {signum}")
             if app:
                 app.quit()
             sys.exit(0)
-            
+
         sys.excepthook = handle_exception
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-        
+
         print("Carregando configuração...")
         config = carregar_configuracao()
-        
+
         print("Configurando janela principal...")
         configurar_janela_principal(config)
-        
+
         print("Configurando menu...")
         configurar_menu()
-        
+
         print("Configurando frames...")
         configurar_frames()
-        
+
         print("Verificando admin existente...")
         verificar_admin_existente()
-        
+
         if g.PRINC_FORM is not None:
             print("Exibindo janela principal...")
             g.PRINC_FORM.show()
             print("Aplicativo iniciado com sucesso!")
-            
+
             # Adicionar uma função para capturar quando a janela é fechada
             def on_app_exit():
                 # Removido print de debug
                 pass
-                
+
             app.aboutToQuit.connect(on_app_exit)
-            
-            exit_code = app.exec()
-            # Removido print de debug
-            return exit_code
+
+            return app.exec()
         else:
             print("ERRO: Janela principal não foi criada!")
             return 1
-            
+
     except KeyboardInterrupt:
         print("Aplicativo interrompido pelo usuário")
         if app:
             app.quit()
         return 0
-    except Exception as e:
+    except (RuntimeError, ImportError, AttributeError, OSError) as e:
         print(f"ERRO CRÍTICO na inicialização: {e}")
-        import traceback
+
+        traceback.print_exc()
+        if app:
+            app.quit()
+        return 1
+    except Exception as e:  # pylint: disable=broad-except
+        print(f"ERRO INESPERADO na inicialização: {e}")
         traceback.print_exc()
         if app:
             app.quit()
