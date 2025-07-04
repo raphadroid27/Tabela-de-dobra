@@ -6,8 +6,10 @@ restauração de valores, e outras operações relacionadas ao funcionamento do
 aplicativo de cálculo de dobras.
 """
 import re
+import traceback
 import pyperclip
-from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QTreeWidgetItem
+from PySide6.QtWidgets import QWidget, QGridLayout, QTreeWidgetItem  # type: ignore
+from PySide6.QtCore import QTimer
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.banco_dados import session, obter_configuracoes
 from src.utils.calculos import (calcular_dobra,
@@ -29,39 +31,40 @@ def _atualizar_material():
         # Função auxiliar para atualizar combobox de materiais
         def atualizar_combobox_material(combo):
             if combo and hasattr(combo, 'clear'):
-                materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
+                materiais = [m.nome for m in session.query(
+                    Material).order_by(Material.nome)]
                 combo.clear()
                 combo.addItems(materiais)
                 combo.setCurrentIndex(-1)
-        
+
         # Atualizar combobox principal
         if hasattr(g, 'MAT_COMB') and g.MAT_COMB:
             atualizar_combobox_material(g.MAT_COMB)
 
         # Atualizar combobox de dedução apenas se não estiver em recarregamento da interface
         if (hasattr(g, 'DED_MATER_COMB') and g.DED_MATER_COMB and
-            (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
-            # Definir flag para indicar que estamos atualizando os comboboxes de dedução automaticamente
+                (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
+            # Sinaliza atualização automática dos comboboxes de dedução
             g.UPDATING_DEDUCAO_COMBOS = True
             try:
                 # Capturar valor atual antes de limpar
                 valor_atual = g.DED_MATER_COMB.currentText()
-                
+
                 atualizar_combobox_material(g.DED_MATER_COMB)
-                
+
                 # Tentar restaurar o valor anterior se ainda existir na lista
                 if valor_atual and valor_atual.strip():
                     index = g.DED_MATER_COMB.findText(valor_atual)
-                    g.DED_MATER_COMB.setCurrentIndex(index if index >= 0 else -1)
+                    g.DED_MATER_COMB.setCurrentIndex(
+                        index if index >= 0 else -1)
             finally:
                 g.UPDATING_DEDUCAO_COMBOS = False
-            
+
         # Chamar calcular_valores após atualizar material
         calcular_valores()
-            
-    except Exception as e:
+
+    except (AttributeError, RuntimeError, ValueError) as e:
         print(f"Erro ao atualizar materiais: {e}")
-        import traceback
         traceback.print_exc()
 
 
@@ -75,15 +78,16 @@ def _atualizar_espessura():
         return
 
     material_nome = g.MAT_COMB.currentText()
-    
+
     # Limpar espessuras sempre
     if g.ESP_COMB and hasattr(g.ESP_COMB, 'clear'):
         g.ESP_COMB.clear()
-        
+
     if not material_nome or material_nome.strip() == "":
         return
-        
-    material_obj = session.query(Material).filter_by(nome=material_nome).first()
+
+    material_obj = session.query(Material).filter_by(
+        nome=material_nome).first()
     if material_obj and g.ESP_COMB:
         # Buscar espessuras relacionadas ao material através da tabela Deducao
         espessuras = session.query(Espessura).join(Deducao).filter(
@@ -96,18 +100,20 @@ def _atualizar_espessura():
     # Verifica se o combobox de dedução de espessura existe e atualiza seus valores
     # Apenas se não estiver em recarregamento da interface
     if (hasattr(g, 'DED_ESPES_COMB') and g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear') and
-        (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
+            (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
         # Definir flag para indicar que estamos atualizando os comboboxes de dedução automaticamente
         g.UPDATING_DEDUCAO_COMBOS = True
         try:
             # Capturar valor atual antes de limpar
             valor_atual = g.DED_ESPES_COMB.currentText()
-            
+
             valores_espessura = session.query(Espessura.valor).distinct().all()
-            valores_limpos = [float(valor[0]) for valor in valores_espessura if valor[0] is not None]
+            valores_limpos = [
+                float(valor[0]) for valor in valores_espessura if valor[0] is not None]
             g.DED_ESPES_COMB.clear()
-            g.DED_ESPES_COMB.addItems([str(valor) for valor in sorted(valores_limpos)])
-            
+            g.DED_ESPES_COMB.addItems([str(valor)
+                                      for valor in sorted(valores_limpos)])
+
             # Tentar restaurar o valor anterior se ainda existir na lista
             if valor_atual and valor_atual.strip():
                 index = g.DED_ESPES_COMB.findText(valor_atual)
@@ -116,8 +122,8 @@ def _atualizar_espessura():
                 g.DED_ESPES_COMB.setCurrentIndex(-1)
         finally:
             g.UPDATING_DEDUCAO_COMBOS = False
-        
-    # Chamar calcular_valores após atualizar espessura para garantir que 
+
+    # Chamar calcular_valores após atualizar espessura para garantir que
     # os cálculos sejam atualizados
     calcular_valores()
 
@@ -125,7 +131,8 @@ def _atualizar_espessura():
 def _atualizar_canal():
     """
     Atualiza os valores do combobox de canais.
-    Exibe apenas os canais relacionados ao material e espessura selecionados através da tabela Deducao.
+    Exibe apenas os canais relacionados ao material e espessura
+    selecionados através da tabela Deducao.
     Só carrega quando material e espessura válidos forem selecionados.
     """
     if (not g.ESP_COMB or not hasattr(g.ESP_COMB, 'currentText') or
@@ -134,18 +141,22 @@ def _atualizar_canal():
 
     espessura_valor = g.ESP_COMB.currentText()
     material_nome = g.MAT_COMB.currentText()
-    
+
     # Limpar canais sempre
     if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'clear'):
         g.CANAL_COMB.clear()
-    
+
     # Só continuar se ambos material e espessura estiverem selecionados
-    if not espessura_valor or not material_nome or espessura_valor.strip() == "" or material_nome.strip() == "":
+    if (not espessura_valor or
+        not material_nome or
+            espessura_valor.strip() == "" or material_nome.strip() == ""):
         return
-        
+
     try:
-        espessura_obj = session.query(Espessura).filter_by(valor=float(espessura_valor)).first()
-        material_obj = session.query(Material).filter_by(nome=material_nome).first()
+        espessura_obj = session.query(Espessura).filter_by(
+            valor=float(espessura_valor)).first()
+        material_obj = session.query(Material).filter_by(
+            nome=material_nome).first()
 
         if espessura_obj and material_obj and g.CANAL_COMB:
             # Buscar canais relacionados ao material e espessura através da tabela Deducao
@@ -153,45 +164,49 @@ def _atualizar_canal():
                 Deducao.espessura_id == espessura_obj.id,
                 Deducao.material_id == material_obj.id
             ).order_by(Canal.valor)
-            
+
             canais_valores = sorted(
                 [str(c.valor) for c in canais],
-                key=lambda x: float(re.findall(r'\d+\.?\d*', x)[0]) if re.findall(r'\d+\.?\d*', x) else 0
+                key=lambda x: float(re.findall(
+                    r'\d+\.?\d*', x)[0]) if re.findall(r'\d+\.?\d*', x) else 0
             )
-            
+
             g.CANAL_COMB.addItems(canais_valores)
 
         # Verifica se o combobox de dedução de canal existe e atualiza seus valores
         # Apenas se não estiver em recarregamento da interface
-        if (hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear') and
-            (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
-            # Definir flag para indicar que estamos atualizando os comboboxes de dedução automaticamente
+        if (hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB,
+                                                                          'clear') and
+                (not hasattr(g, 'INTERFACE_RELOADING') or not g.INTERFACE_RELOADING)):
+            # Sinaliza atualização automática dos comboboxes de dedução
             g.UPDATING_DEDUCAO_COMBOS = True
             try:
                 # Capturar valor atual antes de limpar
                 valor_atual = g.DED_CANAL_COMB.currentText()
-                
+
                 valores_canal = session.query(Canal.valor).distinct().all()
-                valores_canal_limpos = [str(valor[0]) for valor in valores_canal if valor[0] is not None]
+                valores_canal_limpos = [
+                    str(valor[0]) for valor in valores_canal if valor[0] is not None]
                 g.DED_CANAL_COMB.clear()
                 g.DED_CANAL_COMB.addItems(sorted(valores_canal_limpos))
-                
+
                 # Tentar restaurar o valor anterior se ainda existir na lista
                 if valor_atual and valor_atual.strip():
                     index = g.DED_CANAL_COMB.findText(valor_atual)
-                    g.DED_CANAL_COMB.setCurrentIndex(index if index >= 0 else -1)
+                    g.DED_CANAL_COMB.setCurrentIndex(
+                        index if index >= 0 else -1)
                 else:
                     g.DED_CANAL_COMB.setCurrentIndex(-1)
             finally:
                 g.UPDATING_DEDUCAO_COMBOS = False
-            
-        # Chamar calcular_valores após atualizar canal para garantir que 
+
+        # Chamar calcular_valores após atualizar canal para garantir que
         # os cálculos sejam atualizados
         calcular_valores()
-            
+
     except ValueError as e:
         print(f"Erro ao converter valor da espessura: {e}")
-    except Exception as e:
+    except (AttributeError, RuntimeError) as e:
         print(f"Erro ao atualizar canais: {e}")
 
 
@@ -212,10 +227,10 @@ def _atualizar_deducao():
             return
 
     # Verificar se alguma combobox não tem seleção (currentIndex == -1)
-    if (g.ESP_COMB.currentIndex() == -1 or 
-        g.MAT_COMB.currentIndex() == -1 or 
-        g.CANAL_COMB.currentIndex() == -1):
-        
+    if (g.ESP_COMB.currentIndex() == -1 or
+        g.MAT_COMB.currentIndex() == -1 or
+            g.CANAL_COMB.currentIndex() == -1):
+
         # Limpar valores de dedução se alguma seleção estiver vazia
         if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
             g.DED_LBL.setText('')
@@ -229,8 +244,9 @@ def _atualizar_deducao():
 
     # Verificar se todas as seleções são válidas (não vazias)
     if (not espessura_valor or not material_nome or not canal_valor or
-        espessura_valor.strip() == "" or material_nome.strip() == "" or canal_valor.strip() == ""):
-        
+            espessura_valor.strip() == ("" or material_nome.strip() == ""
+                                        or canal_valor.strip() == "")):
+
         # Limpar valores de dedução se alguma seleção estiver vazia
         if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
             g.DED_LBL.setText('')
@@ -239,8 +255,10 @@ def _atualizar_deducao():
         return
 
     try:
-        espessura_obj = session.query(Espessura).filter_by(valor=float(espessura_valor)).first()
-        material_obj = session.query(Material).filter_by(nome=material_nome).first()
+        espessura_obj = session.query(Espessura).filter_by(
+            valor=float(espessura_valor)).first()
+        material_obj = session.query(Material).filter_by(
+            nome=material_nome).first()
         canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
         if espessura_obj and material_obj and canal_obj:
@@ -268,14 +286,14 @@ def _atualizar_deducao():
                 g.DED_LBL.setText('')
             if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
                 g.OBS_LBL.setText('')
-                
-        # Chamar calcular_valores após atualizar a dedução para garantir que 
+
+        # Chamar calcular_valores após atualizar a dedução para garantir que
         # os cálculos das dobras usem a dedução correta
         calcular_valores()
-                
+
     except ValueError as e:
         print(f"Erro ao converter valor da espessura: {e}")
-    except Exception as e:
+    except (AttributeError, RuntimeError) as e:
         print(f"Erro ao atualizar dedução: {e}")
 
 
@@ -300,17 +318,18 @@ def atualizar_widgets(tipo):
         if tipo in acoes:
             # Capturar valores atuais dos comboboxes do cabeçalho principal antes da atualização
             valores_preservar = {}
-            
+
             # Preservar seleções do cabeçalho principal que podem ser perdidas pela atualização
             if tipo == 'material' and hasattr(g, 'ESP_COMB') and g.ESP_COMB:
                 valores_preservar['ESP_COMB'] = g.ESP_COMB.currentText()
-                valores_preservar['CANAL_COMB'] = getattr(g, 'CANAL_COMB', None) and g.CANAL_COMB.currentText()
+                valores_preservar['CANAL_COMB'] = getattr(
+                    g, 'CANAL_COMB', None) and g.CANAL_COMB.currentText()
             elif tipo == 'espessura' and hasattr(g, 'CANAL_COMB') and g.CANAL_COMB:
                 valores_preservar['CANAL_COMB'] = g.CANAL_COMB.currentText()
-            
+
             # Executar a atualização
             acoes[tipo]()
-            
+
             # Tentar restaurar valores preservados do cabeçalho principal quando possível
             for widget_name, valor in valores_preservar.items():
                 if valor:  # Só restaurar se havia um valor
@@ -318,10 +337,11 @@ def atualizar_widgets(tipo):
                     if widget and hasattr(widget, 'setCurrentText'):
                         try:
                             widget.setCurrentText(valor)
-                        except Exception as e:
-                            print(f"Não foi possível restaurar {widget_name}: {e}")
-    
-    except Exception as e:
+                        except (AttributeError, RuntimeError) as e:
+                            print(
+                                f"Não foi possível restaurar {widget_name}: {e}")
+
+    except (AttributeError, KeyError, RuntimeError) as e:
         print(f"Erro em atualizar_widgets({tipo}): {e}")
 
 
@@ -336,10 +356,12 @@ def canal_tooltip():
     if g.CANAL_COMB.currentText() == "":
         g.CANAL_COMB.setToolTip("Selecione o canal de dobra.")
     else:
-        canal_obj = session.query(Canal).filter_by(valor=g.CANAL_COMB.currentText()).first()
+        canal_obj = session.query(Canal).filter_by(
+            valor=g.CANAL_COMB.currentText()).first()
         if canal_obj:
             canal_obs = getattr(canal_obj, 'observacao', None) or "N/A."
-            canal_comprimento_total = getattr(canal_obj, 'comprimento_total', None) or "N/A."
+            canal_comprimento_total = getattr(
+                canal_obj, 'comprimento_total', None) or "N/A."
 
             tooltip_text = f'Obs: {canal_obs}\nComprimento total: {canal_comprimento_total}'
             g.CANAL_COMB.setToolTip(tooltip_text)
@@ -365,10 +387,10 @@ def atualizar_toneladas_m():
             return
 
     # Verificar se alguma combobox não tem seleção (currentIndex == -1)
-    if (g.ESP_COMB.currentIndex() == -1 or 
-        g.MAT_COMB.currentIndex() == -1 or 
-        g.CANAL_COMB.currentIndex() == -1):
-        
+    if (g.ESP_COMB.currentIndex() == -1 or
+        g.MAT_COMB.currentIndex() == -1 or
+            g.CANAL_COMB.currentIndex() == -1):
+
         # Limpar valor de força se alguma seleção estiver vazia
         if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
             g.FORCA_LBL.setText('')
@@ -381,16 +403,19 @@ def atualizar_toneladas_m():
 
     # Verificar se todas as seleções são válidas (não vazias)
     if (not espessura_valor or not material_nome or not canal_valor or
-        espessura_valor.strip() == "" or material_nome.strip() == "" or canal_valor.strip() == ""):
-        
+            espessura_valor.strip() == ("" or material_nome.strip() == ""
+                                        or canal_valor.strip() == "")):
+
         # Limpar valor de força se alguma seleção estiver vazia
         if g.FORCA_LBL and hasattr(g.FORCA_LBL, 'setText'):
             g.FORCA_LBL.setText('')
         return
 
     try:
-        espessura_obj = session.query(Espessura).filter_by(valor=float(espessura_valor)).first()
-        material_obj = session.query(Material).filter_by(nome=material_nome).first()
+        espessura_obj = session.query(Espessura).filter_by(
+            valor=float(espessura_valor)).first()
+        material_obj = session.query(Material).filter_by(
+            nome=material_nome).first()
         canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
         if espessura_obj and material_obj and canal_obj:
@@ -413,8 +438,10 @@ def atualizar_toneladas_m():
 
         # Verificar se o comprimento é menor que o comprimento total do canal
         if g.CANAL_COMB and hasattr(g.CANAL_COMB, 'currentText') and canal_valor.strip():
-            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-            comprimento_total = getattr(canal_obj, 'comprimento_total', None) if canal_obj else None
+            canal_obj = session.query(Canal).filter_by(
+                valor=canal_valor).first()
+            comprimento_total = getattr(
+                canal_obj, 'comprimento_total', None) if canal_obj else None
             comprimento_float = float(comprimento) if comprimento else None
 
             if canal_obj and comprimento_float and comprimento_total:
@@ -424,10 +451,10 @@ def atualizar_toneladas_m():
                 elif comprimento_float >= comprimento_total:
                     if g.COMPR_ENTRY and hasattr(g.COMPR_ENTRY, 'setStyleSheet'):
                         g.COMPR_ENTRY.setStyleSheet("color: red")
-                        
+
     except ValueError as e:
         print(f"Erro ao converter valores numéricos: {e}")
-    except Exception as e:
+    except (AttributeError, RuntimeError) as e:
         print(f"Erro ao atualizar toneladas/m: {e}")
 
 
@@ -472,14 +499,17 @@ def copiar(tipo, numero=None, w=None):
 
     config = configuracoes[tipo]
 
-    label = config['label'](numero) if callable(config['label']) else config['label']
+    label = config['label'](numero) if callable(
+        config['label']) else config['label']
     if label is None:
-        print(f"Erro: Label não encontrado para o tipo '{tipo}' com numero={numero} e w={w}.")
+        print(
+            f"Erro: Label não encontrado para o tipo '{tipo}' com numero={numero} e w={w}.")
         return
 
     # Verificar se o label é um widget válido do PySide6
     if not hasattr(label, 'text') and not hasattr(label, 'setText'):
-        print(f"Erro: O objeto para o tipo '{tipo}' não é um widget válido do PySide6.")
+        print(
+            f"Erro: O objeto para o tipo '{tipo}' não é um widget válido do PySide6.")
         return
 
     # Verificar se o texto está vazio
@@ -490,8 +520,9 @@ def copiar(tipo, numero=None, w=None):
         texto_atual = str(texto_atual)
         if texto_atual == "":
             return
-    except (Exception, AttributeError):
-        print(f"Erro: Não foi possível acessar o texto do widget para o tipo '{tipo}'.")
+    except AttributeError:
+        print(
+            f"Erro: Não foi possível acessar o texto do widget para o tipo '{tipo}'.")
         return
 
     # Remover " Copiado!" se já estiver presente para evitar repetição
@@ -509,12 +540,12 @@ def copiar(tipo, numero=None, w=None):
         texto_atualizado = str(texto_atualizado)
         if " Copiado!" in texto_atualizado:
             texto_atualizado = texto_atualizado.replace(" Copiado!", "")
-    except (Exception, AttributeError):
+    except AttributeError:
         texto_atualizado = texto_original
 
     pyperclip.copy(texto_atualizado)
     print(f'Valor copiado {texto_atualizado}')
-    
+
     # Para widgets PySide6, usar setText() e setStyleSheet() para alterar cor
     if hasattr(label, 'setText'):
         label.setText(f'{texto_atualizado} Copiado!')
@@ -528,12 +559,11 @@ def copiar(tipo, numero=None, w=None):
                 label.setText(texto_atualizado)
                 if hasattr(label, 'setStyleSheet'):
                     label.setStyleSheet("color: black;")
-        except (Exception, AttributeError):
+        except AttributeError:
             pass
 
     # Usar QTimer em vez de after() do Tkinter
     try:
-        from PySide6.QtCore import QTimer
         timer = QTimer()
         timer.timeout.connect(remover_copiado)
         timer.setSingleShot(True)
@@ -551,9 +581,11 @@ def limpar_busca(tipo):
     if tipo == 'dedução':
         # Limpar apenas a seleção, mantendo os itens disponíveis
         if configuracoes[tipo]['entries']['material_combo']:
-            configuracoes[tipo]['entries']['material_combo'].setCurrentIndex(-1)
+            configuracoes[tipo]['entries']['material_combo'].setCurrentIndex(
+                -1)
         if configuracoes[tipo]['entries']['espessura_combo']:
-            configuracoes[tipo]['entries']['espessura_combo'].setCurrentIndex(-1)
+            configuracoes[tipo]['entries']['espessura_combo'].setCurrentIndex(
+                -1)
         if configuracoes[tipo]['entries']['canal_combo']:
             configuracoes[tipo]['entries']['canal_combo'].setCurrentIndex(-1)
     else:
@@ -606,14 +638,14 @@ def listar(tipo):
             if tipo == 'dedução':
                 if item.material is None or item.espessura is None or item.canal is None:
                     continue
-            
+
             valores = config['valores'](item)
             # Garantir que todos os valores sejam strings
             valores_str = [str(v) if v is not None else '' for v in valores]
             item_widget = QTreeWidgetItem(valores_str)
             config['lista'].addTopLevelItem(item_widget)
-            
-    except Exception as e:
+
+    except (AttributeError, RuntimeError, ValueError) as e:
         print(f"Erro ao listar {tipo}: {e}")
 
 
@@ -625,38 +657,37 @@ def todas_funcoes():
         for tipo in ['material', 'espessura', 'canal', 'dedução']:
             try:
                 atualizar_widgets(tipo)
-            except Exception as e:
+            except (AttributeError, RuntimeError, ValueError) as e:
                 print(f"Erro ao atualizar widgets {tipo}: {e}")
-            
+
         try:
             calcular_k_offset()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular k_offset: {e}")
-            
+
         try:
             aba_minima_externa()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular aba mínima externa: {e}")
-            
+
         try:
             z_minimo_externo()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular z mínimo externo: {e}")
-            
+
         try:
             for w in g.VALORES_W:
                 calcular_dobra(w)
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular dobras: {e}")
 
         try:
             razao_ri_espessura()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular razão ri/espessura: {e}")
-            
-    except Exception as e:
+
+    except (AttributeError, RuntimeError) as e:
         print(f"Erro geral em todas_funcoes: {e}")
-        import traceback
         traceback.print_exc()
 
 
@@ -668,36 +699,36 @@ def calcular_valores():
     try:
         try:
             calcular_k_offset()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular k_offset: {e}")
-            
+
         try:
             aba_minima_externa()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular aba mínima externa: {e}")
-            
+
         try:
             z_minimo_externo()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular z mínimo externo: {e}")
-            
+
         try:
             for w in g.VALORES_W:
                 calcular_dobra(w)
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular dobras: {e}")
 
         try:
             razao_ri_espessura()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao calcular razão ri/espessura: {e}")
 
         try:
             atualizar_toneladas_m()
-        except Exception as e:
+        except (AttributeError, ValueError, ZeroDivisionError) as e:
             print(f"Erro ao atualizar toneladas/m: {e}")
-            
-    except Exception as e:
+
+    except (AttributeError, RuntimeError) as e:
         print(f"Erro geral em calcular_valores: {e}")
 
 
@@ -708,15 +739,12 @@ def configurar_main_frame(parent, rows=4):
     main_frame = QWidget(parent)
     layout = QGridLayout(main_frame)
     main_frame.setLayout(layout)
-    
+
     # Configurar o layout principal do parent para usar o main_frame
     if not parent.layout():
         parent_layout = QGridLayout(parent)
         parent.setLayout(parent_layout)
-    
+
     parent.layout().addWidget(main_frame)
-    
+
     return main_frame
-
-
-
