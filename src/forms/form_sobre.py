@@ -7,17 +7,11 @@
 # e configurada para permanecer no topo das outras janelas.
 # O link para o GitHub abre o navegador padrão ao ser clicado.
 """
-try:
-    from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel
-    from PySide6.QtCore import Qt
-    from PySide6.QtGui import QIcon, QFont, QCursor
-except ImportError:
-    # Fallback para PyQt6 se PySide6 não estiver disponível
-    from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtGui import QIcon, QFont, QCursor
 
 import webbrowser
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QFont, QCursor
 from src import __version__
 from src.config import globals as g
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
@@ -32,7 +26,8 @@ def main(root):
     g.SOBRE_FORM.setWindowTitle("Sobre")
     g.SOBRE_FORM.resize(300, 210)
     g.SOBRE_FORM.setFixedSize(300, 210)
-    g.SOBRE_FORM.setWindowFlags(g.SOBRE_FORM.windowFlags() | Qt.WindowStaysOnTopHint)
+    g.SOBRE_FORM.setWindowFlags(
+        g.SOBRE_FORM.windowFlags() | Qt.WindowStaysOnTopHint)
 
     # Define o ícone
     icone_path = obter_caminho_icone()
