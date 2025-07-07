@@ -1,7 +1,7 @@
 """
 Módulo com funções utilitárias para limpeza da interface.
 """
-from PySide6.QtWidgets import QLineEdit, QLabel, QComboBox
+from PySide6.QtWidgets import QLabel, QComboBox
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
 from src.utils.widget_manager import WidgetManager
@@ -34,7 +34,7 @@ def limpar_tudo():
     """
     # Limpar comboboxes do cabeçalho
     cabecalho_widgets = WidgetManager.get_cabecalho_widgets()
-    
+
     # Limpar comboboxes principais (preservar material para último)
     combobox_names = ['ESP_COMB', 'CANAL_COMB']
     for name in combobox_names:
@@ -42,7 +42,7 @@ def limpar_tudo():
         if widget and isinstance(widget, QComboBox):
             WidgetManager.set_widget_value(widget, '')  # Limpa seleção
             widget.clear()  # Limpa itens
-    
+
     # Limpar material por último (só a seleção, não os itens)
     mat_comb = cabecalho_widgets.get('MAT_COMB')
     if mat_comb and isinstance(mat_comb, QComboBox):
