@@ -46,31 +46,41 @@ def verificar_widget_inicializado(widget, metodo='get', default_value=''):
 def calcular_k_offset():
     """
     Calcula o fator K com base nos valores de espessura, dedução e raio interno.
-    O fator K é usado para calcular o desenvolvimento de dobras considerando o alongamento do material.
-    
+    O fator K é usado para calcular o desenvolvimento de dobras considerando o
+    alongamento do material.
+
     Fórmulas utilizadas:
-    - Fator K personalizado: K = (4 × (espessura - (dedução / 2) + raio_interno) - (π × raio_interno)) / (π × espessura)
+    - Fator K personalizado: K = (4 × (espessura - (dedução / 2) + raio_interno) -
+      (π × raio_interno)) / (π × espessura)
       (usado sempre que há dedução disponível)
     - Fator K padrão baseado na razão raio/espessura (usando tabela de referência)
       (usado apenas quando não há dedução disponível)
     - Offset = Fator K × Espessura
-    
+
     Atualiza os labels correspondentes com os valores calculados.
     """
     try:
         # Obtém os valores dos widgets e valida
-        espessura_text = verificar_widget_inicializado(g.ESP_COMB, 'currentText', '0') or '0'
-        raio_interno_str = verificar_widget_inicializado(g.RI_ENTRY, 'text', '0') or '0'
-        deducao_espec_str = verificar_widget_inicializado(g.DED_ESPEC_ENTRY, 'text', '0') or '0'
-        
+        espessura_text = verificar_widget_inicializado(
+            g.ESP_COMB, 'currentText', '0') or '0'
+        raio_interno_str = verificar_widget_inicializado(
+            g.RI_ENTRY, 'text', '0') or '0'
+        deducao_espec_str = verificar_widget_inicializado(
+            g.DED_ESPEC_ENTRY, 'text', '0') or '0'
+
         # Converte valores para float, tratando vírgulas
-        espessura = float(espessura_text.replace(',', '.')) if espessura_text and espessura_text.strip() != '' else 0
-        raio_interno = float(raio_interno_str.replace(',', '.')) if raio_interno_str and raio_interno_str.strip() != '' else 0
-        deducao_espec = float(deducao_espec_str.replace(',', '.')) if deducao_espec_str.strip() else 0
-        
+        espessura = float(espessura_text.replace(
+            ',', '.')) if espessura_text and espessura_text.strip() != '' else 0
+        raio_interno = float(raio_interno_str.replace(
+            ',', '.')) if raio_interno_str and raio_interno_str.strip() != '' else 0
+        deducao_espec = float(deducao_espec_str.replace(
+            ',', '.')) if deducao_espec_str.strip() else 0
+
         # Obtém dedução padrão do label
-        deducao_label_text = verificar_widget_inicializado(g.DED_LBL, 'text', '0') or '0'
-        deducao_valor = float(deducao_label_text.replace(',', '.')) if deducao_label_text else 0
+        deducao_label_text = verificar_widget_inicializado(
+            g.DED_LBL, 'text', '0') or '0'
+        deducao_valor = float(deducao_label_text.replace(
+            ',', '.')) if deducao_label_text else 0
 
         # Valida se os valores necessários são válidos
         if raio_interno <= 0 or espessura <= 0:
@@ -87,13 +97,13 @@ def calcular_k_offset():
 
         # Calcula a razão raio/espessura
         razao_re = raio_interno / espessura
-        
+
         # Sempre usa a fórmula personalizada quando há dedução disponível
         if deducao_usada > 0:
             # Fórmula corrigida para fator K quando dedução é fornecida
-            # K = (4 × (espessura - (dedução / 2) + raio_interno) - (π × raio_interno)) / (π × espessura)
-            fator_k = (4 * (espessura - (deducao_usada / 2) + raio_interno) - (pi * raio_interno)) / (pi * espessura)
-            
+            fator_k = (4 * (espessura - (deducao_usada / 2) +
+                       raio_interno) - (pi * raio_interno)) / (pi * espessura)
+
             # Limita o fator K a valores razoáveis
             fator_k = max(0.0, min(fator_k, 0.5))
         else:
@@ -133,42 +143,42 @@ def calcular_k_offset():
             g.OFFSET_LBL.setText('N/A')
             if hasattr(g.OFFSET_LBL, 'setStyleSheet'):
                 g.OFFSET_LBL.setStyleSheet("color: red")
-    except Exception as e:
-        print(f"Erro geral no cálculo do fator K: {e}")
+    except (AttributeError, TypeError) as e:
+        print(f"Erro de atributo ou tipo no cálculo do fator K: {e}")
 
 
 def obter_fator_k_da_tabela(razao_re):
     """
     Obtém o fator K da tabela de referência baseado na razão raio/espessura.
     Usa interpolação linear para valores intermediários.
-    
+
     Args:
         razao_re (float): Razão entre raio interno e espessura
-        
+
     Returns:
         float: Fator K correspondente
     """
     # Limita a razão aos valores da tabela
     razao_re = max(0.1, min(razao_re, 10.0))
-    
+
     # Se o valor está exatamente na tabela, retorna diretamente
     if razao_re in g.RAIO_K:
         return g.RAIO_K[razao_re]
-    
+
     # Encontra os valores adjacentes para interpolação
     razoes_ordenadas = sorted(g.RAIO_K.keys())
-    
+
     for i in range(len(razoes_ordenadas) - 1):
         r1 = razoes_ordenadas[i]
         r2 = razoes_ordenadas[i + 1]
-        
+
         if r1 <= razao_re <= r2:
             # Interpolação linear
             k1 = g.RAIO_K[r1]
             k2 = g.RAIO_K[r2]
             fator_k = k1 + (k2 - k1) * (razao_re - r1) / (r2 - r1)
             return fator_k
-    
+
     # Se não encontrou na interpolação, usa o valor mais próximo
     if razao_re < razoes_ordenadas[0]:
         return g.RAIO_K[razoes_ordenadas[0]]
@@ -185,18 +195,20 @@ def aba_minima_externa():
     aba_minima_valor = 0  # Valor padrão caso a condição não seja satisfeita
 
     try:
-        canal_valor = verificar_widget_inicializado(g.CANAL_COMB, 'currentText', '')
+        canal_valor = verificar_widget_inicializado(
+            g.CANAL_COMB, 'currentText', '')
         if canal_valor != "":
             # Extrai o valor numérico do canal (pode estar em formato "25mm" ou "V=25")
             numeros = re.findall(r'\d+\.?\d*', canal_valor)
             if numeros:
                 canal_valor_num = float(numeros[0])
-                espessura_text = verificar_widget_inicializado(g.ESP_COMB, 'currentText', '0')
+                espessura_text = verificar_widget_inicializado(
+                    g.ESP_COMB, 'currentText', '0')
                 espessura = float(espessura_text.replace(',', '.'))
 
                 # Fórmula para aba mínima: metade da largura do canal + espessura + margem
                 aba_minima_valor = canal_valor_num / 2 + espessura + 2
-                
+
                 if g.ABA_EXT_LBL and hasattr(g.ABA_EXT_LBL, 'setText'):
                     g.ABA_EXT_LBL.setText(f"{aba_minima_valor:.0f}")
                     if hasattr(g.ABA_EXT_LBL, 'setStyleSheet'):
@@ -210,7 +222,7 @@ def aba_minima_externa():
             # Limpar label se não houver canal selecionado
             if g.ABA_EXT_LBL and hasattr(g.ABA_EXT_LBL, 'setText'):
                 g.ABA_EXT_LBL.setText("")
-                
+
     except (ValueError, AttributeError) as e:
         print(f"Erro ao calcular aba mínima externa: {e}")
         if g.ABA_EXT_LBL and hasattr(g.ABA_EXT_LBL, 'setText'):
@@ -230,15 +242,19 @@ def z_minimo_externo():
     try:
         # Obtém os valores dos widgets e valida
         material = verificar_widget_inicializado(g.MAT_COMB, 'currentText', '')
-        espessura_text = verificar_widget_inicializado(g.ESP_COMB, 'currentText', '0')
-        canal_valor = verificar_widget_inicializado(g.CANAL_COMB, 'currentText', '')
-        
+        espessura_text = verificar_widget_inicializado(
+            g.ESP_COMB, 'currentText', '0')
+        canal_valor = verificar_widget_inicializado(
+            g.CANAL_COMB, 'currentText', '')
+
         # Converte espessura
         espessura = float(espessura_text.replace(',', '.'))
-        
+
         # Obtém dedução do label
-        deducao_label_text = verificar_widget_inicializado(g.DED_LBL, 'text', '0')
-        deducao_valor = float(deducao_label_text.replace(',', '.')) if deducao_label_text else 0
+        deducao_label_text = verificar_widget_inicializado(
+            g.DED_LBL, 'text', '0')
+        deducao_valor = float(deducao_label_text.replace(
+            ',', '.')) if deducao_label_text else 0
 
         # Verifica se todos os valores necessários estão disponíveis
         if not material or not canal_valor or espessura <= 0:
@@ -275,8 +291,9 @@ def z_minimo_externo():
         # Calcula o Z mínimo externo
         if deducao_valor > 0:
             # Fórmula: Espessura + (Dedução / 2) + (Largura do canal / 2) + Margem
-            valor_z_min_ext = espessura + (deducao_valor / 2) + (largura_canal / 2) + 2
-            
+            valor_z_min_ext = espessura + \
+                (deducao_valor / 2) + (largura_canal / 2) + 2
+
             if g.Z_EXT_LBL and hasattr(g.Z_EXT_LBL, 'setText'):
                 g.Z_EXT_LBL.setText(f'{valor_z_min_ext:.0f}')
                 if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
@@ -289,13 +306,14 @@ def z_minimo_externo():
                     g.Z_EXT_LBL.setStyleSheet("color: orange")
 
     except ValueError as e:
-        print(f"Erro ao converter valores para o cálculo do Z mínimo externo: {e}")
+        print(
+            f"Erro ao converter valores para o cálculo do Z mínimo externo: {e}")
         if g.Z_EXT_LBL and hasattr(g.Z_EXT_LBL, 'setText'):
             g.Z_EXT_LBL.setText("N/A")
             if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
                 g.Z_EXT_LBL.setStyleSheet("color: red")
-    except Exception as e:
-        print(f"Erro geral no cálculo do Z mínimo externo: {e}")
+    except (AttributeError, TypeError) as e:
+        print(f"Erro de atributo ou tipo no cálculo do Z mínimo externo: {e}")
 
 
 def _obter_valores_dobras(w):
@@ -311,7 +329,8 @@ def _obter_valor_deducao():
     """Obtém o valor da dedução dos widgets correspondentes."""
     deducao_valor = str(verificar_widget_inicializado(g.DED_LBL, 'text', '')).replace(
         ' Copiado!', '')
-    deducao_espec_str = verificar_widget_inicializado(g.DED_ESPEC_ENTRY, 'text', '') or ''
+    deducao_espec_str = verificar_widget_inicializado(
+        g.DED_ESPEC_ENTRY, 'text', '') or ''
     deducao_espec = deducao_espec_str.replace(',', '.')
 
     if deducao_espec != "":
@@ -325,14 +344,15 @@ def _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras):
     posicoes_com_valores = []
     for idx, valor in enumerate(valores_dobras):
         if valor.strip():  # Se não está vazio
-            posicoes_com_valores.append(idx + 1)  # Converter para índice baseado em 1
-    
+            # Converter para índice baseado em 1
+            posicoes_com_valores.append(idx + 1)
+
     if len(posicoes_com_valores) == 0:
         return float(dobra) - float(deducao_valor) / 2
-    
+
     primeira_posicao = posicoes_com_valores[0]
     ultima_posicao = posicoes_com_valores[-1]
-    
+
     # Aplicar lógica baseada na posição
     if i == primeira_posicao or i == ultima_posicao:
         # Primeira ou última aba com valor usa dedução/2
@@ -340,7 +360,7 @@ def _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras):
     else:
         # Abas intermediárias usam dedução completa
         resultado = float(dobra) - float(deducao_valor)
-    
+
     return resultado
 
 
@@ -352,10 +372,10 @@ def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
             widget.setText(f"{valor:.2f}")
             if hasattr(widget, 'setStyleSheet'):
                 widget.setStyleSheet("")
-    
+
     widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
     widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-    
+
     atualizar_widget_seguro(widget_medida, medidadobra)
     atualizar_widget_seguro(widget_metade, metade_dobra)
 
@@ -366,10 +386,10 @@ def _limpar_widgets_dobra(i, w):
         """Limpa um widget de forma segura"""
         if widget is not None and hasattr(widget, 'setText'):
             widget.setText("")
-    
+
     widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
     widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-    
+
     limpar_widget_seguro(widget_medida)
     limpar_widget_seguro(widget_metade)
 
@@ -377,9 +397,10 @@ def _limpar_widgets_dobra(i, w):
 def _calcular_e_atualizar_blank(w):
     """Calcula e atualiza os valores de blank para uma coluna."""
     blank = sum(
-        float(getattr(g, f'medidadobra{row}_label_{w}').text().replace(' Copiado!', ''))
+        float(getattr(g, f'medidadobra{row}_label_{w}').text().replace(
+            ' Copiado!', ''))
         for row in range(1, g.N)
-        if getattr(g, f'medidadobra{row}_label_{w}', None) is not None 
+        if getattr(g, f'medidadobra{row}_label_{w}', None) is not None
         and hasattr(getattr(g, f'medidadobra{row}_label_{w}'), 'text')
         and getattr(g, f'medidadobra{row}_label_{w}').text()
     )
@@ -423,7 +444,7 @@ def calcular_dobra(w):
     for i in range(1, g.N):
         # Índice na lista valores_dobras (base 0)
         indice_lista = i - 1
-        
+
         if indice_lista >= len(valores_dobras):
             continue
 
@@ -432,14 +453,16 @@ def calcular_dobra(w):
         if dobra == "":
             _limpar_widgets_dobra(i, w)
         else:
-            medidadobra = _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras)
+            medidadobra = _calcular_medida_dobra(
+                dobra, deducao_valor, i, valores_dobras)
             metade_dobra = medidadobra / 2
             _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra)
 
         # Verificar aba mínima usando o valor atual
-        valor_atual = valores_dobras[indice_lista] if indice_lista < len(valores_dobras) else ""
+        valor_atual = valores_dobras[indice_lista] if indice_lista < len(
+            valores_dobras) else ""
         verificar_aba_minima(valor_atual, i, w)
-    
+
     # Calcular e atualizar blank para esta coluna (fora do loop)
     _calcular_e_atualizar_blank(w)
 
@@ -466,7 +489,8 @@ def verificar_aba_minima(dobra, i, w):
             # Converter o valor de 'dobra' para float e verificar se é menor que 'aba_minima'
             if float(dobra) < aba_minima:
                 if hasattr(entry_widget, 'setStyleSheet'):
-                    entry_widget.setStyleSheet("color: white; background-color: red")
+                    entry_widget.setStyleSheet(
+                        "color: white; background-color: red")
             else:
                 if hasattr(entry_widget, 'setStyleSheet'):
                     entry_widget.setStyleSheet("")
@@ -488,10 +512,12 @@ def razao_ri_espessura():
 
     try:
         # Obtém os valores dos widgets e valida
-        espessura_text = verificar_widget_inicializado(g.ESP_COMB, 'currentText', '0') or '0'
+        espessura_text = verificar_widget_inicializado(
+            g.ESP_COMB, 'currentText', '0') or '0'
         espessura = float(espessura_text.replace(',', '.'))
-        
-        raio_interno_str = verificar_widget_inicializado(g.RI_ENTRY, 'text', '0') or '0'
+
+        raio_interno_str = verificar_widget_inicializado(
+            g.RI_ENTRY, 'text', '0') or '0'
         raio_interno = float(raio_interno_str.replace(',', '.'))
 
         # Valida se os valores necessários são maiores que zero
@@ -507,11 +533,12 @@ def razao_ri_espessura():
 
         # Atualiza o label com o valor calculado
         g.RAZAO_RIE_LBL.setText(f"{razao:.1f}")
-        
+
         # Aplica cor baseada na faixa de valores
         if hasattr(g.RAZAO_RIE_LBL, 'setStyleSheet'):
             if razao < 0.5:
-                g.RAZAO_RIE_LBL.setStyleSheet("color: red")  # Razão muito baixa
+                g.RAZAO_RIE_LBL.setStyleSheet(
+                    "color: red")  # Razão muito baixa
             elif razao > 5.0:
                 g.RAZAO_RIE_LBL.setStyleSheet("color: orange")  # Razão alta
             else:
@@ -522,5 +549,6 @@ def razao_ri_espessura():
         g.RAZAO_RIE_LBL.setText('N/A')
         if hasattr(g.RAZAO_RIE_LBL, 'setStyleSheet'):
             g.RAZAO_RIE_LBL.setStyleSheet("color: red")
-    except Exception as e:
-        print(f"Erro geral no cálculo da razão ri/espessura: {e}")
+    except (AttributeError, TypeError) as e:
+        print(
+            f"Erro de atributo ou tipo no cálculo da razão ri/espessura: {e}")
