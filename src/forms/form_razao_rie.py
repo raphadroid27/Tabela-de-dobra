@@ -1,19 +1,12 @@
 """
 Módulo para exibir o formulário de cálculo de razão raio interno / espessura.
 """
-try:
-    from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
-                                   QLabel, QFrame, QScrollArea, QTreeWidget, 
-                                   QTreeWidgetItem, QWidget, QTextBrowser)
-    from PySide6.QtCore import Qt
-    from PySide6.QtGui import QIcon
-except ImportError:
-    # Fallback para PyQt6 se PySide6 não estiver disponível
-    from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
-                                 QLabel, QFrame, QScrollArea, QTreeWidget, 
-                                 QTreeWidgetItem, QWidget, QTextBrowser)
-    from PyQt6.QtGui import QIcon
 
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QGridLayout,
+                               QLabel, QTreeWidget,
+                               QTreeWidgetItem, QWidget, QTextBrowser)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.calculos import razao_ri_espessura
@@ -55,7 +48,7 @@ def main(root):
     # Label da razão
     razao_label = QLabel('Razão Raio Interno / Espessura: ')
     main_layout.addWidget(razao_label, 0, 0)
-    
+
     g.RAZAO_RIE_LBL = QLabel("")
     g.RAZAO_RIE_LBL.setMinimumWidth(100)
     g.RAZAO_RIE_LBL.setFrameShape(QLabel.Shape.Panel)
@@ -69,7 +62,7 @@ def main(root):
         tree = QTreeWidget()
         tree.setHeaderLabels(['Raio/Esp', 'Fator K'])
         tree.setRootIsDecorated(False)
-        
+
         # Configurar larguras das colunas
         tree.setColumnWidth(0, 100)  # Raio/Esp
         tree.setColumnWidth(1, 100)  # Fator K
@@ -93,8 +86,10 @@ def main(root):
     aviso_browser.setMaximumWidth(220)
     aviso_browser.setFrameStyle(0)
     # Remover barras de rolagem e desabilitar rolagem
-    aviso_browser.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    aviso_browser.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    aviso_browser.setVerticalScrollBarPolicy(
+        Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    aviso_browser.setHorizontalScrollBarPolicy(
+        Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     main_layout.addWidget(aviso_browser, 2, 0, 1, 2)
 
     layout.addWidget(main_frame)
