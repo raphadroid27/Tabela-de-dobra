@@ -5,8 +5,8 @@
 # A interface é construída com a biblioteca PySide6, utilizando o módulo globals
 # para variáveis globais e o módulo funcoes para operações relacionadas ao banco de dados.
 """
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QTreeWidget, QTreeWidgetItem, QFrame, QGroupBox
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QTreeWidget, QGroupBox)
 from PySide6.QtGui import QIcon
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.interface import (listar, limpar_busca)
@@ -54,7 +54,7 @@ def main(root):
     busca_layout.addWidget(QLabel("Usuário:"), 0, 0)
     g.USUARIO_BUSCA_ENTRY = QLineEdit()
     busca_layout.addWidget(g.USUARIO_BUSCA_ENTRY, 0, 1)
-    
+
     def on_text_changed():
         buscar('usuario')
     g.USUARIO_BUSCA_ENTRY.textChanged.connect(on_text_changed)
