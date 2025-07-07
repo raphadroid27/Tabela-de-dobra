@@ -13,12 +13,12 @@ def no_topo(form):
     # Alternar o estado de NO_TOPO_VAR
     if g.NO_TOPO_VAR is None:
         g.NO_TOPO_VAR = False
-    
+
     g.NO_TOPO_VAR = not g.NO_TOPO_VAR
-    
+
     # Aplicar a configuração a todas as janelas abertas
     aplicar_no_topo_todas_janelas()
-    
+
     print(f"No topo {'ativado' if g.NO_TOPO_VAR else 'desativado'}")
 
 
@@ -65,7 +65,8 @@ def desabilitar_janelas():
     """
     Desabilita todas as janelas do aplicativo.
     """
-    forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
+    forms = [g.PRINC_FORM, g.DEDUC_FORM,
+             g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
     for form in forms:
         if form is not None:
             form.setEnabled(False)
@@ -75,7 +76,8 @@ def habilitar_janelas():
     """
     Habilita todas as janelas do aplicativo.
     """
-    forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
+    forms = [g.PRINC_FORM, g.DEDUC_FORM,
+             g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
     for form in forms:
         if form is not None:
             form.setEnabled(True)
@@ -92,21 +94,21 @@ def aplicar_no_topo_todas_janelas():
                 new_flags = current_flags | Qt.WindowStaysOnTopHint
             else:
                 new_flags = current_flags & ~Qt.WindowStaysOnTopHint
-            
-            essential_flags = (Qt.Window | 
-                             Qt.WindowTitleHint | 
-                             Qt.WindowSystemMenuHint | 
-                             Qt.WindowMinimizeButtonHint | 
-                             Qt.WindowMaximizeButtonHint | 
-                             Qt.WindowCloseButtonHint)
-            
+
+            essential_flags = (Qt.Window |
+                               Qt.WindowTitleHint |
+                               Qt.WindowSystemMenuHint |
+                               Qt.WindowMinimizeButtonHint |
+                               Qt.WindowMaximizeButtonHint |
+                               Qt.WindowCloseButtonHint)
+
             new_flags = new_flags | essential_flags
             window.setWindowFlags(new_flags)
             window.show()
 
     if g.NO_TOPO_VAR is None:
         return
-    
+
     # Lista de janelas que podem estar abertas
     janelas = [
         g.PRINC_FORM,
@@ -119,15 +121,18 @@ def aplicar_no_topo_todas_janelas():
         getattr(g, 'RIE_FORM', None),
         getattr(g, 'IMPRESSAO_FORM', None)
     ]
-    
+
     count = 0
     for janela in janelas:
         if janela is not None:
             set_topmost(janela, g.NO_TOPO_VAR)
             count += 1
-    
+
     if count > 0:
-        print(f"Estado 'no topo' {'ativado' if g.NO_TOPO_VAR else 'desativado'} aplicado a {count} janela(s)")
+        print(
+            f"Estado 'no topo' {'ativado' if g.NO_TOPO_VAR else 'desativado'}\n"
+            f"aplicado a {count} janela(s)"
+        )
 
 
 def aplicar_no_topo(form):
@@ -142,14 +147,14 @@ def aplicar_no_topo(form):
                 new_flags = current_flags | Qt.WindowStaysOnTopHint
             else:
                 new_flags = current_flags & ~Qt.WindowStaysOnTopHint
-            
-            essential_flags = (Qt.Window | 
-                             Qt.WindowTitleHint | 
-                             Qt.WindowSystemMenuHint | 
-                             Qt.WindowMinimizeButtonHint | 
-                             Qt.WindowMaximizeButtonHint | 
-                             Qt.WindowCloseButtonHint)
-            
+
+            essential_flags = (Qt.Window |
+                               Qt.WindowTitleHint |
+                               Qt.WindowSystemMenuHint |
+                               Qt.WindowMinimizeButtonHint |
+                               Qt.WindowMaximizeButtonHint |
+                               Qt.WindowCloseButtonHint)
+
             new_flags = new_flags | essential_flags
             window.setWindowFlags(new_flags)
             window.show()
@@ -157,8 +162,11 @@ def aplicar_no_topo(form):
     # Inicializar se necessário
     if g.NO_TOPO_VAR is None:
         g.NO_TOPO_VAR = False
-    
+
     # Aplicar o estado atual (sem alternar)
     if form:
         set_topmost(form, g.NO_TOPO_VAR)
-        print(f"Estado 'no topo' {'ativado' if g.NO_TOPO_VAR else 'desativado'} aplicado à nova janela")
+        print(
+            f"Estado 'no topo' {'ativado' if g.NO_TOPO_VAR else 'desativado'} "
+            "aplicado à nova janela"
+        )
