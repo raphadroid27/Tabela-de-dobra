@@ -367,6 +367,7 @@ def editar(tipo):
     limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
+    buscar(tipo)
 
 
 def excluir(tipo):
