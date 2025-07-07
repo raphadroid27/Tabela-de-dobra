@@ -7,10 +7,9 @@
 """
 import os
 import subprocess
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, 
-                               QLineEdit, QPushButton, QTextEdit, QTextBrowser, QListWidget, QFrame, 
-                               QGroupBox, QScrollArea, QFileDialog, QMessageBox)
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
+                               QLineEdit, QPushButton, QTextEdit, QTextBrowser, QListWidget,
+                               QGroupBox, QFileDialog, QMessageBox)
 from PySide6.QtGui import QIcon
 from src.utils.janelas import (aplicar_no_topo,
                                posicionar_janela,
@@ -31,7 +30,8 @@ def imprimir_pdf(diretorio, lista_arquivos):
         # Procurar pelos arquivos no diretório
         for arquivo in lista_arquivos:
             # Extrair a parte principal do nome (antes de " - ")
-            nome_base = arquivo.split(' - ')[0].strip() if ' - ' in arquivo else arquivo
+            nome_base = arquivo.split(
+                ' - ')[0].strip() if ' - ' in arquivo else arquivo
 
             # Buscar arquivos que contenham esse nome base
             pesquisa = [f for f in os.listdir(diretorio)
@@ -75,7 +75,8 @@ def imprimir_pdf(diretorio, lista_arquivos):
                 if os.path.exists(foxit_path):
                     try:
                         resultado_impressao += f"Imprimindo {nome_arquivo} com Foxit...\n"
-                        subprocess.run([foxit_path, "/p", caminho_completo], check=True, timeout=30)
+                        subprocess.run(
+                            [foxit_path, "/p", caminho_completo], check=True, timeout=30)
                         resultado_impressao += "  ✓ Sucesso com Foxit\n"
                         sucesso = True
                     except (subprocess.TimeoutExpired,
@@ -123,7 +124,8 @@ def imprimir_pdf(diretorio, lista_arquivos):
             # Atualizar o campo de resultado com os detalhes da impressão
             if hasattr(g, 'IMPRESSAO_RESULTADO_TEXT') and g.IMPRESSAO_RESULTADO_TEXT:
                 current_text = g.IMPRESSAO_RESULTADO_TEXT.toPlainText()
-                g.IMPRESSAO_RESULTADO_TEXT.setText(current_text + resultado_impressao)
+                g.IMPRESSAO_RESULTADO_TEXT.setText(
+                    current_text + resultado_impressao)
 
             QMessageBox.information(
                 g.IMPRESSAO_FORM,
@@ -132,10 +134,12 @@ def imprimir_pdf(diretorio, lista_arquivos):
                 "Verifique os detalhes no campo 'Resultado da Impressão'."
             )
         else:
-            QMessageBox.warning(g.IMPRESSAO_FORM, "Aviso", "Nenhum arquivo foi encontrado para impressão.")
+            QMessageBox.warning(g.IMPRESSAO_FORM, "Aviso",
+                                "Nenhum arquivo foi encontrado para impressão.")
 
     except (OSError, PermissionError, FileNotFoundError, ValueError) as e:
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", f"Erro ao processar impressão: {str(e)}")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
+                             f"Erro ao processar impressão: {str(e)}")
 
 
 def selecionar_diretorio():
@@ -196,7 +200,8 @@ def adicionar_lista_arquivos():
             # Limpa o campo de texto
             g.IMPRESSAO_LISTA_TEXT.clear()
 
-            QMessageBox.information(g.IMPRESSAO_FORM, "Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
+            QMessageBox.information(
+                g.IMPRESSAO_FORM, "Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
 
 
 def remover_arquivo():
@@ -230,28 +235,33 @@ def executar_impressao():
     Executa a impressão dos arquivos selecionados.
     """
     if not (hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY):
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Interface não inicializada corretamente.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
+                             "Interface não inicializada corretamente.")
         return
 
     diretorio = g.IMPRESSAO_DIRETORIO_ENTRY.text().strip()
     if not diretorio:
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Por favor, selecione um diretório.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
+                             "Por favor, selecione um diretório.")
         return
 
     if not os.path.exists(diretorio):
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "O diretório selecionado não existe.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
+                             "O diretório selecionado não existe.")
         return
 
     if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS):
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Interface não inicializada corretamente.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
+                             "Interface não inicializada corretamente.")
         return
 
     lista_arquivos = []
     for i in range(g.IMPRESSAO_LISTA_ARQUIVOS.count()):
         lista_arquivos.append(g.IMPRESSAO_LISTA_ARQUIVOS.item(i).text())
-        
+
     if not lista_arquivos:
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro", "Por favor, adicione pelo menos um arquivo à lista.")
+        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
+                             "Por favor, adicione pelo menos um arquivo à lista.")
         return
 
     imprimir_pdf(diretorio, lista_arquivos)
@@ -320,15 +330,16 @@ def main(root):
 
     # Layout horizontal para texto e botões
     text_layout = QHBoxLayout()
-    
+
     g.IMPRESSAO_LISTA_TEXT = QTextEdit()
     g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(100)
-    g.IMPRESSAO_LISTA_TEXT.setPlaceholderText("Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519")
+    g.IMPRESSAO_LISTA_TEXT.setPlaceholderText(
+        "Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519")
     text_layout.addWidget(g.IMPRESSAO_LISTA_TEXT)
 
     # Botões ao lado do texto
     text_buttons_layout = QVBoxLayout()
-    
+
     adicionar_btn = QPushButton("➕ Adicionar")
     adicionar_btn.setStyleSheet("""
         QPushButton {
