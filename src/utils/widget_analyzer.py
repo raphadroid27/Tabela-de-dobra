@@ -16,9 +16,9 @@ class WidgetUsageAnalyzer:
     Analisador para identificar widgets globais não utilizados e padrões de uso.
     """
 
-    def __init__(self, project_root: str):
-        self.project_root = project_root
-        self.src_path = os.path.join(project_root, 'src')
+    def __init__(self, root_path: str):
+        self.project_root = root_path
+        self.src_path = os.path.join(root_path, 'src')
         self.widget_assignments = set()
         self.widget_usages = set()
 
@@ -95,7 +95,7 @@ class WidgetUsageAnalyzer:
                         widget_name = parts[1]
                         usages.add(widget_name)
 
-        except Exception as e:
+        except (OSError, IOError) as e:
             print(f"Erro ao analisar {file_path}: {e}")
 
         return assignments, usages
@@ -304,20 +304,20 @@ class WidgetUsageAnalyzer:
         return '\n'.join(report)
 
 
-def analyze_project_widgets(project_root: str = None) -> str:
+def analyze_project_widgets(root_path: str = None) -> str:
     """
     Função utilitária para analisar o uso de widgets no projeto.
 
     Args:
-        project_root: Caminho raiz do projeto (usa o diretório atual se None)
+        root_path: Caminho raiz do projeto (usa o diretório atual se None)
 
     Returns:
         Relatório de análise formatado
     """
-    if project_root is None:
-        project_root = os.getcwd()
+    if root_path is None:
+        root_path = os.getcwd()
 
-    analyzer = WidgetUsageAnalyzer(project_root)
+    analyzer = WidgetUsageAnalyzer(root_path)
     return analyzer.generate_report()
 
 
