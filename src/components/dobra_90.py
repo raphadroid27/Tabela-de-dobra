@@ -22,16 +22,16 @@ def dobras(frame, w):
     g.FRAME_DOBRA = QGroupBox()
     layout = QGridLayout(g.FRAME_DOBRA)
     g.FRAME_DOBRA.setLayout(layout)
-    
+
     # Configurar espaçamento e margens
     layout.setSpacing(5)
     layout.setContentsMargins(5, 5, 5, 5)
-    
+
     # Configurar larguras das colunas para alinhamento com cabeçalho
     # Coluna 0: Labels "Aba:" - largura fixa
     layout.setColumnMinimumWidth(0, 30)
     layout.setColumnStretch(0, 0)  # Não expande
-    
+
     # Colunas 1, 2, 3: Larguras iguais e expansíveis (mesmo que cabeçalho)
     for col in range(1, 4):
         layout.setColumnStretch(col, 1)  # Expande igualmente
@@ -76,13 +76,15 @@ def entradas_dobras(valor, w):
         entry.textChanged.connect(lambda text, w=w: calcular_dobra(w))
         entry.returnPressed.connect(lambda i=i, w=w: focus_next_entry(i, w))
         # Substituir keyPressEvent para lidar com UP/DOWN sem criar uma função separada
-        entry.keyPressEvent = (lambda entry=entry, i=i, w=w: 
-            lambda event: (
-            focus_next_entry(i, w) if event.key() == Qt.Key_Down else
-            focus_previous_entry(i, w) if event.key() == Qt.Key_Up else
-            QLineEdit.keyPressEvent(entry, event)
-            )
-        )(entry, i, w)
+        def custom_key_press_event(event, entry=entry, i=i, w=w):
+            if event.key() == Qt.Key_Down:
+                focus_next_entry(i, w)
+            elif event.key() == Qt.Key_Up:
+                focus_previous_entry(i, w)
+            else:
+                QLineEdit.keyPressEvent(entry, event)
+
+        entry.keyPressEvent = custom_key_press_event
         entry.setToolTip("Insira o valor da dobra.")
 
         medida_dobra_label = QLabel()
@@ -92,7 +94,8 @@ def entradas_dobras(valor, w):
         medida_dobra_label.setAlignment(Qt.AlignCenter)
         setattr(g, f'medidadobra{i}_label_{w}', medida_dobra_label)
         layout.addWidget(medida_dobra_label, i, 2)
-        medida_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar('medida_dobra', i, w)
+        medida_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar(
+            'medida_dobra', i, w)
         medida_dobra_label.setToolTip("Clique para copiar a medida da dobra.")
 
         metade_dobra_label = QLabel()
@@ -102,7 +105,8 @@ def entradas_dobras(valor, w):
         metade_dobra_label.setAlignment(Qt.AlignCenter)
         setattr(g, f'metadedobra{i}_label_{w}', metade_dobra_label)
         layout.addWidget(metade_dobra_label, i, 3)
-        metade_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar('metade_dobra', i, w)
+        metade_dobra_label.mousePressEvent = lambda event, i=i, w=w: copiar(
+            'metade_dobra', i, w)
         metade_dobra_label.setToolTip("Clique para copiar a metade da dobra.")
 
     blank_label = QLabel("Medida do Blank:")
@@ -117,7 +121,8 @@ def entradas_dobras(valor, w):
     medida_blank.setAlignment(Qt.AlignCenter)
     setattr(g, f'medida_blank_label_{w}', medida_blank)
     layout.addWidget(medida_blank, i + 1, 2)
-    medida_blank.mousePressEvent = lambda event, i=i, w=w: copiar('blank', i, w)
+    medida_blank.mousePressEvent = lambda event, i=i, w=w: copiar(
+        'blank', i, w)
     medida_blank.setToolTip("Clique para copiar a medida do blank.")
 
     metade_blank = QLabel()
@@ -127,5 +132,6 @@ def entradas_dobras(valor, w):
     metade_blank.setAlignment(Qt.AlignCenter)
     setattr(g, f'metade_blank_label_{w}', metade_blank)
     layout.addWidget(metade_blank, i + 1, 3)
-    metade_blank.mousePressEvent = lambda event, i=i, w=w: copiar('metade_blank', i, w)
+    metade_blank.mousePressEvent = lambda event, i=i, w=w: copiar(
+        'metade_blank', i, w)
     metade_blank.setToolTip("Clique para copiar a metade do blank.")
