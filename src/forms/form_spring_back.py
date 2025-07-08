@@ -1,12 +1,16 @@
 """
 Formulário para o cálculo de Spring Back
 """
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QComboBox, QWidget
+
+from PySide6.QtWidgets import (
+    QMainWindow, QGridLayout, QLabel, QComboBox, QWidget, QApplication)
+
 from src.models.models import Material
 from src.utils.banco_dados import session
 from src.config import globals as g
 
 # Configuração do banco de dados
+
 
 def create_spring_back_form():
     """Cria o formulário de Spring Back usando PySide6"""
@@ -15,12 +19,13 @@ def create_spring_back_form():
 
     central_widget = QWidget()
     spring_back_form.setCentralWidget(central_widget)
-    
+
     layout = QGridLayout()
     central_widget.setLayout(layout)
 
     # Obtém os nomes dos materiais como strings a partir da consulta
-    materiais = [str(material.nome) for material in session.query(Material).all()]
+    materiais = [str(material.nome)
+                 for material in session.query(Material).all()]
 
     layout.addWidget(QLabel("Material:"), 0, 0)
     g.MAT_COMB = QComboBox()
@@ -29,10 +34,10 @@ def create_spring_back_form():
 
     return spring_back_form
 
+
 if __name__ == "__main__":
-    from PySide6.QtWidgets import QApplication
     import sys
-    
+
     app = QApplication(sys.argv)
     form = create_spring_back_form()
     form.show()
