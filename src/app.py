@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt  # type: ignore
 from PySide6.QtGui import QIcon, QAction  # type: ignore
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
-from src.utils.janelas import no_topo
+from src.utils.janelas import no_topo, cleanup_orphaned_windows
 from src.utils.interface_manager import carregar_interface
 from src.utils.banco_dados import session
 from src.models import Usuario
@@ -162,59 +162,6 @@ def configurar_janela_principal(config):
 
     # Configurar para encerrar a aplicação quando a janela principal for fechada
     g.PRINC_FORM.setAttribute(Qt.WA_QuitOnClose, True)
-
-
-def cleanup_orphaned_windows():
-    """
-    Remove todas as janelas órfãs que possam estar abertas,
-    mas preserva formulários ativos.
-    """
-    try:
-        app = QApplication.instance()
-        if not app:
-            return
-
-        main_window = g.PRINC_FORM if hasattr(g, 'PRINC_FORM') else None
-
-        # Lista de formulários ativos que devem ser preservados
-        active_forms = []
-        form_vars = ['DEDUC_FORM', 'MATER_FORM', 'CANAL_FORM', 'ESPES_FORM',
-                     'SOBRE_FORM', 'AUTEN_FORM', 'USUAR_FORM', 'RIE_FORM', 'IMPRESSAO_FORM']
-
-        for form_var in form_vars:
-            if hasattr(g, form_var):
-                form = getattr(g, form_var)
-                if form is not None and hasattr(form, 'isVisible') and form.isVisible():
-                    active_forms.append(form)
-
-        top_level_widgets = app.topLevelWidgets()
-
-        for widget in top_level_widgets[:]:  # Cópia para iteração segura
-            if (widget != main_window and
-                widget not in active_forms and
-                widget.isVisible() and
-                not hasattr(widget, '_is_system_widget') and
-                    not hasattr(widget, '_is_main_window')):
-
-                widget_type = type(widget).__name__
-                if widget_type in ['QLabel',
-                                   'QFrame',
-                                   'QWidget',
-                                   'QDialog',
-                                   'QWindow',
-                                   'QMainWindow']:
-                    try:
-                        widget.hide()
-                        widget.close()
-                        widget.deleteLater()
-                    except (RuntimeError, AttributeError):
-                        pass
-
-        # Processar eventos para garantir limpeza
-        app.processEvents()
-
-    except (RuntimeError, AttributeError):
-        pass
 
 
 def configurar_menu():
