@@ -6,8 +6,9 @@ serão utilizados para manipular as dobras e a interface de forma
 interativa.
 """
 from PySide6.QtWidgets import QWidget, QGridLayout, QCheckBox, QPushButton, QApplication
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QTimer
 from src.utils.limpeza import limpar_dobras, limpar_tudo
+from src.utils.janelas import cleanup_orphaned_windows
 import src.config.globals as g
 
 
@@ -20,86 +21,86 @@ def criar_botoes(root):
     """
     frame_botoes = QWidget()
     layout = QGridLayout(frame_botoes)
-    
+
     # Configurar espaçamento e margens
     layout.setSpacing(5)  # Espaçamento entre widgets
     layout.setContentsMargins(5, 5, 5, 5)  # Margens internas
 
     class ExpansionManager:
         """Gerencia a expansão da interface de forma robusta"""
-        
+
         def __init__(self):
             self.is_updating = False
             self.cleanup_timer = QTimer()
             self.cleanup_timer.setSingleShot(True)
             self.cleanup_timer.timeout.connect(self.force_cleanup_orphans)
-        
+
         def force_cleanup_orphans(self):
             """Remove todas as janelas órfãs - usa função centralizada"""
             try:
-                # Importar e usar a função centralizada de limpeza
-                from src.app import cleanup_orphaned_windows
                 cleanup_orphaned_windows()
             except ImportError:
                 pass
-                
-            except:
+
+            except ValueError:
                 pass
-        
+
         def update_interface_size(self, exp_h, exp_v):
             """Atualiza o tamanho da interface baseado nos estados de expansão"""
             if self.is_updating or not g.PRINC_FORM:
                 return
-            
+
             self.is_updating = True
-            
+
             try:
                 # Limpar widgets órfãos antes da atualização
                 self.force_cleanup_orphans()
-                
+
                 # Calcular novo tamanho e configuração conforme especificado
                 # Sem expansão: 340x400, 1 coluna, 5 linhas (Aba 1-5 + Blank)
                 # Só horizontal: 680x400, 2 colunas, 5 linhas (Aba 1-5 + Blank)
-                # Só vertical: 340x500, 1 coluna, 10 linhas (Aba 1-10 + Blank)  
+                # Só vertical: 340x500, 1 coluna, 10 linhas (Aba 1-10 + Blank)
                 # Ambas: 680x500, 2 colunas, 10 linhas (Aba 1-10 + Blank)
-                
+
                 largura = 680 if exp_h else 340
                 altura = 590 if exp_v else 460
                 colunas = 2 if exp_h else 1
                 num_abas = 10 if exp_v else 5
-                
+
                 # Atualizar estados globais
                 g.EXP_H = exp_h
                 g.EXP_V = exp_v
                 g.VALORES_W = [1, 2] if exp_h else [1]
-                
-                print(f"Atualizando interface: {largura}x{altura}, {colunas} colunas, {num_abas} abas")
-                
+
+                print(
+                    f"Atualizando interface: {largura}x{altura}, {colunas} colunas, {num_abas} abas"
+                )
+
                 # Aplicar setFixedSize para o tamanho atual (baseado na expansão)
                 g.PRINC_FORM.setFixedSize(largura, altura)
-                
+
                 # Recarregar interface se necessário
                 if hasattr(g, 'CARREGAR_INTERFACE_FUNC') and callable(g.CARREGAR_INTERFACE_FUNC):
                     g.CARREGAR_INTERFACE_FUNC(colunas, g.MAIN_LAYOUT)
-                
+
                 # Forçar limpeza completa do layout quando voltando ao estado normal
                 if not exp_h and not exp_v:  # Estado normal 340x460
                     print("Estado normal detectado - aplicando ajustes básicos...")
                     # Aplicar apenas ajustes básicos, sem correção agressiva
-                    QTimer.singleShot(100, lambda: self._basic_layout_fix())
-                
+                    QTimer.singleShot(100, self._basic_layout_fix)
+
                 # Forçar atualização do layout para evitar espaços laterais
                 if g.MAIN_LAYOUT:
                     g.MAIN_LAYOUT.invalidate()
                     g.MAIN_LAYOUT.activate()
-                
+
                 # Processar eventos para garantir atualização visual
                 app = QApplication.instance()
                 if app:
                     app.processEvents()
-                
+
                 # Nota: O número de abas é agora controlado pelo interface_manager.py
-                
+
                 # Restaurar configuração final após delay
                 def restore_limits():
                     if g.PRINC_FORM:
@@ -107,59 +108,61 @@ def criar_botoes(root):
                         final_largura = 680 if g.EXP_H else 340
                         final_altura = 590 if g.EXP_V else 460
                         g.PRINC_FORM.setFixedSize(final_largura, final_altura)
-                        
+
                         # Forçar reajuste completo do layout para eliminar espaços laterais
                         if g.MAIN_LAYOUT:
                             g.MAIN_LAYOUT.invalidate()
                             g.MAIN_LAYOUT.activate()
                             g.MAIN_LAYOUT.update()
-                        
+
                         # Atualizar widget central
                         central_widget = g.PRINC_FORM.centralWidget()
                         if central_widget:
                             central_widget.updateGeometry()
                             central_widget.adjustSize()
-                        
+
                         # Processar eventos novamente para garantir atualização
                         app = QApplication.instance()
                         if app:
                             app.processEvents()
-                            
+
                     self.is_updating = False
-                
-                QTimer.singleShot(200, restore_limits)  # Aumentado para 200ms para melhor ajuste
-                
+
+                # Aumentado para 200ms para melhor ajuste
+                QTimer.singleShot(200, restore_limits)
+
                 # Agendar limpeza de órfãos após mudanças
                 self.cleanup_timer.start(300)  # Aumentado para 300ms
-                
-            except:
+
+            except (ValueError, TypeError):
+                print("Erro de valor ou tipo.")
                 self.is_updating = False
-        
+
         def _basic_layout_fix(self):
             """Correção básica e conservadora para o layout no estado normal."""
             try:
                 if not g.PRINC_FORM or not g.MAIN_LAYOUT:
                     return
-                
+
                 print("Aplicando ajuste básico do layout...")
-                
+
                 # Apenas resetar a segunda coluna se ela existir
                 g.MAIN_LAYOUT.setColumnStretch(1, 0)
-                
+
                 # Garantir que a primeira coluna está configurada
                 g.MAIN_LAYOUT.setColumnStretch(0, 1)
-                
+
                 # Forçar tamanho da janela
                 g.PRINC_FORM.setFixedSize(340, 460)
-                
+
                 print("Ajuste básico aplicado!")
-                
-            except Exception as e:
+
+            except RuntimeError as e:
                 print(f"Erro no ajuste básico: {e}")
 
     # Criar gerenciador de expansão
     expansion_manager = ExpansionManager()
-    
+
     def on_expandir_v(checked):
         """Callback para expansão vertical"""
         if not expansion_manager.is_updating:
