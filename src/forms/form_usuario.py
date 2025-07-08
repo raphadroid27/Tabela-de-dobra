@@ -34,7 +34,7 @@ def main(root):
 
     g.USUAR_FORM = QDialog(root)
     g.USUAR_FORM.setWindowTitle("Editar/Excluir Usuário")
-    g.USUAR_FORM.setFixedSize(300, 280)
+    g.USUAR_FORM.setFixedSize(330, 280)
 
     # Define o ícone
     icone_path = obter_caminho_icone()
