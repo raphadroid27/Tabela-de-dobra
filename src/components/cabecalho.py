@@ -40,14 +40,14 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
         widget.setFrameShadow(QLabel.Shadow.Sunken)
         widget.setFixedHeight(20)  # Altura fixa
         widget.setAlignment(Qt.AlignCenter)
-    
+
     elif tipo == 'combobox':
         widget = QComboBox(**kwargs)
         widget.setFixedHeight(20)  # Altura fixa
         # QComboBox não tem uma propriedade 'justify' simples.
         # A centralização pode ser feita se for editável ou com um delegate.
         # Por enquanto, vamos usar o alinhamento padrão.
-    
+
     elif tipo == 'entry':
         widget = QLineEdit(**kwargs)
         widget.setFixedHeight(20)  # Altura fixa
@@ -66,16 +66,15 @@ def cabecalho(parent):
     """
     frame_cabecalho = QGroupBox()
     layout = QGridLayout(frame_cabecalho)
-    
+
     # Configurar espaçamento e margens
     layout.setSpacing(5)  # Espaçamento entre widgets
     layout.setContentsMargins(5, 5, 5, 5)  # Margens internas
-    
+
     # Configurar larguras das colunas para alinhamento com dobras
     # Colunas 0, 1, 2, 3: Larguras iguais e expansíveis (Material, Espessura, Canal, Comprimento)
     for col in range(0, 4):
         layout.setColumnStretch(col, 1)  # Expande igualmente
-
 
     # Labels da Linha 1
     criar_label(layout, "Material", (0, 0))
@@ -98,7 +97,6 @@ def cabecalho(parent):
     # Conectar eventos de mudança nas comboboxes
     # Removidas as conexões diretas para calcular_valores - agora é feito após atualizar widgets
     compr_entry.textChanged.connect(calcular_valores)
-
 
     # Labels da Linha 2
     criar_label(layout, "Raio Interno", (2, 0))
@@ -124,7 +122,6 @@ def cabecalho(parent):
     ded_lbl.mousePressEvent = lambda event: copiar('dedução')
     offset_lbl.mousePressEvent = lambda event: copiar('offset')
 
-
     # Labels da Linha 3
     criar_label(layout, "Ded. Espec.", (4, 0))
     criar_label(layout, "Aba Mín.", (4, 1))
@@ -137,7 +134,7 @@ def cabecalho(parent):
     z_ext_lbl = criar_widget(layout, 'label', 'Z_EXT_LBL', (5, 2))
     forca_lbl = criar_widget(layout, 'label', 'FORCA_LBL', (5, 3))
 
-    #Tooltips para os widgets linha 3
+    # Tooltips para os widgets linha 3
     ded_espec_entry.setToolTip("Digite a dedução específica em milímetros.")
     aba_ext_lbl.setToolTip("Medida da aba mínima.")
     z_ext_lbl.setToolTip("Medida de Z90° mínima.")
@@ -145,7 +142,6 @@ def cabecalho(parent):
 
     # Conectar eventos de mudança nos widgets
     ded_espec_entry.textChanged.connect(calcular_valores)
-
 
     # Observações
     obs_label = criar_label(layout, "Observações:", (6, 0))
@@ -156,14 +152,15 @@ def cabecalho(parent):
     # Tooltip para observações
     obs_widget.setToolTip("Observações sobre a dobra ou material.")
 
-
     # Conectar eventos de mudança nas comboboxes após todos os widgets estarem criados
     if mat_comb:
-        mat_comb.currentTextChanged.connect(lambda: atualizar_widgets('espessura'))
+        mat_comb.currentTextChanged.connect(
+            lambda: atualizar_widgets('espessura'))
     if esp_comb:
         esp_comb.currentTextChanged.connect(lambda: atualizar_widgets('canal'))
     if canal_comb:
-        canal_comb.currentTextChanged.connect(lambda: atualizar_widgets('dedução'))
+        canal_comb.currentTextChanged.connect(
+            lambda: atualizar_widgets('dedução'))
         canal_comb.currentTextChanged.connect(canal_tooltip)
     if compr_entry:
         compr_entry.textChanged.connect(calcular_valores)
