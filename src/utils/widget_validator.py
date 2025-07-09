@@ -147,7 +147,7 @@ class OperationHelper:
                             'DED_MATER_COMB', 'DED_VALOR_ENTRY']
 
         # Validar existência dos widgets
-        is_valid, missing = WidgetValidator.validate_required_widgets(
+        is_valid = WidgetValidator.validate_required_widgets(
             required_widgets, "adicionar dedução"
         )
         if not is_valid:
@@ -155,14 +155,14 @@ class OperationHelper:
 
         # Validar seleções dos comboboxes
         combobox_names = ['DED_ESPES_COMB', 'DED_CANAL_COMB', 'DED_MATER_COMB']
-        is_valid, empty = WidgetValidator.validate_combobox_selections(
+        is_valid = WidgetValidator.validate_combobox_selections(
             combobox_names, "adicionar dedução"
         )
         if not is_valid:
             return False, {}
 
         # Validar campo de valor
-        is_valid, empty = WidgetValidator.validate_entry_fields(
+        is_valid = WidgetValidator.validate_entry_fields(
             ['DED_VALOR_ENTRY'], "adicionar dedução"
         )
         if not is_valid:
@@ -190,7 +190,7 @@ class OperationHelper:
                             'MAT_DENS_ENTRY', 'MAT_ESCO_ENTRY', 'MAT_ELAS_ENTRY']
 
         # Validar existência dos widgets
-        is_valid, missing = WidgetValidator.validate_required_widgets(
+        is_valid = WidgetValidator.validate_required_widgets(
             required_widgets, "adicionar material"
         )
         if not is_valid:
@@ -217,14 +217,14 @@ class OperationHelper:
         required_widgets = ['ESP_VALOR_ENTRY']
 
         # Validar existência dos widgets
-        is_valid, missing = WidgetValidator.validate_required_widgets(
+        is_valid = WidgetValidator.validate_required_widgets(
             required_widgets, "adicionar espessura"
         )
         if not is_valid:
             return False, {}
 
         # Validar campo não vazio
-        is_valid, empty = WidgetValidator.validate_entry_fields(
+        is_valid = WidgetValidator.validate_entry_fields(
             required_widgets, "adicionar espessura"
         )
         if not is_valid:
@@ -248,14 +248,14 @@ class OperationHelper:
                             'CANAL_COMPR_ENTRY', 'CANAL_OBSER_ENTRY']
 
         # Validar existência dos widgets obrigatórios
-        is_valid, missing = WidgetValidator.validate_required_widgets(
+        is_valid = WidgetValidator.validate_required_widgets(
             required_widgets, "adicionar canal"
         )
         if not is_valid:
             return False, {}
 
         # Validar campo obrigatório não vazio
-        is_valid, empty = WidgetValidator.validate_entry_fields(
+        is_valid = WidgetValidator.validate_entry_fields(
             required_widgets, "adicionar canal"
         )
         if not is_valid:
@@ -278,7 +278,7 @@ class OperationHelper:
         required_widgets = ['USUARIO_ENTRY', 'SENHA_ENTRY']
 
         # Validar existência dos widgets
-        is_valid, missing = WidgetValidator.validate_required_widgets(
+        is_valid = WidgetValidator.validate_required_widgets(
             required_widgets, "operação de usuário"
         )
         if not is_valid:
