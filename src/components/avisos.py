@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
 
-def avisos(root):
+def avisos():
     """
     Cria um frame contendo avisos para o usuário.
 

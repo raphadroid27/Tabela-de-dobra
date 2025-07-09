@@ -12,7 +12,7 @@ from src.utils.interface import (
 )
 
 
-def criar_label(layout, texto, linha_coluna, **kwargs):
+def criar_label(layout, texto, linha_coluna):
     """
     Cria um rótulo (QLabel) no layout especificado.
 
@@ -60,7 +60,7 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
     return widget
 
 
-def cabecalho(parent):
+def cabecalho():
     """
     Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
     """

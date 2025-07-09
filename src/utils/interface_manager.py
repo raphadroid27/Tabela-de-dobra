@@ -114,13 +114,13 @@ def carregar_interface(var, layout):
 
         # Adicionar o cabeçalho principal
         print("Carregando cabeçalho...")
-        cabecalho_widget = cabecalho(None)
+        cabecalho_widget = cabecalho()
         layout.addWidget(cabecalho_widget, 0, 0)
 
         # Adicionar avisos se necessário
         if var == 2:
             print("Carregando avisos...")
-            avisos_widget = avisos(None)
+            avisos_widget = avisos()
             layout.addWidget(avisos_widget, 0, 1)
 
         # Determinar número de abas baseado na expansão vertical
@@ -131,12 +131,12 @@ def carregar_interface(var, layout):
         print(f"Carregando dobras para valores W: {g.VALORES_W}")
         for w in g.VALORES_W:
             print(f"  Criando dobra para W={w}")
-            dobras_widget = dobras(None, w)
+            dobras_widget = dobras(w)
             layout.addWidget(dobras_widget, 1, w - 1)
 
         # Adicionar botões
         print("Carregando botões...")
-        botoes_widget = botoes.criar_botoes(None)
+        botoes_widget = botoes.criar_botoes()
         layout.addWidget(botoes_widget, 2, 0, 1, 2)  # span 2 columns
 
         # Configurar layout
