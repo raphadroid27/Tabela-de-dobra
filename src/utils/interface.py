@@ -213,47 +213,54 @@ def _atualizar_canal():
 def _atualizar_deducao():
     """
     Atualiza os valores de dedução com base nos widgets selecionados.
-    Só calcula quando todas as seleções forem válidas (não vazias).
+    Só calcula quando todas as seleções forem válidas.
     """
-    # Verificar se todos os widgets necessários estão disponíveis
-    widgets_requeridos = [
-        (g.ESP_COMB, 'currentText'),
-        (g.MAT_COMB, 'currentText'),
-        (g.CANAL_COMB, 'currentText')
-    ]
-
-    for widget, metodo in widgets_requeridos:
-        if not widget or not hasattr(widget, metodo):
-            return
-
-    # Verificar se alguma combobox não tem seleção (currentIndex == -1)
-    if (g.ESP_COMB.currentIndex() == -1 or
-        g.MAT_COMB.currentIndex() == -1 or
-            g.CANAL_COMB.currentIndex() == -1):
-
-        # Limpar valores de dedução se alguma seleção estiver vazia
-        if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
-            g.DED_LBL.setText('')
-        if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
-            g.OBS_LBL.setText('')
+    if not _widgets_selecionados():
+        _limpar_deducao()
         return
 
     espessura_valor = g.ESP_COMB.currentText()
     material_nome = g.MAT_COMB.currentText()
     canal_valor = g.CANAL_COMB.currentText()
 
-    # Verificar se todas as seleções são válidas (não vazias)
-    if (not espessura_valor or not material_nome or not canal_valor or
-            espessura_valor.strip() == ("" or material_nome.strip() == ""
-                                        or canal_valor.strip() == "")):
-
-        # Limpar valores de dedução se alguma seleção estiver vazia
-        if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
-            g.DED_LBL.setText('')
-        if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
-            g.OBS_LBL.setText('')
+    if not _selecoes_validas(espessura_valor, material_nome, canal_valor):
+        _limpar_deducao()
         return
 
+    _atualiza_labels_deducao(espessura_valor, material_nome, canal_valor)
+    calcular_valores()
+
+
+def _widgets_selecionados():
+    widgets = [g.ESP_COMB, g.MAT_COMB, g.CANAL_COMB]
+    metodos = ['currentText'] * 3
+    for widget, metodo in zip(widgets, metodos):
+        if not widget or not hasattr(widget, metodo):
+            return False
+    if (g.ESP_COMB.currentIndex() == -1 or
+        g.MAT_COMB.currentIndex() == -1 or
+            g.CANAL_COMB.currentIndex() == -1):
+        return False
+    return True
+
+
+def _selecoes_validas(espessura, material, canal):
+    if not all([espessura, material, canal]):
+        return False
+    if any(x.strip() == "" for x in (espessura, material, canal)):
+        return False
+    return True
+
+
+def _limpar_deducao():
+    if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
+        g.DED_LBL.setText('')
+        g.DED_LBL.setStyleSheet("")
+    if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
+        g.OBS_LBL.setText('')
+
+
+def _atualiza_labels_deducao(espessura_valor, material_nome, canal_valor):
     try:
         espessura_obj = session.query(Espessura).filter_by(
             valor=float(espessura_valor)).first()
@@ -267,34 +274,30 @@ def _atualizar_deducao():
                 Deducao.material_id == material_obj.id,
                 Deducao.canal_id == canal_obj.id
             ).first()
-
             if deducao_obj:
-                if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
-                    g.DED_LBL.setText(str(deducao_obj.valor))
-                    g.DED_LBL.setStyleSheet("")
-                observacao = deducao_obj.observacao or 'Observações não encontradas'
-                if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
-                    g.OBS_LBL.setText(observacao)
+                _set_deducao_label(str(deducao_obj.valor), "")
+                _set_obs_label(
+                    deducao_obj.observacao or 'Observações não encontradas')
             else:
-                if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
-                    g.DED_LBL.setText('N/A')
-                    g.DED_LBL.setStyleSheet("color: red")
-                if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
-                    g.OBS_LBL.setText('Observações não encontradas')
+                _set_deducao_label('N/A', "color: red")
+                _set_obs_label('Observações não encontradas')
         else:
-            if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
-                g.DED_LBL.setText('')
-            if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
-                g.OBS_LBL.setText('')
-
-        # Chamar calcular_valores após atualizar a dedução para garantir que
-        # os cálculos das dobras usem a dedução correta
-        calcular_valores()
-
+            _limpar_deducao()
     except ValueError as e:
         print(f"Erro ao converter valor da espessura: {e}")
     except (AttributeError, RuntimeError) as e:
         print(f"Erro ao atualizar dedução: {e}")
+
+
+def _set_deducao_label(texto, estilo):
+    if g.DED_LBL and hasattr(g.DED_LBL, 'setText'):
+        g.DED_LBL.setText(texto)
+        g.DED_LBL.setStyleSheet(estilo)
+
+
+def _set_obs_label(texto):
+    if g.OBS_LBL and hasattr(g.OBS_LBL, 'setText'):
+        g.OBS_LBL.setText(texto)
 
 
 def atualizar_widgets(tipo):
@@ -732,7 +735,7 @@ def calcular_valores():
         print(f"Erro geral em calcular_valores: {e}")
 
 
-def configurar_main_frame(parent, rows=4):
+def configurar_main_frame(parent):
     """
     Configura o frame principal com colunas e linhas padrão.
     """
