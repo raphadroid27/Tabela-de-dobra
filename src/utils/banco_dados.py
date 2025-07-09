@@ -13,7 +13,8 @@ from src.config import globals as g
 # Configuração do banco de dados
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
-engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
+engine = create_engine(
+    f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -70,6 +71,9 @@ def obter_configuracoes():
             'form': g.ESPES_FORM,
             'lista': g.LIST_ESP,
             'modelo': Espessura,
+            'campos': {
+                'valor': g.ESP_VALOR_ENTRY
+            },
             'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
             'valores': lambda e: (e.valor,),
             'ordem': Espessura.valor,
@@ -117,7 +121,8 @@ def salvar_no_banco(obj, tipo, detalhes):
     """
     session.add(obj)
     tratativa_erro()
-    registrar_log(g.USUARIO_NOME, 'adicionar', tipo, obj.id, f'{tipo} {detalhes}')
+    registrar_log(g.USUARIO_NOME, 'adicionar', tipo,
+                  obj.id, f'{tipo} {detalhes}')
 
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
