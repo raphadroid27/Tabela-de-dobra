@@ -579,72 +579,88 @@ def item_selecionado(tipo):
 def buscar(tipo):
     """
     Realiza a busca de itens no banco de dados com base nos critérios especificados.
+    Evita buscas automáticas durante recarregamentos ou atualizações de interface.
     """
-    # Evitar busca durante recarregamento da interface
-    if hasattr(g, 'INTERFACE_RELOADING') and g.INTERFACE_RELOADING:
+    if _deve_ignorar_busca(tipo):
         return
 
-    # Evitar busca automática durante atualização dos comboboxes de dedução
-    if (tipo == 'dedução' and hasattr(g, 'DEDUC_FORM') and g.DEDUC_FORM and
-            g.DEDUC_FORM.isVisible() and hasattr(g, 'UPDATING_DEDUCAO_COMBOS')
-            and g.UPDATING_DEDUCAO_COMBOS):
+    config = _obter_configuracao(tipo)
+    if config is None or not _widgets_validos(config, tipo):
         return
 
+    itens = _buscar_itens(tipo, config)
+    if itens is None:
+        return
+
+    _preencher_lista(config, itens)
+
+
+def _deve_ignorar_busca(tipo):
+    if getattr(g, 'INTERFACE_RELOADING', False):
+        return True
+    if tipo == 'dedução' and (
+        getattr(g, 'DEDUC_FORM', None)
+        and g.DEDUC_FORM.isVisible()
+        and getattr(g, 'UPDATING_DEDUCAO_COMBOS', False)
+    ):
+        return True
+    return False
+
+
+def _obter_configuracao(tipo):
     configuracoes = obter_configuracoes()
-
-    try:
-        config = configuracoes.get(tipo)
-    except KeyError:
-        show_error("Erro", f"Tipo '{tipo}' não encontrado nas configurações.")
-        return
-
-    # Verificar se config não é None
+    config = configuracoes.get(tipo)
     if config is None:
         show_error("Erro", f"Configuração para '{tipo}' não encontrada.")
-        return
+    return config
 
-    # Para QTreeWidget, verificar se o widget existe e está visível
-    if tipo != 'dedução' and (config.get('busca') is None or not hasattr(config['busca'],
-                                                                         'isVisible')):
-        return
 
-    if config['lista'] is None:
-        return
+def _widgets_validos(config, tipo):
+    if tipo != 'dedução':
+        busca_widget = config.get('busca')
+        if busca_widget is None or not hasattr(busca_widget, 'isVisible'):
+            return False
+    if config.get('lista') is None:
+        return False
+    return True
 
-    def filtrar_deducoes(material_nome, espessura_valor, canal_valor):
-        query = session.query(Deducao).join(
-            Material).join(Espessura).join(Canal)
 
-        if material_nome:
-            query = query.filter(Material.nome == material_nome)
-        if espessura_valor:
-            query = query.filter(Espessura.valor == espessura_valor)
-        if canal_valor:
-            query = query.filter(Canal.valor == canal_valor)
-
-        return query.all()
-
+def _buscar_itens(tipo, config):
     if tipo == 'dedução':
-        material_nome = config['entries']['material_combo'].currentText()
-        espessura_valor = config['entries']['espessura_combo'].currentText()
-        canal_valor = config['entries']['canal_combo'].currentText()
-        itens = filtrar_deducoes(material_nome, espessura_valor, canal_valor)
-    else:
-        item = config['busca'].text().replace(',', '.') if config.get(
-            'busca') and hasattr(config['busca'], 'text') else ""
-        if not item:
-            listar(tipo)
-            return
-        itens = session.query(config['modelo']).filter(
-            config['campo_busca'].like(f"{item}%"))
+        return _obter_itens_deducao(config)
+    return _obter_itens_geral(config, tipo)
 
-    # Limpar a lista atual
+
+def _obter_itens_deducao(config):
+    material = config['entries']['material_combo'].currentText()
+    espessura = config['entries']['espessura_combo'].currentText()
+    canal = config['entries']['canal_combo'].currentText()
+    query = session.query(Deducao).join(Material).join(Espessura).join(Canal)
+    if material:
+        query = query.filter(Material.nome == material)
+    if espessura:
+        query = query.filter(Espessura.valor == espessura)
+    if canal:
+        query = query.filter(Canal.valor == canal)
+    return query.all()
+
+
+def _obter_itens_geral(config, tipo):
+    busca_widget = config['busca']
+    termo = busca_widget.text().replace(
+        ',', '.') if hasattr(busca_widget, 'text') else ""
+    if not termo:
+        listar(tipo)
+        return None
+    return session.query(config['modelo']).filter(
+        config['campo_busca'].like(f"{termo}%")
+    )
+
+
+def _preencher_lista(config, itens):
     config['lista'].clear()
-
-    # Adicionar os itens filtrados
     for item in itens:
         valores = config['valores'](item)
-        # Garantir que todos os valores sejam strings
         valores_str = [str(v) if v is not None else '' for v in valores]
         item_widget = QTreeWidgetItem(valores_str)
         config['lista'].addTopLevelItem(item_widget)
