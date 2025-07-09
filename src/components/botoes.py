@@ -12,7 +12,7 @@ from src.utils.janelas import cleanup_orphaned_windows
 import src.config.globals as g
 
 
-def criar_botoes(root):
+def criar_botoes():
     """
     Cria os botões e checkbuttons no frame inferior com nova lógica de expansão.
 
