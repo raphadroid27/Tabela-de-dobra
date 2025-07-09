@@ -161,7 +161,7 @@ FORM_CONFIGS = {
 }
 
 
-def criar_label(layout, texto, pos, **kwargs):
+def criar_label(layout, texto, pos):
     """
     Cria um rótulo (QLabel) no layout especificado.
 
@@ -169,7 +169,6 @@ def criar_label(layout, texto, pos, **kwargs):
         layout (QGridLayout): Layout onde o rótulo será criado.
         texto (str): Texto do rótulo.
         pos (tuple): Tupla contendo a linha e a coluna onde o rótulo será posicionado.
-        **kwargs: Argumentos adicionais para o widget QLabel.
     """
     linha, coluna = pos
     label = QLabel(texto)
@@ -286,13 +285,12 @@ def criar_lista(config, tipo):
     return tree_widget
 
 
-def criar_frame_edicoes(config, tipo):
+def criar_frame_edicoes(config):
     """
     Cria o frame de edições baseado na configuração.
 
     Args:
         config (dict): Configuração do formulário.
-        tipo (str): Tipo do formulário.
     """
     is_edit = getattr(g, config['global_edit'], False)
     titulo = config['edicao']['titulo_edit'] if is_edit else config['edicao']['titulo_novo']
@@ -316,13 +314,12 @@ def criar_frame_edicoes(config, tipo):
     return frame_edicoes
 
 
-def configurar_botoes(config, main_frame, frame_edicoes, tipo):
+def configurar_botoes(config, frame_edicoes, tipo):
     """
     Configura os botões baseado na configuração.
 
     Args:
         config (dict): Configuração do formulário.
-        main_frame: Frame principal.
         frame_edicoes: Frame de edições.
         tipo (str): Tipo do formulário.
     """
@@ -330,25 +327,20 @@ def configurar_botoes(config, main_frame, frame_edicoes, tipo):
     layout = frame_edicoes.layout() if frame_edicoes else None
     tipo_operacao = config.get('tipo_busca', tipo)
 
-    if is_edit:
-        # Modo edição
-        form_widget = getattr(g, config['global_form'])
-        if form_widget:
-            form_widget.setWindowTitle(
-                f"Editar/Excluir {config['titulo'].split(' ')[-1]}")
+    if layout:
+        # Descobrir a última linha ocupada pelos campos
+        linhas_ocupadas = []
+        for campo in config['edicao']['campos']:
+            pos_label = campo['pos']
+            linhas_ocupadas.append(pos_label[0] + 1)  # linha do widget
+        ultima_linha = max(linhas_ocupadas) + 1  # linha abaixo do último campo
 
-        # Conectar seleção da lista
-        list_widget = getattr(g, config['lista']['global'])
-        if list_widget:
-            list_widget.itemSelectionChanged.connect(
-                lambda: preencher_campos(tipo_operacao))
+        button_rowspan = config['edicao'].get('button_rowspan', 1)
+        # Se quiser preencher todo o frame, pode calcular o rowspan:
+        # Exemplo: preencher até a linha 5
+        # button_rowspan = max(1, 6 - ultima_linha)
 
-        # Atualizar título do frame de edições
-        if frame_edicoes:
-            frame_edicoes.setTitle(config['edicao']['titulo_edit'])
-
-        # Botão Atualizar (no frame de edições, se existir)
-        if layout:
+        if is_edit:
             atualizar_btn = QPushButton("✏️ Atualizar")
             atualizar_btn.setStyleSheet("""
                 QPushButton {
@@ -367,28 +359,10 @@ def configurar_botoes(config, main_frame, frame_edicoes, tipo):
                 }
             """)
             atualizar_btn.clicked.connect(lambda: editar(tipo_operacao))
-
-            button_pos = config['edicao']['button_pos']
-            button_rowspan = config['edicao'].get('button_rowspan', 1)
             layout.addWidget(
-                atualizar_btn, button_pos[0], button_pos[1], button_rowspan, 1)
-    else:
-        # Modo adição
-        form_widget = getattr(g, config['global_form'])
-        if form_widget:
-            # Atualizar título baseado no tipo
-            if tipo == 'espessura':
-                form_widget.setWindowTitle("Adicionar Espessura")
-            else:
-                nome = config['titulo'].split(' ')[-1]
-                form_widget.setWindowTitle(f"Novo {nome}")
-
-        # Atualizar título do frame de edições
-        if frame_edicoes:
-            frame_edicoes.setTitle(config['edicao']['titulo_novo'])
-
-        # Botão Adicionar (no frame de edições, se existir)
-        if layout:
+                atualizar_btn, ultima_linha, 0, button_rowspan, layout.columnCount()
+            )
+        else:
             adicionar_btn = QPushButton("➕ Adicionar")
             adicionar_btn.setStyleSheet("""
                 QPushButton {
@@ -407,11 +381,35 @@ def configurar_botoes(config, main_frame, frame_edicoes, tipo):
                 }
             """)
             adicionar_btn.clicked.connect(lambda: adicionar(tipo_operacao))
-
-            button_pos = config['edicao']['button_pos']
-            button_rowspan = config['edicao'].get('button_rowspan', 1)
             layout.addWidget(
-                adicionar_btn, button_pos[0], button_pos[1], button_rowspan, 1)
+                adicionar_btn, ultima_linha, 0, button_rowspan, layout.columnCount()
+            )
+
+    # Atualizar títulos normalmente
+    form_widget = getattr(g, config['global_form'])
+    if form_widget:
+        if is_edit:
+            form_widget.setWindowTitle(
+                f"Editar/Excluir {config['titulo'].split(' ')[-1]}")
+        else:
+            if tipo == 'espessura':
+                form_widget.setWindowTitle("Adicionar Espessura")
+            else:
+                nome = config['titulo'].split(' ')[-1]
+                form_widget.setWindowTitle(f"Novo {nome}")
+
+    if frame_edicoes:
+        if is_edit:
+            frame_edicoes.setTitle(config['edicao']['titulo_edit'])
+        else:
+            frame_edicoes.setTitle(config['edicao']['titulo_novo'])
+
+    # Conectar seleção da lista no modo edição
+    if is_edit:
+        list_widget = getattr(g, config['lista']['global'])
+        if list_widget:
+            list_widget.itemSelectionChanged.connect(
+                lambda: preencher_campos(tipo_operacao))
 
 
 def atualizar_comboboxes(tipos):
@@ -509,13 +507,13 @@ def main(tipo, root):
     frame_edicoes = None
 
     if not is_edit or tipo != 'espessura':
-        frame_edicoes = criar_frame_edicoes(config, tipo)
+        frame_edicoes = criar_frame_edicoes(config)
         # Se tem botão excluir, frame de edições vai na linha 3, senão na linha 2
         row_frame_edicoes = 3 if is_edit else 2
         layout.addWidget(frame_edicoes, row_frame_edicoes, 0)
 
     # Configurar botões
-    configurar_botoes(config, main_frame, frame_edicoes, tipo)
+    configurar_botoes(config, frame_edicoes, tipo)
 
     # Executar pós-inicialização se necessário
     if 'post_init' in config:
