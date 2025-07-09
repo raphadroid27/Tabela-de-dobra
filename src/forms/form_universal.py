@@ -131,7 +131,7 @@ FORM_CONFIGS = {
 
     'espessura': {
         'titulo': 'Formulário de Espessuras',
-        'size': (240, 280),
+        'size': (240, 320),
         'global_form': 'ESPES_FORM',
         'global_edit': 'EDIT_ESP',
         'busca': {
