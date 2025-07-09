@@ -8,10 +8,8 @@ disable=import-error,
         no-name-in-module,
         E0401,
         E0611,
-        C0103,
         R0903,
-        W0613,
-        W0612
+        E1102
 
 [REPORTS]
 output-format=text
