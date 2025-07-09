@@ -14,7 +14,7 @@ from src.utils.interface import (
 LARGURA = 12
 
 
-def dobras(frame, w):
+def dobras(w):
     """
     Cria o frame para as dobras, com base no valor de n.
     O frame é criado apenas uma vez, e os widgets são atualizados
@@ -76,6 +76,7 @@ def entradas_dobras(valor, w):
         entry.textChanged.connect(lambda text, w=w: calcular_dobra(w))
         entry.returnPressed.connect(lambda i=i, w=w: focus_next_entry(i, w))
         # Substituir keyPressEvent para lidar com UP/DOWN sem criar uma função separada
+
         def custom_key_press_event(event, entry=entry, i=i, w=w):
             if event.key() == Qt.Key_Down:
                 focus_next_entry(i, w)
