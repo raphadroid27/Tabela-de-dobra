@@ -314,7 +314,7 @@ def _processar_campo_edicao(obj, campo, entry, tipo):
     return []
 
 
-def _limpar_campos_edicao(config, tipo):
+def _limpar_campos_edicao(config):
     """Limpa os campos após a edição."""
     for entry in config['campos'].values():
         if entry is not None:
@@ -363,7 +363,7 @@ def editar(tipo):
     show_info("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
 
     # Limpar campos e atualizar interface
-    _limpar_campos_edicao(config, tipo)
+    _limpar_campos_edicao(config)
     limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
