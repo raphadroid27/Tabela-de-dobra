@@ -1,17 +1,35 @@
 """
-Sistema centralizado de gerenciamento de widgets para evitar
-redundâncias e melhorar a modularização.
+Sistema centralizado de gerenciamento de widgets com validação robusta.
 """
-from typing import Any, Dict, List, Callable
+
+from typing import Any, Dict, List
 from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QLabel
 import src.config.globals as g
 
 
 class WidgetManager:
-    """
-    Gerenciador centralizado para operações com widgets, evitando código redundante
-    e proporcionando uma interface consistente para manipulação de widgets.
-    """
+    """Gerenciador centralizado para operações com widgets."""
+
+    @staticmethod
+    def is_widget_valid(widget: QWidget) -> bool:
+        """
+        Verifica se um widget é válido (não foi deletado).
+
+        Args:
+            widget: Widget a ser verificado
+
+        Returns:
+            bool: True se válido, False caso contrário
+        """
+        if widget is None:
+            return False
+
+        try:
+            # Tenta acessar uma propriedade básica
+            widget.objectName()
+            return True
+        except RuntimeError:
+            return False
 
     @staticmethod
     def safe_get_widget(name: str, default: Any = None) -> Any:
@@ -25,7 +43,10 @@ class WidgetManager:
         Returns:
             O widget ou o valor padrão
         """
-        return getattr(g, name, default)
+        widget = getattr(g, name, default)
+        if WidgetManager.is_widget_valid(widget):
+            return widget
+        return default
 
     @staticmethod
     def safe_set_widget(name: str, widget: Any) -> None:
@@ -41,7 +62,7 @@ class WidgetManager:
     @staticmethod
     def get_widget_value(widget: QWidget, default: str = '') -> str:
         """
-        Obtém o valor de um widget de forma padronizada.
+        Obtém o valor de um widget de forma padronizada e segura.
 
         Args:
             widget: Widget do qual obter o valor
@@ -50,7 +71,7 @@ class WidgetManager:
         Returns:
             Valor do widget ou padrão
         """
-        if widget is None:
+        if not WidgetManager.is_widget_valid(widget):
             return default
 
         try:
@@ -59,13 +80,13 @@ class WidgetManager:
             elif hasattr(widget, 'text'):
                 return widget.text() or default
             return default
-        except AttributeError:
+        except (AttributeError, RuntimeError):
             return default
 
     @staticmethod
     def set_widget_value(widget: QWidget, value: str, safe: bool = True) -> bool:
         """
-        Define o valor de um widget de forma padronizada.
+        Define o valor de um widget de forma padronizada e segura.
 
         Args:
             widget: Widget no qual definir o valor
@@ -75,7 +96,7 @@ class WidgetManager:
         Returns:
             True se conseguiu definir, False caso contrário
         """
-        if widget is None:
+        if not WidgetManager.is_widget_valid(widget):
             return False
 
         try:
@@ -86,7 +107,7 @@ class WidgetManager:
                 widget.setText(value)
                 return True
             return False
-        except AttributeError as e:
+        except (AttributeError, RuntimeError) as e:
             if not safe:
                 raise
             print(f"Erro ao definir valor do widget: {e}")
@@ -95,7 +116,7 @@ class WidgetManager:
     @staticmethod
     def clear_widget(widget: QWidget, safe: bool = True) -> bool:
         """
-        Limpa um widget de forma padronizada.
+        Limpa um widget de forma padronizada e segura.
 
         Args:
             widget: Widget a ser limpo
@@ -104,7 +125,7 @@ class WidgetManager:
         Returns:
             True se conseguiu limpar, False caso contrário
         """
-        if widget is None:
+        if not WidgetManager.is_widget_valid(widget):
             return False
 
         try:
@@ -115,7 +136,7 @@ class WidgetManager:
                 widget.setText("")
                 return True
             return False
-        except AttributeError as e:
+        except (AttributeError, RuntimeError) as e:
             if not safe:
                 raise
             print(f"Erro ao limpar widget: {e}")
@@ -135,7 +156,7 @@ class WidgetManager:
         Returns:
             True se conseguiu restaurar, False caso contrário
         """
-        if not combobox or not value:
+        if not WidgetManager.is_widget_valid(combobox) or not value:
             return False
 
         try:
@@ -159,7 +180,7 @@ class WidgetManager:
                 return True
 
             return False
-        except AttributeError as e:
+        except (AttributeError, RuntimeError) as e:
             print(f"Erro ao restaurar combobox: {e}")
             return False
 
@@ -223,7 +244,10 @@ class WidgetManager:
             cls.clear_widget(entry)
             # Remover estilo personalizado se aplicável
             if hasattr(entry, 'setStyleSheet'):
-                entry.setStyleSheet("")
+                try:
+                    entry.setStyleSheet("")
+                except RuntimeError:
+                    pass
 
         # Limpar labels
         for label_list in [widgets['medida_dobra_labels'], widgets['metade_dobra_labels']]:
@@ -251,68 +275,18 @@ class WidgetManager:
         return {name: cls.safe_get_widget(name) for name in widget_names}
 
     @classmethod
-    def get_form_widgets(cls, form_type: str) -> Dict[str, QWidget]:
+    def validate_widgets_exist(cls, widget_names: List[str]) -> Dict[str, bool]:
         """
-        Obtém todos os widgets de um formulário específico.
+        Valida se uma lista de widgets existe e não é None.
 
         Args:
-            form_type: Tipo do formulário ('deducao', 'material', 'canal', 'espessura')
+            widget_names: Lista de nomes dos widgets a serem validados
 
         Returns:
-            Dicionário com os widgets do formulário
+            Dicionário indicando se cada widget existe e é válido
         """
-        widget_maps = {
-            'deducao': [
-                'DED_MATER_COMB', 'DED_ESPES_COMB', 'DED_CANAL_COMB',
-                'DED_VALOR_ENTRY', 'DED_OBSER_ENTRY', 'DED_FORCA_ENTRY',
-                'LIST_DED', 'EDIT_DED'
-            ],
-            'material': [
-                'MAT_NOME_ENTRY', 'MAT_DENS_ENTRY', 'MAT_ESCO_ENTRY',
-                'MAT_ELAS_ENTRY', 'LIST_MAT', 'EDIT_MAT', 'MAT_BUSCA_ENTRY'
-            ],
-            'canal': [
-                'CANAL_VALOR_ENTRY', 'CANAL_LARGU_ENTRY', 'CANAL_ALTUR_ENTRY',
-                'CANAL_COMPR_ENTRY', 'CANAL_OBSER_ENTRY', 'LIST_CANAL',
-                'EDIT_CANAL', 'CANAL_BUSCA_ENTRY'
-            ],
-            'espessura': [
-                'ESP_VALOR_ENTRY', 'LIST_ESP', 'EDIT_ESP', 'ESP_BUSCA_ENTRY'
-            ]
-        }
-
-        widget_names = widget_maps.get(form_type, [])
-        return {name: cls.safe_get_widget(name) for name in widget_names}
-
-    @classmethod
-    def apply_operation_to_widgets(cls, widgets: List[QWidget],
-                                   operation: Callable[[QWidget], Any],
-                                   safe: bool = True) -> List[Any]:
-        """
-        Aplica uma operação a uma lista de widgets de forma segura.
-
-        Args:
-            widgets: Lista de widgets
-            operation: Função a ser aplicada a cada widget
-            safe: Se True, não para a execução em caso de erro
-
-        Returns:
-            Lista com os resultados da operação
-        """
-        results = []
-        for widget in widgets:
-            try:
-                if widget is not None:
-                    result = operation(widget)
-                    results.append(result)
-                else:
-                    results.append(None)
-            except AttributeError as e:
-                if not safe:
-                    raise
-                print(f"Erro ao aplicar operação ao widget: {e}")
-                results.append(None)
-        return results
+        return {name: cls.is_widget_valid(cls.safe_get_widget(name))
+                for name in widget_names}
 
     @classmethod
     def batch_clear_widgets(cls, widget_names: List[str]) -> Dict[str, bool]:
@@ -348,21 +322,9 @@ class WidgetManager:
             results[name] = cls.set_widget_value(widget, value)
         return results
 
-    @classmethod
-    def validate_widgets_exist(cls, widget_names: List[str]) -> Dict[str, bool]:
-        """
-        Valida se uma lista de widgets existe e não é None.
-
-        Args:
-            widget_names: Lista de nomes dos widgets a serem validados
-
-        Returns:
-            Dicionário indicando se cada widget existe
-        """
-        return {name: cls.safe_get_widget(name) is not None for name in widget_names}
+# Funções utilitárias globais para compatibilidade
 
 
-# Funções utilitárias globais para compatibilidade com código existente
 def safe_get_widget_value(widget_name: str, default: str = '') -> str:
     """Função global para obter valor de widget de forma segura."""
     widget = WidgetManager.safe_get_widget(widget_name)
