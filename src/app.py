@@ -29,10 +29,10 @@ from src.forms import (
     form_impressao
 )
 from src.forms.form_wrappers import (
-    form_espessura,
-    form_deducao,
-    form_material,
-    form_canal
+    FormEspessura,
+    FormDeducao,
+    FormMaterial,
+    FormCanal
 )
 from src.config import globals as g
 
@@ -178,22 +178,22 @@ def configurar_menu():
 
     nova_deducao_action = QAction("Nova Dedução", g.PRINC_FORM)
     nova_deducao_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_DED', False), form_deducao.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_DED', False), FormDeducao.main(g.PRINC_FORM)))
     file_menu.addAction(nova_deducao_action)
 
     novo_material_action = QAction("Novo Material", g.PRINC_FORM)
     novo_material_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_MAT', False), form_material.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_MAT', False), FormMaterial.main(g.PRINC_FORM)))
     file_menu.addAction(novo_material_action)
 
     nova_espessura_action = QAction("Nova Espessura", g.PRINC_FORM)
     nova_espessura_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_ESP', False), form_espessura.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_ESP', False), FormEspessura.main(g.PRINC_FORM)))
     file_menu.addAction(nova_espessura_action)
 
     novo_canal_action = QAction("Novo Canal", g.PRINC_FORM)
     novo_canal_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_CANAL', False), form_canal.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_CANAL', False), FormCanal.main(g.PRINC_FORM)))
     file_menu.addAction(novo_canal_action)
 
     file_menu.addSeparator()
@@ -207,22 +207,22 @@ def configurar_menu():
 
     editar_deducao_action = QAction("Editar Dedução", g.PRINC_FORM)
     editar_deducao_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_DED', True), form_deducao.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_DED', True), FormDeducao.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_deducao_action)
 
     editar_material_action = QAction("Editar Material", g.PRINC_FORM)
     editar_material_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_MAT', True), form_material.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_MAT', True), FormMaterial.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_material_action)
 
     editar_espessura_action = QAction("Editar Espessura", g.PRINC_FORM)
     editar_espessura_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_ESP', True), form_espessura.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_ESP', True), FormEspessura.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_espessura_action)
 
     editar_canal_action = QAction("Editar Canal", g.PRINC_FORM)
     editar_canal_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_CANAL', True), form_canal.main(g.PRINC_FORM)))
+        lambda: (setattr(g, 'EDIT_CANAL', True), FormCanal.main(g.PRINC_FORM)))
     edit_menu.addAction(editar_canal_action)
 
     # Menu Opções
@@ -327,7 +327,7 @@ def main():
                 print(''.join(traceback.format_exception(
                     exc_type, exc_value, exc_traceback)))
 
-        def signal_handler(signum, frame):
+        def signal_handler(signum):
             """Handler para sinais do sistema"""
             print(f"Sinal recebido: {signum}")
             if app:

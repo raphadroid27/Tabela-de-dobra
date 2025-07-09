@@ -14,7 +14,7 @@ from .form_universal import (
 # Classe wrapper para form_deducao
 
 
-class form_deducao:
+class FormDeducao:
     """Wrapper para o formulário de dedução, mantendo compatibilidade com o código legado."""
     @staticmethod
     def main(root):
@@ -24,7 +24,7 @@ class form_deducao:
 # Classe wrapper para form_material
 
 
-class form_material:
+class FormMaterial:
     """Wrapper para o formulário de material, mantendo compatibilidade com o código legado."""
     @staticmethod
     def main(root):
@@ -34,7 +34,7 @@ class form_material:
 # Classe wrapper para form_canal
 
 
-class form_canal:
+class FormCanal:
     """Wrapper para o formulário de canal, mantendo compatibilidade com o código legado."""
     @staticmethod
     def main(root):
@@ -44,7 +44,7 @@ class form_canal:
 # Classe wrapper para form_espessura
 
 
-class form_espessura:
+class FormEspessura:
     """Wrapper para o formulário de espessura, mantendo compatibilidade com o código legado."""
     @staticmethod
     def main(root):
