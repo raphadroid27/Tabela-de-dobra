@@ -173,59 +173,48 @@ def configurar_menu():
 
     menu_bar = g.PRINC_FORM.menuBar()
 
-    # Menu Arquivo
+    # Criar menus usando funções especializadas
+    _criar_menu_arquivo(menu_bar)
+    _criar_menu_editar(menu_bar)
+    _criar_menu_opcoes(menu_bar)
+    _criar_menu_utilidades(menu_bar)
+    _criar_menu_usuario(menu_bar)
+    _criar_menu_ajuda(menu_bar)
+
+
+def _criar_menu_arquivo(menu_bar):
+    """Cria o menu Arquivo."""
     file_menu = menu_bar.addMenu("Arquivo")
 
-    nova_deducao_action = QAction("Nova Dedução", g.PRINC_FORM)
-    nova_deducao_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_DED', False), FormDeducao.main(g.PRINC_FORM)))
-    file_menu.addAction(nova_deducao_action)
+    # Definir ações e suas funções
+    acoes_arquivo = [
+        ("Nova Dedução", _executar_nova_deducao),
+        ("Novo Material", _executar_novo_material),
+        ("Nova Espessura", _executar_nova_espessura),
+        ("Novo Canal", _executar_novo_canal),
+        ("separator", None),
+        ("Sair", fechar_aplicativo)
+    ]
 
-    novo_material_action = QAction("Novo Material", g.PRINC_FORM)
-    novo_material_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_MAT', False), FormMaterial.main(g.PRINC_FORM)))
-    file_menu.addAction(novo_material_action)
+    _adicionar_acoes_ao_menu(file_menu, acoes_arquivo)
 
-    nova_espessura_action = QAction("Nova Espessura", g.PRINC_FORM)
-    nova_espessura_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_ESP', False), FormEspessura.main(g.PRINC_FORM)))
-    file_menu.addAction(nova_espessura_action)
 
-    novo_canal_action = QAction("Novo Canal", g.PRINC_FORM)
-    novo_canal_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_CANAL', False), FormCanal.main(g.PRINC_FORM)))
-    file_menu.addAction(novo_canal_action)
-
-    file_menu.addSeparator()
-
-    sair_action = QAction("Sair", g.PRINC_FORM)
-    sair_action.triggered.connect(fechar_aplicativo)
-    file_menu.addAction(sair_action)
-
-    # Menu Editar
+def _criar_menu_editar(menu_bar):
+    """Cria o menu Editar."""
     edit_menu = menu_bar.addMenu("Editar")
 
-    editar_deducao_action = QAction("Editar Dedução", g.PRINC_FORM)
-    editar_deducao_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_DED', True), FormDeducao.main(g.PRINC_FORM)))
-    edit_menu.addAction(editar_deducao_action)
+    acoes_editar = [
+        ("Editar Dedução", _executar_editar_deducao),
+        ("Editar Material", _executar_editar_material),
+        ("Editar Espessura", _executar_editar_espessura),
+        ("Editar Canal", _executar_editar_canal)
+    ]
 
-    editar_material_action = QAction("Editar Material", g.PRINC_FORM)
-    editar_material_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_MAT', True), FormMaterial.main(g.PRINC_FORM)))
-    edit_menu.addAction(editar_material_action)
+    _adicionar_acoes_ao_menu(edit_menu, acoes_editar)
 
-    editar_espessura_action = QAction("Editar Espessura", g.PRINC_FORM)
-    editar_espessura_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_ESP', True), FormEspessura.main(g.PRINC_FORM)))
-    edit_menu.addAction(editar_espessura_action)
 
-    editar_canal_action = QAction("Editar Canal", g.PRINC_FORM)
-    editar_canal_action.triggered.connect(
-        lambda: (setattr(g, 'EDIT_CANAL', True), FormCanal.main(g.PRINC_FORM)))
-    edit_menu.addAction(editar_canal_action)
-
-    # Menu Opções
+def _criar_menu_opcoes(menu_bar):
+    """Cria o menu Opções."""
     opcoes_menu = menu_bar.addMenu("Opções")
 
     # Inicializar NO_TOPO_VAR se não existir
@@ -234,59 +223,131 @@ def configurar_menu():
 
     no_topo_action = QAction("No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
-    no_topo_action.setChecked(g.NO_TOPO_VAR)  # Sincronizar com o estado atual
-
-    def toggle_no_topo():
-        """Função para alternar o estado 'no topo' e sincronizar o checkbox"""
-        no_topo(g.PRINC_FORM)
-        # Atualizar checkbox após mudança
-        no_topo_action.setChecked(g.NO_TOPO_VAR)
-
-    no_topo_action.triggered.connect(toggle_no_topo)
+    no_topo_action.setChecked(g.NO_TOPO_VAR)
+    no_topo_action.triggered.connect(_toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
 
-    # Menu ferramentas
+
+def _criar_menu_utilidades(menu_bar):
+    """Cria o menu Utilidades."""
     ferramentas_menu = menu_bar.addMenu("Utilidades")
 
-    razao_action = QAction("Razão Raio/Espessura", g.PRINC_FORM)
-    razao_action.triggered.connect(lambda: form_razao_rie.main(g.PRINC_FORM))
-    ferramentas_menu.addAction(razao_action)
+    acoes_utilidades = [
+        ("Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
+        ("Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM))
+    ]
 
-    impressao_action = QAction("Impressão em Lote", g.PRINC_FORM)
-    impressao_action.triggered.connect(
-        lambda: form_impressao.main(g.PRINC_FORM))
-    ferramentas_menu.addAction(impressao_action)
+    _adicionar_acoes_ao_menu(ferramentas_menu, acoes_utilidades)
 
-    # Menu Usuário
+
+def _criar_menu_usuario(menu_bar):
+    """Cria o menu Usuário."""
     usuario_menu = menu_bar.addMenu("Usuário")
 
-    login_action = QAction("Login", g.PRINC_FORM)
-    login_action.triggered.connect(
-        lambda: (setattr(g, "LOGIN", True), form_aut.main(g.PRINC_FORM)))
-    usuario_menu.addAction(login_action)
+    acoes_usuario = [
+        ("Login", _executar_login),
+        ("Novo Usuário", _executar_novo_usuario),
+        ("Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
+        ("separator", None),
+        ("Sair", logout)
+    ]
 
-    novo_usuario_action = QAction("Novo Usuário", g.PRINC_FORM)
-    novo_usuario_action.triggered.connect(
-        lambda: (setattr(g, "LOGIN", False), form_aut.main(g.PRINC_FORM)))
-    usuario_menu.addAction(novo_usuario_action)
+    _adicionar_acoes_ao_menu(usuario_menu, acoes_usuario)
 
-    gerenciar_usuarios_action = QAction("Gerenciar Usuários", g.PRINC_FORM)
-    gerenciar_usuarios_action.triggered.connect(
-        lambda: form_usuario.main(g.PRINC_FORM))
-    usuario_menu.addAction(gerenciar_usuarios_action)
 
-    usuario_menu.addSeparator()
-
-    sair_usuario_action = QAction("Sair", g.PRINC_FORM)
-    sair_usuario_action.triggered.connect(logout)
-    usuario_menu.addAction(sair_usuario_action)
-
-    # Menu Ajuda
+def _criar_menu_ajuda(menu_bar):
+    """Cria o menu Ajuda."""
     help_menu = menu_bar.addMenu("Ajuda")
 
     sobre_action = QAction("Sobre", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
     help_menu.addAction(sobre_action)
+
+
+def _adicionar_acoes_ao_menu(menu, acoes):
+    """
+    Adiciona uma lista de ações a um menu.
+
+    Args:
+        menu: O menu onde adicionar as ações
+        acoes: Lista de tuplas (nome, função) ou ("separator", None)
+    """
+    for nome, funcao in acoes:
+        if nome == "separator":
+            menu.addSeparator()
+        else:
+            action = QAction(nome, g.PRINC_FORM)
+            action.triggered.connect(funcao)
+            menu.addAction(action)
+
+# Funções auxiliares para as ações dos menus
+
+
+def _executar_nova_deducao():
+    """Executa a ação de nova dedução."""
+    setattr(g, 'EDIT_DED', False)
+    FormDeducao.main(g.PRINC_FORM)
+
+
+def _executar_novo_material():
+    """Executa a ação de novo material."""
+    setattr(g, 'EDIT_MAT', False)
+    FormMaterial.main(g.PRINC_FORM)
+
+
+def _executar_nova_espessura():
+    """Executa a ação de nova espessura."""
+    setattr(g, 'EDIT_ESP', False)
+    FormEspessura.main(g.PRINC_FORM)
+
+
+def _executar_novo_canal():
+    """Executa a ação de novo canal."""
+    setattr(g, 'EDIT_CANAL', False)
+    FormCanal.main(g.PRINC_FORM)
+
+
+def _executar_editar_deducao():
+    """Executa a ação de editar dedução."""
+    setattr(g, 'EDIT_DED', True)
+    FormDeducao.main(g.PRINC_FORM)
+
+
+def _executar_editar_material():
+    """Executa a ação de editar material."""
+    setattr(g, 'EDIT_MAT', True)
+    FormMaterial.main(g.PRINC_FORM)
+
+
+def _executar_editar_espessura():
+    """Executa a ação de editar espessura."""
+    setattr(g, 'EDIT_ESP', True)
+    FormEspessura.main(g.PRINC_FORM)
+
+
+def _executar_editar_canal():
+    """Executa a ação de editar canal."""
+    setattr(g, 'EDIT_CANAL', True)
+    FormCanal.main(g.PRINC_FORM)
+
+
+def _executar_login():
+    """Executa a ação de login."""
+    setattr(g, "LOGIN", True)
+    form_aut.main(g.PRINC_FORM)
+
+
+def _executar_novo_usuario():
+    """Executa a ação de novo usuário."""
+    setattr(g, "LOGIN", False)
+    form_aut.main(g.PRINC_FORM)
+
+
+def _toggle_no_topo():
+    """Função para alternar o estado 'no topo' e sincronizar o checkbox."""
+    no_topo(g.PRINC_FORM)
+
+# Correção do problema R1705 na função main()
 
 
 def configurar_frames():
@@ -319,7 +380,6 @@ def main():
         app = QApplication(sys.argv)
 
         # Configurar para capturar exceções não tratadas
-
         def handle_exception(exc_type, exc_value, exc_traceback):
             """Captura exceções não tratadas"""
             if exc_type != KeyboardInterrupt:
@@ -340,16 +400,12 @@ def main():
 
         print("Carregando configuração...")
         config = carregar_configuracao()
-
         print("Configurando janela principal...")
         configurar_janela_principal(config)
-
         print("Configurando menu...")
         configurar_menu()
-
         print("Configurando frames...")
         configurar_frames()
-
         print("Verificando admin existente...")
         verificar_admin_existente()
 
@@ -364,11 +420,11 @@ def main():
                 pass
 
             app.aboutToQuit.connect(on_app_exit)
-
             return app.exec()
-        else:
-            print("ERRO: Janela principal não foi criada!")
-            return 1
+
+        # Remover o else desnecessário - código movido para aqui
+        print("ERRO: Janela principal não foi criada!")
+        return 1
 
     except KeyboardInterrupt:
         print("Aplicativo interrompido pelo usuário")
@@ -377,7 +433,6 @@ def main():
         return 0
     except (RuntimeError, ImportError, AttributeError, OSError) as e:
         print(f"ERRO CRÍTICO na inicialização: {e}")
-
         traceback.print_exc()
         if app:
             app.quit()
