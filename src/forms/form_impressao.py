@@ -127,10 +127,16 @@ class PrintManager:
         """Tenta imprimir usando a impressora padrão do Windows."""
         try:
             self.resultado_impressao += f"Imprimindo {nome_arquivo} com impressora padrão...\n"
-            os.startfile(caminho_completo,
-                         "print")  # pylint: disable=no-member
-            self.resultado_impressao += " ✓ Sucesso com impressora padrão\n"
-            return True
+
+            # Verificar se startfile está disponível (Windows)
+            if hasattr(os, 'startfile'):
+                os.startfile(caminho_completo, "print")
+                self.resultado_impressao += " ✓ Sucesso com impressora padrão\n"
+                return True
+
+            self.resultado_impressao += " ✗ startfile não disponível nesta plataforma\n"
+            return False
+
         except (OSError, PermissionError, FileNotFoundError) as e:
             self.resultado_impressao += f" ✗ Erro com impressora padrão: {str(e)}\n"
             return False
