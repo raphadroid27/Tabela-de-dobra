@@ -148,12 +148,7 @@ def aplicar_no_topo(form):
             else:
                 new_flags = current_flags & ~Qt.WindowStaysOnTopHint
 
-            essential_flags = (Qt.Window |
-                               Qt.WindowTitleHint |
-                               Qt.WindowSystemMenuHint |
-                               Qt.WindowMinimizeButtonHint |
-                               Qt.WindowMaximizeButtonHint |
-                               Qt.WindowCloseButtonHint)
+            essential_flags = windows_flags()
 
             new_flags = new_flags | essential_flags
             window.setWindowFlags(new_flags)
@@ -223,3 +218,18 @@ def cleanup_orphaned_windows():
 
     except (RuntimeError, AttributeError):
         pass
+
+
+def windows_flags():
+    """
+    Define as flags essenciais para janelas do aplicativo.
+    Essas flags garantem que a janela tenha todos os botões necessários
+    na barra de título e se comporte corretamente no sistema operacional.
+    """
+    essential_flags = (Qt.Window |
+                       Qt.WindowTitleHint |
+                       Qt.WindowSystemMenuHint |
+                       Qt.WindowMinimizeButtonHint |
+                       Qt.WindowMaximizeButtonHint |
+                       Qt.WindowCloseButtonHint)
+    return essential_flags

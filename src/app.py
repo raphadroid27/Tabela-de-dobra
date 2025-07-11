@@ -17,7 +17,8 @@ from PySide6.QtCore import Qt  # type: ignore
 from PySide6.QtGui import QIcon, QAction  # type: ignore
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
-from src.utils.janelas import aplicar_no_topo_app_principal, cleanup_orphaned_windows
+from src.utils.janelas import (
+    aplicar_no_topo_app_principal, cleanup_orphaned_windows, windows_flags)
 from src.utils.interface_manager import carregar_interface
 from src.utils.banco_dados import session
 from src.models import Usuario
@@ -117,13 +118,8 @@ def configurar_janela_principal(config):
 
     # Configurar flags da janela corretamente
     # Garantir que todos os botões da barra de título estejam habilitados
-    window_flags = (Qt.Window |
-                    Qt.WindowTitleHint |
-                    Qt.WindowSystemMenuHint |
-                    Qt.WindowMinimizeButtonHint |
-                    Qt.WindowMaximizeButtonHint |
-                    Qt.WindowCloseButtonHint)
-    g.PRINC_FORM.setWindowFlags(window_flags)
+    essential_flags = windows_flags()
+    g.PRINC_FORM.setWindowFlags(essential_flags)
 
     if 'geometry' in config and isinstance(config['geometry'], str):
         # Parse geometry string and apply
