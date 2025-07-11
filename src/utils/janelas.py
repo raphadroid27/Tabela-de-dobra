@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication
 from src.config import globals as g
 
 
-def no_topo(form):
+def aplicar_no_topo_app_principal():
     """
     Alterna se a janela deve ficar sempre no topo ou não.
     """
