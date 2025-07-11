@@ -389,31 +389,39 @@ def _obter_valor_deducao():
 
 def _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras):
     """
-    Calcula a medida da dobra baseada na posição e valor de dedução.
-    LÓGICA ORIGINAL MANTIDA.
+    Calcula a medida da dobra baseada na posição e valor de dedução,
+    considerando blocos contínuos de abas preenchidas.
     """
-    # Encontrar as posições das abas com valores (primeira e última)
-    posicoes_com_valores = []
-    for idx, valor in enumerate(valores_dobras):
-        if valor.strip():  # Se não está vazio
-            # Converter para índice baseado em 1
-            posicoes_com_valores.append(idx + 1)
-
-    if len(posicoes_com_valores) == 0:
-        return float(dobra) - float(deducao_valor) / 2
-
-    primeira_posicao = posicoes_com_valores[0]
-    ultima_posicao = posicoes_com_valores[-1]
-
-    # Aplicar lógica baseada na posição - LÓGICA ORIGINAL
-    # Corrigido R1714: Usar 'in' em vez de múltiplas comparações
-    if i in (primeira_posicao, ultima_posicao):
-        # Primeira ou última aba com valor usa dedução/2
-        resultado = float(dobra) - float(deducao_valor) / 2
+    deducao_valor = float(deducao_valor)
+    preenchidos = [bool(v.strip()) for v in valores_dobras]
+    blocos = []
+    bloco_atual = []
+    for idx, preenchido in enumerate(preenchidos):
+        if preenchido:
+            bloco_atual.append(idx)
+        else:
+            if bloco_atual:
+                blocos.append(bloco_atual)
+                bloco_atual = []
+    if bloco_atual:
+        blocos.append(bloco_atual)
+    pos = i - 1
+    bloco_encontrado = None
+    for bloco in blocos:
+        if pos in bloco:
+            bloco_encontrado = bloco
+            break
+    if bloco_encontrado is None:
+        return None
+    pos_bloco = bloco_encontrado.index(pos)
+    valor = float(dobra)
+    if len(bloco_encontrado) == 1:
+        resultado = valor - deducao_valor / 2
     else:
-        # Abas intermediárias usam dedução completa
-        resultado = float(dobra) - float(deducao_valor)
-
+        if pos_bloco == 0 or pos_bloco == len(bloco_encontrado) - 1:
+            resultado = valor - deducao_valor / 2
+        else:
+            resultado = valor - deducao_valor
     return resultado
 
 
