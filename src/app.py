@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt  # type: ignore
 from PySide6.QtGui import QIcon, QAction  # type: ignore
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
-from src.utils.janelas import no_topo, cleanup_orphaned_windows
+from src.utils.janelas import aplicar_no_topo_app_principal, cleanup_orphaned_windows
 from src.utils.interface_manager import carregar_interface
 from src.utils.banco_dados import session
 from src.models import Usuario
@@ -345,7 +345,7 @@ def _executar_novo_usuario():
 
 def _toggle_no_topo():
     """Função para alternar o estado 'no topo' e sincronizar o checkbox."""
-    no_topo(g.PRINC_FORM)
+    aplicar_no_topo_app_principal(g.PRINC_FORM)
 
 # Correção do problema R1705 na função main()
 
