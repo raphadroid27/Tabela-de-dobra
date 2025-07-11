@@ -4,6 +4,7 @@ Sistema robusto com tratamento de widgets deletados.
 """
 
 import src.config.globals as g
+from src.utils.widget_manager import WidgetManager
 
 
 class WidgetStateManager:
@@ -21,27 +22,6 @@ class WidgetStateManager:
         """Desabilita o gerenciamento de estado."""
         self.is_enabled = False
 
-    def is_widget_valid(self, widget):
-        """
-        Verifica se um widget ainda é válido (não foi deletado).
-
-        Args:
-            widget: Widget a ser verificado
-
-        Returns:
-            bool: True se o widget é válido, False caso contrário
-        """
-        if widget is None:
-            return False
-
-        try:
-            # Tenta acessar uma propriedade básica para verificar se o widget ainda existe
-            widget.objectName()
-            return True
-        except RuntimeError:
-            # Widget foi deletado pelo Qt
-            return False
-
     def safe_get_widget_value(self, widget):
         """
         Obtém o valor de um widget de forma segura.
@@ -52,7 +32,7 @@ class WidgetStateManager:
         Returns:
             str: Valor do widget ou string vazia se houver erro
         """
-        if not self.is_widget_valid(widget):
+        if not WidgetManager.is_widget_valid(widget):
             return ''
 
         try:
@@ -111,7 +91,7 @@ class WidgetStateManager:
 
     def _get_widget_value_safely(self, widget, widget_name):
         """Obtém valor do widget de forma segura com logging."""
-        if not self.is_widget_valid(widget):
+        if not WidgetManager.is_widget_valid(widget):
             return ''
 
         try:
@@ -134,7 +114,7 @@ class WidgetStateManager:
         Returns:
             bool: True se restaurou com sucesso
         """
-        if not self.is_widget_valid(widget) or not value:
+        if not WidgetManager.is_widget_valid(widget) or not value:
             return False
 
         try:
@@ -178,7 +158,7 @@ class WidgetStateManager:
         Returns:
             bool: True se restaurou com sucesso
         """
-        if not self.is_widget_valid(widget) or not value:
+        if not WidgetManager.is_widget_valid(widget) or not value:
             return False
 
         try:
@@ -232,7 +212,7 @@ class WidgetStateManager:
     def _restore_single_widget(self, widget_name, value):
         """Restaura um único widget do cabeçalho."""
         widget = getattr(g, widget_name, None)
-        if not self.is_widget_valid(widget):
+        if not WidgetManager.is_widget_valid(widget):
             return
 
         success = False
@@ -250,7 +230,7 @@ class WidgetStateManager:
     def _restore_single_dobra_widget(self, widget_name, value):
         """Restaura um único widget de dobra e retorna se foi bem-sucedido."""
         widget = getattr(g, widget_name, None)
-        if not self.is_widget_valid(widget):
+        if not WidgetManager.is_widget_valid(widget):
             return False
 
         success = self.safe_restore_entry(widget, value)
