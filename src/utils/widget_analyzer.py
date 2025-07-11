@@ -51,12 +51,6 @@ class WidgetUsageAnalyzer:
     def scan_python_file(self, file_path: str) -> Tuple[Set[str], Set[str]]:
         """
         Escaneia um arquivo Python procurando por usos de widgets globais.
-
-        Args:
-            file_path: Caminho para o arquivo Python
-
-        Returns:
-            Tupla (widget_assignments, widget_usages)
         """
         assignments = set()
         usages = set()
@@ -65,40 +59,61 @@ class WidgetUsageAnalyzer:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # Buscar padrões comuns de uso
             lines = content.split('\n')
             for line in lines:
                 line = line.strip()
 
-                # Atribuições: setattr(g, 'WIDGET_NAME', ...)
-                if 'setattr(g,' in line:
-                    parts = line.split("'")
-                    if len(parts) >= 2:
-                        widget_name = parts[1]
-                        assignments.add(widget_name)
-
-                # Usos diretos: g.WIDGET_NAME
-                if 'g.' in line and not line.startswith('#'):
-                    words = line.split()
-                    for word in words:
-                        if word.startswith('g.') and len(word) > 2:
-                            # Extrair nome do widget (remover símbolos)
-                            widget_name = word[2:].split('(')[0].split('[')[0].split('.')[
-                                0].split(',')[0].split(')')[0]
-                            if widget_name.isupper():
-                                usages.add(widget_name)
-
-                # getattr(g, 'WIDGET_NAME', ...)
-                if 'getattr(g,' in line:
-                    parts = line.split("'")
-                    if len(parts) >= 2:
-                        widget_name = parts[1]
-                        usages.add(widget_name)
+                # Processar linha para encontrar widgets
+                self._processar_linha_setattr(line, assignments)
+                self._processar_linha_uso_direto(line, usages)
+                self._processar_linha_getattr(line, usages)
 
         except (OSError, IOError) as e:
             print(f"Erro ao analisar {file_path}: {e}")
 
         return assignments, usages
+
+    def _processar_linha_setattr(self, line: str, assignments: Set[str]):
+        """Processa linhas com setattr para encontrar atribuições."""
+        if 'setattr(g,' not in line:
+            return
+
+        parts = line.split("'")
+        if len(parts) >= 2:
+            widget_name = parts[1]
+            assignments.add(widget_name)
+
+    def _processar_linha_uso_direto(self, line: str, usages: Set[str]):
+        """Processa linhas com uso direto de widgets (g.WIDGET_NAME)."""
+        if 'g.' not in line or line.startswith('#'):
+            return
+
+        words = line.split()
+        for word in words:
+            if not word.startswith('g.') or len(word) <= 2:
+                continue
+
+            # Extrair nome do widget
+            widget_name = self._extrair_nome_widget(word[2:])
+            if widget_name and widget_name.isupper():
+                usages.add(widget_name)
+
+    def _processar_linha_getattr(self, line: str, usages: Set[str]):
+        """Processa linhas com getattr para encontrar usos."""
+        if 'getattr(g,' not in line:
+            return
+
+        parts = line.split("'")
+        if len(parts) >= 2:
+            widget_name = parts[1]
+            usages.add(widget_name)
+
+    def _extrair_nome_widget(self, texto: str) -> str:
+        """Extrai nome do widget removendo símbolos."""
+        separadores = ['(', '[', '.', ',', ')']
+        for sep in separadores:
+            texto = texto.split(sep)[0]
+        return texto
 
     def scan_project(self) -> Dict[str, Dict]:
         """
@@ -112,7 +127,7 @@ class WidgetUsageAnalyzer:
         file_stats = {}
 
         # Escanear todos os arquivos Python
-        for root, dirs, files in os.walk(self.src_path):
+        for root, files in os.walk(self.src_path):
             for file in files:
                 if file.endswith('.py'):
                     file_path = os.path.join(root, file)
