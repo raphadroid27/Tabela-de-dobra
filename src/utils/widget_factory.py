@@ -43,9 +43,8 @@ class WidgetFactory:
             widget = cls._widget_cache[widget_name]
             if WidgetManager.is_widget_valid(widget):
                 return widget
-            else:
-                # Widget no cache foi deletado, removê-lo
-                del cls._widget_cache[widget_name]
+            # Widget no cache foi deletado, removê-lo
+            del cls._widget_cache[widget_name]
 
         # Verificar se existe globalmente
         existing_widget = WidgetManager.safe_get_widget(widget_name)
@@ -54,19 +53,24 @@ class WidgetFactory:
             return existing_widget
 
         # Criar widget usando função registrada
-        if widget_name in cls._widget_creators:
-            try:
-                widget = cls._widget_creators[widget_name]()
-                if widget is not None:
-                    cls._widget_cache[widget_name] = widget
-                    WidgetManager.safe_set_widget(widget_name, widget)
-                    return widget
-            except RuntimeError as e:
-                print(f"Erro ao criar widget {widget_name}: {e}")
-                return None
+        if widget_name not in cls._widget_creators:
+            print(f"Widget {widget_name} não tem criador registrado")
+            return None
 
-        print(f"Widget {widget_name} não tem criador registrado")
-        return None
+        try:
+            widget = cls._widget_creators[widget_name]()
+            if widget is not None:
+                cls._widget_cache[widget_name] = widget
+                WidgetManager.safe_set_widget(widget_name, widget)
+                return widget
+
+            # CORRIGIDO R1705: Código movido para fora do else (desindentar)
+            print(f"Erro ao criar widget {widget_name}")
+            return None
+
+        except RuntimeError as e:
+            print(f"Erro ao criar widget {widget_name}: {e}")
+            return None
 
     @classmethod
     def clear_cache(cls):
