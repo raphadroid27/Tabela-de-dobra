@@ -15,6 +15,8 @@ from src.utils.janelas import posicionar_janela, aplicar_no_topo
 from src.utils.interface import listar, limpar_busca, configurar_main_frame, atualizar_widgets
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
+from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
+                              obter_estilo_botao_azul)
 from src.config import globals as g
 
 
@@ -189,14 +191,14 @@ class ButtonConfigManager:
     def create_update_button(self):
         """Cria o botão de atualizar."""
         atualizar_btn = QPushButton("✏️ Atualizar")
-        atualizar_btn.setStyleSheet(self._get_green_button_style())
+        atualizar_btn.setStyleSheet(obter_estilo_botao_verde())
         atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
         return atualizar_btn
 
     def create_add_button(self):
         """Cria o botão de adicionar."""
         adicionar_btn = QPushButton("➕ Adicionar")
-        adicionar_btn.setStyleSheet(self._get_blue_button_style())
+        adicionar_btn.setStyleSheet(obter_estilo_botao_azul())
         adicionar_btn.clicked.connect(lambda: adicionar(self.tipo_operacao))
         return adicionar_btn
 
@@ -228,44 +230,6 @@ class ButtonConfigManager:
             if list_widget:
                 list_widget.itemSelectionChanged.connect(
                     lambda: preencher_campos(self.tipo_operacao))
-
-    def _get_green_button_style(self):
-        """Retorna estilo CSS para botões verdes."""
-        return """
-            QPushButton {
-                background-color: #4caf50;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                font-weight: bold;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-            QPushButton:pressed {
-                background-color: #3d8b40;
-            }
-        """
-
-    def _get_blue_button_style(self):
-        """Retorna estilo CSS para botões azuis."""
-        return """
-            QPushButton {
-                background-color: #2196f3;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                font-weight: bold;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #1976d2;
-            }
-            QPushButton:pressed {
-                background-color: #1565c0;
-            }
-        """
 
 
 class FormManager:
@@ -540,26 +504,6 @@ def atualizar_comboboxes(tipos):
     """
     for tipo in tipos:
         atualizar_widgets(tipo)
-
-
-def obter_estilo_botao_amarelo():
-    """Retorna estilo CSS para botões amarelos."""
-    return """
-        QPushButton {
-            background-color: #ffd93d;
-            color: #333;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ffcc02;
-        }
-        QPushButton:pressed {
-            background-color: #e6b800;
-        }
-    """
 
 
 def main(tipo, root):
