@@ -309,6 +309,20 @@ class FormManager:
         return None
 
 
+def aplicar_medida_borda(layout_ou_widget, margem=5):
+    """
+    Aplica bordas a um layout ou widget.
+
+    Args:
+        layout_ou_widget: Layout ou widget a ser configurado
+        margem: Valor da margem em pixels (padrão: 5)
+    """
+    if hasattr(layout_ou_widget, 'setContentsMargins'):
+        layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
+    elif hasattr(layout_ou_widget, 'layout') and layout_ou_widget.layout():
+        layout_ou_widget.layout().setContentsMargins(margem, margem, margem, margem)
+
+
 def criar_label(layout, texto, pos):
     """
     Cria um rótulo (QLabel) no layout especificado.
@@ -347,6 +361,10 @@ def criar_frame_busca(config, tipo):
     """
     frame_busca = QGroupBox(config['busca']['titulo'])
     layout = QGridLayout(frame_busca)
+
+    # ALTERAÇÃO: Reduzir bordas magenta do frame de busca para 5,5,5,5
+    aplicar_medida_borda(layout, 5)
+
     tipo_busca = config.get('tipo_busca', tipo)
 
     # Criar campos
@@ -420,6 +438,9 @@ def criar_frame_edicoes(config):
     titulo = config['edicao']['titulo_edit'] if is_edit else config['edicao']['titulo_novo']
     frame_edicoes = QGroupBox(titulo)
     layout = QGridLayout(frame_edicoes)
+
+    # ALTERAÇÃO: Reduzir bordas magenta do frame de edições para 5,5,5,5
+    aplicar_medida_borda(layout, 5)
 
     # Criar campos
     for campo in config['edicao']['campos']:
@@ -512,6 +533,10 @@ def main(tipo, root):
 
 def _setup_form_components(form_manager, main_layout):
     """Configura os componentes do formulário."""
+
+    # ALTERAÇÃO: Reduzir bordas magenta do layout principal dos componentes para 5,5,5,5
+    aplicar_medida_borda(main_layout, 5)
+
     # Frame de busca
     frame_busca = form_manager.create_search_frame()
     main_layout.addWidget(frame_busca, 0, 0)
