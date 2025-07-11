@@ -70,8 +70,9 @@ def _converter_valores_k(espessura_text, raio_interno_str, deducao_espec_str, de
         ',', '.')) if raio_interno_str and raio_interno_str.strip() != '' else 0
     deducao_espec = float(deducao_espec_str.replace(
         ',', '.')) if deducao_espec_str.strip() else 0
-    deducao_valor = float(deducao_label_text.replace(
-        ',', '.')) if deducao_label_text else 0
+    deducao_valor = float(
+        deducao_label_text.replace(' Copiado!', '').replace(',', '.')
+    ) if deducao_label_text else 0
 
     return espessura, raio_interno, deducao_espec, deducao_valor
 
@@ -83,9 +84,8 @@ def _determinar_deducao_usada(deducao_espec, deducao_valor):
     return deducao_usada, usa_deducao_especifica
 
 
-def _calcular_fator_k_personalizado(espessura, deducao_usada, raio_interno):
+def _calcular_fator_k(espessura, deducao_usada, raio_interno):
     """Calcula fator K usando fórmula personalizada - FÓRMULA ORIGINAL."""
-    # FÓRMULA ORIGINAL - NÃO ALTERADA
     fator_k = (4 * (espessura - (deducao_usada / 2) + raio_interno) -
                (pi * raio_interno)) / (pi * espessura)
     # Limita o fator K a valores razoáveis
@@ -162,14 +162,11 @@ def calcular_k_offset():
 
         # Calcula fator K
         if deducao_usada > 0:
-            # FÓRMULA ORIGINAL - NÃO ALTERADA
-            fator_k = _calcular_fator_k_personalizado(
+            fator_k = _calcular_fator_k(
                 espessura, deducao_usada, raio_interno)
         else:
-            # Usa tabela de referência - LÓGICA ORIGINAL
             fator_k = obter_fator_k_da_tabela(razao_re)
 
-        # Calcula offset - FÓRMULA ORIGINAL
         offset = fator_k * espessura
 
         # Atualiza labels
@@ -201,7 +198,6 @@ def obter_fator_k_da_tabela(razao_re):
         r1 = razoes_ordenadas[i]
         r2 = razoes_ordenadas[i + 1]
         if r1 <= razao_re <= r2:
-            # Interpolação linear - FÓRMULA ORIGINAL
             k1 = g.RAIO_K[r1]
             k2 = g.RAIO_K[r2]
             fator_k = k1 + (k2 - k1) * (razao_re - r1) / (r2 - r1)
@@ -514,7 +510,6 @@ def calcular_dobra(w):
         if dobra == "":
             _limpar_widgets_dobra(i, w)
         else:
-            # CÁLCULO ORIGINAL MANTIDO
             medidadobra = _calcular_medida_dobra(
                 dobra, deducao_valor, i, valores_dobras)
             metade_dobra = medidadobra / 2
