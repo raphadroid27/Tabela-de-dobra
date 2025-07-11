@@ -9,9 +9,13 @@ interativa.
 
 from PySide6.QtWidgets import QWidget, QGridLayout, QCheckBox, QPushButton, QApplication
 from PySide6.QtCore import QTimer
-
+from PySide6.QtCore import Qt
 from src.utils.limpeza import limpar_dobras, limpar_tudo
 from src.utils.janelas import cleanup_orphaned_windows
+from src.utils.estilo import (
+    obter_estilo_botao_vermelho,
+    obter_estilo_botao_amarelo
+)
 import src.config.globals as g
 
 
@@ -247,51 +251,18 @@ def _criar_botao_limpar_tudo():
 
 def _adicionar_widgets_ao_layout(layout, widgets):
     """Adiciona os widgets ao layout."""
-    layout.addWidget(widgets['exp_v_check'], 0, 0)
-    layout.addWidget(widgets['exp_h_check'], 0, 1)
+    layout.addWidget(widgets['exp_v_check'], 0, 0,
+                     alignment=Qt.AlignmentFlag.AlignCenter)
+    layout.addWidget(widgets['exp_h_check'], 0, 1,
+                     alignment=Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(widgets['limpar_dobras_btn'], 1, 0)
     layout.addWidget(widgets['limpar_tudo_btn'], 1, 1)
 
 
 def _configurar_estilos_botoes(widgets):
     """Configura os estilos dos botões."""
-    # Estilo do botão limpar dobras
-    estilo_limpar_dobras = """
-        QPushButton {
-            background-color: #ffd93d;
-            color: #333;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ffcc02;
-        }
-        QPushButton:pressed {
-            background-color: #e6b800;
-        }
-    """
-    widgets['limpar_dobras_btn'].setStyleSheet(estilo_limpar_dobras)
-
-    # Estilo do botão limpar tudo
-    estilo_limpar_tudo = """
-        QPushButton {
-            background-color: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ff5252;
-        }
-        QPushButton:pressed {
-            background-color: #e53935;
-        }
-    """
-    widgets['limpar_tudo_btn'].setStyleSheet(estilo_limpar_tudo)
+    widgets['limpar_dobras_btn'].setStyleSheet(obter_estilo_botao_amarelo())
+    widgets['limpar_tudo_btn'].setStyleSheet(obter_estilo_botao_vermelho())
 
 
 def _configurar_tooltips(widgets):
