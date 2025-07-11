@@ -77,7 +77,8 @@ class WidgetManager:
         try:
             if hasattr(widget, 'currentText'):
                 return widget.currentText() or default
-            elif hasattr(widget, 'text'):
+            # CORRIGIDO R1705: Removido "el" do "elif" após return
+            if hasattr(widget, 'text'):
                 return widget.text() or default
             return default
         except (AttributeError, RuntimeError):
@@ -103,7 +104,8 @@ class WidgetManager:
             if hasattr(widget, 'setCurrentText'):
                 widget.setCurrentText(value)
                 return True
-            elif hasattr(widget, 'setText'):
+            # CORRIGIDO R1705: Removido "el" do "elif" após return
+            if hasattr(widget, 'setText'):
                 widget.setText(value)
                 return True
             return False
@@ -132,7 +134,8 @@ class WidgetManager:
             if isinstance(widget, (QLineEdit, QComboBox)):
                 widget.clear()
                 return True
-            elif isinstance(widget, QLabel):
+            # CORRIGIDO R1705: Removido "el" do "elif" após return
+            if isinstance(widget, QLabel):
                 widget.setText("")
                 return True
             return False
@@ -322,8 +325,8 @@ class WidgetManager:
             results[name] = cls.set_widget_value(widget, value)
         return results
 
-# Funções utilitárias globais para compatibilidade
 
+# Funções utilitárias globais para compatibilidade
 
 def safe_get_widget_value(widget_name: str, default: str = '') -> str:
     """Função global para obter valor de widget de forma segura."""
