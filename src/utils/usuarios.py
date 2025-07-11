@@ -2,7 +2,7 @@
 Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
 """
 import hashlib
-from PySide6.QtWidgets import QInputDialog, QMessageBox
+from PySide6.QtWidgets import QMessageBox
 from src.config import globals as g
 from src.models.models import Usuario
 from src.utils.banco_dados import (session,
@@ -11,40 +11,8 @@ from src.utils.banco_dados import (session,
                                    )
 from src.utils.janelas import habilitar_janelas
 from src.utils.interface import listar
-
-
-def show_error(title, message, parent=None):
-    """Mostra uma mensagem de erro usando QMessageBox"""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Critical)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
-
-
-def show_info(title, message, parent=None):
-    """Mostra uma mensagem de informação usando QMessageBox"""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Information)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
-
-
-def show_warning(title, message, parent=None):
-    """Mostra uma mensagem de aviso usando QMessageBox"""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Warning)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
-
-
-def ask_string(title, prompt, parent=None):
-    """Pede uma string usando QInputDialog"""
-    text, ok = QInputDialog.getText(
-        parent, title, prompt, QInputDialog.Password)
-    return text if ok else None
+from src.utils.utilitarios import (
+    ask_string, show_error, show_info, show_warning)
 
 
 def novo_usuario():

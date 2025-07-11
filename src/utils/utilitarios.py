@@ -3,6 +3,7 @@ Funções utilitárias para o aplicativo de cálculo de dobras.
 """
 import os
 import sys
+from PySide6.QtWidgets import QMessageBox, QInputDialog
 
 
 def obter_caminho_icone():
@@ -16,3 +17,48 @@ def obter_caminho_icone():
         base_path = os.path.abspath(".")  # Diretório atual no modo normal
 
     return os.path.join(base_path, "assets", "icone.ico")
+
+
+def ask_string(title, prompt, parent=None):
+    """Pede uma string usando QInputDialog"""
+    text, ok = QInputDialog.getText(
+        parent, title, prompt, QInputDialog.Password)
+    return text if ok else None
+
+
+def show_error(title, message, parent=None):
+    """Mostra uma mensagem de erro usando QMessageBox"""
+    msg = QMessageBox(parent)
+    msg.setIcon(QMessageBox.Critical)
+    msg.setWindowTitle(title)
+    msg.setText(message)
+    msg.exec()
+
+
+def show_info(title, message, parent=None):
+    """Mostra uma mensagem de informação usando QMessageBox"""
+    msg = QMessageBox(parent)
+    msg.setIcon(QMessageBox.Information)
+    msg.setWindowTitle(title)
+    msg.setText(message)
+    msg.exec()
+
+
+def show_warning(title, message, parent=None):
+    """Mostra uma mensagem de aviso usando QMessageBox"""
+    msg = QMessageBox(parent)
+    msg.setIcon(QMessageBox.Warning)
+    msg.setWindowTitle(title)
+    msg.setText(message)
+    msg.exec()
+
+
+def ask_yes_no(title, message, parent=None):
+    """Pergunta sim/não usando QMessageBox"""
+    msg = QMessageBox(parent)
+    msg.setIcon(QMessageBox.Question)
+    msg.setWindowTitle(title)
+    msg.setText(message)
+    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+    msg.setDefaultButton(QMessageBox.No)
+    return msg.exec() == QMessageBox.Yes
