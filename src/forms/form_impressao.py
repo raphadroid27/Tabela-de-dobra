@@ -19,6 +19,11 @@ from src.utils.janelas import (aplicar_no_topo,
                                habilitar_janelas,
                                desabilitar_janelas)
 from src.utils.utilitarios import obter_caminho_icone
+from src.utils.estilo import (obter_estilo_botao_cinza,
+                              obter_estilo_botao_azul,
+                              obter_estilo_botao_amarelo,
+                              obter_estilo_botao_verde,
+                              obter_estilo_botao_vermelho)
 from src.config import globals as g
 
 
@@ -415,7 +420,7 @@ def _criar_secao_diretorio():
 def _criar_botao_procurar():
     """Cria o botão de procurar diretório."""
     procurar_btn = QPushButton("📁 Procurar")
-    procurar_btn.setStyleSheet(_obter_estilo_botao_cinza())
+    procurar_btn.setStyleSheet(obter_estilo_botao_cinza())
     procurar_btn.clicked.connect(selecionar_diretorio)
     return procurar_btn
 
@@ -459,12 +464,12 @@ def _criar_botoes_texto():
     text_buttons_layout = QVBoxLayout()
 
     adicionar_btn = QPushButton("➕ Adicionar")
-    adicionar_btn.setStyleSheet(_obter_estilo_botao_azul())
+    adicionar_btn.setStyleSheet(obter_estilo_botao_azul())
     adicionar_btn.clicked.connect(adicionar_lista_arquivos)
     text_buttons_layout.addWidget(adicionar_btn)
 
     limpar_text_btn = QPushButton("🧹 Limpar")
-    limpar_text_btn.setStyleSheet(_obter_estilo_botao_amarelo())
+    limpar_text_btn.setStyleSheet(obter_estilo_botao_amarelo())
     limpar_text_btn.clicked.connect(limpar_texto_placeholder)
     text_buttons_layout.addWidget(limpar_text_btn)
 
@@ -495,17 +500,17 @@ def _criar_botoes_lista():
     lista_buttons_layout = QVBoxLayout()
 
     remover_btn = QPushButton("🗑️ Remover")
-    remover_btn.setStyleSheet(_obter_estilo_botao_vermelho())
+    remover_btn.setStyleSheet(obter_estilo_botao_vermelho())
     remover_btn.clicked.connect(remover_arquivo)
     lista_buttons_layout.addWidget(remover_btn)
 
     limpar_lista_btn = QPushButton("🧹 Limpar")
-    limpar_lista_btn.setStyleSheet(_obter_estilo_botao_amarelo())
+    limpar_lista_btn.setStyleSheet(obter_estilo_botao_amarelo())
     limpar_lista_btn.clicked.connect(limpar_lista)
     lista_buttons_layout.addWidget(limpar_lista_btn)
 
     imprimir_btn = QPushButton("🖨️ Imprimir")
-    imprimir_btn.setStyleSheet(_obter_estilo_botao_verde())
+    imprimir_btn.setStyleSheet(obter_estilo_botao_verde())
     imprimir_btn.clicked.connect(executar_impressao)
     lista_buttons_layout.addWidget(imprimir_btn)
 
@@ -523,106 +528,6 @@ def _criar_secao_resultado():
     resultado_layout.addWidget(g.IMPRESSAO_RESULTADO_TEXT)
 
     return frame_resultado
-
-
-def _obter_estilo_botao_cinza():
-    """Retorna o estilo CSS para botões cinza."""
-    return """
-        QPushButton {
-            background-color: #9e9e9e;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #757575;
-        }
-        QPushButton:pressed {
-            background-color: #616161;
-        }
-    """
-
-
-def _obter_estilo_botao_azul():
-    """Retorna o estilo CSS para botões azuis."""
-    return """
-        QPushButton {
-            background-color: #2196f3;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #1976d2;
-        }
-        QPushButton:pressed {
-            background-color: #1565c0;
-        }
-    """
-
-
-def _obter_estilo_botao_amarelo():
-    """Retorna o estilo CSS para botões amarelos."""
-    return """
-        QPushButton {
-            background-color: #ffd93d;
-            color: #333;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ffcc02;
-        }
-        QPushButton:pressed {
-            background-color: #e6b800;
-        }
-    """
-
-
-def _obter_estilo_botao_vermelho():
-    """Retorna o estilo CSS para botões vermelhos."""
-    return """
-        QPushButton {
-            background-color: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ff5252;
-        }
-        QPushButton:pressed {
-            background-color: #e53935;
-        }
-    """
-
-
-def _obter_estilo_botao_verde():
-    """Retorna o estilo CSS para botões verdes."""
-    return """
-        QPushButton {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #45a049;
-        }
-        QPushButton:pressed {
-            background-color: #3d8b40;
-        }
-    """
 
 
 if __name__ == "__main__":
