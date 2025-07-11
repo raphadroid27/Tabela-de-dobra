@@ -15,6 +15,9 @@ from src.utils.usuarios import login, novo_usuario
 from src.utils.janelas import (habilitar_janelas,
                                posicionar_janela
                                )
+from src.utils.estilo import (
+    obter_estilo_botao_azul,
+    obter_estilo_botao_verde)
 from src.config import globals as g
 
 
@@ -63,22 +66,7 @@ def main(root):
         g.AUTEN_FORM.setWindowTitle("Login")
         login_btn = QPushButton("🔐 Login")
         # Estilo moderno para o botão de login
-        login_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #4caf50;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                font-weight: bold;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-            QPushButton:pressed {
-                background-color: #3d8b40;
-            }
-        """)
+        login_btn.setStyleSheet(obter_estilo_botao_verde())
         login_btn.clicked.connect(login)
         main_layout.addWidget(login_btn, 3, 0, 1, 2)
     else:
@@ -100,22 +88,7 @@ def main(root):
         g.AUTEN_FORM.setWindowTitle("Novo Usuário")
         save_btn = QPushButton("💾 Salvar")
         # Estilo moderno para o botão de salvar
-        save_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2196f3;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                font-weight: bold;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #1976d2;
-            }
-            QPushButton:pressed {
-                background-color: #1565c0;
-            }
-        """)
+        save_btn.setStyleSheet(obter_estilo_botao_azul())
         save_btn.clicked.connect(novo_usuario)
         main_layout.addWidget(save_btn, 3, 0, 1, 2)
 
