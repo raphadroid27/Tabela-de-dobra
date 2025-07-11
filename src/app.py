@@ -345,9 +345,7 @@ def _executar_novo_usuario():
 
 def _toggle_no_topo():
     """Função para alternar o estado 'no topo' e sincronizar o checkbox."""
-    aplicar_no_topo_app_principal(g.PRINC_FORM)
-
-# Correção do problema R1705 na função main()
+    aplicar_no_topo_app_principal()
 
 
 def configurar_frames():
