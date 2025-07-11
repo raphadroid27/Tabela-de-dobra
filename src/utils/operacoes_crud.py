@@ -4,7 +4,7 @@ de dobras. Inclui operações CRUD (Criar, Ler, Atualizar, Excluir) para os tipo
 dedução, espessura, material e canal.
 """
 import re
-from PySide6.QtWidgets import QMessageBox, QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 from src.utils.banco_dados import (session,
                                    salvar_no_banco,
                                    tratativa_erro,
@@ -17,44 +17,8 @@ from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
 from src.utils.widget_validator import OperationHelper
 from src.utils.widget_manager import WidgetManager
-
-
-def show_error(title, message, parent=None):
-    """Mostra uma mensagem de erro usando QMessageBox"""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Critical)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
-
-
-def show_info(title, message, parent=None):
-    """Mostra uma mensagem de informação usando QMessageBox"""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Information)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
-
-
-def show_warning(title, message, parent=None):
-    """Mostra uma mensagem de aviso usando QMessageBox"""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Warning)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
-
-
-def ask_yes_no(title, message, parent=None):
-    """Pergunta sim/não usando QMessageBox"""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Question)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-    msg.setDefaultButton(QMessageBox.No)
-    return msg.exec() == QMessageBox.Yes
+from src.utils.utilitarios import (
+    ask_yes_no, show_error, show_info, show_warning)
 
 
 def adicionar(tipo):
