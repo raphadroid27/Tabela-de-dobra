@@ -17,6 +17,10 @@ from src.utils.usuarios import (tem_permissao,
                                 resetar_senha,
                                 excluir_usuario
                                 )
+from src.utils.estilo import (
+    obter_estilo_botao_vermelho,
+    obter_estilo_botao_amarelo,
+    obter_estilo_botao_verde)
 from src.config import globals as g
 
 
@@ -60,22 +64,7 @@ def main(root):
     g.USUARIO_BUSCA_ENTRY.textChanged.connect(on_text_changed)
 
     limpar_btn = QPushButton("🧹 Limpar")
-    limpar_btn.setStyleSheet("""
-        QPushButton {
-            background-color: #ffd93d;
-            color: #333;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ffcc02;
-        }
-        QPushButton:pressed {
-            background-color: #e6b800;
-        }
-    """)
+    limpar_btn.setStyleSheet(obter_estilo_botao_amarelo())
     limpar_btn.clicked.connect(lambda: limpar_busca('usuario'))
     busca_layout.addWidget(limpar_btn, 0, 2)
 
@@ -92,62 +81,17 @@ def main(root):
 
     # Botões de ação
     tornar_editor_btn = QPushButton("👤 Tornar Editor")
-    tornar_editor_btn.setStyleSheet("""
-        QPushButton {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #45a049;
-        }
-        QPushButton:pressed {
-            background-color: #3d8b40;
-        }
-    """)
+    tornar_editor_btn.setStyleSheet(obter_estilo_botao_verde())
     tornar_editor_btn.clicked.connect(tornar_editor)
     main_layout.addWidget(tornar_editor_btn, 2, 0)
 
     resetar_senha_btn = QPushButton("🔄 Resetar Senha")
-    resetar_senha_btn.setStyleSheet("""
-        QPushButton {
-            background-color: #ffd93d;
-            color: #333;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ffcc02;
-        }
-        QPushButton:pressed {
-            background-color: #e6b800;
-        }
-    """)
+    resetar_senha_btn.setStyleSheet(obter_estilo_botao_amarelo())
     resetar_senha_btn.clicked.connect(resetar_senha)
     main_layout.addWidget(resetar_senha_btn, 2, 1)
 
     excluir_btn = QPushButton("🗑️ Excluir")
-    excluir_btn.setStyleSheet("""
-        QPushButton {
-            background-color: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        QPushButton:hover {
-            background-color: #ff5252;
-        }
-        QPushButton:pressed {
-            background-color: #e53935;
-        }
-    """)
+    excluir_btn.setStyleSheet(obter_estilo_botao_vermelho())
     excluir_btn.clicked.connect(excluir_usuario)
     main_layout.addWidget(excluir_btn, 2, 2)
 
