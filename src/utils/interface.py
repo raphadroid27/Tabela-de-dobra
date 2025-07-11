@@ -698,9 +698,10 @@ def _limpar_busca_deducao(config):
         ('canal_combo', entries.get('canal_combo'))
     ]
 
-    for combo in combos:
+    for nome, combo in combos:
         if combo and hasattr(combo, 'setCurrentIndex'):
             combo.setCurrentIndex(-1)
+            print(f"Limpando combobox {nome}")
 
 
 def _limpar_busca_generica(config):
