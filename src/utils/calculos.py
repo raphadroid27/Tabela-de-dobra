@@ -85,7 +85,7 @@ def _determinar_deducao_usada(deducao_espec, deducao_valor):
 
 
 def _calcular_fator_k(espessura, deducao_usada, raio_interno):
-    """Calcula fator K usando fórmula personalizada - FÓRMULA ORIGINAL."""
+    """Calcula fator K usando fórmula personalizada."""
     fator_k = (4 * (espessura - (deducao_usada / 2) + raio_interno) -
                (pi * raio_interno)) / (pi * espessura)
     # Limita o fator K a valores razoáveis
@@ -129,7 +129,6 @@ def calcular_k_offset():
     Calcula o fator K com base nos valores de espessura, dedução e raio
     interno.
 
-    FÓRMULAS ORIGINAIS MANTIDAS:
     - Fator K personalizado: K = (4 × (espessura - (dedução / 2) +
       raio_interno) - (π × raio_interno)) / (π × espessura)
     - Fator K padrão baseado na razão raio/espessura (usando tabela de
@@ -183,7 +182,6 @@ def obter_fator_k_da_tabela(razao_re):
     """
     Obtém o fator K da tabela de referência baseado na razão raio/espessura.
     Usa interpolação linear para valores intermediários.
-    LÓGICA ORIGINAL MANTIDA.
     """
     # Limita a razão aos valores da tabela
     razao_re = max(0.1, min(razao_re, 10.0))
@@ -234,7 +232,7 @@ def _atualizar_label_aba_externa(aba_minima_valor, erro=False):
 def aba_minima_externa():
     """
     Calcula a aba mínima externa com base no valor do canal e na espessura.
-    FÓRMULA ORIGINAL: Aba mínima = (Largura do canal / 2) + Espessura + Margem de segurança
+    Aba mínima = (Largura do canal / 2) + Espessura + Margem de segurança
     """
     aba_minima_valor = 0
 
@@ -258,7 +256,6 @@ def aba_minima_externa():
             g.ESP_COMB, 'currentText', '0')
         espessura = float(espessura_text.replace(',', '.'))
 
-        # FÓRMULA ORIGINAL - NÃO ALTERADA
         aba_minima_valor = canal_valor_num / 2 + espessura + 2
 
         _atualizar_label_aba_externa(aba_minima_valor)
@@ -277,7 +274,8 @@ def _obter_dados_z_minimo():
         g.ESP_COMB, 'currentText', '0')
     canal_valor = verificar_widget_inicializado(
         g.CANAL_COMB, 'currentText', '')
-    deducao_label_text = verificar_widget_inicializado(g.DED_LBL, 'text', '0')
+    deducao_label_text = verificar_widget_inicializado(
+        g.DED_LBL, 'text', '0').replace(' Copiado!', '')
 
     return material, espessura_text, canal_valor, deducao_label_text
 
@@ -311,7 +309,7 @@ def _atualizar_label_z_externo(valor, erro_tipo=None):
 def z_minimo_externo():
     """
     Calcula o valor mínimo externo Z com base na espessura, dedução e largura do canal.
-    FÓRMULA ORIGINAL: Z mínimo = Espessura + (Dedução / 2) + (Largura do canal / 2) + Margem
+    Z mínimo = Espessura + (Dedução / 2) + (Largura do canal / 2) + Margem
     """
     try:
         # Obtém dados
@@ -346,7 +344,6 @@ def z_minimo_externo():
 
         # Calcula Z mínimo externo
         if deducao_valor > 0:
-            # FÓRMULA ORIGINAL - NÃO ALTERADA
             valor_z_min_ext = espessura + \
                 (deducao_valor / 2) + (largura_canal / 2) + 2
             _atualizar_label_z_externo(valor_z_min_ext)
@@ -414,7 +411,7 @@ def _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras):
     if len(bloco_encontrado) == 1:
         resultado = valor - deducao_valor / 2
     else:
-        if pos_bloco == 0 or pos_bloco == len(bloco_encontrado) - 1:
+        if pos_bloco in (0, len(bloco_encontrado) - 1):
             resultado = valor - deducao_valor / 2
         else:
             resultado = valor - deducao_valor
@@ -487,7 +484,6 @@ def _calcular_e_atualizar_blank(w):
 def calcular_dobra(w):
     """
     Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
-    LÓGICA DE CÁLCULO ORIGINAL MANTIDA.
     """
     # Obter valores das dobras diretamente dos widgets para a coluna específica
     valores_dobras = _obter_valores_dobras(w)
@@ -528,7 +524,6 @@ def calcular_dobra(w):
 def verificar_aba_minima(dobra, i, w):
     """
     Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
-    LÓGICA ORIGINAL MANTIDA.
     """
     # Verificar se a dobra é menor que a aba mínima
     aba_minima = aba_minima_externa()
@@ -547,7 +542,6 @@ def verificar_aba_minima(dobra, i, w):
 
     # Corrigido R1705: Removido else desnecessário após return
     try:
-        # LÓGICA ORIGINAL MANTIDA
         if float(dobra) < aba_minima:
             if hasattr(entry_widget, 'setStyleSheet'):
                 entry_widget.setStyleSheet(
@@ -565,7 +559,7 @@ def verificar_aba_minima(dobra, i, w):
 def razao_ri_espessura():
     """
     Calcula a razão entre o raio interno e a espessura, atualizando o label correspondente.
-    FÓRMULA ORIGINAL MANTIDA: razao = raio_interno / espessura
+    razao = raio_interno / espessura
     """
     # Verifica se o widget existe
     if not g.RAZAO_RIE_LBL or not hasattr(g.RAZAO_RIE_LBL, 'setText'):
@@ -586,7 +580,6 @@ def razao_ri_espessura():
             g.RAZAO_RIE_LBL.setText('')
             return
 
-        # FÓRMULA ORIGINAL - NÃO ALTERADA
         razao = raio_interno / espessura
 
         # Limita a razão a valores razoáveis (conforme tabela de referência)
