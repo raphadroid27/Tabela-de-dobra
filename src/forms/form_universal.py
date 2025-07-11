@@ -16,7 +16,7 @@ from src.utils.interface import listar, limpar_busca, configurar_main_frame, atu
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
-                              obter_estilo_botao_azul)
+                              obter_estilo_botao_azul, obter_estilo_botao_vermelho)
 from src.config import globals as g
 
 
@@ -291,7 +291,7 @@ class FormManager:
         excluir_layout.setContentsMargins(5, 5, 5, 5)
 
         excluir_btn = QPushButton("🗑️ Excluir")
-        excluir_btn.setStyleSheet(self._get_red_button_style())
+        excluir_btn.setStyleSheet(obter_estilo_botao_vermelho())
         excluir_btn.setFixedHeight(25)
         excluir_btn.setMinimumWidth(20)
 
@@ -307,25 +307,6 @@ class FormManager:
         if not is_edit or self.tipo != 'espessura':
             return criar_frame_edicoes(self.config)
         return None
-
-    def _get_red_button_style(self):
-        """Retorna estilo CSS para botões vermelhos."""
-        return """
-            QPushButton {
-                background-color: #ff6b6b;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                font-weight: bold;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #ff5252;
-            }
-            QPushButton:pressed {
-                background-color: #e53935;
-            }
-        """
 
 
 def criar_label(layout, texto, pos):
