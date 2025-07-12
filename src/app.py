@@ -20,6 +20,7 @@ from src.utils.usuarios import logout
 from src.utils.janelas import (
     aplicar_no_topo_app_principal, cleanup_orphaned_windows, windows_flags)
 from src.utils.interface_manager import carregar_interface
+from src.utils.interface import aplicar_medida_borda_espaco
 from src.utils.banco_dados import session
 from src.models import Usuario
 from src.forms import (
@@ -352,8 +353,7 @@ def configurar_frames():
     g.PRINC_FORM.setCentralWidget(central_widget)
 
     layout = QGridLayout(central_widget)  # Mudado para QGridLayout
-    layout.setContentsMargins(5, 5, 5, 5)  # Margens menores
-    layout.setSpacing(5)  # Espaçamento padrão entre componentes
+    aplicar_medida_borda_espaco(layout)
 
     g.VALORES_W = [1]
     g.EXP_V = False  # Convertido de IntVar para bool

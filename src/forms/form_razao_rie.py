@@ -10,6 +10,7 @@ from PySide6.QtGui import QIcon
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.calculos import razao_ri_espessura
+from src.utils.interface import aplicar_medida_borda_espaco
 from src.config import globals as g
 
 
@@ -34,8 +35,7 @@ def main(root):
 
     # Layout principal
     layout = QVBoxLayout(g.RIE_FORM)
-    layout.setContentsMargins(5, 5, 5, 5)
-    layout.setSpacing(5)
+    aplicar_medida_borda_espaco(layout)
 
     # Frame principal
     main_frame = QWidget()

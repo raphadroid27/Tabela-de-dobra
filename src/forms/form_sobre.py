@@ -16,6 +16,7 @@ from src import __version__
 from src.config import globals as g
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
+from src.utils.interface import aplicar_medida_borda_espaco
 
 
 def main(root):
@@ -38,8 +39,7 @@ def main(root):
 
     # Layout principal
     layout = QVBoxLayout(g.SOBRE_FORM)
-    layout.setContentsMargins(20, 20, 20, 20)
-    layout.setSpacing(10)
+    aplicar_medida_borda_espaco(layout, 10, 10)
 
     # Título
     label_titulo = QLabel("Cálculo de Dobra")

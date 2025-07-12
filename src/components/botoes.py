@@ -16,6 +16,7 @@ from src.utils.estilo import (
     obter_estilo_botao_vermelho,
     obter_estilo_botao_amarelo
 )
+from src.utils.interface import aplicar_medida_borda_espaco
 import src.config.globals as g
 
 
@@ -147,7 +148,7 @@ def criar_botoes():
     layout = QGridLayout(frame_botoes)
 
     # Configurar espaçamento e margens
-    _configurar_layout_botoes(layout)
+    aplicar_medida_borda_espaco(layout)
 
     # Inicializar valores globais
     _inicializar_valores_globais()
@@ -168,12 +169,6 @@ def criar_botoes():
     _configurar_tooltips(widgets)
 
     return frame_botoes
-
-
-def _configurar_layout_botoes(layout):
-    """Configura o layout dos botões."""
-    layout.setSpacing(5)
-    layout.setContentsMargins(5, 5, 5, 5)
 
 
 def _inicializar_valores_globais():

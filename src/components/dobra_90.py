@@ -5,8 +5,9 @@ Este módulo contém funções para criar e gerenciar o frame de dobras.
 from PySide6.QtWidgets import QGroupBox, QLabel, QLineEdit, QGridLayout
 from PySide6.QtCore import Qt
 from src.config import globals as g
-from src.utils.interface import calcular_dobra, copiar, focus_next_entry, focus_previous_entry
-
+from src.utils.interface import (
+    copiar, focus_next_entry, focus_previous_entry, aplicar_medida_borda_espaco)
+from src.utils.calculos import calcular_dobra
 LARGURA = 12
 
 
@@ -31,8 +32,7 @@ def dobras(w):
 
 
 def _configurar_layout_dobra(layout):
-    layout.setSpacing(5)
-    layout.setContentsMargins(5, 5, 5, 5)
+    aplicar_medida_borda_espaco(layout)
     layout.setColumnMinimumWidth(0, 30)
     layout.setColumnStretch(0, 0)
     for col in range(1, 4):
