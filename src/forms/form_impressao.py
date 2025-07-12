@@ -160,7 +160,10 @@ class PrintManager:
                         [adobe_path, "/p", caminho_completo], check=True, timeout=30)
                     self.resultado_impressao += " ✓ Sucesso com Adobe\n"
                     return True
-                except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError) as e:
+                except (subprocess.TimeoutExpired,
+                        subprocess.CalledProcessError,
+                        FileNotFoundError
+                        ) as e:
                     self.resultado_impressao += f" ✗ Erro com Adobe: {str(e)}\n"
 
         return False
