@@ -1,17 +1,16 @@
 """
-Formulário de Impressão
+Formulário de Impressão com QGridLayout
 
 Este módulo contém a implementação do formulário de impressão em lote,
 que permite selecionar um diretório e uma lista de arquivos PDF para impressão.
-O formulário é construído usando a biblioteca PySide6 e segue o padrão
-dos demais formulários do aplicativo.
+O formulário é construído usando QGridLayout para melhor organização e controle.
 """
 
 import os
 import subprocess
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QPushButton, QTextEdit, QTextBrowser, QListWidget,
-                               QGroupBox, QFileDialog, QMessageBox)
+from PySide6.QtWidgets import (QDialog, QGridLayout, QLabel,
+                               QLineEdit, QPushButton, QTextEdit, QTextBrowser,
+                               QListWidget, QGroupBox, QFileDialog, QMessageBox)
 from PySide6.QtGui import QIcon
 
 from src.utils.janelas import (aplicar_no_topo,
@@ -24,6 +23,7 @@ from src.utils.estilo import (obter_estilo_botao_cinza,
                               obter_estilo_botao_amarelo,
                               obter_estilo_botao_verde,
                               obter_estilo_botao_vermelho)
+from src.utils.interface import aplicar_medida_borda_espaco
 from src.config import globals as g
 
 
@@ -112,8 +112,7 @@ class PrintManager:
 
     def _tentar_foxit(self, nome_arquivo, caminho_completo):
         """Tenta imprimir usando Foxit PDF Reader."""
-        foxit_path = (
-            "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe")
+        foxit_path = "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe"
 
         if not os.path.exists(foxit_path):
             return False
@@ -141,7 +140,6 @@ class PrintManager:
 
             self.resultado_impressao += " ✗ startfile não disponível nesta plataforma\n"
             return False
-
         except (OSError, PermissionError, FileNotFoundError) as e:
             self.resultado_impressao += f" ✗ Erro com impressora padrão: {str(e)}\n"
             return False
@@ -162,18 +160,14 @@ class PrintManager:
                         [adobe_path, "/p", caminho_completo], check=True, timeout=30)
                     self.resultado_impressao += " ✓ Sucesso com Adobe\n"
                     return True
-                except (subprocess.TimeoutExpired,
-                        subprocess.CalledProcessError,
-                        FileNotFoundError) as e:
+                except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError) as e:
                     self.resultado_impressao += f" ✗ Erro com Adobe: {str(e)}\n"
 
         return False
 
 
 def imprimir_pdf(diretorio, lista_arquivos):
-    """
-    Imprime os PDFs usando diferentes métodos disponíveis.
-    """
+    """Imprime os PDFs usando diferentes métodos disponíveis."""
     try:
         print_manager = PrintManager()
         print_manager.buscar_arquivos(diretorio, lista_arquivos)
@@ -364,10 +358,12 @@ def _obter_lista_arquivos():
     return lista_arquivos
 
 
+# === SEÇÃO DE LAYOUT COM QGridLayout ===
+
 def main(root):
     """Inicializa e exibe o formulário de impressão em lote."""
     _inicializar_formulario(root)
-    _configurar_layout_principal()
+    _configurar_layout_grid()
 
 
 def _inicializar_formulario(root):
@@ -386,146 +382,133 @@ def _inicializar_formulario(root):
     posicionar_janela(g.IMPRESSAO_FORM, None)
 
 
-def _configurar_layout_principal():
-    """Configura o layout principal do formulário."""
-    main_layout = QVBoxLayout()
-    g.IMPRESSAO_FORM.setLayout(main_layout)
+def _configurar_layout_grid():
+    """Configura o layout principal usando QGridLayout."""
+    # === LAYOUT PRINCIPAL (GRID) ===
+    layout_principal = QGridLayout()
+    g.IMPRESSAO_FORM.setLayout(layout_principal)
+    aplicar_medida_borda_espaco(layout_principal, 10)
 
-    # Criar seções do formulário
-    frame_diretorio = _criar_secao_diretorio()
-    frame_arquivos = _criar_secao_arquivos()
-    frame_resultado = _criar_secao_resultado()
+    layout_principal.setRowStretch(0, 0)
+    layout_principal.setRowStretch(1, 1)
+    layout_principal.setRowStretch(2, 0)
 
-    # Adicionar ao layout principal
-    main_layout.addWidget(frame_diretorio)
-    main_layout.addWidget(frame_arquivos)
-    main_layout.addWidget(frame_resultado)
+    # === CRIAR E POSICIONAR SEÇÕES ===
+    # Linha 0: Seção de Diretório
+    frame_diretorio = _criar_secao_diretorio_grid()
+    layout_principal.addWidget(frame_diretorio, 0, 0)
+
+    # Linha 1: Seção de Arquivos
+    frame_arquivos = _criar_secao_arquivos_grid()
+    layout_principal.addWidget(frame_arquivos, 1, 0)
+
+    # Linha 2: Seção de Resultado
+    frame_resultado = _criar_secao_resultado_grid()
+    layout_principal.addWidget(frame_resultado, 2, 0)
+
+    # Mostrar formulário
+    g.IMPRESSAO_FORM.show()
 
 
-def _criar_secao_diretorio():
-    """Cria a seção de seleção de diretório."""
+def _criar_secao_diretorio_grid():
+    """Cria a seção de seleção de diretório usando QGridLayout."""
     frame_diretorio = QGroupBox('Diretório dos PDFs')
-    dir_layout = QHBoxLayout()
+
+    # Layout interno em grid
+    dir_layout = QGridLayout()
     frame_diretorio.setLayout(dir_layout)
+    aplicar_medida_borda_espaco(dir_layout)
 
+    # Linha 0: Campo de diretório (coluna 0) + Botão procurar (coluna 1)
     g.IMPRESSAO_DIRETORIO_ENTRY = QLineEdit()
-    dir_layout.addWidget(g.IMPRESSAO_DIRETORIO_ENTRY)
+    dir_layout.addWidget(g.IMPRESSAO_DIRETORIO_ENTRY, 0, 0)
 
-    procurar_btn = _criar_botao_procurar()
-    dir_layout.addWidget(procurar_btn)
+    procurar_btn = QPushButton("📁 Procurar")
+    procurar_btn.setStyleSheet(obter_estilo_botao_cinza())
+    procurar_btn.clicked.connect(selecionar_diretorio)
+    dir_layout.addWidget(procurar_btn, 0, 1)
 
     return frame_diretorio
 
 
-def _criar_botao_procurar():
-    """Cria o botão de procurar diretório."""
-    procurar_btn = QPushButton("📁 Procurar")
-    procurar_btn.setStyleSheet(obter_estilo_botao_cinza())
-    procurar_btn.clicked.connect(selecionar_diretorio)
-    return procurar_btn
-
-
-def _criar_secao_arquivos():
-    """Cria a seção de gerenciamento de arquivos."""
+def _criar_secao_arquivos_grid():
+    """Cria a seção de gerenciamento de arquivos usando QGridLayout."""
     frame_arquivos = QGroupBox('Lista de Arquivos para Impressão')
-    arquivos_layout = QVBoxLayout()
+
+    # Layout interno em grid
+    arquivos_layout = QGridLayout()
     frame_arquivos.setLayout(arquivos_layout)
+    aplicar_medida_borda_espaco(arquivos_layout)
 
-    # Adicionar componentes da seção
-    _adicionar_campo_texto_multiplo(arquivos_layout)
-    _adicionar_lista_arquivos(arquivos_layout)
-
-    return frame_arquivos
-
-
-def _adicionar_campo_texto_multiplo(layout):
-    """Adiciona o campo de texto para múltiplos arquivos."""
+    # === SUBSECÇÃO: CAMPO DE TEXTO MÚLTIPLO ===
+    # Linha 0: Label
     lista_label = QLabel("Lista de arquivos (um por linha):")
     lista_label.setStyleSheet("font-weight: bold; font-size: 8pt;")
-    layout.addWidget(lista_label)
+    arquivos_layout.addWidget(lista_label, 0, 0, 1, 3)  # colspan=3
 
-    text_layout = QHBoxLayout()
-
+    # Linha 1-2: Campo de texto (coluna 0-1) + Botões (coluna 2)
     g.IMPRESSAO_LISTA_TEXT = QTextEdit()
     g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(100)
     g.IMPRESSAO_LISTA_TEXT.setPlaceholderText(
         "Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519")
-    text_layout.addWidget(g.IMPRESSAO_LISTA_TEXT)
+    arquivos_layout.addWidget(g.IMPRESSAO_LISTA_TEXT,
+                              1, 0, 2, 2)  # rowspan=2, colspan=2
 
-    # Botões ao lado do texto
-    text_buttons_layout = _criar_botoes_texto()
-    text_layout.addLayout(text_buttons_layout)
-
-    layout.addLayout(text_layout)
-
-
-def _criar_botoes_texto():
-    """Cria os botões para o campo de texto."""
-    text_buttons_layout = QVBoxLayout()
-
+    # Botões do campo de texto (coluna 2)
     adicionar_btn = QPushButton("➕ Adicionar")
     adicionar_btn.setStyleSheet(obter_estilo_botao_azul())
     adicionar_btn.clicked.connect(adicionar_lista_arquivos)
-    text_buttons_layout.addWidget(adicionar_btn)
+    arquivos_layout.addWidget(adicionar_btn, 1, 2)
 
     limpar_text_btn = QPushButton("🧹 Limpar")
     limpar_text_btn.setStyleSheet(obter_estilo_botao_amarelo())
     limpar_text_btn.clicked.connect(limpar_texto_placeholder)
-    text_buttons_layout.addWidget(limpar_text_btn)
+    arquivos_layout.addWidget(limpar_text_btn, 2, 2)
 
-    return text_buttons_layout
-
-
-def _adicionar_lista_arquivos(layout):
-    """Adiciona a lista de arquivos e seus botões."""
+    # === SUBSECÇÃO: LISTA DE ARQUIVOS ===
+    # Linha 3: Label
     lista_arquivos_label = QLabel("Arquivos na lista:")
     lista_arquivos_label.setStyleSheet("font-weight: bold; font-size: 8pt;")
-    layout.addWidget(lista_arquivos_label)
+    arquivos_layout.addWidget(lista_arquivos_label, 3, 0, 1, 3)  # colspan=3
 
-    lista_layout = QHBoxLayout()
-
+    # Linha 4-6: Lista de arquivos (coluna 0-1) + Botões (coluna 2)
     g.IMPRESSAO_LISTA_ARQUIVOS = QListWidget()
     g.IMPRESSAO_LISTA_ARQUIVOS.setMaximumHeight(120)
-    lista_layout.addWidget(g.IMPRESSAO_LISTA_ARQUIVOS)
+    arquivos_layout.addWidget(
+        g.IMPRESSAO_LISTA_ARQUIVOS, 4, 0, 3, 2)  # rowspan=3, colspan=2
 
-    # Botões ao lado da lista
-    lista_buttons_layout = _criar_botoes_lista()
-    lista_layout.addLayout(lista_buttons_layout)
-
-    layout.addLayout(lista_layout)
-
-
-def _criar_botoes_lista():
-    """Cria os botões para a lista de arquivos."""
-    lista_buttons_layout = QVBoxLayout()
-
+    # Botões da lista (coluna 2)
     remover_btn = QPushButton("🗑️ Remover")
     remover_btn.setStyleSheet(obter_estilo_botao_vermelho())
     remover_btn.clicked.connect(remover_arquivo)
-    lista_buttons_layout.addWidget(remover_btn)
+    arquivos_layout.addWidget(remover_btn, 4, 2)
 
     limpar_lista_btn = QPushButton("🧹 Limpar")
     limpar_lista_btn.setStyleSheet(obter_estilo_botao_amarelo())
     limpar_lista_btn.clicked.connect(limpar_lista)
-    lista_buttons_layout.addWidget(limpar_lista_btn)
+    arquivos_layout.addWidget(limpar_lista_btn, 5, 2)
 
     imprimir_btn = QPushButton("🖨️ Imprimir")
     imprimir_btn.setStyleSheet(obter_estilo_botao_verde())
     imprimir_btn.clicked.connect(executar_impressao)
-    lista_buttons_layout.addWidget(imprimir_btn)
+    arquivos_layout.addWidget(imprimir_btn, 6, 2)
 
-    return lista_buttons_layout
+    return frame_arquivos
 
 
-def _criar_secao_resultado():
-    """Cria a seção de resultado da impressão."""
+def _criar_secao_resultado_grid():
+    """Cria a seção de resultado da impressão usando QGridLayout."""
     frame_resultado = QGroupBox('Resultado da Impressão')
-    resultado_layout = QVBoxLayout()
-    frame_resultado.setLayout(resultado_layout)
 
+    # Layout interno em grid
+    resultado_layout = QGridLayout()
+    frame_resultado.setLayout(resultado_layout)
+    aplicar_medida_borda_espaco(resultado_layout)
+
+    # Linha 0: Campo de resultado (ocupa toda a largura)
     g.IMPRESSAO_RESULTADO_TEXT = QTextBrowser()
     g.IMPRESSAO_RESULTADO_TEXT.setMaximumHeight(100)
-    resultado_layout.addWidget(g.IMPRESSAO_RESULTADO_TEXT)
+    resultado_layout.addWidget(g.IMPRESSAO_RESULTADO_TEXT, 0, 0)
 
     return frame_resultado
 
