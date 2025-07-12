@@ -12,7 +12,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from src.utils.janelas import posicionar_janela, aplicar_no_topo
-from src.utils.interface import listar, limpar_busca, configurar_main_frame, atualizar_widgets
+from src.utils.interface import (
+    listar, limpar_busca, configurar_main_frame, atualizar_widgets, aplicar_medida_borda_espaco)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
@@ -309,20 +310,6 @@ class FormManager:
         return None
 
 
-def aplicar_medida_borda(layout_ou_widget, margem=5):
-    """
-    Aplica bordas a um layout ou widget.
-
-    Args:
-        layout_ou_widget: Layout ou widget a ser configurado
-        margem: Valor da margem em pixels (padrão: 5)
-    """
-    if hasattr(layout_ou_widget, 'setContentsMargins'):
-        layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
-    elif hasattr(layout_ou_widget, 'layout') and layout_ou_widget.layout():
-        layout_ou_widget.layout().setContentsMargins(margem, margem, margem, margem)
-
-
 def criar_label(layout, texto, pos):
     """
     Cria um rótulo (QLabel) no layout especificado.
@@ -362,8 +349,7 @@ def criar_frame_busca(config, tipo):
     frame_busca = QGroupBox(config['busca']['titulo'])
     layout = QGridLayout(frame_busca)
 
-    # ALTERAÇÃO: Reduzir bordas magenta do frame de busca para 5,5,5,5
-    aplicar_medida_borda(layout, 5)
+    aplicar_medida_borda_espaco(layout)
 
     tipo_busca = config.get('tipo_busca', tipo)
 
@@ -439,8 +425,7 @@ def criar_frame_edicoes(config):
     frame_edicoes = QGroupBox(titulo)
     layout = QGridLayout(frame_edicoes)
 
-    # ALTERAÇÃO: Reduzir bordas magenta do frame de edições para 5,5,5,5
-    aplicar_medida_borda(layout, 5)
+    aplicar_medida_borda_espaco(layout)
 
     # Criar campos
     for campo in config['edicao']['campos']:
@@ -516,52 +501,51 @@ def main(tipo, root):
         raise ValueError(f"Tipo '{tipo}' não suportado")
 
     config = FORM_CONFIGS[tipo]
-    form_manager = FormManager(tipo, config, root)
+    gerenciador_form = FormManager(tipo, config, root)
 
     # Configurar janela
-    new_form = form_manager.setup_window()
-    main_layout = form_manager.setup_main_layout(new_form)
+    novo_form = gerenciador_form.setup_window()
+    layout_principal = gerenciador_form.setup_main_layout(novo_form)
 
     # Criar e adicionar componentes
-    _setup_form_components(form_manager, main_layout)
+    _config_componentes_form(gerenciador_form, layout_principal)
 
     # Executar pós-inicialização
-    _execute_post_init(config, tipo)
+    _executar_pos_inicio(config, tipo)
 
-    new_form.show()
+    novo_form.show()
 
 
-def _setup_form_components(form_manager, main_layout):
+def _config_componentes_form(gerenciador_form, layout):
     """Configura os componentes do formulário."""
 
-    # ALTERAÇÃO: Reduzir bordas magenta do layout principal dos componentes para 5,5,5,5
-    aplicar_medida_borda(main_layout, 5)
+    aplicar_medida_borda_espaco(layout, 0)
 
     # Frame de busca
-    frame_busca = form_manager.create_search_frame()
-    main_layout.addWidget(frame_busca, 0, 0)
+    frame_busca = gerenciador_form.create_search_frame()
+    layout.addWidget(frame_busca, 0, 0)
 
     # Lista
-    lista_widget = form_manager.create_list_widget()
-    main_layout.addWidget(lista_widget, 1, 0)
+    lista_widget = gerenciador_form.create_list_widget()
+    layout.addWidget(lista_widget, 1, 0)
 
     # Botão Excluir (se necessário)
-    excluir_container = form_manager.create_delete_button()
+    excluir_container = gerenciador_form.create_delete_button()
     if excluir_container:
-        main_layout.addWidget(excluir_container, 2, 0)
+        layout.addWidget(excluir_container, 2, 0)
 
     # Frame de edições (se necessário)
-    frame_edicoes = form_manager.create_edit_frame()
+    frame_edicoes = gerenciador_form.create_edit_frame()
     if frame_edicoes:
         row_frame_edicoes = 3 if excluir_container else 2
-        main_layout.addWidget(frame_edicoes, row_frame_edicoes, 0)
+        layout.addWidget(frame_edicoes, row_frame_edicoes, 0)
 
         # Configurar botões
-        configurar_botoes(form_manager.config,
-                          frame_edicoes, form_manager.tipo)
+        configurar_botoes(gerenciador_form.config,
+                          frame_edicoes, gerenciador_form.tipo)
 
 
-def _execute_post_init(config, tipo):
+def _executar_pos_inicio(config, tipo):
     """Executa pós-inicialização se necessário."""
     if 'post_init' in config:
         config['post_init']()

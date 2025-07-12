@@ -5,7 +5,8 @@ Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos c
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QLabel, QComboBox, QLineEdit
 from PySide6.QtCore import Qt
 from src.config import globals as g
-from src.utils.interface import atualizar_widgets, calcular_valores, copiar, canal_tooltip
+from src.utils.interface import (
+    atualizar_widgets, calcular_valores, copiar, canal_tooltip, aplicar_medida_borda_espaco)
 
 
 def criar_label(layout, texto, linha_coluna):
@@ -156,8 +157,7 @@ def cabecalho():
     """
     frame_cabecalho = QGroupBox()
     layout = QGridLayout(frame_cabecalho)
-    layout.setSpacing(5)
-    layout.setContentsMargins(5, 5, 5, 5)
+    aplicar_medida_borda_espaco(layout)
     for col in range(0, 4):
         layout.setColumnStretch(col, 1)
     mat_comb, esp_comb, canal_comb, compr_entry = _criar_linha_1(layout)
