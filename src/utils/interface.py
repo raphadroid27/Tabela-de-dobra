@@ -904,3 +904,19 @@ def configurar_main_frame(parent):
 
     parent.layout().addWidget(main_frame)
     return main_frame
+
+
+def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
+    """
+    Aplica bordas a um layout ou widget.
+
+    Args:
+        layout_ou_widget: Layout ou widget a ser configurado
+        margem: Valor da margem em pixels (padrão: 5)
+    """
+    if hasattr(layout_ou_widget, 'setContentsMargins'):
+        layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
+        layout_ou_widget.setSpacing(espaco)
+    elif hasattr(layout_ou_widget, 'layout') and layout_ou_widget.layout():
+        layout_ou_widget.layout().setContentsMargins(margem, margem, margem, margem)
+        layout_ou_widget.layout().setSpacing(espaco)
