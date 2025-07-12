@@ -3,6 +3,8 @@ Formulário Universal para todos os tipos de CRUD do sistema.
 
 Este módulo unifica todos os formulários de adição/edição, eliminando duplicação de código
 e facilitando manutenção através de configurações centralizadas.
+
+Versão atualizada com botões de ação fora do grid para melhor organização visual.
 """
 
 from PySide6.QtWidgets import (QDialog, QGridLayout, QGroupBox, QLabel,
@@ -13,13 +15,13 @@ from PySide6.QtGui import QIcon
 
 from src.utils.janelas import posicionar_janela, aplicar_no_topo
 from src.utils.interface import (
-    listar, limpar_busca, configurar_main_frame, atualizar_widgets, aplicar_medida_borda_espaco)
+    listar, limpar_busca, configurar_frame_principal,
+    atualizar_widgets, aplicar_medida_borda_espaco)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
                               obter_estilo_botao_azul, obter_estilo_botao_vermelho)
 from src.config import globals as g
-
 
 # Configurações para cada tipo de formulário
 FORM_CONFIGS = {
@@ -54,8 +56,7 @@ FORM_CONFIGS = {
                  'global': 'DED_OBSER_ENTRY', 'pos': (0, 1)},
                 {'label': 'Força:', 'widget': 'entry',
                  'global': 'DED_FORCA_ENTRY', 'pos': (0, 2)}
-            ],
-            'button_pos': (1, 3)
+            ]
         },
         'post_init': lambda: atualizar_comboboxes(['material', 'espessura', 'canal']),
         'tipo_busca': 'dedução'
@@ -89,8 +90,7 @@ FORM_CONFIGS = {
                  'global': 'MAT_ESCO_ENTRY', 'pos': (2, 0)},
                 {'label': 'Elasticidade:', 'widget': 'entry',
                  'global': 'MAT_ELAS_ENTRY', 'pos': (2, 1)}
-            ],
-            'button_pos': (1, 2)
+            ]
         },
         'tipo_busca': 'material'
     },
@@ -125,9 +125,7 @@ FORM_CONFIGS = {
                  'global': 'CANAL_COMPR_ENTRY', 'pos': (2, 1)},
                 {'label': 'Observação:', 'widget': 'entry',
                  'global': 'CANAL_OBSER_ENTRY', 'pos': (4, 0), 'colspan': 2}
-            ],
-            'button_pos': (1, 2),
-            'button_rowspan': 5
+            ]
         },
         'tipo_busca': 'canal'
     },
@@ -154,9 +152,7 @@ FORM_CONFIGS = {
             'campos': [
                 {'label': 'Valor:', 'widget': 'entry',
                  'global': 'ESP_VALOR_ENTRY', 'pos': (0, 0)}
-            ],
-            'button_pos': (0, 2),
-            'inline_button': True  # Botão inline para espessuras
+            ]
         },
         'tipo_busca': 'espessura'
     }
@@ -172,36 +168,35 @@ class ButtonConfigManager:
         self.is_edit = getattr(g, config['global_edit'], False)
         self.tipo_operacao = config.get('tipo_busca', tipo)
 
-    def get_button_layout_info(self, frame_edicoes):
-        """Calcula informações de layout para os botões."""
-        if not frame_edicoes or not frame_edicoes.layout():
+    def create_button_container(self):
+        """Cria o container para os botões fora do grid."""
+        # Verificar se é espessura em modo edição (não mostrar botões)
+        if self.tipo == 'espessura' and self.is_edit:
             return None
 
-        # Descobrir a última linha ocupada pelos campos
-        linhas_ocupadas = [campo['pos'][0] +
-                           1 for campo in self.config['edicao']['campos']]
-        ultima_linha = max(linhas_ocupadas) + 1
-        button_rowspan = self.config['edicao'].get('button_rowspan', 1)
+        botao_container = QWidget()
+        botao_layout = QHBoxLayout(botao_container)
+        aplicar_medida_borda_espaco(botao_layout, 0)
 
-        return {
-            'ultima_linha': ultima_linha,
-            'button_rowspan': button_rowspan,
-            'layout': frame_edicoes.layout()
-        }
+        if self.is_edit:
+            # Botão Atualizar
+            atualizar_btn = QPushButton("✏️ Atualizar")
+            atualizar_btn.setStyleSheet(obter_estilo_botao_verde())
+            atualizar_btn.setFixedHeight(25)
+            atualizar_btn.setMinimumWidth(20)
+            atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
+            botao_layout.addWidget(atualizar_btn)
+        else:
+            # Botão Adicionar
+            adicionar_btn = QPushButton("➕ Adicionar")
+            adicionar_btn.setStyleSheet(obter_estilo_botao_azul())
+            adicionar_btn.setFixedHeight(25)
+            adicionar_btn.setMinimumWidth(20)
+            adicionar_btn.clicked.connect(
+                lambda: adicionar(self.tipo_operacao))
+            botao_layout.addWidget(adicionar_btn)
 
-    def create_update_button(self):
-        """Cria o botão de atualizar."""
-        atualizar_btn = QPushButton("✏️ Atualizar")
-        atualizar_btn.setStyleSheet(obter_estilo_botao_verde())
-        atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
-        return atualizar_btn
-
-    def create_add_button(self):
-        """Cria o botão de adicionar."""
-        adicionar_btn = QPushButton("➕ Adicionar")
-        adicionar_btn.setStyleSheet(obter_estilo_botao_azul())
-        adicionar_btn.clicked.connect(lambda: adicionar(self.tipo_operacao))
-        return adicionar_btn
+        return botao_container
 
     def update_form_titles(self, form_widget, frame_edicoes):
         """Atualiza os títulos do formulário e frame."""
@@ -245,7 +240,6 @@ class FormManager:
         """Configura a janela principal do formulário."""
         form_attr = self.config['global_form']
         current_form = getattr(g, form_attr, None)
-
         if current_form:
             current_form.close()
 
@@ -268,20 +262,20 @@ class FormManager:
 
         return new_form
 
-    def setup_main_layout(self, form):
+    def config_layout_main(self, form):
         """Configura o layout principal do formulário."""
-        main_frame = configurar_main_frame(form)
+        main_frame = configurar_frame_principal(form)
         return main_frame.layout()
 
-    def create_search_frame(self):
+    def criar_frame_busca(self):
         """Cria o frame de busca."""
         return criar_frame_busca(self.config, self.tipo)
 
-    def create_list_widget(self):
+    def criar_widget_lista(self):
         """Cria o widget de lista."""
         return criar_lista(self.config, self.tipo)
 
-    def create_delete_button(self):
+    def criar_botao_delete(self):
         """Cria o botão de excluir se necessário."""
         is_edit = getattr(g, self.config['global_edit'], False)
         if not is_edit:
@@ -289,7 +283,7 @@ class FormManager:
 
         excluir_container = QWidget()
         excluir_layout = QHBoxLayout(excluir_container)
-        excluir_layout.setContentsMargins(5, 5, 5, 5)
+        aplicar_medida_borda_espaco(excluir_layout, 0)
 
         excluir_btn = QPushButton("🗑️ Excluir")
         excluir_btn.setStyleSheet(obter_estilo_botao_vermelho())
@@ -302,18 +296,18 @@ class FormManager:
         excluir_layout.addWidget(excluir_btn)
         return excluir_container
 
-    def create_edit_frame(self):
+    def criar_frame_edicoes(self):
         """Cria o frame de edições se necessário."""
+        # Sempre criar frame de edições, exceto para espessura em modo edição
         is_edit = getattr(g, self.config['global_edit'], False)
-        if not is_edit or self.tipo != 'espessura':
-            return criar_frame_edicoes(self.config)
-        return None
+        if is_edit and self.tipo == 'espessura':
+            return None
+
+        return criar_frame_edicoes(self.config)
 
 
 def criar_label(layout, texto, pos):
-    """
-    Cria um rótulo (QLabel) no layout especificado.
-    """
+    """Cria um rótulo (QLabel) no layout especificado."""
     linha, coluna = pos
     label = QLabel(texto)
     label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -322,9 +316,7 @@ def criar_label(layout, texto, pos):
 
 
 def criar_widget(layout, tipo, nome_global, pos, **kwargs):
-    """
-    Cria e configura um widget, o adiciona ao layout e o armazena em g.
-    """
+    """Cria e configura um widget, o adiciona ao layout e o armazena em g."""
     if tipo == 'entry':
         widget = QLineEdit()
         widget.setFixedHeight(20)
@@ -337,18 +329,16 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
     colspan = kwargs.get('colspan', 1)
     rowspan = kwargs.get('rowspan', 1)
     linha, coluna = pos
+
     layout.addWidget(widget, linha, coluna, rowspan, colspan)
     setattr(g, nome_global, widget)
     return widget
 
 
 def criar_frame_busca(config, tipo):
-    """
-    Cria o frame de busca baseado na configuração.
-    """
+    """Cria o frame de busca baseado na configuração."""
     frame_busca = QGroupBox(config['busca']['titulo'])
     layout = QGridLayout(frame_busca)
-
     aplicar_medida_borda_espaco(layout)
 
     tipo_busca = config.get('tipo_busca', tipo)
@@ -396,9 +386,7 @@ def configurar_conexoes_busca(widget, campo_config, tipo_busca):
 
 
 def criar_lista(config, tipo):
-    """
-    Cria a lista/árvore baseada na configuração.
-    """
+    """Cria a lista/árvore baseada na configuração."""
     tree_widget = QTreeWidget()
     tree_widget.setHeaderLabels(config['lista']['headers'])
     tree_widget.header().setDefaultAlignment(Qt.AlignCenter)
@@ -417,17 +405,15 @@ def criar_lista(config, tipo):
 
 
 def criar_frame_edicoes(config):
-    """
-    Cria o frame de edições baseado na configuração.
-    """
+    """Cria o frame de edições baseado na configuração."""
     is_edit = getattr(g, config['global_edit'], False)
     titulo = config['edicao']['titulo_edit'] if is_edit else config['edicao']['titulo_novo']
+
     frame_edicoes = QGroupBox(titulo)
     layout = QGridLayout(frame_edicoes)
-
     aplicar_medida_borda_espaco(layout)
 
-    # Criar campos
+    # Criar apenas os campos, sem botões
     for campo in config['edicao']['campos']:
         _criar_campo_edicao(layout, campo)
 
@@ -448,55 +434,31 @@ def _criar_campo_edicao(layout, campo):
                  campo['global'], pos_widget, colspan=colspan)
 
 
-def configurar_botoes(config, frame_edicoes, tipo):
-    """
-    Configura os botões baseado na configuração.
-    """
+def configurar_botoes(config, tipo):
+    """Configura os botões baseado na configuração."""
     button_manager = ButtonConfigManager(config, tipo)
-    layout_info = button_manager.get_button_layout_info(frame_edicoes)
 
-    if not layout_info:
-        return
+    # Criar container de botões
+    botao_container = button_manager.create_button_container()
 
-    _add_button_to_layout(button_manager, layout_info)
-    _update_form_elements(button_manager, frame_edicoes)
+    # Atualizar elementos do formulário
+    form_widget = getattr(g, button_manager.config['global_form'])
+    button_manager.update_form_titles(form_widget, None)
+
+    # Configurar conexão da lista
     button_manager.setup_list_connection()
 
-
-def _add_button_to_layout(button_manager, layout_info):
-    """Adiciona o botão apropriado ao layout."""
-    if button_manager.is_edit:
-        button = button_manager.create_update_button()
-    else:
-        button = button_manager.create_add_button()
-
-    layout_info['layout'].addWidget(
-        button,
-        layout_info['ultima_linha'],
-        0,
-        layout_info['button_rowspan'],
-        layout_info['layout'].columnCount()
-    )
-
-
-def _update_form_elements(button_manager, frame_edicoes):
-    """Atualiza elementos do formulário."""
-    form_widget = getattr(g, button_manager.config['global_form'])
-    button_manager.update_form_titles(form_widget, frame_edicoes)
+    return botao_container
 
 
 def atualizar_comboboxes(tipos):
-    """
-    Atualiza comboboxes específicas.
-    """
+    """Atualiza comboboxes específicas."""
     for tipo in tipos:
         atualizar_widgets(tipo)
 
 
 def main(tipo, root):
-    """
-    Função principal universal para todos os formulários.
-    """
+    """Função principal universal para todos os formulários."""
     if tipo not in FORM_CONFIGS:
         raise ValueError(f"Tipo '{tipo}' não suportado")
 
@@ -505,7 +467,7 @@ def main(tipo, root):
 
     # Configurar janela
     novo_form = gerenciador_form.setup_window()
-    layout_principal = gerenciador_form.setup_main_layout(novo_form)
+    layout_principal = gerenciador_form.config_layout_main(novo_form)
 
     # Criar e adicionar componentes
     _config_componentes_form(gerenciador_form, layout_principal)
@@ -518,31 +480,34 @@ def main(tipo, root):
 
 def _config_componentes_form(gerenciador_form, layout):
     """Configura os componentes do formulário."""
-
     aplicar_medida_borda_espaco(layout, 0)
 
     # Frame de busca
-    frame_busca = gerenciador_form.create_search_frame()
+    frame_busca = gerenciador_form.criar_frame_busca()
     layout.addWidget(frame_busca, 0, 0)
 
     # Lista
-    lista_widget = gerenciador_form.create_list_widget()
+    lista_widget = gerenciador_form.criar_widget_lista()
     layout.addWidget(lista_widget, 1, 0)
 
     # Botão Excluir (se necessário)
-    excluir_container = gerenciador_form.create_delete_button()
+    excluir_container = gerenciador_form.criar_botao_delete()
+    current_row = 2
     if excluir_container:
-        layout.addWidget(excluir_container, 2, 0)
+        layout.addWidget(excluir_container, current_row, 0)
+        current_row += 1
 
     # Frame de edições (se necessário)
-    frame_edicoes = gerenciador_form.create_edit_frame()
+    frame_edicoes = gerenciador_form.criar_frame_edicoes()
     if frame_edicoes:
-        row_frame_edicoes = 3 if excluir_container else 2
-        layout.addWidget(frame_edicoes, row_frame_edicoes, 0)
+        layout.addWidget(frame_edicoes, current_row, 0)
+        current_row += 1
 
-        # Configurar botões
-        configurar_botoes(gerenciador_form.config,
-                          frame_edicoes, gerenciador_form.tipo)
+    # Botões Adicionar/Atualizar (fora do grid)
+    botao_container = configurar_botoes(
+        gerenciador_form.config, gerenciador_form.tipo)
+    if botao_container:
+        layout.addWidget(botao_container, current_row, 0)
 
 
 def _executar_pos_inicio(config, tipo):
