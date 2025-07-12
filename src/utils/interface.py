@@ -891,19 +891,20 @@ def calcular_valores():
         print(f"Erro geral em calcular_valores: {e}")
 
 
-def configurar_main_frame(parent):
+def configurar_frame_principal(parent):
     """Configura o frame principal com colunas e linhas padrão."""
-    main_frame = QWidget(parent)
-    layout = QGridLayout(main_frame)
-    main_frame.setLayout(layout)
+    frame_principal = QWidget(parent)
+    layout = QGridLayout(frame_principal)
+    frame_principal.setLayout(layout)
+    aplicar_medida_borda_espaco(layout)
 
     # Configurar o layout principal do parent para usar o main_frame
     if not parent.layout():
         parent_layout = QGridLayout(parent)
         parent.setLayout(parent_layout)
 
-    parent.layout().addWidget(main_frame)
-    return main_frame
+    parent.layout().addWidget(frame_principal)
+    return frame_principal
 
 
 def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
@@ -913,6 +914,7 @@ def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
     Args:
         layout_ou_widget: Layout ou widget a ser configurado
         margem: Valor da margem em pixels (padrão: 5)
+        espaco: Valor do espaçamento entre widgets em pixels (padrão: 5)
     """
     if hasattr(layout_ou_widget, 'setContentsMargins'):
         layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
