@@ -12,6 +12,7 @@ import os
 import sys
 import traceback
 import signal
+import qdarktheme
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout  # type: ignore
 from PySide6.QtCore import Qt  # type: ignore
 from PySide6.QtGui import QIcon, QAction  # type: ignore
@@ -224,6 +225,47 @@ def _criar_menu_opcoes(menu_bar):
     no_topo_action.triggered.connect(_toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
 
+    # Adicionar submenu Temas
+    try:
+        temas_disponiveis = []
+        if hasattr(qdarktheme, "get_themes"):
+            temas_disponiveis = qdarktheme.get_themes()
+        else:
+            temas_disponiveis = ["dark", "light", "auto"]
+    except ImportError:
+        temas_disponiveis = ["dark", "light"]
+
+    temas_menu = opcoes_menu.addMenu("Temas")
+
+    # Armazenar as ações para controle de seleção
+    temas_actions = {}
+    # Estado do tema atual
+    g.TEMA_ATUAL = getattr(g, 'TEMA_ATUAL', 'auto')
+
+    def aplicar_tema_qdarktheme(nome_tema):
+        try:
+            if hasattr(qdarktheme, "enable"):
+                qdarktheme.enable(theme=nome_tema)
+            elif hasattr(qdarktheme, "setup_theme"):
+                qdarktheme.setup_theme(nome_tema)
+            else:
+                print("qdarktheme não possui métodos conhecidos para aplicar tema.")
+            # Atualizar check dos menus
+            for t, act in temas_actions.items():
+                act.setChecked(t == nome_tema)
+            g.TEMA_ATUAL = nome_tema
+        except ImportError as e:
+            print(f"Erro ao importar ou aplicar tema: {e}")
+
+    for tema in temas_disponiveis:
+        action = QAction(tema.capitalize(), g.PRINC_FORM)
+        action.setCheckable(True)
+        action.setChecked(tema == getattr(g, 'TEMA_ATUAL', 'auto'))
+        action.triggered.connect(
+            lambda checked, t=tema: aplicar_tema_qdarktheme(t))
+        temas_menu.addAction(action)
+        temas_actions[tema] = action
+
 
 def _criar_menu_utilidades(menu_bar):
     """Cria o menu Utilidades."""
@@ -370,8 +412,12 @@ def main():
     Função principal que inicializa a interface gráfica do aplicativo.
     """
     app = None
+
     try:
         app = QApplication(sys.argv)
+
+        # Aplicar tema auto com qdarktheme
+        qdarktheme.setup_theme("auto")
 
         # Configurar para capturar exceções não tratadas
         def handle_exception(exc_type, exc_value, exc_traceback):
