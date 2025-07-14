@@ -2,6 +2,14 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 2.0.0 (14/07/2025)
+
+- Interface totalmente renovada, com visual mais moderno, responsivo e novos ícones para facilitar a identificação das funções.
+- Agora é possível escolher entre tema escuro, claro ou automático diretamente no menu Opções, proporcionando mais conforto visual em diferentes ambientes.
+- Formulários e campos foram reorganizados para tornar a navegação mais intuitiva, com botões e elementos melhor posicionados e atalhos de teclado otimizados.
+- Diversos ajustes visuais deixam a leitura dos dados mais clara, com fontes maiores, espaçamentos aprimorados e rótulos mais explicativos.
+- O desempenho geral do sistema foi aprimorado, tornando o uso mais rápido e estável, além de reduzir erros e travamentos.
+
 ## 1.2.0 (01/07/2025)
 
 - Adicionado formulário de impressão em lote com funcionalidades de seleção de diretório e lista de arquivos  
