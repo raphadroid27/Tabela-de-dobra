@@ -12,7 +12,7 @@ import os
 import sys
 import traceback
 import signal
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout  # type: ignore
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout  # type: ignore
 from PySide6.QtCore import Qt  # type: ignore
 from PySide6.QtGui import QIcon, QAction  # type: ignore
 
@@ -44,6 +44,8 @@ from src.utils.estilo import (
     obter_temas_disponiveis,
     registrar_tema_actions
 )
+from src.components.barra_titulo import BarraTitulo
+from src.components.menu_custom import MenuCustom
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -119,10 +121,8 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.setFixedSize(340, 500)
     g.PRINC_FORM.is_main_window = True
 
-    # Configurar flags da janela corretamente
-    # Garantir que todos os botões da barra de título estejam habilitados
-    essential_flags = windows_flags()
-    g.PRINC_FORM.setWindowFlags(essential_flags)
+    # Remover barra de título nativa e borda
+    g.PRINC_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     if 'geometry' in config and isinstance(config['geometry'], str):
         # Parse geometry string and apply
@@ -167,10 +167,10 @@ def configurar_menu():
     """
     Configura o menu superior da janela principal.
     """
-    if g.PRINC_FORM is None:
+    if not hasattr(g, 'MENU_CUSTOM') or g.MENU_CUSTOM is None:
         return
 
-    menu_bar = g.PRINC_FORM.menuBar()
+    menu_bar = g.MENU_CUSTOM.get_menu_bar()
 
     # Criar menus usando funções especializadas
     _criar_menu_arquivo(menu_bar)
@@ -373,8 +373,29 @@ def configurar_frames():
     central_widget = QWidget()
     g.PRINC_FORM.setCentralWidget(central_widget)
 
-    layout = QGridLayout(central_widget)  # Mudado para QGridLayout
+    # Layout vertical para barra de título customizada, menu customizado e conteúdo
+    vlayout = QVBoxLayout(central_widget)
+    vlayout.setContentsMargins(0, 0, 0, 0)
+    vlayout.setSpacing(0)
+
+    # Barra de título customizada
+    tema_atual = getattr(g, 'TEMA_ATUAL', 'dark')
+    g.BARRA_TITULO = BarraTitulo(g.PRINC_FORM, tema=tema_atual)
+    vlayout.addWidget(g.BARRA_TITULO)
+    # Forçar atualização da cor da barra após aplicar o tema inicial
+    if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
+        from src.utils.estilo import obter_tema_atual
+        g.BARRA_TITULO.set_tema(obter_tema_atual())
+
+    # Menu customizado
+    g.MENU_CUSTOM = MenuCustom(g.PRINC_FORM)
+    vlayout.addWidget(g.MENU_CUSTOM)
+
+    # Widget de conteúdo principal
+    conteudo_widget = QWidget()
+    layout = QGridLayout(conteudo_widget)
     aplicar_medida_borda_espaco(layout)
+    vlayout.addWidget(conteudo_widget)
 
     g.VALORES_W = [1]
     g.EXP_V = False  # Convertido de IntVar para bool
@@ -393,6 +414,7 @@ def main():
     """
     Função principal que inicializa a interface gráfica do aplicativo.
     """
+
     app = None
     try:
         app = QApplication(sys.argv)
@@ -402,14 +424,12 @@ def main():
 
         # Configurar para capturar exceções não tratadas
         def handle_exception(exc_type, exc_value, exc_traceback):
-            """Captura exceções não tratadas"""
             if exc_type != KeyboardInterrupt:
                 print("ERRO NÃO TRATADO:")
                 print(''.join(traceback.format_exception(
                     exc_type, exc_value, exc_traceback)))
 
         def signal_handler(signum):
-            """Handler para sinais do sistema"""
             print(f"Sinal recebido: {signum}")
             if app:
                 app.quit()
@@ -425,11 +445,11 @@ def main():
         print("Configurando janela principal...")
         configurar_janela_principal(config)
 
-        print("Configurando menu...")
-        configurar_menu()
-
         print("Configurando frames...")
         configurar_frames()
+
+        print("Configurando menu...")
+        configurar_menu()
 
         print("Verificando admin existente...")
         verificar_admin_existente()
@@ -440,16 +460,13 @@ def main():
 
             print("Aplicativo iniciado com sucesso!")
 
-            # Adicionar uma função para capturar quando a janela é fechada
             def on_app_exit():
-                # Removido print de debug
                 pass
 
             app.aboutToQuit.connect(on_app_exit)
 
             return app.exec()
 
-        # Remover o else desnecessário - código movido para aqui
         print("ERRO: Janela principal não foi criada!")
         return 1
 
