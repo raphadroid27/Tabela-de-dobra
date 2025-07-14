@@ -2,6 +2,10 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 2.0.1 (14/07/2025)
+
+- Adiciona estilos personalizados para tooltips no módulo de estilo
+
 ## 2.0.0 (14/07/2025)
 
 - Interface totalmente renovada, com visual mais moderno, responsivo e novos ícones para facilitar a identificação das funções.
