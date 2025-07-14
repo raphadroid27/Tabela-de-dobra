@@ -3,3 +3,4 @@ sqlalchemy
 pyperclip
 pyinstaller
 pylint
+pyqtdarktheme
