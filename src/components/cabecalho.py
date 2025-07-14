@@ -9,8 +9,6 @@ from src.config import globals as g
 from src.utils.interface import (
     atualizar_widgets, calcular_valores, copiar, canal_tooltip, aplicar_medida_borda_espaco)
 from src.utils.estilo import (
-    WIDGET_MAX_HEIGHT,
-    WIDGET_MIN_WIDTH,
     aplicar_estilo_widget_auto_ajustavel,
     configurar_layout_flexivel
 )
@@ -54,20 +52,20 @@ def criar_widget_cabecalho(layout, tipo, nome_global, pos, **kwargs):
         widget = QLabel(kwargs.pop('text', ''))
         widget.setFrameShape(QLabel.Shape.Panel)
         widget.setFrameShadow(QLabel.Shadow.Sunken)
-        widget.setFixedHeight(WIDGET_MAX_HEIGHT)  # Apenas altura fixa
-        widget.setMinimumWidth(WIDGET_MIN_WIDTH)  # Largura mínima
+        widget.setFixedHeight(g.WIDGET_MAX_HEIGHT)  # Apenas altura fixa
+        widget.setMinimumWidth(g.WIDGET_MIN_WIDTH)  # Largura mínima
         widget.setAlignment(Qt.AlignCenter)
 
     elif tipo == 'combobox':
         widget = QComboBox(**kwargs)
-        widget.setFixedHeight(WIDGET_MAX_HEIGHT)  # Apenas altura fixa
-        widget.setMinimumWidth(WIDGET_MIN_WIDTH)  # Largura mínima
+        widget.setFixedHeight(g.WIDGET_MAX_HEIGHT)  # Apenas altura fixa
+        widget.setMinimumWidth(g.WIDGET_MIN_WIDTH)  # Largura mínima
         aplicar_estilo_widget_auto_ajustavel(widget, 'combobox')
 
     elif tipo == 'entry':
         widget = QLineEdit(**kwargs)
-        widget.setFixedHeight(WIDGET_MAX_HEIGHT)  # Apenas altura fixa
-        widget.setMinimumWidth(WIDGET_MIN_WIDTH)  # Largura mínima
+        widget.setFixedHeight(g.WIDGET_MAX_HEIGHT)  # Apenas altura fixa
+        widget.setMinimumWidth(g.WIDGET_MIN_WIDTH)  # Largura mínima
         widget.setAlignment(Qt.AlignCenter)
         aplicar_estilo_widget_auto_ajustavel(widget, 'lineedit')
     else:

@@ -9,6 +9,10 @@ EXP_V = None
 EXP_H = None
 USUARIO_ID = None
 USUARIO_NOME = None
+TEMA_ATUAL = None
+WIDGET_MIN_WIDTH = None
+WIDGET_MAX_HEIGHT = None
+
 
 # Flag para controlar quando a interface está sendo recarregada
 INTERFACE_RELOADING = False
