@@ -134,22 +134,23 @@ def obter_css_correcao_widgets():
     return """
     QComboBox { 
         min-height: 1em; 
-        max-height: 20px; 
+        max-height: {g.WIDGET_MAX_HEIGHT}px; 
         padding: 2px 4px; 
-        font-size: 8pt;
+        font-size: 10pt;
     }
     QLineEdit { 
         min-height: 1em; 
-        max-height: 20px; 
+        max-height: {g.WIDGET_MAX_HEIGHT}px; 
         padding: 2px 4px; 
-        font-size: 8pt;
+        font-size: 10pt;
     }
     QLabel { 
+        min-height: 1em;
         padding: 2px; 
-        font-size: 8pt;
+        font-size: 10pt;
     }
     QGroupBox::title {
-        font-size: 8pt;
+        font-size: 10pt;
         padding: 2px;
     }
     """
@@ -169,7 +170,7 @@ def obter_css_widgets_auto_ajustaveis():
                 min-height: 1em; 
                 max-height: {g.WIDGET_MAX_HEIGHT}px;
                 padding: {WIDGET_PADDING};
-                font-size: 8pt;
+                font-size: 10pt;
             }}
         """,
         'lineedit': f"""
@@ -178,7 +179,7 @@ def obter_css_widgets_auto_ajustaveis():
                 min-height: 1em; 
                 max-height: {g.WIDGET_MAX_HEIGHT}px;
                 padding: {WIDGET_PADDING};
-                font-size: 8pt;
+                font-size: 10pt;
             }}
         """
     }
