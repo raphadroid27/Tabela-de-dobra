@@ -16,7 +16,7 @@ def obter_caminho_icone():
     else:
         base_path = os.path.abspath(".")  # Diretório atual no modo normal
 
-    return os.path.join(base_path, "assets", "icone.ico")
+    return os.path.join(base_path, "assets", "icone_2.ico")
 
 
 def ask_string(title, prompt, parent=None):
