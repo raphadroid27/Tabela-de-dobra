@@ -12,10 +12,10 @@ import os
 import sys
 import traceback
 import signal
-import qdarktheme
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout  # type: ignore
 from PySide6.QtCore import Qt  # type: ignore
 from PySide6.QtGui import QIcon, QAction  # type: ignore
+
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
 from src.utils.janelas import (
@@ -38,11 +38,15 @@ from src.forms.form_wrappers import (
     FormCanal
 )
 from src.config import globals as g
-
+from src.utils.estilo import (
+    aplicar_tema_qdarktheme,
+    aplicar_tema_inicial,
+    obter_temas_disponiveis,
+    registrar_tema_actions
+)
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 
 DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
 CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
@@ -86,11 +90,9 @@ def fechar_aplicativo():
     try:
         if g.PRINC_FORM is not None:
             g.PRINC_FORM.close()
-
         app = QApplication.instance()
         if app:
             app.quit()
-
     except (RuntimeError, AttributeError) as e:
         print(f"Erro ao fechar aplicativo: {e}")
         # Forçar o fechamento se necessário
@@ -115,7 +117,6 @@ def configurar_janela_principal(config):
     g.PRINC_FORM = QMainWindow()
     g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
     g.PRINC_FORM.setFixedSize(340, 460)
-
     g.PRINC_FORM.is_main_window = True
 
     # Configurar flags da janela corretamente
@@ -182,16 +183,16 @@ def configurar_menu():
 
 def _criar_menu_arquivo(menu_bar):
     """Cria o menu Arquivo."""
-    file_menu = menu_bar.addMenu("Arquivo")
+    file_menu = menu_bar.addMenu("📁 Arquivo")
 
     # Definir ações e suas funções
     acoes_arquivo = [
-        ("Nova Dedução", _executar_nova_deducao),
-        ("Novo Material", _executar_novo_material),
-        ("Nova Espessura", _executar_nova_espessura),
-        ("Novo Canal", _executar_novo_canal),
+        ("➕ Nova Dedução", _executar_nova_deducao),
+        ("➕ Novo Material", _executar_novo_material),
+        ("➕ Nova Espessura", _executar_nova_espessura),
+        ("➕ Novo Canal", _executar_novo_canal),
         ("separator", None),
-        ("Sair", fechar_aplicativo)
+        ("🚪 Sair", fechar_aplicativo)
     ]
 
     _adicionar_acoes_ao_menu(file_menu, acoes_arquivo)
@@ -199,13 +200,13 @@ def _criar_menu_arquivo(menu_bar):
 
 def _criar_menu_editar(menu_bar):
     """Cria o menu Editar."""
-    edit_menu = menu_bar.addMenu("Editar")
+    edit_menu = menu_bar.addMenu("✏️ Editar")
 
     acoes_editar = [
-        ("Editar Dedução", _executar_editar_deducao),
-        ("Editar Material", _executar_editar_material),
-        ("Editar Espessura", _executar_editar_espessura),
-        ("Editar Canal", _executar_editar_canal)
+        ("📝 Editar Dedução", _executar_editar_deducao),
+        ("📝 Editar Material", _executar_editar_material),
+        ("📝 Editar Espessura", _executar_editar_espessura),
+        ("📝 Editar Canal", _executar_editar_canal)
     ]
 
     _adicionar_acoes_ao_menu(edit_menu, acoes_editar)
@@ -213,67 +214,46 @@ def _criar_menu_editar(menu_bar):
 
 def _criar_menu_opcoes(menu_bar):
     """Cria o menu Opções."""
-    opcoes_menu = menu_bar.addMenu("Opções")
+    opcoes_menu = menu_bar.addMenu("⚙️ Opções")
 
     # Inicializar NO_TOPO_VAR se não existir
     if not hasattr(g, 'NO_TOPO_VAR') or g.NO_TOPO_VAR is None:
         g.NO_TOPO_VAR = False
 
-    no_topo_action = QAction("No topo", g.PRINC_FORM)
+    no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
     no_topo_action.setChecked(g.NO_TOPO_VAR)
     no_topo_action.triggered.connect(_toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
 
     # Adicionar submenu Temas
-    try:
-        temas_disponiveis = []
-        if hasattr(qdarktheme, "get_themes"):
-            temas_disponiveis = qdarktheme.get_themes()
-        else:
-            temas_disponiveis = ["dark", "light", "auto"]
-    except ImportError:
-        temas_disponiveis = ["dark", "light"]
+    temas_disponiveis = obter_temas_disponiveis()
+    temas_menu = opcoes_menu.addMenu("🎨 Temas")
 
-    temas_menu = opcoes_menu.addMenu("Temas")
-
-    # Armazenar as ações para controle de seleção
+    # Inicializar dicionário para rastrear ações dos temas
     temas_actions = {}
-    # Estado do tema atual
-    g.TEMA_ATUAL = getattr(g, 'TEMA_ATUAL', 'auto')
 
-    def aplicar_tema_qdarktheme(nome_tema):
-        try:
-            if hasattr(qdarktheme, "enable"):
-                qdarktheme.enable(theme=nome_tema)
-            elif hasattr(qdarktheme, "setup_theme"):
-                qdarktheme.setup_theme(nome_tema)
-            else:
-                print("qdarktheme não possui métodos conhecidos para aplicar tema.")
-            # Atualizar check dos menus
-            for t, act in temas_actions.items():
-                act.setChecked(t == nome_tema)
-            g.TEMA_ATUAL = nome_tema
-        except ImportError as e:
-            print(f"Erro ao importar ou aplicar tema: {e}")
-
+    # Criar ações para cada tema
     for tema in temas_disponiveis:
         action = QAction(tema.capitalize(), g.PRINC_FORM)
         action.setCheckable(True)
-        action.setChecked(tema == getattr(g, 'TEMA_ATUAL', 'auto'))
+        action.setChecked(tema == getattr(g, 'TEMA_ATUAL', 'dark'))
         action.triggered.connect(
             lambda checked, t=tema: aplicar_tema_qdarktheme(t))
         temas_menu.addAction(action)
         temas_actions[tema] = action
 
+    # Registrar actions no módulo de estilo para controle de estado
+    registrar_tema_actions(temas_actions)
+
 
 def _criar_menu_utilidades(menu_bar):
     """Cria o menu Utilidades."""
-    ferramentas_menu = menu_bar.addMenu("Utilidades")
+    ferramentas_menu = menu_bar.addMenu("🔧 Utilidades")
 
     acoes_utilidades = [
-        ("Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
-        ("Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM))
+        ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
+        ("🖨️ Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM))
     ]
 
     _adicionar_acoes_ao_menu(ferramentas_menu, acoes_utilidades)
@@ -281,14 +261,14 @@ def _criar_menu_utilidades(menu_bar):
 
 def _criar_menu_usuario(menu_bar):
     """Cria o menu Usuário."""
-    usuario_menu = menu_bar.addMenu("Usuário")
+    usuario_menu = menu_bar.addMenu("👤 Usuário")
 
     acoes_usuario = [
-        ("Login", _executar_login),
-        ("Novo Usuário", _executar_novo_usuario),
-        ("Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
+        ("🔐 Login", _executar_login),
+        ("👥 Novo Usuário", _executar_novo_usuario),
+        ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
         ("separator", None),
-        ("Sair", logout)
+        ("🚪 Sair", logout)
     ]
 
     _adicionar_acoes_ao_menu(usuario_menu, acoes_usuario)
@@ -296,9 +276,9 @@ def _criar_menu_usuario(menu_bar):
 
 def _criar_menu_ajuda(menu_bar):
     """Cria o menu Ajuda."""
-    help_menu = menu_bar.addMenu("Ajuda")
+    help_menu = menu_bar.addMenu("❓ Ajuda")
 
-    sobre_action = QAction("Sobre", g.PRINC_FORM)
+    sobre_action = QAction("ℹ️ Sobre", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
     help_menu.addAction(sobre_action)
 
@@ -306,7 +286,6 @@ def _criar_menu_ajuda(menu_bar):
 def _adicionar_acoes_ao_menu(menu, acoes):
     """
     Adiciona uma lista de ações a um menu.
-
     Args:
         menu: O menu onde adicionar as ações
         acoes: Lista de tuplas (nome, função) ou ("separator", None)
@@ -400,10 +379,13 @@ def configurar_frames():
     g.VALORES_W = [1]
     g.EXP_V = False  # Convertido de IntVar para bool
     g.EXP_H = False  # Convertido de IntVar para bool
+
     # Armazenar referência ao layout principal
     g.MAIN_LAYOUT = layout
+
     # Atribuir a função carregar_interface à variável global
     g.CARREGAR_INTERFACE_FUNC = carregar_interface
+
     carregar_interface(1, layout)
 
 
@@ -412,12 +394,11 @@ def main():
     Função principal que inicializa a interface gráfica do aplicativo.
     """
     app = None
-
     try:
         app = QApplication(sys.argv)
 
-        # Aplicar tema auto com qdarktheme
-        qdarktheme.setup_theme("auto")
+        # Aplicar tema inicial com correções CSS
+        aplicar_tema_inicial("dark")
 
         # Configurar para capturar exceções não tratadas
         def handle_exception(exc_type, exc_value, exc_traceback):
@@ -440,18 +421,23 @@ def main():
 
         print("Carregando configuração...")
         config = carregar_configuracao()
+
         print("Configurando janela principal...")
         configurar_janela_principal(config)
+
         print("Configurando menu...")
         configurar_menu()
+
         print("Configurando frames...")
         configurar_frames()
+
         print("Verificando admin existente...")
         verificar_admin_existente()
 
         if g.PRINC_FORM is not None:
             print("Exibindo janela principal...")
             g.PRINC_FORM.show()
+
             print("Aplicativo iniciado com sucesso!")
 
             # Adicionar uma função para capturar quando a janela é fechada
@@ -460,6 +446,7 @@ def main():
                 pass
 
             app.aboutToQuit.connect(on_app_exit)
+
             return app.exec()
 
         # Remover o else desnecessário - código movido para aqui
@@ -471,12 +458,14 @@ def main():
         if app:
             app.quit()
         return 0
+
     except (RuntimeError, ImportError, AttributeError, OSError) as e:
         print(f"ERRO CRÍTICO na inicialização: {e}")
         traceback.print_exc()
         if app:
             app.quit()
         return 1
+
     except Exception as e:  # pylint: disable=broad-except
         print(f"ERRO INESPERADO na inicialização: {e}")
         traceback.print_exc()
