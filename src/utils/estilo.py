@@ -153,6 +153,17 @@ def obter_css_correcao_widgets():
         font-size: 10pt;
         padding: 2px;
     }
+
+    QToolTip {
+        color: #ffffff;
+        background-color: #2d2d2d;
+        border: 1px solid #555555;
+        border-radius: 3px;
+        padding: 4px 6px;
+        font-size: 9pt;
+        font-family: inherit;
+        opacity: 240;
+    }
     """
 
 
