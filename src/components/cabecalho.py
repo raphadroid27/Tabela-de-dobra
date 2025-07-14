@@ -103,10 +103,10 @@ def criar_widget_observacao(layout, nome_global, pos, **kwargs):
 
 def _criar_linha_1(layout):
     """Cria a primeira linha do cabeçalho com Material, Espessura, Canal e Comprimento."""
-    criar_label(layout, "Material", (0, 0))
-    criar_label(layout, "Espessura", (0, 1))
-    criar_label(layout, "Canal", (0, 2))
-    criar_label(layout, "Comprimento", (0, 3))
+    criar_label(layout, "Material:", (0, 0))
+    criar_label(layout, "Espessura:", (0, 1))
+    criar_label(layout, "Canal:", (0, 2))
+    criar_label(layout, "Compr.:", (0, 3))
 
     mat_comb = criar_widget_cabecalho(layout, 'combobox', 'MAT_COMB', (1, 0))
     esp_comb = criar_widget_cabecalho(layout, 'combobox', 'ESP_COMB', (1, 1))
@@ -129,10 +129,10 @@ def _criar_linha_1(layout):
 
 def _criar_linha_2(layout):
     """Cria a segunda linha do cabeçalho com Raio Interno, Fator K, Dedução e Offset."""
-    criar_label(layout, "Raio Interno", (2, 0))
-    criar_label(layout, "Fator K", (2, 1))
-    criar_label(layout, "Dedução", (2, 2))
-    criar_label(layout, "Offset", (2, 3))
+    criar_label(layout, "Raio Interno:", (2, 0))
+    criar_label(layout, "Fator K:", (2, 1))
+    criar_label(layout, "Dedução:", (2, 2))
+    criar_label(layout, "Offset:", (2, 3))
 
     ri_entry = criar_widget_cabecalho(layout, 'entry', 'RI_ENTRY', (3, 0))
     k_lbl = criar_widget_cabecalho(layout, 'label', 'K_LBL', (3, 1))
@@ -156,10 +156,10 @@ def _criar_linha_2(layout):
 
 def _criar_linha_3(layout):
     """Cria a terceira linha do cabeçalho com Ded. Espec., Aba Mín., Ext. Z90° e Força."""
-    criar_label(layout, "Ded. Espec.", (4, 0))
-    criar_label(layout, "Aba Mín.", (4, 1))
-    criar_label(layout, "Ext. Z90°", (4, 2))
-    criar_label(layout, "Força", (4, 3))
+    criar_label(layout, "Ded. Espec.:", (4, 0))
+    criar_label(layout, "Aba Mín.:", (4, 1))
+    criar_label(layout, "Ext. Z90°:", (4, 2))
+    criar_label(layout, "Força:", (4, 3))
 
     ded_espec_entry = criar_widget_cabecalho(
         layout, 'entry', 'DED_ESPEC_ENTRY', (5, 0))
