@@ -2,7 +2,7 @@ a = Analysis(
     ['src\\app.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets\\icone.ico', 'assets'), ('src\\__init__.py', 'src')],
+    datas=[('assets\\icone_2.ico', 'assets'), ('src\\__init__.py', 'src')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -32,6 +32,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='assets\\icone.ico',
+    icon='assets\\icone_2.ico',
     version='version_info.txt', # Adicionando o arquivo de versão (gerado dinamicamente)
 )
