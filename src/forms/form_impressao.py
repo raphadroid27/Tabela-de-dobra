@@ -376,7 +376,7 @@ def _inicializar_formulario(root):
 
     g.IMPRESSAO_FORM = QDialog(root)
     g.IMPRESSAO_FORM.setWindowTitle("Impressão em Lote de PDFs")
-    g.IMPRESSAO_FORM.setFixedSize(500, 460)
+    g.IMPRESSAO_FORM.setFixedSize(500, 500)
 
     icone_path = obter_caminho_icone()
     g.IMPRESSAO_FORM.setWindowIcon(QIcon(icone_path))
@@ -446,7 +446,7 @@ def _criar_secao_arquivos_grid():
     # === SUBSECÇÃO: CAMPO DE TEXTO MÚLTIPLO ===
     # Linha 0: Label
     lista_label = QLabel("Lista de arquivos (um por linha):")
-    lista_label.setStyleSheet("font-weight: bold; font-size: 8pt;")
+    lista_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
     arquivos_layout.addWidget(lista_label, 0, 0, 1, 3)  # colspan=3
 
     # Linha 1-2: Campo de texto (coluna 0-1) + Botões (coluna 2)
@@ -471,7 +471,7 @@ def _criar_secao_arquivos_grid():
     # === SUBSECÇÃO: LISTA DE ARQUIVOS ===
     # Linha 3: Label
     lista_arquivos_label = QLabel("Arquivos na lista:")
-    lista_arquivos_label.setStyleSheet("font-weight: bold; font-size: 8pt;")
+    lista_arquivos_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
     arquivos_layout.addWidget(lista_arquivos_label, 3, 0, 1, 3)  # colspan=3
 
     # Linha 4-6: Lista de arquivos (coluna 0-1) + Botões (coluna 2)
