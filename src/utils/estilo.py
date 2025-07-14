@@ -9,7 +9,7 @@ Funcionalidades:
 - Widgets auto-ajustáveis para interface
 - Correções de CSS para compatibilidade com temas
 """
-
+from src.config import globals as g
 # Imports no topo para evitar imports dentro de funções
 try:
     import qdarktheme
@@ -22,8 +22,8 @@ except ImportError:
 TEMA_ATUAL_PADRAO = "dark"
 
 # Constantes para widgets auto-ajustáveis
-WIDGET_MAX_HEIGHT = 20  # Manter altura fixa para consistência
-WIDGET_MIN_WIDTH = 60  # Largura mínima para garantir usabilidade
+g.WIDGET_MAX_HEIGHT = 20  # Manter altura fixa para consistência
+g.WIDGET_MIN_WIDTH = 60  # Largura mínima para garantir usabilidade
 WIDGET_PADDING = "2px 4px"  # Padding interno uniforme
 
 
@@ -165,18 +165,18 @@ def obter_css_widgets_auto_ajustaveis():
     return {
         'combobox': f"""
             QComboBox {{
-                min-width: {WIDGET_MIN_WIDTH}px;
+                min-width: {g.WIDGET_MIN_WIDTH}px;
                 min-height: 1em; 
-                max-height: {WIDGET_MAX_HEIGHT}px;
+                max-height: {g.WIDGET_MAX_HEIGHT}px;
                 padding: {WIDGET_PADDING};
                 font-size: 8pt;
             }}
         """,
         'lineedit': f"""
             QLineEdit {{
-                min-width: {WIDGET_MIN_WIDTH}px;
+                min-width: {g.WIDGET_MIN_WIDTH}px;
                 min-height: 1em; 
-                max-height: {WIDGET_MAX_HEIGHT}px;
+                max-height: {g.WIDGET_MAX_HEIGHT}px;
                 padding: {WIDGET_PADDING};
                 font-size: 8pt;
             }}
@@ -206,8 +206,8 @@ def obter_configuracao_layout_flexivel():
         dict: Configurações de layout flexível
     """
     return {
-        'widget_max_height': WIDGET_MAX_HEIGHT,
-        'widget_min_width': WIDGET_MIN_WIDTH,
+        'g.WIDGET_MAX_HEIGHT': g.WIDGET_MAX_HEIGHT,
+        'g.WIDGET_MIN_WIDTH': g.WIDGET_MIN_WIDTH,
         'horizontal_spacing': 5,
         'vertical_spacing': 3
     }
