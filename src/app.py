@@ -121,7 +121,7 @@ def configurar_janela_principal(config):
 
     g.PRINC_FORM = QMainWindow()
     g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
-    g.PRINC_FORM.setFixedSize(340, 500)
+    g.PRINC_FORM.setFixedSize(360, 500)
     g.PRINC_FORM.is_main_window = True
 
     # Remover barra de título nativa e borda
