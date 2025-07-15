@@ -80,7 +80,7 @@ def main(root):
 
     # Descrição
     label_desc = QLabel(
-        "Aplicativo para cálculo de dobras em chapas metálicas.")
+        "Aplicativo para cálculo de dobras em\nchapas metálicas.")
     label_desc.setFont(font_normal)
     label_desc.setAlignment(Qt.AlignCenter)
     conteudo_layout.addWidget(label_desc)
