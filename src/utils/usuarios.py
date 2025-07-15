@@ -101,6 +101,9 @@ def login():
             if g.PRINC_FORM is not None:
                 titulo = f"Cálculo de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
                 g.PRINC_FORM.setWindowTitle(titulo)
+            # Atualiza a barra de título customizada, se existir
+            if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
+                g.BARRA_TITULO.titulo.setText(titulo)
         else:
             show_error("Erro", "Usuário ou senha incorretos.",
                        parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
