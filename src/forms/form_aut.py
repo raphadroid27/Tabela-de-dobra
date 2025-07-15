@@ -22,6 +22,7 @@ from src.utils.estilo import (
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
+from src.utils.interface import aplicar_medida_borda_espaco
 
 
 def _configurar_janela_base(root):
@@ -45,8 +46,7 @@ def _configurar_janela_base(root):
 def _criar_layout_principal():
     """Cria o layout principal da janela."""
     vlayout = QVBoxLayout(g.AUTEN_FORM)
-    vlayout.setContentsMargins(5, 5, 5, 5)
-    vlayout.setSpacing(5)
+    aplicar_medida_borda_espaco(vlayout, 5)
     return vlayout
 
 

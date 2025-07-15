@@ -378,8 +378,7 @@ def configurar_frames():
 
     # Layout vertical para barra de título customizada, menu customizado e conteúdo
     vlayout = QVBoxLayout(central_widget)
-    vlayout.setContentsMargins(0, 0, 0, 0)
-    vlayout.setSpacing(0)
+    aplicar_medida_borda_espaco(vlayout, 0, 0)
 
     # Barra de título customizada
     tema_atual = getattr(g, 'TEMA_ATUAL', 'dark')
@@ -396,7 +395,6 @@ def configurar_frames():
     # Widget de conteúdo principal
     conteudo_widget = QWidget()
     layout = QGridLayout(conteudo_widget)
-    aplicar_medida_borda_espaco(layout)
     vlayout.addWidget(conteudo_widget)
 
     g.VALORES_W = [1]

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QGroupBox, QGridLayout, QLabel, QComboBox, QLineEd
 from PySide6.QtCore import Qt
 from src.config import globals as g
 from src.utils.interface import (
-    atualizar_widgets, calcular_valores, copiar, canal_tooltip, aplicar_medida_borda_espaco)
+    atualizar_widgets, calcular_valores, copiar, canal_tooltip)
 from src.utils.estilo import (
     aplicar_estilo_widget_auto_ajustavel,
     configurar_layout_flexivel
@@ -229,8 +229,11 @@ def cabecalho():
         QGroupBox contendo o cabeçalho completo.
     """
     frame_cabecalho = QGroupBox()
+    frame_cabecalho.setFlat(True)
+    frame_cabecalho.setStyleSheet('QGroupBox { margin-top: 0px; }')
     layout = QGridLayout(frame_cabecalho)
-    aplicar_medida_borda_espaco(layout)
+    layout.setContentsMargins(10, 0, 10, 0)
+    layout.setSpacing(5)
 
     # Configurar layout flexível
     configurar_layout_flexivel(layout)

@@ -125,6 +125,8 @@ def _criar_widgets_interface(var, layout):
     print("Carregando cabeçalho...")
     cabecalho_widget = cabecalho()
     layout.addWidget(cabecalho_widget, 0, 0)
+    layout.setSpacing(0)
+    layout.setContentsMargins(0, 0, 0, 0)
 
     # Avisos se necessário
     if var == 2:
@@ -155,7 +157,7 @@ def _configurar_layout_interface(layout):
     layout.setRowStretch(0, 0)  # Cabeçalho: tamanho fixo
     layout.setRowStretch(1, 1)  # Dobras: expansível
     layout.setRowStretch(2, 0)  # Botões: tamanho fixo
-    layout.setSpacing(5)
+    layout.setSpacing(0)
 
     # Configurar colunas
     max_cols = max(2, len(g.VALORES_W))

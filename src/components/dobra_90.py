@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QGroupBox, QLabel, QLineEdit, QGridLayout
 from PySide6.QtCore import Qt
 from src.config import globals as g
 from src.utils.interface import (
-    copiar, focus_next_entry, focus_previous_entry, aplicar_medida_borda_espaco)
+    copiar, focus_next_entry, focus_previous_entry)
 from src.utils.calculos import calcular_dobra
 from src.utils.estilo import aplicar_estilo_widget_auto_ajustavel
 
@@ -174,7 +174,12 @@ def dobras(w):
         QGroupBox configurado com os campos de dobras auto-ajustáveis.
     """
     g.FRAME_DOBRA = QGroupBox()
+    g.FRAME_DOBRA.setFlat(True)
+    g.FRAME_DOBRA.setStyleSheet('QGroupBox { margin-top: 0px; }')
     layout = QGridLayout(g.FRAME_DOBRA)
+    layout.setContentsMargins(10, 0, 10, 0)
+    layout.setSpacing(5)
+
     g.FRAME_DOBRA.setLayout(layout)
 
     _configurar_layout_dobra(layout)
@@ -187,7 +192,6 @@ def dobras(w):
 
 def _configurar_layout_dobra(layout):
     """Configura o layout com responsividade e espaçamento adequado."""
-    aplicar_medida_borda_espaco(layout)
 
     # Configurar primeira coluna (labels de aba) com largura fixa
     layout.setColumnMinimumWidth(0, 50)
