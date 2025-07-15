@@ -13,6 +13,7 @@ TEMA_ATUAL = None
 WIDGET_MIN_WIDTH = None
 WIDGET_MAX_HEIGHT = None
 BARRA_TITULO = None
+MENU_CUSTOM = None
 
 # Flag para controlar quando a interface está sendo recarregada
 INTERFACE_RELOADING = False

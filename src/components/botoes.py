@@ -16,7 +16,6 @@ from src.utils.estilo import (
     obter_estilo_botao_vermelho,
     obter_estilo_botao_amarelo
 )
-from src.utils.interface import aplicar_medida_borda_espaco
 import src.config.globals as g
 
 
@@ -146,9 +145,8 @@ def criar_botoes():
     """
     frame_botoes = QWidget()
     layout = QGridLayout(frame_botoes)
-
-    # Configurar espaçamento e margens
-    aplicar_medida_borda_espaco(layout)
+    layout.setContentsMargins(10, 0, 10, 10)
+    layout.setSpacing(5)
 
     # Inicializar valores globais
     _inicializar_valores_globais()
@@ -232,7 +230,7 @@ def _criar_botao_limpar_dobras():
     """Cria o botão para limpar dobras."""
     limpar_dobras_btn = QPushButton("🧹 Limpar Dobras")
     limpar_dobras_btn.clicked.connect(limpar_dobras)
-    limpar_dobras_btn.setFixedHeight(20)
+    limpar_dobras_btn.setFixedHeight(25)
     return limpar_dobras_btn
 
 
@@ -240,7 +238,7 @@ def _criar_botao_limpar_tudo():
     """Cria o botão para limpar tudo."""
     limpar_tudo_btn = QPushButton("🗑️ Limpar Tudo")
     limpar_tudo_btn.clicked.connect(limpar_tudo)
-    limpar_tudo_btn.setFixedHeight(20)
+    limpar_tudo_btn.setFixedHeight(25)
     return limpar_tudo_btn
 
 

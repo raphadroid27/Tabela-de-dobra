@@ -36,6 +36,6 @@ def avisos():
         aviso_label.setMaximumWidth(300)
         layout.addWidget(aviso_label)
 
-    aplicar_medida_borda_espaco(layout)
+    aplicar_medida_borda_espaco(layout, 10)
 
     return frame_avisos
