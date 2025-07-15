@@ -155,13 +155,11 @@ def obter_css_correcao_widgets():
     }
 
     QToolTip {
-        color: #ffffff;
+        color: white;
         background-color: #2d2d2d;
-        border: 1px solid #555555;
         border-radius: 3px;
         padding: 4px 6px;
         font-size: 9pt;
-        font-family: inherit;
         opacity: 240;
     }
     """

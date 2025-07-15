@@ -108,7 +108,7 @@ class CopyManager:
 
         label.setText(f'{texto_atualizado} Copiado!')
         if hasattr(label, 'setStyleSheet'):
-            label.setStyleSheet("color: green;")
+            label.setStyleSheet("QLabel { color: green; }")
 
     def agendar_remocao_copiado(self, label, texto_original):
         """Agenda a remoção da indicação 'Copiado!' após 2 segundos."""
