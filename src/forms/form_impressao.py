@@ -8,9 +8,12 @@ O formulário é construído usando QGridLayout para melhor organização e cont
 
 import os
 import subprocess
+
 from PySide6.QtWidgets import (QDialog, QGridLayout, QLabel,
                                QLineEdit, QPushButton, QTextEdit, QTextBrowser,
-                               QListWidget, QGroupBox, QFileDialog, QMessageBox)
+                               QListWidget, QGroupBox, QFileDialog, QMessageBox,
+                               QVBoxLayout, QWidget)
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from src.utils.janelas import (aplicar_no_topo,
@@ -24,7 +27,10 @@ from src.utils.estilo import (obter_estilo_botao_cinza,
                               obter_estilo_botao_verde,
                               obter_estilo_botao_vermelho)
 from src.utils.interface import aplicar_medida_borda_espaco
+
 from src.config import globals as g
+from src.components.barra_titulo import BarraTitulo
+from src.utils.estilo import obter_tema_atual
 
 
 class PrintManager:
@@ -377,6 +383,8 @@ def _inicializar_formulario(root):
     g.IMPRESSAO_FORM = QDialog(root)
     g.IMPRESSAO_FORM.setWindowTitle("Impressão em Lote de PDFs")
     g.IMPRESSAO_FORM.setFixedSize(500, 500)
+    # Remover barra nativa
+    g.IMPRESSAO_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     icone_path = obter_caminho_icone()
     g.IMPRESSAO_FORM.setWindowIcon(QIcon(icone_path))
@@ -387,9 +395,19 @@ def _inicializar_formulario(root):
 
 def _configurar_layout_grid():
     """Configura o layout principal usando QGridLayout."""
-    # === LAYOUT PRINCIPAL (GRID) ===
-    layout_principal = QGridLayout()
-    g.IMPRESSAO_FORM.setLayout(layout_principal)
+    # Layout vertical: barra de título customizada + conteúdo grid
+    vlayout = QVBoxLayout(g.IMPRESSAO_FORM)
+    vlayout.setContentsMargins(0, 0, 0, 0)
+    vlayout.setSpacing(0)
+
+    # Barra de título customizada
+    barra = BarraTitulo(g.IMPRESSAO_FORM, tema=obter_tema_atual())
+    barra.titulo.setText("Impressão em Lote de PDFs")
+    vlayout.addWidget(barra)
+
+    # Widget de conteúdo principal
+    conteudo = QWidget()
+    layout_principal = QGridLayout(conteudo)
     aplicar_medida_borda_espaco(layout_principal, 10)
 
     layout_principal.setRowStretch(0, 0)
@@ -408,6 +426,8 @@ def _configurar_layout_grid():
     # Linha 2: Seção de Resultado
     frame_resultado = _criar_secao_resultado_grid()
     layout_principal.addWidget(frame_resultado, 2, 0)
+
+    vlayout.addWidget(conteudo)
 
     # Mostrar formulário
     g.IMPRESSAO_FORM.show()

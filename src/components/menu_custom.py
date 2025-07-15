@@ -1,10 +1,18 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QMenuBar, QMenu
-from PySide6.QtGui import QAction
-from PySide6.QtCore import Qt
+"""
+MenuCustom: Widget de barra de menu customizada para o aplicativo.
+"""
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QMenuBar
 
 
 class MenuCustom(QWidget):
+    """
+    Widget de barra de menu customizada para uso no topo da aplicação.
+    """
+
     def __init__(self, parent=None):
+        """
+        Inicializa o widget de menu customizado.
+        """
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -15,4 +23,7 @@ class MenuCustom(QWidget):
         self.setLayout(layout)
 
     def get_menu_bar(self):
+        """
+        Retorna a instância do QMenuBar interno.
+        """
         return self.menu_bar
