@@ -546,13 +546,17 @@ def verificar_aba_minima(dobra, i, w):
             if hasattr(entry_widget, 'setStyleSheet'):
                 entry_widget.setStyleSheet(
                     "color: white; background-color: red")
+                entry_widget.setToolTip(
+                    f"Aba {dobra} menor que a aba mínima {aba_minima:.0f}.")
         else:
             if hasattr(entry_widget, 'setStyleSheet'):
                 entry_widget.setStyleSheet("")
+                entry_widget.setToolTip("Insira o valor da dobra.")
     except ValueError:
         # Tratar erros de conversão
         if hasattr(entry_widget, 'setStyleSheet'):
             entry_widget.setStyleSheet("")
+            entry_widget.setToolTip("Insira o valor da dobra.")
         print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
 
 
