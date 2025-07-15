@@ -40,7 +40,6 @@ class BarraTitulo(QWidget):
         self.icone_label.setFixedSize(24, 24)
         self.icone_label.setScaledContents(True)
         self.icone_label.setPixmap(QPixmap(icone_path))
-        self.icone_label.setCursor(Qt.PointingHandCursor)
         layout.addWidget(self.icone_label)
 
         self.titulo = QLabel("Cálculo de Dobra", self)
