@@ -117,7 +117,7 @@ class CopyManager:
                 if hasattr(label, 'setText'):
                     label.setText(texto_original)
                 if hasattr(label, 'setStyleSheet'):
-                    label.setStyleSheet("color: black;")
+                    label.setStyleSheet("")
             except AttributeError:
                 pass
 
@@ -486,7 +486,7 @@ class WidgetUpdater:
                     self._set_obs_label(
                         deducao_obj.observacao or 'Observações não encontradas')
                 else:
-                    self._set_deducao_label('N/A', "color: red")
+                    self._set_deducao_label('N/A', "QLabel { color: red; }")
                     self._set_obs_label('Observações não encontradas')
             else:
                 self._limpar_deducao()
@@ -787,7 +787,7 @@ def _calcular_forca_toneladas(comprimento, espessura_valor, material_nome, canal
                                if comprimento else deducao_obj.forca)
                 _set_forca_label(f'{toneladas_m:.0f}', "")
             else:
-                _set_forca_label('N/A', "color: red")
+                _set_forca_label('N/A', "QLabel { color: red; }")
 
             _verificar_comprimento_canal(comprimento, canal_obj)
 
@@ -817,7 +817,7 @@ def _verificar_comprimento_canal(comprimento, canal_obj):
         if comprimento_float < comprimento_total:
             g.COMPR_ENTRY.setStyleSheet("")
         elif comprimento_float >= comprimento_total:
-            g.COMPR_ENTRY.setStyleSheet("color: red")
+            g.COMPR_ENTRY.setStyleSheet("QLabel { color: red; }")
 
 
 def focus_next_entry(current_index, w):

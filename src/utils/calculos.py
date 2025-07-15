@@ -98,7 +98,7 @@ def _atualizar_labels_k_offset(fator_k, offset, usa_deducao_especifica):
         g.K_LBL.setText(f"{fator_k:.2f}")
         if hasattr(g.K_LBL, 'setStyleSheet'):
             if usa_deducao_especifica:
-                g.K_LBL.setStyleSheet("color: blue")
+                g.K_LBL.setStyleSheet("QLabel { color: blue; }")
             else:
                 g.K_LBL.setStyleSheet("")
 
@@ -106,7 +106,7 @@ def _atualizar_labels_k_offset(fator_k, offset, usa_deducao_especifica):
         g.OFFSET_LBL.setText(f"{offset:.2f}")
         if hasattr(g.OFFSET_LBL, 'setStyleSheet'):
             if usa_deducao_especifica:
-                g.OFFSET_LBL.setStyleSheet("color: blue")
+                g.OFFSET_LBL.setStyleSheet("QLabel { color: blue; }")
             else:
                 g.OFFSET_LBL.setStyleSheet("")
 
@@ -116,12 +116,12 @@ def _limpar_labels_k_erro():
     if g.K_LBL and hasattr(g.K_LBL, 'setText'):
         g.K_LBL.setText('N/A')
         if hasattr(g.K_LBL, 'setStyleSheet'):
-            g.K_LBL.setStyleSheet("color: red")
+            g.K_LBL.setStyleSheet("QLabel { color: red; }")
 
     if g.OFFSET_LBL and hasattr(g.OFFSET_LBL, 'setText'):
         g.OFFSET_LBL.setText('N/A')
         if hasattr(g.OFFSET_LBL, 'setStyleSheet'):
-            g.OFFSET_LBL.setStyleSheet("color: red")
+            g.OFFSET_LBL.setStyleSheet("QLabel { color: red; }")
 
 
 def calcular_k_offset():
@@ -222,7 +222,7 @@ def _atualizar_label_aba_externa(aba_minima_valor, erro=False):
     if erro:
         g.ABA_EXT_LBL.setText("N/A")
         if hasattr(g.ABA_EXT_LBL, 'setStyleSheet'):
-            g.ABA_EXT_LBL.setStyleSheet("color: red")
+            g.ABA_EXT_LBL.setStyleSheet("QLabel { color: red; }")
     else:
         g.ABA_EXT_LBL.setText(f"{aba_minima_valor:.0f}")
         if hasattr(g.ABA_EXT_LBL, 'setStyleSheet'):
@@ -295,11 +295,11 @@ def _atualizar_label_z_externo(valor, erro_tipo=None):
     elif erro_tipo == "na":
         g.Z_EXT_LBL.setText("N/A")
         if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
-            g.Z_EXT_LBL.setStyleSheet("color: red")
+            g.Z_EXT_LBL.setStyleSheet("QLabel { color: red; }")
     elif erro_tipo == "orange":
         g.Z_EXT_LBL.setText("N/A")
         if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
-            g.Z_EXT_LBL.setStyleSheet("color: orange")
+            g.Z_EXT_LBL.setStyleSheet("QLabel { color: orange; }")
     else:
         g.Z_EXT_LBL.setText(f'{valor:.0f}')
         if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
