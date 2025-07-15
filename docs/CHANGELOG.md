@@ -2,6 +2,12 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 2.1.0 (15/07/2025)
+
+- Melhora a responsividade e o layout da interface, ajustando tamanhos de janelas, cabeçalhos, espaçamentos e margens.
+- Atualiza e personaliza barras de título e menus, incluindo exibição do nome do usuário no login.
+- Refatora componentes da UI para melhor organização e experiência visual.
+
 ## 2.0.1 (14/07/2025)
 
 - Adiciona estilos personalizados para tooltips no módulo de estilo
