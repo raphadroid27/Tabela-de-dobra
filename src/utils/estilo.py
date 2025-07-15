@@ -268,7 +268,6 @@ def aplicar_tema_qdarktheme(nome_tema):
     """Função de conveniência para aplicar tema."""
     gerenciador_temas.aplicar_tema_qdarktheme(nome_tema)
     # Atualizar barra de título customizada, se existir
-    from src.config import globals as g
     if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
         g.BARRA_TITULO.set_tema(nome_tema)
 

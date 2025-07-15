@@ -12,14 +12,15 @@ import os
 import sys
 import traceback
 import signal
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout  # type: ignore
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout)  # type: ignore
 from PySide6.QtCore import Qt  # type: ignore
 from PySide6.QtGui import QIcon, QAction  # type: ignore
 
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
 from src.utils.janelas import (
-    aplicar_no_topo_app_principal, cleanup_orphaned_windows, windows_flags)
+    aplicar_no_topo_app_principal, cleanup_orphaned_windows)
 from src.utils.interface_manager import carregar_interface
 from src.utils.interface import aplicar_medida_borda_espaco
 from src.utils.banco_dados import session
@@ -42,7 +43,9 @@ from src.utils.estilo import (
     aplicar_tema_qdarktheme,
     aplicar_tema_inicial,
     obter_temas_disponiveis,
-    registrar_tema_actions
+    registrar_tema_actions,
+    obter_tema_atual
+
 )
 from src.components.barra_titulo import BarraTitulo
 from src.components.menu_custom import MenuCustom
@@ -384,7 +387,6 @@ def configurar_frames():
     vlayout.addWidget(g.BARRA_TITULO)
     # Forçar atualização da cor da barra após aplicar o tema inicial
     if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
-        from src.utils.estilo import obter_tema_atual
         g.BARRA_TITULO.set_tema(obter_tema_atual())
 
     # Menu customizado

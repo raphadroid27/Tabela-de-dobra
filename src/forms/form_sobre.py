@@ -8,27 +8,32 @@
 # O link para o GitHub abre o navegador padrão ao ser clicado.
 """
 
-import webbrowser
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel
+
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QWidget
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QFont, QCursor
+from PySide6.QtGui import QIcon, QFont
 from src import __version__
 from src.config import globals as g
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.interface import aplicar_medida_borda_espaco
+from src.components.barra_titulo import BarraTitulo
+from src.utils.estilo import obter_tema_atual
 
 
 def main(root):
     """
-    Função principal que cria a janela "Sobre".
+    Função principal que cria a janela "Sobre" com barra de título customizada.
     """
+    if getattr(g, 'SOBRE_FORM', None):
+        g.SOBRE_FORM.close()
+
     g.SOBRE_FORM = QDialog(root)
     g.SOBRE_FORM.setWindowTitle("Sobre")
     g.SOBRE_FORM.resize(300, 210)
     g.SOBRE_FORM.setFixedSize(300, 210)
-    g.SOBRE_FORM.setWindowFlags(
-        g.SOBRE_FORM.windowFlags() | Qt.WindowStaysOnTopHint)
+    # Remover barra nativa
+    g.SOBRE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     # Define o ícone
     icone_path = obter_caminho_icone()
@@ -37,9 +42,20 @@ def main(root):
     aplicar_no_topo(g.SOBRE_FORM)
     posicionar_janela(g.SOBRE_FORM, 'centro')
 
-    # Layout principal
+    # Layout principal vertical: barra de título + conteúdo
     layout = QVBoxLayout(g.SOBRE_FORM)
-    aplicar_medida_borda_espaco(layout, 10, 10)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(0)
+
+    # Barra de título customizada
+    barra = BarraTitulo(g.SOBRE_FORM, tema=obter_tema_atual())
+    barra.titulo.setText("Sobre")
+    layout.addWidget(barra)
+
+    # Widget de conteúdo principal
+    conteudo = QWidget()
+    conteudo_layout = QVBoxLayout(conteudo)
+    aplicar_medida_borda_espaco(conteudo_layout, 10, 10)
 
     # Título
     label_titulo = QLabel("Cálculo de Dobra")
@@ -47,39 +63,40 @@ def main(root):
     font_titulo.setBold(True)
     label_titulo.setFont(font_titulo)
     label_titulo.setAlignment(Qt.AlignCenter)
-    layout.addWidget(label_titulo)
+    conteudo_layout.addWidget(label_titulo)
 
     # Versão
     label_versao = QLabel(f"Versão: {__version__}")
     font_normal = QFont("Arial", 12)
     label_versao.setFont(font_normal)
     label_versao.setAlignment(Qt.AlignCenter)
-    layout.addWidget(label_versao)
+    conteudo_layout.addWidget(label_versao)
 
     # Autor
     label_autor = QLabel("Autor: raphadroid27")
     label_autor.setFont(font_normal)
     label_autor.setAlignment(Qt.AlignCenter)
-    layout.addWidget(label_autor)
+    conteudo_layout.addWidget(label_autor)
 
     # Descrição
-    label_descricao = QLabel("Aplicativo para cálculo de dobras.")
-    label_descricao.setFont(font_normal)
-    label_descricao.setAlignment(Qt.AlignCenter)
-    layout.addWidget(label_descricao)
+    label_desc = QLabel(
+        "Aplicativo para cálculo de dobras em chapas metálicas.")
+    label_desc.setFont(font_normal)
+    label_desc.setAlignment(Qt.AlignCenter)
+    conteudo_layout.addWidget(label_desc)
 
-    def abrir_github():
-        webbrowser.open("https://github.com/raphadroid27/Tabela-de-dobra")
+    # Link para o GitHub
+    label_link = QLabel(
+        '<a href="https://github.com/raphadroid27/Tabela-de-dobra">Repositório no GitHub</a>')
+    label_link.setFont(font_normal)
+    label_link.setAlignment(Qt.AlignCenter)
+    label_link.setOpenExternalLinks(True)
+    conteudo_layout.addWidget(label_link)
 
-    # Link GitHub
-    link_github = QLabel("GitHub: raphadroid27/Tabela-de-dobra")
-    link_github.setFont(font_normal)
-    link_github.setAlignment(Qt.AlignCenter)
-    link_github.setStyleSheet("color: blue;")
-    link_github.setCursor(QCursor(Qt.PointingHandCursor))
-    link_github.mousePressEvent = lambda event: abrir_github()
-    layout.addWidget(link_github)
+    conteudo.setLayout(conteudo_layout)
+    layout.addWidget(conteudo)
 
+    g.SOBRE_FORM.show()
     g.SOBRE_FORM.show()
 
 

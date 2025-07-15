@@ -9,19 +9,21 @@ Versão atualizada com botões de ação fora do grid para melhor organização 
 
 from PySide6.QtWidgets import (QDialog, QGridLayout, QGroupBox, QLabel,
                                QPushButton, QTreeWidget, QLineEdit, QComboBox,
-                               QHBoxLayout, QWidget)
+                               QHBoxLayout, QWidget, QVBoxLayout)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from src.utils.janelas import posicionar_janela, aplicar_no_topo
 from src.utils.interface import (
-    listar, limpar_busca, configurar_frame_principal,
+    listar, limpar_busca,
     atualizar_widgets, aplicar_medida_borda_espaco)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
                               obter_estilo_botao_azul, obter_estilo_botao_vermelho)
 from src.config import globals as g
+from src.components.barra_titulo import BarraTitulo
+from src.utils.estilo import obter_tema_atual
 
 # Configurações para cada tipo de formulário
 FORM_CONFIGS = {
@@ -248,14 +250,50 @@ class FormManager:
         return new_form
 
     def _create_dialog(self):
-        """Cria o diálogo do formulário."""
+        """Cria o diálogo do formulário com barra de título customizada."""
         new_form = QDialog(self.root)
         new_form.setWindowTitle(self.config['titulo'])
         new_form.resize(*self.config['size'])
         new_form.setFixedSize(*self.config['size'])
 
+        # Remover barra de título nativa
+        new_form.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+
         icone_path = obter_caminho_icone()
         new_form.setWindowIcon(QIcon(icone_path))
+
+        # Layout vertical: barra de título + conteúdo
+        vlayout = QVBoxLayout(new_form)
+        vlayout.setContentsMargins(0, 0, 0, 0)
+        vlayout.setSpacing(0)
+
+        # Definir título dinâmico para a barra
+        is_edit = getattr(g, self.config['global_edit'], False)
+        if is_edit:
+            nome = self.config['titulo'].split(' ')[-1]
+            barra_titulo = f"Editar/Excluir {nome}"
+        else:
+            if self.tipo == 'espessura':
+                barra_titulo = "Adicionar Espessura"
+            else:
+                nome = self.config['titulo'].split(' ')[-1]
+                barra_titulo = f"Adicionar {nome}"
+
+        # Barra de título customizada
+        barra = BarraTitulo(new_form, tema=obter_tema_atual())
+        barra.titulo.setText(barra_titulo)
+        vlayout.addWidget(barra)
+
+        # Widget de conteúdo principal
+        conteudo_widget = QWidget()
+        vlayout.addWidget(conteudo_widget)
+
+        # Layout do conteúdo principal
+        grid_layout = QGridLayout(conteudo_widget)
+        conteudo_widget.setLayout(grid_layout)
+
+        # Guardar referência para uso posterior
+        new_form.conteudo_layout = grid_layout
 
         aplicar_no_topo(new_form)
         posicionar_janela(new_form, None)
@@ -264,8 +302,8 @@ class FormManager:
 
     def config_layout_main(self, form):
         """Configura o layout principal do formulário."""
-        main_frame = configurar_frame_principal(form)
-        return main_frame.layout()
+        # Usar o layout do widget de conteúdo
+        return form.conteudo_layout
 
     def criar_frame_busca(self):
         """Cria o frame de busca."""
@@ -480,7 +518,7 @@ def main(tipo, root):
 
 def _config_componentes_form(gerenciador_form, layout):
     """Configura os componentes do formulário."""
-    aplicar_medida_borda_espaco(layout, 0)
+    aplicar_medida_borda_espaco(layout, 10)
 
     # Frame de busca
     frame_busca = gerenciador_form.criar_frame_busca()

@@ -588,21 +588,15 @@ def razao_ri_espessura():
         # Atualiza o label com o valor calculado
         g.RAZAO_RIE_LBL.setText(f"{razao:.1f}")
 
-        # Aplica cor baseada na faixa de valores
+        # Sempre mantém a cor padrão do label
         if hasattr(g.RAZAO_RIE_LBL, 'setStyleSheet'):
-            if razao < 0.5:
-                g.RAZAO_RIE_LBL.setStyleSheet(
-                    "color: red")  # Razão muito baixa
-            elif razao > 5.0:
-                g.RAZAO_RIE_LBL.setStyleSheet("color: orange")  # Razão alta
-            else:
-                g.RAZAO_RIE_LBL.setStyleSheet("")  # Faixa normal - cor padrão
+            g.RAZAO_RIE_LBL.setStyleSheet("")
 
     except ValueError as e:
         print(f"Erro ao converter valores para o cálculo da razão: {e}")
         g.RAZAO_RIE_LBL.setText('N/A')
         if hasattr(g.RAZAO_RIE_LBL, 'setStyleSheet'):
-            g.RAZAO_RIE_LBL.setStyleSheet("color: red")
+            g.RAZAO_RIE_LBL.setStyleSheet("")
     except (AttributeError, TypeError) as e:
         print(
             f"Erro de atributo ou tipo no cálculo da razão ri/espessura: {e}")
