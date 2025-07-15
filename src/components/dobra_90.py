@@ -209,7 +209,7 @@ def _configurar_layout_dobra(layout):
 
 def _criar_headers(layout):
     """Cria os cabeçalhos das colunas com widgets auto-ajustáveis."""
-    headers = ['Medida Ext.', 'Medida Dobra', 'Metade Dobra']
+    headers = ['Medida Ext.:', 'Medida Dobra:', 'Metade Dobra:']
 
     for i, label_text in enumerate(headers):
         criar_label_header(layout, label_text, (0, i + 1))

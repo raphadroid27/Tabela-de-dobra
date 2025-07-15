@@ -45,7 +45,7 @@ class ExpansionManager:
             self.force_cleanup_orphans()
 
             # Calcular novo tamanho baseado na expansão
-            largura = 680 if exp_h else 340
+            largura = 720 if exp_h else 360
             altura = 650 if exp_v else 500
             colunas = 2 if exp_h else 1
             num_abas = 10 if exp_v else 5
@@ -104,7 +104,7 @@ class ExpansionManager:
             g.MAIN_LAYOUT.setColumnStretch(0, 1)
 
             # Forçar tamanho da janela
-            g.PRINC_FORM.setFixedSize(340, 500)
+            g.PRINC_FORM.setFixedSize(360, 500)
 
             print("Ajuste básico aplicado!")
 
@@ -117,7 +117,7 @@ class ExpansionManager:
             return
 
         # Manter o tamanho fixo baseado no estado atual de expansão
-        final_largura = 680 if g.EXP_H else 340
+        final_largura = 720 if g.EXP_H else 360
         final_altura = 650 if g.EXP_V else 500
         g.PRINC_FORM.setFixedSize(final_largura, final_altura)
 

@@ -65,7 +65,7 @@ FORM_CONFIGS = {
     },
     'material': {
         'titulo': 'Formulário de Materiais',
-        'size': (340, 500),
+        'size': (360, 500),
         'global_form': 'MATER_FORM',
         'global_edit': 'EDIT_MAT',
         'busca': {
@@ -98,7 +98,7 @@ FORM_CONFIGS = {
     },
     'canal': {
         'titulo': 'Formulário de Canais',
-        'size': (340, 500),
+        'size': (360, 500),
         'global_form': 'CANAL_FORM',
         'global_edit': 'EDIT_CANAL',
         'busca': {
