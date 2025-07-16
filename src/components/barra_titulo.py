@@ -43,7 +43,7 @@ class BarraTitulo(QWidget):
         layout.addWidget(self.icone_label)
 
         self.titulo = QLabel("Cálculo de Dobra", self)
-        self.titulo.setStyleSheet("font-weight: bold; font-size: 13pt;")
+        self.titulo.setStyleSheet("font-weight: bold; font-size: 12pt;")
         layout.addWidget(self.titulo)
         layout.addStretch()
 
