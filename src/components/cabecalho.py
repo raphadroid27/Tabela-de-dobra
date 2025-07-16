@@ -159,7 +159,7 @@ def _criar_linha_3(layout):
     criar_label(layout, "Ded. Espec.:", (4, 0))
     criar_label(layout, "Aba Mín.:", (4, 1))
     criar_label(layout, "Ext. Z90°:", (4, 2))
-    criar_label(layout, "Força:", (4, 3))
+    criar_label(layout, "Força [Ton/m]:", (4, 3))
 
     ded_espec_entry = criar_widget_cabecalho(
         layout, 'entry', 'DED_ESPEC_ENTRY', (5, 0))
