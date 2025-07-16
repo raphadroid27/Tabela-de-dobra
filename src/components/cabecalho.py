@@ -119,7 +119,7 @@ def _criar_linha_1(layout):
     mat_comb.setToolTip("Selecione o material.")
     esp_comb.setToolTip("Selecione a espessura.")
     canal_comb.setToolTip("Selecione o canal de dobra.")
-    compr_entry.setToolTip("Digite o comprimento.")
+    compr_entry.setToolTip("Digite o comprimento em milímetros.")
 
     # Conectar eventos
     compr_entry.textChanged.connect(calcular_valores)
@@ -159,7 +159,7 @@ def _criar_linha_3(layout):
     criar_label(layout, "Ded. Espec.:", (4, 0))
     criar_label(layout, "Aba Mín.:", (4, 1))
     criar_label(layout, "Ext. Z90°:", (4, 2))
-    criar_label(layout, "Força [Ton/m]:", (4, 3))
+    criar_label(layout, "Força:", (4, 3))
 
     ded_espec_entry = criar_widget_cabecalho(
         layout, 'entry', 'DED_ESPEC_ENTRY', (5, 0))
@@ -172,7 +172,7 @@ def _criar_linha_3(layout):
     ded_espec_entry.setToolTip("Digite a dedução específica em milímetros.")
     aba_ext_lbl.setToolTip("Medida da aba mínima.")
     z_ext_lbl.setToolTip("Medida de Z90° mínima.")
-    forca_lbl.setToolTip("Força necessária para a dobra.")
+    forca_lbl.setToolTip("Força necessária para a dobra em Ton/m.")
 
     # Conectar eventos
     ded_espec_entry.textChanged.connect(calcular_valores)
