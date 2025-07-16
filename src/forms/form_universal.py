@@ -45,7 +45,7 @@ FORM_CONFIGS = {
         },
         'lista': {
             'global': 'LIST_DED',
-            'headers': ["Material", "Espessura", "Canal", "Dedução", "Observação", "Força"],
+            'headers': ["Material", "Espessura", "Canal", "Dedução", "Observação", "Força [Ton/m]"],
             'widths': [80, 60, 60, 60, 120, 60]
         },
         'edicao': {
@@ -56,7 +56,7 @@ FORM_CONFIGS = {
                  'global': 'DED_VALOR_ENTRY', 'pos': (0, 0)},
                 {'label': 'Observação:', 'widget': 'entry',
                  'global': 'DED_OBSER_ENTRY', 'pos': (0, 1)},
-                {'label': 'Força:', 'widget': 'entry',
+                {'label': 'Força [Ton/m]:', 'widget': 'entry',
                  'global': 'DED_FORCA_ENTRY', 'pos': (0, 2)}
             ]
         },
