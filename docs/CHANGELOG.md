@@ -2,6 +2,12 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 2.1.1 (15/07/2025)
+
+- Exibe dicas explicativas (tooltips) na validação da aba mínima para facilitar o preenchimento.
+- Ajustados estilos de tooltip e formatação de texto em widgets
+- atualizados rótulos de força para incluir unidade [Ton/m] no cabeçalho e no formulário universal
+
 ## 2.1.0 (15/07/2025)
 
 - Melhora a responsividade e o layout da interface, ajustando tamanhos de janelas, cabeçalhos, espaçamentos e margens.
