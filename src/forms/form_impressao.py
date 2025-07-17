@@ -231,7 +231,8 @@ def selecionar_diretorio():
     DESABILITAR_JANELAS()
     diretorio = QFileDialog.getExistingDirectory(
         g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs")
-    HABILITAR_JANELAS()
+    if callable(HABILITAR_JANELAS):
+        HABILITAR_JANELAS()
 
     if diretorio and hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY:
         g.IMPRESSAO_DIRETORIO_ENTRY.clear()
