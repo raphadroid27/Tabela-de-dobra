@@ -1,4 +1,3 @@
-
 """
 Módulo utilitário para gerenciamento, análise, criação e validação de widgets na aplicação.
 Inclui classes para análise de uso, factory, cache, operações e gerenciamento de estado de widgets.
