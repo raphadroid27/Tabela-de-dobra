@@ -20,7 +20,7 @@ from PySide6.QtGui import QIcon, QAction  # type: ignore
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
 from src.utils.janelas import (
-    aplicar_no_topo_app_principal, cleanup_orphaned_windows)
+    aplicar_no_topo_app_principal, remover_janelas_orfas)
 from src.utils.interface_manager import carregar_interface
 from src.utils.interface import aplicar_medida_borda_espaco
 from src.utils.banco_dados import session
@@ -109,7 +109,7 @@ def configurar_janela_principal(config):
     Configura a janela principal do aplicativo com lógica melhorada.
     """
     # Garantir que existe apenas uma janela principal e limpar órfãs
-    cleanup_orphaned_windows()
+    remover_janelas_orfas()
 
     if g.PRINC_FORM is not None:
         try:
@@ -142,7 +142,7 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.setWindowIcon(QIcon(icone_path))
 
     def on_closing():
-        cleanup_orphaned_windows()
+        remover_janelas_orfas()
         if g.PRINC_FORM is not None:
             pos = g.PRINC_FORM.pos()
             config['geometry'] = f"+{pos.x()}+{pos.y()}"

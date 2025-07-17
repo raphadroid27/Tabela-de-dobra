@@ -12,7 +12,7 @@ from src.components.dobra_90 import dobras
 from src.components import botoes
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
-from src.utils.widget_state_manager import widget_state_manager
+from src.utils.widget_manager import widget_state_manager
 
 
 def safe_process_events():

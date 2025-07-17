@@ -15,8 +15,7 @@ from src.utils.usuarios import logado, tem_permissao
 from src.config import globals as g
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.interface import atualizar_widgets, listar
-from src.utils.widget_validator import OperationHelper
-from src.utils.widget_manager import WidgetManager
+from src.utils.widget import OperationHelper, WidgetManager
 from src.utils.utilitarios import (
     ask_yes_no, show_error, show_info, show_warning)
 
