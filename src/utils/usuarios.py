@@ -9,7 +9,7 @@ from src.utils.banco_dados import (session,
                                    tratativa_erro,
                                    obter_configuracoes
                                    )
-from src.utils.janelas import habilitar_janelas
+from src.utils.janelas import HABILITAR_JANELAS
 from src.utils.interface import listar
 from src.utils.utilitarios import (
     ask_string, show_error, show_info, show_warning)
@@ -56,7 +56,7 @@ def novo_usuario():
     if g.AUTEN_FORM is not None:
         g.AUTEN_FORM.close()
 
-    habilitar_janelas()
+    HABILITAR_JANELAS()
 
 
 def login():
@@ -111,7 +111,7 @@ def login():
         show_error("Erro", "Usuário ou senha incorretos.",
                    parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
 
-    habilitar_janelas()
+    HABILITAR_JANELAS()
 
 
 def logado(tipo):

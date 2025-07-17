@@ -18,8 +18,8 @@ from PySide6.QtGui import QIcon
 
 from src.utils.janelas import (aplicar_no_topo,
                                posicionar_janela,
-                               habilitar_janelas,
-                               desabilitar_janelas)
+                               HABILITAR_JANELAS,
+                               DESABILITAR_JANELAS)
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.estilo import (obter_estilo_botao_cinza,
                               obter_estilo_botao_azul,
@@ -228,10 +228,10 @@ def _mostrar_erro_impressao(erro):
 
 def selecionar_diretorio():
     """Abre o diálogo para seleção de diretório."""
-    desabilitar_janelas()
+    DESABILITAR_JANELAS()
     diretorio = QFileDialog.getExistingDirectory(
         g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs")
-    habilitar_janelas()
+    HABILITAR_JANELAS()
 
     if diretorio and hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY:
         g.IMPRESSAO_DIRETORIO_ENTRY.clear()

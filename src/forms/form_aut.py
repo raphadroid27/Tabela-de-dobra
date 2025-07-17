@@ -15,7 +15,7 @@ from PySide6.QtCore import Qt
 from src.utils.banco_dados import session
 from src.models import Usuario
 from src.utils.usuarios import login, novo_usuario
-from src.utils.janelas import (habilitar_janelas, posicionar_janela)
+from src.utils.janelas import (HABILITAR_JANELAS, posicionar_janela)
 from src.utils.estilo import (
     obter_estilo_botao_azul,
     obter_estilo_botao_verde)
@@ -37,7 +37,7 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     def close_event(event):
-        habilitar_janelas()
+        HABILITAR_JANELAS()
         event.accept()
 
     g.AUTEN_FORM.closeEvent = close_event
