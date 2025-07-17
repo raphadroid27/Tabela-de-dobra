@@ -27,15 +27,15 @@ class CopyManager:
     def __init__(self):
         self.configuracoes = {
             'dedução': {
-                'label': g.DED_LBL,
+                'label': lambda *_: getattr(g, 'DED_LBL', None),
                 'funcao_calculo': lambda: (atualizar_widgets('dedução'), calcular_k_offset())
             },
             'fator_k': {
-                'label': g.K_LBL,
+                'label': lambda *_: getattr(g, 'K_LBL', None),
                 'funcao_calculo': lambda: (atualizar_widgets('dedução'), calcular_k_offset())
             },
             'offset': {
-                'label': g.OFFSET_LBL,
+                'label': lambda *_: getattr(g, 'OFFSET_LBL', None),
                 'funcao_calculo': lambda: (atualizar_widgets('dedução'), calcular_k_offset())
             },
             'medida_dobra': {
@@ -55,6 +55,53 @@ class CopyManager:
                 'funcao_calculo': calcular_dobra
             }
         }
+
+    def copiar(self, tipo, numero=None, w=None):
+        """
+        Copia o valor do label correspondente ao tipo e número
+        especificados para a área de transferência.
+        """
+        # Obter e validar label
+        label = self.obter_label(tipo, numero, w)
+        if not self.validar_label(label, tipo, numero, w):
+            return
+
+        # Obter texto atual
+        texto_atual = self.obter_texto_atual(label)
+        if not texto_atual:
+            return
+
+        # Processar texto (remover "Copiado!" se existir)
+        texto_original = self._processar_texto_copiado(texto_atual)
+
+        # Executar cálculo
+        self.executar_calculo(tipo, w)
+
+        # Obter texto atualizado após cálculo
+        texto_atualizado = self._obter_texto_atualizado(label, texto_original)
+
+        # Copiar para área de transferência
+        pyperclip.copy(texto_atualizado)
+        print(f'Valor copiado {texto_atualizado}')
+
+        # Atualizar interface
+        self.atualizar_label_copiado(label, texto_atualizado)
+        self.agendar_remocao_copiado(label, texto_atualizado)
+
+    def _processar_texto_copiado(self, texto_atual):
+        """Remove 'Copiado!' do texto se já estiver presente."""
+        return texto_atual.replace(" Copiado!", "") if " Copiado!" in texto_atual else texto_atual
+
+    def _obter_texto_atualizado(self, label, texto_original):
+        """Obtém o texto atualizado após o cálculo."""
+        try:
+            texto_atualizado = label.text() if hasattr(label, 'text') else str(label.text)
+            texto_atualizado = str(texto_atualizado)
+            return (texto_atualizado.replace(" Copiado!", "")
+                    if (" Copiado!" in texto_atualizado)
+                    else texto_atualizado)
+        except AttributeError:
+            return texto_original
 
     def obter_label(self, tipo, numero=None, w=None):
         """Obtém o label correspondente ao tipo especificado."""
@@ -131,11 +178,54 @@ class CopyManager:
                 "QTimer não disponível, texto 'Copiado!' não será removido automaticamente")
 
 
+copiar = CopyManager().copiar
+
+
 class ListManager:
     """Gerencia operações de listagem de dados."""
 
     def __init__(self):
         self.configuracoes = None
+
+    def listar(self, tipo):
+        """
+        Lista os itens do banco de dados na interface gráfica.
+        """
+        # Inicializar configurações
+        if not self.inicializar_configuracoes():
+            return
+
+        # Validar configuração
+        if not self.validar_configuracao(tipo):
+            return
+
+        # Limpar lista atual
+        self.limpar_lista(tipo)
+
+        # Processar itens
+        self._processar_itens_lista(tipo)
+
+    def _processar_itens_lista(self, tipo):
+        """Processa e adiciona itens à lista."""
+        try:
+            config = self.configuracoes[tipo]
+            itens = self.obter_itens_ordenados(tipo)
+
+            for item in itens:
+                item_processado = self._processar_item_individual(item, tipo)
+                if item_processado:
+                    item_widget = self.criar_item_widget(
+                        item_processado, config)
+                    self.adicionar_item_a_lista(item_widget, config)
+
+        except (AttributeError, RuntimeError, ValueError) as e:
+            print(f"Erro ao processar itens da lista {tipo}: {e}")
+
+    def _processar_item_individual(self, item, tipo):
+        """Processa um item individual baseado no tipo."""
+        if tipo == 'dedução':
+            return self.processar_item_deducao(item)
+        return item
 
     def inicializar_configuracoes(self):
         """Inicializa as configurações necessárias."""
@@ -184,6 +274,9 @@ class ListManager:
     def adicionar_item_a_lista(self, item_widget, config):
         """Adiciona item widget à lista."""
         config['lista'].addTopLevelItem(item_widget)
+
+
+listar = ListManager().listar
 
 
 class WidgetUpdater:
@@ -561,104 +654,6 @@ class ParameterValidator:
 
 # Funções principais refatoradas usando as classes
 
-def copiar(tipo, numero=None, w=None):
-    """
-    Copia o valor do label correspondente ao tipo e número
-    especificados para a área de transferência.
-    """
-    copy_manager = CopyManager()
-
-    # Obter e validar label
-    label = copy_manager.obter_label(tipo, numero, w)
-    if not copy_manager.validar_label(label, tipo, numero, w):
-        return
-
-    # Obter texto atual
-    texto_atual = copy_manager.obter_texto_atual(label)
-    if not texto_atual:
-        return
-
-    # Processar texto (remover "Copiado!" se existir)
-    texto_original = _processar_texto_copiado(texto_atual)
-
-    # Executar cálculo
-    copy_manager.executar_calculo(tipo, w)
-
-    # Obter texto atualizado após cálculo
-    texto_atualizado = _obter_texto_atualizado(label, texto_original)
-
-    # Copiar para área de transferência
-    pyperclip.copy(texto_atualizado)
-    print(f'Valor copiado {texto_atualizado}')
-
-    # Atualizar interface
-    copy_manager.atualizar_label_copiado(label, texto_atualizado)
-    copy_manager.agendar_remocao_copiado(label, texto_atualizado)
-
-
-def _processar_texto_copiado(texto_atual):
-    """Remove 'Copiado!' do texto se já estiver presente."""
-    return texto_atual.replace(" Copiado!", "") if " Copiado!" in texto_atual else texto_atual
-
-
-def _obter_texto_atualizado(label, texto_original):
-    """Obtém o texto atualizado após o cálculo."""
-    try:
-        texto_atualizado = label.text() if hasattr(label, 'text') else str(label.text)
-        texto_atualizado = str(texto_atualizado)
-        return (texto_atualizado.replace(" Copiado!", "")
-                if (" Copiado!" in texto_atualizado)
-                else texto_atualizado)
-    except AttributeError:
-        return texto_original
-
-
-def listar(tipo):
-    """
-    Lista os itens do banco de dados na interface gráfica.
-    """
-    list_manager = ListManager()
-
-    # Inicializar configurações
-    if not list_manager.inicializar_configuracoes():
-        return
-
-    # Validar configuração
-    if not list_manager.validar_configuracao(tipo):
-        return
-
-    # Limpar lista atual
-    list_manager.limpar_lista(tipo)
-
-    # Processar itens
-    _processar_itens_lista(list_manager, tipo)
-
-
-def _processar_itens_lista(list_manager, tipo):
-    """Processa e adiciona itens à lista."""
-    try:
-        config = list_manager.configuracoes[tipo]
-        itens = list_manager.obter_itens_ordenados(tipo)
-
-        for item in itens:
-            item_processado = _processar_item_individual(
-                list_manager, item, tipo)
-            if item_processado:
-                item_widget = list_manager.criar_item_widget(
-                    item_processado, config)
-                list_manager.adicionar_item_a_lista(item_widget, config)
-
-    except (AttributeError, RuntimeError, ValueError) as e:
-        print(f"Erro ao processar itens da lista {tipo}: {e}")
-
-
-def _processar_item_individual(list_manager, item, tipo):
-    """Processa um item individual baseado no tipo."""
-    if tipo == 'dedução':
-        return list_manager.processar_item_deducao(item)
-    return item
-
-
 def atualizar_widgets(tipo):
     """
     Atualiza os valores de comboboxes com base no tipo especificado.
@@ -682,7 +677,8 @@ def limpar_busca(tipo):
         else:
             _limpar_busca_generica(configuracoes[tipo])
 
-        listar(tipo)
+        list_manager = ListManager()
+        list_manager.listar(tipo)
 
     except (AttributeError, RuntimeError, ValueError) as e:
         print(f"Erro ao limpar busca para {tipo}: {e}")
