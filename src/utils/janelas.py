@@ -157,7 +157,7 @@ class Janela:
                 form.setEnabled(estado)
 
     @staticmethod
-    def cleanup_orphaned_windows():
+    def remover_janelas_orfas():
         """
         Remove todas as janelas órfãs que possam estar abertas,
         mas preserva formulários ativos.
@@ -223,3 +223,12 @@ class Janela:
                            Qt.WindowMaximizeButtonHint |
                            Qt.WindowCloseButtonHint)
         return essential_flags
+
+
+aplicar_no_topo_app_principal = Janela.aplicar_no_topo_app_principal
+aplicar_no_topo = Janela.aplicar_no_topo
+aplicar_no_topo_todas_janelas = Janela.aplicar_no_topo_todas_janelas
+remover_janelas_orfas = Janela.remover_janelas_orfas
+habilitar_janelas = Janela.estado_janelas(True)
+desabilitar_janelas = Janela.estado_janelas(False)
+posicionar_janela = Janela.posicionar_janela

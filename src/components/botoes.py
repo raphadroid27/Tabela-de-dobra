@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QCheckBox, QPushButton, QApp
 from PySide6.QtCore import QTimer
 from PySide6.QtCore import Qt
 from src.utils.limpeza import limpar_dobras, limpar_tudo
-from src.utils.janelas import cleanup_orphaned_windows
+from src.utils.janelas import remover_janelas_orfas
 from src.utils.estilo import (
     obter_estilo_botao_vermelho,
     obter_estilo_botao_amarelo
@@ -31,7 +31,7 @@ class ExpansionManager:
     def force_cleanup_orphans(self):
         """Remove todas as janelas órfãs - usa função centralizada"""
         try:
-            cleanup_orphaned_windows()
+            remover_janelas_orfas()
         except (ImportError, ValueError):
             pass
 

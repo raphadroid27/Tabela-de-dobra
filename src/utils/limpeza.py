@@ -4,7 +4,7 @@ Módulo com funções utilitárias para limpeza da interface.
 from PySide6.QtWidgets import QLabel, QComboBox
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
-from src.utils.widget_manager import WidgetManager
+from src.utils.widget import WidgetManager
 
 
 class Limpeza:
@@ -76,3 +76,7 @@ class Limpeza:
 
         if g.RAZAO_RIE_LBL and isinstance(g.RAZAO_RIE_LBL, QLabel):
             g.RAZAO_RIE_LBL.setText("N/A")
+
+
+limpar_tudo = Limpeza.limpar_tudo
+limpar_dobras = Limpeza.limpar_dobras
