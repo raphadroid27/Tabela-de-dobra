@@ -37,7 +37,8 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     def close_event(event):
-        HABILITAR_JANELAS()
+        if callable(HABILITAR_JANELAS):
+            HABILITAR_JANELAS()
         event.accept()
 
     g.AUTEN_FORM.closeEvent = close_event
