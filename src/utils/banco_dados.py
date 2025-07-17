@@ -109,7 +109,7 @@ def obter_configuracoes():
             'modelo': Usuario,  # Corrigido de usuario
             'valores': lambda u: (u.id, u.nome, u.role),
             'ordem': Usuario.nome,  # Corrigido de usuario.nome
-            'entry': g.USUARIO_BUSCA_ENTRY,
+            'busca': g.USUARIO_BUSCA_ENTRY,  # Corrigido de usuario.busca
             'campo_busca': Usuario.nome  # Corrigido de usuario.nome
         }
     }
