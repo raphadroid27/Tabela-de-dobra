@@ -652,7 +652,53 @@ class ParameterValidator:
         return valores_existem and valores_nao_vazios
 
 
+class LimparBusca:
+    """Classe para limpar campos de busca."""
+
+    def limpar_busca(self, tipo):
+        """
+        Limpa os campos de busca e atualiza a lista correspondente.
+        """
+        try:
+            configuracoes = obter_configuracoes()
+
+            if tipo == 'dedução':
+                self._limpar_busca_deducao(configuracoes[tipo])
+            else:
+                self._limpar_busca_generica(configuracoes[tipo])
+
+            list_manager = ListManager()
+            list_manager.listar(tipo)
+
+        except (AttributeError, RuntimeError, ValueError) as e:
+            print(f"Erro ao limpar busca para {tipo}: {e}")
+
+    def _limpar_busca_deducao(self, config):
+        """Limpa campos específicos de busca de dedução."""
+        entries = config.get('entries', {})
+
+        combos = [
+            ('material_combo', entries.get('material_combo')),
+            ('espessura_combo', entries.get('espessura_combo')),
+            ('canal_combo', entries.get('canal_combo'))
+        ]
+
+        for nome, combo in combos:
+            if combo and hasattr(combo, 'setCurrentIndex'):
+                combo.setCurrentIndex(-1)
+                print(f"Limpando combobox {nome}")
+
+    def _limpar_busca_generica(self, config):
+        """Limpa campos genéricos de busca."""
+        busca_widget = config.get('busca')
+        if busca_widget and hasattr(busca_widget, 'clear'):
+            busca_widget.clear()
+
+
+limpar_busca = LimparBusca().limpar_busca
+
 # Funções principais refatoradas usando as classes
+
 
 def atualizar_widgets(tipo):
     """
@@ -663,48 +709,6 @@ def atualizar_widgets(tipo):
         updater.atualizar(tipo)
     except (AttributeError, KeyError, RuntimeError) as e:
         print(f"Erro em atualizar_widgets({tipo}): {e}")
-
-
-def limpar_busca(tipo):
-    """
-    Limpa os campos de busca e atualiza a lista correspondente.
-    """
-    try:
-        configuracoes = obter_configuracoes()
-
-        if tipo == 'dedução':
-            _limpar_busca_deducao(configuracoes[tipo])
-        else:
-            _limpar_busca_generica(configuracoes[tipo])
-
-        list_manager = ListManager()
-        list_manager.listar(tipo)
-
-    except (AttributeError, RuntimeError, ValueError) as e:
-        print(f"Erro ao limpar busca para {tipo}: {e}")
-
-
-def _limpar_busca_deducao(config):
-    """Limpa campos específicos de busca de dedução."""
-    entries = config.get('entries', {})
-
-    combos = [
-        ('material_combo', entries.get('material_combo')),
-        ('espessura_combo', entries.get('espessura_combo')),
-        ('canal_combo', entries.get('canal_combo'))
-    ]
-
-    for nome, combo in combos:
-        if combo and hasattr(combo, 'setCurrentIndex'):
-            combo.setCurrentIndex(-1)
-            print(f"Limpando combobox {nome}")
-
-
-def _limpar_busca_generica(config):
-    """Limpa campos genéricos de busca."""
-    busca_widget = config.get('busca')
-    if busca_widget and hasattr(busca_widget, 'clear'):
-        busca_widget.clear()
 
 
 def canal_tooltip():
