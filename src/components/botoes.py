@@ -10,7 +10,7 @@ interativa.
 from PySide6.QtWidgets import QWidget, QGridLayout, QCheckBox, QPushButton, QApplication
 from PySide6.QtCore import QTimer
 from PySide6.QtCore import Qt
-from src.utils.limpeza import limpar_dobras, limpar_tudo
+from src.utils.interface import limpar_dobras, limpar_tudo
 from src.utils.janelas import remover_janelas_orfas
 from src.utils.estilo import (
     obter_estilo_botao_vermelho,
