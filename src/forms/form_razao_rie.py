@@ -10,8 +10,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.utilitarios import obter_caminho_icone
-from src.utils.calculos import razao_ri_espessura
-from src.utils.interface import aplicar_medida_borda_espaco
+from src.utils.interface import aplicar_medida_borda_espaco, calcular_valores
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
@@ -100,7 +99,7 @@ def _criar_label_resultado(main_layout):
 
 
 def _criar_tabela(main_layout):
-    razao_ri_espessura()
+    calcular_valores()
     _create_table(main_layout, g.RAIO_K)
 
 
