@@ -16,8 +16,8 @@ from PySide6.QtGui import QIcon
 from src.utils.janelas import posicionar_janela, aplicar_no_topo
 from src.utils.interface import (
     listar, limpar_busca,
-    atualizar_widgets, aplicar_medida_borda_espaco)
-from src.utils.utilitarios import obter_caminho_icone
+    atualizar_widgets)
+from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
                               obter_estilo_botao_azul, obter_estilo_botao_vermelho)

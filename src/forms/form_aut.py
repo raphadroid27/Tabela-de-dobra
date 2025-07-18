@@ -22,7 +22,7 @@ from src.utils.estilo import (
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
-from src.utils.interface import aplicar_medida_borda_espaco
+from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 
 def _configurar_janela_base(root):

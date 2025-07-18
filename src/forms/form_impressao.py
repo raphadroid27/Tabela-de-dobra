@@ -20,13 +20,12 @@ from src.utils.janelas import (aplicar_no_topo,
                                posicionar_janela,
                                HABILITAR_JANELAS,
                                DESABILITAR_JANELAS)
-from src.utils.utilitarios import obter_caminho_icone
+from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
 from src.utils.estilo import (obter_estilo_botao_cinza,
                               obter_estilo_botao_azul,
                               obter_estilo_botao_amarelo,
                               obter_estilo_botao_verde,
                               obter_estilo_botao_vermelho)
-from src.utils.interface import aplicar_medida_borda_espaco
 
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo

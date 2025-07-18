@@ -22,7 +22,7 @@ from src.utils.usuarios import logout
 from src.utils.janelas import (
     aplicar_no_topo_app_principal, remover_janelas_orfas)
 from src.utils.interface_manager import carregar_interface
-from src.utils.interface import aplicar_medida_borda_espaco
+from src.utils.utilitarios import aplicar_medida_borda_espaco
 from src.utils.banco_dados import session
 from src.models import Usuario
 from src.forms import (

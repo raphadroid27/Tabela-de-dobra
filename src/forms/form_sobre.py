@@ -15,8 +15,7 @@ from PySide6.QtGui import QIcon, QFont
 from src import __version__
 from src.config import globals as g
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
-from src.utils.utilitarios import obter_caminho_icone
-from src.utils.interface import aplicar_medida_borda_espaco
+from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
 

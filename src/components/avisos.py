@@ -4,7 +4,7 @@ Módulo responsável por criar o frame de avisos na interface gráfica.
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from src.utils.interface import aplicar_medida_borda_espaco
+from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 
 def avisos():
