@@ -3,10 +3,10 @@ Módulo de Interface para o Aplicativo de Dobras.
 
 Este módulo contém funções que interagem diretamente com a interface gráfica
 (widgets PySide6). Ele é responsável por:
-- Disparar os cálculos do módulo `calculos`.
-- Receber os resultados dos cálculos.
+- Orquestrar os cálculos do módulo `calculos`.
 - Atualizar os labels, comboboxes e outros widgets com os novos valores.
 - Gerenciar a aparência (estilos, tooltips) dos widgets.
+- Lidar com ações diretas na interface, como limpeza de campos.
 """
 
 import traceback
@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QTreeWidgetItem
 from PySide6.QtCore import QTimer
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.banco_dados import session, obter_configuracoes
-from src.utils import calculos
+from src.utils import calculos, utilitarios
 from src.config import globals as g
 
 # --- CLASSES DE MANIPULAÇÃO DA INTERFACE ---
@@ -102,7 +102,7 @@ listar = ListManager().listar
 
 
 class LimparBusca:
-    """Classe para limpar campos de busca."""
+    """Classe para limpar campos de busca dos formulários."""
 
     def limpar_busca(self, tipo):
         """
@@ -123,7 +123,6 @@ class LimparBusca:
             print(f"Erro ao limpar busca para {tipo}: {e}")
 
     def _limpar_busca_deducao(self, config):
-        """Limpa campos específicos de busca de dedução."""
         entries = config.get('entries', {})
         combos = [entries.get('material_combo'), entries.get(
             'espessura_combo'), entries.get('canal_combo')]
@@ -132,7 +131,6 @@ class LimparBusca:
                 combo.setCurrentIndex(-1)
 
     def _limpar_busca_generica(self, config):
-        """Limpa campos genéricos de busca."""
         busca_widget = config.get('busca')
         if busca_widget and hasattr(busca_widget, 'clear'):
             busca_widget.clear()
@@ -182,7 +180,6 @@ class WidgetUpdater:
                     widget.setCurrentText(valor)
 
     def _atualizar_material(self):
-        """Atualiza comboboxes de Material da tela principal e do formulário."""
         materiais = [m.nome for m in session.query(
             Material).order_by(Material.nome)]
         for combo_global in [g.MAT_COMB, g.DED_MATER_COMB]:
@@ -192,8 +189,6 @@ class WidgetUpdater:
                 combo_global.setCurrentIndex(-1)
 
     def _atualizar_espessura(self):
-        """Atualiza comboboxes de Espessura."""
-        # CORREÇÃO: A verificação hasattr() agora usa 2 argumentos.
         if hasattr(g, 'ESP_COMB') and g.ESP_COMB and hasattr(g.ESP_COMB, 'clear'):
             g.ESP_COMB.clear()
             material_nome = calculos.obter_valor_widget(
@@ -216,8 +211,6 @@ class WidgetUpdater:
             g.DED_ESPES_COMB.setCurrentIndex(-1)
 
     def _atualizar_canal(self):
-        """Atualiza comboboxes de Canal."""
-        # CORREÇÃO: A verificação hasattr() agora usa 2 argumentos.
         if hasattr(g, 'CANAL_COMB') and g.CANAL_COMB and hasattr(g.CANAL_COMB, 'clear'):
             g.CANAL_COMB.clear()
             material_nome = calculos.obter_valor_widget(
@@ -246,6 +239,48 @@ class WidgetUpdater:
 
 
 atualizar_widgets = WidgetUpdater().atualizar
+
+
+# --- FUNÇÕES DE LIMPEZA (MOVIDAS DE limpeza.py) ---
+
+def limpar_dobras():
+    """Limpa os valores das dobras e a dedução específica."""
+    if hasattr(g, 'VALORES_W'):
+        for w in g.VALORES_W:
+            for i in range(1, g.N):
+                entry = getattr(g, f'aba{i}_entry_{w}', None)
+                if entry and hasattr(entry, 'clear'):
+                    entry.clear()
+
+    ded_espec_entry = getattr(g, 'DED_ESPEC_ENTRY', None)
+    if ded_espec_entry and hasattr(ded_espec_entry, 'clear'):
+        ded_espec_entry.clear()
+
+    calcular_valores()
+
+    primeiro_entry = getattr(g, "aba1_entry_a", None)
+    if primeiro_entry and hasattr(primeiro_entry, 'setFocus'):
+        primeiro_entry.setFocus()
+
+
+def limpar_tudo():
+    """Limpa todos os campos e labels da interface principal."""
+    # Limpar comboboxes do cabeçalho
+    for combo_global in [g.ESP_COMB, g.CANAL_COMB]:
+        if combo_global and hasattr(combo_global, 'setCurrentIndex'):
+            combo_global.setCurrentIndex(-1)
+            combo_global.clear()
+
+    if hasattr(g, 'MAT_COMB') and g.MAT_COMB:
+        g.MAT_COMB.setCurrentIndex(-1)
+
+    # Limpar campos de entrada
+    for entry_global in [g.RI_ENTRY, g.COMPR_ENTRY]:
+        if entry_global and hasattr(entry_global, 'clear'):
+            entry_global.clear()
+
+    limpar_dobras()
+    calcular_valores()
 
 
 # --- FUNÇÕES DE ATUALIZAÇÃO DE LABELS ---
@@ -392,7 +427,7 @@ def calcular_valores():
         _atualizar_forca_ui()
         for w in g.VALORES_W:
             _atualizar_coluna_dobras_ui(w)
-    except (AttributeError, ValueError, RuntimeError, KeyError) as e:
+    except (AttributeError, RuntimeError, ValueError, KeyError, TypeError) as e:
         print(f"Erro inesperado em calcular_valores: {e}")
         traceback.print_exc()
 
@@ -436,28 +471,13 @@ def canal_tooltip():
         g.CANAL_COMB.setToolTip("Canal não encontrado.")
 
 
-def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
-    """
-    Aplica bordas e espaçamento a um layout ou widget.
-    """
-    if hasattr(layout_ou_widget, 'setContentsMargins'):
-        layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
-    if hasattr(layout_ou_widget, 'setSpacing'):
-        layout_ou_widget.setSpacing(espaco)
-    elif hasattr(layout_ou_widget, 'layout') and layout_ou_widget.layout():
-        layout = layout_ou_widget.layout()
-        if hasattr(layout, 'setContentsMargins'):
-            layout.setContentsMargins(margem, margem, margem, margem)
-        if hasattr(layout, 'setSpacing'):
-            layout.setSpacing(espaco)
-
-
 def configurar_frame_principal(parent):
     """Configura o frame principal com colunas e linhas padrão."""
     frame_principal = QWidget(parent)
     layout = QGridLayout(frame_principal)
     frame_principal.setLayout(layout)
-    aplicar_medida_borda_espaco(layout)
+    # Função movida para utilitarios
+    utilitarios.aplicar_medida_borda_espaco(layout)
 
     if not parent.layout():
         parent_layout = QGridLayout(parent)
