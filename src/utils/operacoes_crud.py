@@ -36,7 +36,7 @@ def adicionar(tipo):
     elif tipo == 'canal':
         adicionar_canal()
 
-    limpar_campos(tipo)
+    _limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
     buscar(tipo)
@@ -108,7 +108,7 @@ def adicionar_deducao():
                     f'valor: {nova_deducao_valor}')
 
     # Atualizar interface após salvar
-    limpar_campos('dedução')
+    _limpar_campos('dedução')
     listar('dedução')
     atualizar_widgets('dedução')
 
@@ -145,7 +145,7 @@ def adicionar_espessura():
     salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}')
 
     # Atualizar interface após salvar
-    limpar_campos('espessura')
+    _limpar_campos('espessura')
     listar('espessura')
     atualizar_widgets('espessura')
 
@@ -190,7 +190,7 @@ def adicionar_material():
                     f'elasticidade: {elasticidade_material}')
 
     # Atualizar interface após salvar
-    limpar_campos('material')
+    _limpar_campos('material')
     listar('material')
     atualizar_widgets('material')
 
@@ -238,7 +238,7 @@ def adicionar_canal():
                     f'observacao: {observacao_canal}')
 
     # Atualizar interface após salvar
-    limpar_campos('canal')
+    _limpar_campos('canal')
     listar('canal')
     atualizar_widgets('canal')
 
@@ -303,7 +303,7 @@ def editar(tipo):
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    obj = item_selecionado(tipo)
+    obj = _item_selecionado(tipo)
     if obj is None:
         show_error("Erro", "Nenhum item selecionado para editar.")
         return
@@ -327,7 +327,7 @@ def editar(tipo):
 
     # Limpar campos e atualizar interface
     _limpar_campos_edicao(config)
-    limpar_campos(tipo)
+    _limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
     buscar(tipo)
@@ -366,7 +366,7 @@ def excluir(tipo):
         return
 
     # Usar item_selecionado para buscar o objeto corretamente
-    obj = item_selecionado(tipo)
+    obj = _item_selecionado(tipo)
     if obj is None:
         show_error("Erro",
                    f"{tipo.capitalize()} não encontrado(a).",
@@ -406,7 +406,7 @@ def excluir(tipo):
               parent=config['form'])
 
     # Atualizar interface após exclusão
-    limpar_campos(tipo)
+    _limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
     buscar(tipo)
@@ -419,7 +419,7 @@ def preencher_campos(tipo):
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    obj = item_selecionado(tipo)
+    obj = _item_selecionado(tipo)
 
     if obj:
         for campo, entry in config['campos'].items():
@@ -437,7 +437,7 @@ def preencher_campos(tipo):
                         entry.setText('')
 
 
-def limpar_campos(tipo):
+def _limpar_campos(tipo):
     """
     Limpa os campos de entrada na aba correspondente ao tipo especificado.
     Os tipos disponíveis são:
@@ -456,7 +456,7 @@ def limpar_campos(tipo):
             entry.setText('')
 
 
-def item_selecionado(tipo):
+def _item_selecionado(tipo):
     """
     Retorna o objeto selecionado na lista correspondente ao tipo especificado.
     Os tipos disponíveis são:
