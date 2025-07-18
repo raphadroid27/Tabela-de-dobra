@@ -123,6 +123,7 @@ def _criar_linha_1(layout):
 
     # Conectar eventos
     compr_entry.textChanged.connect(calcular_valores)
+    canal_comb.currentTextChanged.connect(calcular_valores)
 
     return mat_comb, esp_comb, canal_comb, compr_entry
 

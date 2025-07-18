@@ -9,8 +9,7 @@ from PySide6.QtWidgets import QGroupBox, QLabel, QLineEdit, QGridLayout
 from PySide6.QtCore import Qt
 from src.config import globals as g
 from src.utils.interface import (
-    copiar, focus_next_entry, focus_previous_entry)
-from src.utils.calculos import calcular_dobra
+    copiar, focus_next_entry, focus_previous_entry, calcular_valores)
 from src.utils.estilo import aplicar_estilo_widget_auto_ajustavel
 
 # Constantes para widgets auto-ajustáveis
@@ -91,7 +90,7 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
         config: Configuração do entry
     """
     # Conectar eventos
-    entry.textChanged.connect(lambda text: calcular_dobra(config.w))
+    entry.textChanged.connect(calcular_valores)
     entry.returnPressed.connect(lambda: focus_next_entry(config.i, config.w))
 
     def custom_key_press_event(event):
