@@ -4,7 +4,7 @@ Sistema robusto com gerenciamento seguro de widgets.
 """
 
 import traceback
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget, QGridLayout
 from PySide6.QtCore import QTimer
 from src.components.cabecalho import cabecalho
 from src.components.avisos import avisos
@@ -13,6 +13,7 @@ from src.components import botoes
 from src.config import globals as g
 from src.utils.interface import todas_funcoes
 from src.utils.widget import widget_state_manager
+from src.utils import utilitarios
 
 
 def safe_process_events():
@@ -219,3 +220,19 @@ def reload_interface_safely():
     except RuntimeError as e:
         print(f"Erro ao recarregar interface: {e}")
         traceback.print_exc()
+
+
+def configurar_frame_principal(parent):
+    """Configura o frame principal com colunas e linhas padrão."""
+    frame_principal = QWidget(parent)
+    layout = QGridLayout(frame_principal)
+    frame_principal.setLayout(layout)
+    # Função movida para utilitarios
+    utilitarios.aplicar_medida_borda_espaco(layout)
+
+    if not parent.layout():
+        parent_layout = QGridLayout(parent)
+        parent.setLayout(parent_layout)
+
+    parent.layout().addWidget(frame_principal)
+    return frame_principal
