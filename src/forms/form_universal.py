@@ -16,7 +16,7 @@ from PySide6.QtGui import QIcon
 from src.utils.janelas import posicionar_janela, aplicar_no_topo
 from src.utils.interface import (
     listar, limpar_busca,
-    atualizar_widgets)
+    atualizar_comboboxes_formulario)  # <--- IMPORTA A NOVA FUNÇÃO
 from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
 from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
@@ -60,7 +60,9 @@ FORM_CONFIGS = {
                  'global': 'DED_FORCA_ENTRY', 'pos': (0, 2)}
             ]
         },
-        'post_init': lambda: atualizar_comboboxes(['material', 'espessura', 'canal']),
+        # --- MUDANÇA PRINCIPAL AQUI ---
+        # Chama a nova função que só atualiza os comboboxes do formulário
+        'post_init': lambda: atualizar_comboboxes_formulario(['material', 'espessura', 'canal']),
         'tipo_busca': 'dedução'
     },
     'material': {
@@ -487,12 +489,6 @@ def configurar_botoes(config, tipo):
     button_manager.setup_list_connection()
 
     return botao_container
-
-
-def atualizar_comboboxes(tipos):
-    """Atualiza comboboxes específicas."""
-    for tipo in tipos:
-        atualizar_widgets(tipo)
 
 
 def main(tipo, root):
