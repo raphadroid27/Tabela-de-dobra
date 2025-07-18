@@ -12,11 +12,11 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 import traceback
 from functools import partial
 import pyperclip
-from PySide6.QtWidgets import QWidget, QGridLayout, QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 from PySide6.QtCore import QTimer
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.banco_dados import session, obter_configuracoes
-from src.utils import calculos, utilitarios
+from src.utils import calculos
 from src.config import globals as g
 
 # --- CLASSES DE MANIPULAÇÃO DA INTERFACE ---
@@ -469,19 +469,3 @@ def canal_tooltip():
         g.CANAL_COMB.setToolTip(f'Obs: {obs}\nComprimento total: {comp}')
     else:
         g.CANAL_COMB.setToolTip("Canal não encontrado.")
-
-
-def configurar_frame_principal(parent):
-    """Configura o frame principal com colunas e linhas padrão."""
-    frame_principal = QWidget(parent)
-    layout = QGridLayout(frame_principal)
-    frame_principal.setLayout(layout)
-    # Função movida para utilitarios
-    utilitarios.aplicar_medida_borda_espaco(layout)
-
-    if not parent.layout():
-        parent_layout = QGridLayout(parent)
-        parent.setLayout(parent_layout)
-
-    parent.layout().addWidget(frame_principal)
-    return frame_principal
