@@ -1,606 +1,390 @@
 """
-Funções auxiliares para o aplicativo de cálculo de dobras.
+Módulo de Cálculos para o Aplicativo de Dobras.
+
+Este módulo contém todas as funções e classes responsáveis por realizar
+os cálculos matemáticos e lógicos do sistema. As funções aqui presentes
+capturam os dados brutos dos widgets (passados como argumentos),
+processam-nos e retornam os resultados, sem modificar diretamente a interface.
 """
 
 from math import pi
 import re
 from src.config import globals as g
-from src.models.models import Canal
+from src.models.models import Canal, Espessura, Material, Deducao
 from src.utils.banco_dados import session
 
 
-def verificar_widget_inicializado(widget, metodo='get', default_value=''):
+# --- FUNÇÕES DE CAPTURA E CONVERSÃO DE DADOS DE WIDGETS ---
+
+def obter_valor_widget(widget, metodo='get', default_value=''):
     """
-    Verifica se um widget está inicializado antes de chamar seus métodos.
+    Verifica se um widget está inicializado e obtém seu valor.
 
     Args:
-        widget: O widget a ser verificado
-        metodo: O método a ser chamado ('get', 'text', 'currentText')
-        default_value: Valor padrão caso o widget não esteja inicializado
+        widget: O widget a ser verificado.
+        metodo (str): O método a ser chamado ('get', 'text', 'currentText').
+        default_value: Valor padrão a ser retornado se o widget for inválido.
 
     Returns:
-        O resultado do método ou o valor padrão
+        O valor do widget ou o valor padrão.
     """
     if widget is None:
         return default_value
 
-    result = default_value
-
     try:
-        # Corrigido R1714: Usar 'in' em vez de múltiplas comparações
-        if metodo in ('get', 'text'):
-            # PySide6 QLineEdit usa text()
-            if hasattr(widget, 'text'):
-                result = widget.text()
-            elif hasattr(widget, 'currentText'):
-                result = widget.currentText()
-        elif metodo == 'currentText':
-            if hasattr(widget, 'currentText'):
-                temp_result = widget.currentText()
-                result = temp_result if temp_result else default_value
-        elif metodo == 'cget':
-            # Para PySide6 QLabel, usa text()
-            if hasattr(widget, 'text'):
-                result = widget.text()
+        if metodo in ('get', 'text') and hasattr(widget, 'text'):
+            return widget.text()
+        if metodo == 'currentText' and hasattr(widget, 'currentText'):
+            return widget.currentText() or default_value
     except (AttributeError, TypeError):
-        result = default_value
-
-    return result
-
-
-def _obter_valores_calculo_k():
-    """Obtém valores necessários para cálculo do fator K."""
-    espessura_text = verificar_widget_inicializado(
-        g.ESP_COMB, 'currentText', '0') or '0'
-    raio_interno_str = verificar_widget_inicializado(
-        g.RI_ENTRY, 'text', '0') or '0'
-    deducao_espec_str = verificar_widget_inicializado(
-        g.DED_ESPEC_ENTRY, 'text', '0') or '0'
-    deducao_label_text = verificar_widget_inicializado(
-        g.DED_LBL, 'text', '0') or '0'
-
-    return espessura_text, raio_interno_str, deducao_espec_str, deducao_label_text
+        return default_value
+    return default_value
 
 
-def _converter_valores_k(espessura_text, raio_interno_str, deducao_espec_str, deducao_label_text):
-    """Converte strings para valores numéricos para cálculo K."""
-    espessura = float(espessura_text.replace(
-        ',', '.')) if espessura_text and espessura_text.strip() != '' else 0
-    raio_interno = float(raio_interno_str.replace(
-        ',', '.')) if raio_interno_str and raio_interno_str.strip() != '' else 0
-    deducao_espec = float(deducao_espec_str.replace(
-        ',', '.')) if deducao_espec_str.strip() else 0
-    deducao_valor = float(
-        deducao_label_text.replace(' Copiado!', '').replace(',', '.')
-    ) if deducao_label_text else 0
-
-    return espessura, raio_interno, deducao_espec, deducao_valor
-
-
-def _determinar_deducao_usada(deducao_espec, deducao_valor):
-    """Determina qual dedução usar e se é específica."""
-    deducao_usada = deducao_espec if deducao_espec > 0 else deducao_valor
-    usa_deducao_especifica = deducao_espec > 0
-    return deducao_usada, usa_deducao_especifica
-
-
-def _calcular_fator_k(espessura, deducao_usada, raio_interno):
-    """Calcula fator K usando fórmula personalizada."""
-    fator_k = (4 * (espessura - (deducao_usada / 2) + raio_interno) -
-               (pi * raio_interno)) / (pi * espessura)
-    # Limita o fator K a valores razoáveis
-    return max(0.0, min(fator_k, 0.5))
-
-
-def _atualizar_labels_k_offset(fator_k, offset, usa_deducao_especifica):
-    """Atualiza labels do fator K e offset."""
-    if g.K_LBL and hasattr(g.K_LBL, 'setText'):
-        g.K_LBL.setText(f"{fator_k:.2f}")
-        if hasattr(g.K_LBL, 'setStyleSheet'):
-            if usa_deducao_especifica:
-                g.K_LBL.setStyleSheet("QLabel { color: blue; }")
-            else:
-                g.K_LBL.setStyleSheet("")
-
-    if g.OFFSET_LBL and hasattr(g.OFFSET_LBL, 'setText'):
-        g.OFFSET_LBL.setText(f"{offset:.2f}")
-        if hasattr(g.OFFSET_LBL, 'setStyleSheet'):
-            if usa_deducao_especifica:
-                g.OFFSET_LBL.setStyleSheet("QLabel { color: blue; }")
-            else:
-                g.OFFSET_LBL.setStyleSheet("")
-
-
-def _limpar_labels_k_erro():
-    """Limpa labels em caso de erro."""
-    if g.K_LBL and hasattr(g.K_LBL, 'setText'):
-        g.K_LBL.setText('N/A')
-        if hasattr(g.K_LBL, 'setStyleSheet'):
-            g.K_LBL.setStyleSheet("QLabel { color: red; }")
-
-    if g.OFFSET_LBL and hasattr(g.OFFSET_LBL, 'setText'):
-        g.OFFSET_LBL.setText('N/A')
-        if hasattr(g.OFFSET_LBL, 'setStyleSheet'):
-            g.OFFSET_LBL.setStyleSheet("QLabel { color: red; }")
-
-
-def calcular_k_offset():
+def converter_para_float(valor_str, default_value=0.0):
     """
-    Calcula o fator K com base nos valores de espessura, dedução e raio
-    interno.
+    Converte uma string para float, tratando vírgulas e valores vazios.
 
-    - Fator K personalizado: K = (4 × (espessura - (dedução / 2) +
-      raio_interno) - (π × raio_interno)) / (π × espessura)
-    - Fator K padrão baseado na razão raio/espessura (usando tabela de
-      referência)
-    - Offset = Fator K × Espessura
+    Args:
+        valor_str (str): A string a ser convertida.
+        default_value (float): Valor padrão em caso de falha na conversão.
+
+    Returns:
+        float: O valor convertido.
     """
+    if not isinstance(valor_str, str) or not valor_str.strip():
+        return default_value
     try:
-        # Obtém valores dos widgets
-        espessura_text, raio_interno_str, deducao_espec_str, deducao_label_text = \
-            _obter_valores_calculo_k()
+        return float(valor_str.replace(' Copiado!', '').replace(',', '.'))
+    except (ValueError, TypeError):
+        return default_value
 
-        # Converte valores para float
-        espessura, raio_interno, deducao_espec, deducao_valor = _converter_valores_k(
-            espessura_text, raio_interno_str, deducao_espec_str, deducao_label_text)
 
-        # Valida valores necessários
+# --- CLASSES DE CÁLCULO ---
+
+class CalculoDeducaoDB:
+    """Busca a dedução e observação do banco de dados."""
+
+    def buscar(self):
+        """
+        Busca a dedução no banco de dados com base nos widgets selecionados.
+
+        Returns:
+            dict: {'valor': float/str, 'obs': str} ou None
+        """
+        material_nome = obter_valor_widget(g.MAT_COMB, 'currentText')
+        espessura_str = obter_valor_widget(g.ESP_COMB, 'currentText')
+        canal_valor = obter_valor_widget(g.CANAL_COMB, 'currentText')
+
+        if not all([material_nome, espessura_str, canal_valor]):
+            return None
+
+        try:
+            espessura_valor = float(espessura_str)
+            espessura_obj = session.query(Espessura).filter_by(
+                valor=espessura_valor).first()
+            material_obj = session.query(Material).filter_by(
+                nome=material_nome).first()
+            canal_obj = session.query(Canal).filter_by(
+                valor=canal_valor).first()
+
+            if not all([espessura_obj, material_obj, canal_obj]):
+                return {'valor': 'N/A', 'obs': 'Combinação não encontrada.'}
+
+            deducao_obj = session.query(Deducao).filter(
+                Deducao.espessura_id == espessura_obj.id,
+                Deducao.material_id == material_obj.id,
+                Deducao.canal_id == canal_obj.id
+            ).first()
+
+            if deducao_obj:
+                return {'valor': deducao_obj.valor, 'obs': deducao_obj.observacao or ''}
+
+            return {'valor': 'N/A', 'obs': 'Dedução não encontrada para esta combinação.'}
+
+        except ValueError:
+            return None
+
+
+class CalculoDeducao:
+    """Calcula a dedução a ser utilizada, lendo da UI."""
+
+    @staticmethod
+    def obter_deducao_usada():
+        """
+        Obtém o valor da dedução, priorizando a dedução específica.
+
+        Returns:
+            tuple: (valor_deducao, usa_deducao_especifica)
+        """
+        deducao_espec_str = obter_valor_widget(g.DED_ESPEC_ENTRY, 'text')
+        deducao_espec = converter_para_float(deducao_espec_str)
+
+        if deducao_espec > 0:
+            return deducao_espec, True
+
+        deducao_label_str = obter_valor_widget(g.DED_LBL, 'text')
+        deducao_label = converter_para_float(deducao_label_str)
+        return deducao_label, False
+
+
+class CalculoFatorK:
+    """Calcula o Fator K e o Offset."""
+
+    @staticmethod
+    def _formula_fator_k(espessura, deducao, raio_interno):
+        """Fórmula para calcular o Fator K."""
+        if espessura == 0:
+            return 0.0
+        numerador = 4 * (espessura - (deducao / 2) +
+                         raio_interno) - (pi * raio_interno)
+        denominador = pi * espessura
+        fator_k = numerador / denominador if denominador != 0 else 0
+        return max(0.0, min(fator_k, 0.5))
+
+    @staticmethod
+    def _obter_fator_k_tabela(razao_re):
+        """Obtém o fator K da tabela de referência por interpolação."""
+        razao_re = max(0.1, min(razao_re, 10.0))
+        if razao_re in g.RAIO_K:
+            return g.RAIO_K[razao_re]
+
+        razoes = sorted(g.RAIO_K.keys())
+        for i in range(len(razoes) - 1):
+            r1, r2 = razoes[i], razoes[i+1]
+            if r1 <= razao_re <= r2:
+                k1, k2 = g.RAIO_K[r1], g.RAIO_K[r2]
+                return k1 + (k2 - k1) * (razao_re - r1) / (r2 - r1)
+        return g.RAIO_K[razoes[-1]]
+
+    def calcular(self):
+        """
+        Executa o cálculo do Fator K e Offset.
+
+        Returns:
+            dict: {'fator_k': float, 'offset': float, 'especifico': bool} ou None
+        """
+        espessura = converter_para_float(
+            obter_valor_widget(g.ESP_COMB, 'currentText'))
+        raio_interno = converter_para_float(
+            obter_valor_widget(g.RI_ENTRY, 'text'))
+
         if raio_interno <= 0 or espessura <= 0:
-            if g.K_LBL and hasattr(g.K_LBL, 'setText'):
-                g.K_LBL.setText('')
-            if g.OFFSET_LBL and hasattr(g.OFFSET_LBL, 'setText'):
-                g.OFFSET_LBL.setText('')
-            return
+            return None
 
-        # Determina dedução usada
-        deducao_usada, usa_deducao_especifica = _determinar_deducao_usada(
-            deducao_espec, deducao_valor)
+        deducao_usada, usa_especifica = CalculoDeducao.obter_deducao_usada()
 
-        # Calcula razão raio/espessura
-        razao_re = raio_interno / espessura
-
-        # Calcula fator K
         if deducao_usada > 0:
-            fator_k = _calcular_fator_k(
+            fator_k = self._formula_fator_k(
                 espessura, deducao_usada, raio_interno)
         else:
-            fator_k = obter_fator_k_da_tabela(razao_re)
+            razao_re = raio_interno / espessura if espessura > 0 else 0
+            fator_k = self._obter_fator_k_tabela(razao_re)
 
         offset = fator_k * espessura
+        return {'fator_k': fator_k, 'offset': offset, 'especifico': usa_especifica}
 
-        # Atualiza labels
-        _atualizar_labels_k_offset(fator_k, offset, usa_deducao_especifica)
 
-    except ValueError as e:
-        print(f"Erro ao converter valores para o cálculo do fator K: {e}")
-        _limpar_labels_k_erro()
-    except (AttributeError, TypeError) as e:
-        print(f"Erro de atributo ou tipo no cálculo do fator K: {e}")
-
-
-def obter_fator_k_da_tabela(razao_re):
-    """
-    Obtém o fator K da tabela de referência baseado na razão raio/espessura.
-    Usa interpolação linear para valores intermediários.
-    """
-    # Limita a razão aos valores da tabela
-    razao_re = max(0.1, min(razao_re, 10.0))
+class CalculoAbaMinima:
+    """Calcula a aba mínima externa."""
 
-    # Se o valor está exatamente na tabela, retorna diretamente
-    if razao_re in g.RAIO_K:
-        return g.RAIO_K[razao_re]
+    @staticmethod
+    def _extrair_valor_canal(canal_str):
+        """Extrai o valor numérico de uma string de canal."""
+        numeros = re.findall(r'\d+\.?\d*', canal_str)
+        return float(numeros[0]) if numeros else None
 
-    # Encontra os valores adjacentes para interpolação
-    razoes_ordenadas = sorted(g.RAIO_K.keys())
-    for i in range(len(razoes_ordenadas) - 1):
-        r1 = razoes_ordenadas[i]
-        r2 = razoes_ordenadas[i + 1]
-        if r1 <= razao_re <= r2:
-            k1 = g.RAIO_K[r1]
-            k2 = g.RAIO_K[r2]
-            fator_k = k1 + (k2 - k1) * (razao_re - r1) / (r2 - r1)
-            return fator_k
-
-    # Se não encontrou na interpolação, usa o valor mais próximo
-    if razao_re < razoes_ordenadas[0]:
-        return g.RAIO_K[razoes_ordenadas[0]]
-
-    return g.RAIO_K[razoes_ordenadas[-1]]
-
-
-def _extrair_valor_canal(canal_valor):
-    """Extrai valor numérico do canal."""
-    numeros = re.findall(r'\d+\.?\d*', canal_valor)
-    return float(numeros[0]) if numeros else None
-
-
-def _atualizar_label_aba_externa(aba_minima_valor, erro=False):
-    """Atualiza label da aba mínima externa."""
-    if not g.ABA_EXT_LBL or not hasattr(g.ABA_EXT_LBL, 'setText'):
-        return
-
-    if erro:
-        g.ABA_EXT_LBL.setText("N/A")
-        if hasattr(g.ABA_EXT_LBL, 'setStyleSheet'):
-            g.ABA_EXT_LBL.setStyleSheet("QLabel { color: red; }")
-    else:
-        g.ABA_EXT_LBL.setText(f"{aba_minima_valor:.0f}")
-        if hasattr(g.ABA_EXT_LBL, 'setStyleSheet'):
-            g.ABA_EXT_LBL.setStyleSheet("")
-
-
-def aba_minima_externa():
-    """
-    Calcula a aba mínima externa com base no valor do canal e na espessura.
-    Aba mínima = (Largura do canal / 2) + Espessura + Margem de segurança
-    """
-    aba_minima_valor = 0
-
-    try:
-        canal_valor = verificar_widget_inicializado(
-            g.CANAL_COMB, 'currentText', '')
-
-        if canal_valor == "":
-            if g.ABA_EXT_LBL and hasattr(g.ABA_EXT_LBL, 'setText'):
-                g.ABA_EXT_LBL.setText("")
-            return aba_minima_valor
-
-        # Extrai valor numérico do canal
-        canal_valor_num = _extrair_valor_canal(canal_valor)
-
-        if canal_valor_num is None:
-            _atualizar_label_aba_externa(0, erro=True)
-            return aba_minima_valor
-
-        espessura_text = verificar_widget_inicializado(
-            g.ESP_COMB, 'currentText', '0')
-        espessura = float(espessura_text.replace(',', '.'))
-
-        aba_minima_valor = canal_valor_num / 2 + espessura + 2
-
-        _atualizar_label_aba_externa(aba_minima_valor)
-
-    except (ValueError, AttributeError) as e:
-        print(f"Erro ao calcular aba mínima externa: {e}")
-        _atualizar_label_aba_externa(0, erro=True)
-
-    return aba_minima_valor
-
-
-def _obter_dados_z_minimo():
-    """Obtém dados necessários para cálculo Z mínimo."""
-    material = verificar_widget_inicializado(g.MAT_COMB, 'currentText', '')
-    espessura_text = verificar_widget_inicializado(
-        g.ESP_COMB, 'currentText', '0')
-    canal_valor = verificar_widget_inicializado(
-        g.CANAL_COMB, 'currentText', '')
-    deducao_label_text = verificar_widget_inicializado(
-        g.DED_LBL, 'text', '0').replace(' Copiado!', '')
-
-    return material, espessura_text, canal_valor, deducao_label_text
-
-
-def _validar_dados_z_minimo(material, canal_valor, espessura):
-    """Valida dados para cálculo Z mínimo."""
-    return bool(material and canal_valor and espessura > 0)
-
-
-def _atualizar_label_z_externo(valor, erro_tipo=None):
-    """Atualiza label Z externo."""
-    if not g.Z_EXT_LBL or not hasattr(g.Z_EXT_LBL, 'setText'):
-        return
-
-    if erro_tipo == "limpar":
-        g.Z_EXT_LBL.setText("")
-    elif erro_tipo == "na":
-        g.Z_EXT_LBL.setText("N/A")
-        if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
-            g.Z_EXT_LBL.setStyleSheet("QLabel { color: red; }")
-    elif erro_tipo == "orange":
-        g.Z_EXT_LBL.setText("N/A")
-        if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
-            g.Z_EXT_LBL.setStyleSheet("QLabel { color: orange; }")
-    else:
-        g.Z_EXT_LBL.setText(f'{valor:.0f}')
-        if hasattr(g.Z_EXT_LBL, 'setStyleSheet'):
-            g.Z_EXT_LBL.setStyleSheet("")
-
-
-def z_minimo_externo():
-    """
-    Calcula o valor mínimo externo Z com base na espessura, dedução e largura do canal.
-    Z mínimo = Espessura + (Dedução / 2) + (Largura do canal / 2) + Margem
-    """
-    try:
-        # Obtém dados
-        material, espessura_text, canal_valor, deducao_label_text = _obter_dados_z_minimo()
-
-        # Converte espessura
-        espessura = float(espessura_text.replace(',', '.'))
-        deducao_valor = float(deducao_label_text.replace(
-            ',', '.')) if deducao_label_text else 0
-
-        # Valida dados necessários
-        if not _validar_dados_z_minimo(material, canal_valor, espessura):
-            _atualizar_label_z_externo(0, "limpar")
-            return
-
-        # Busca canal no banco de dados
-        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-
-        if canal_obj is None:
-            _atualizar_label_z_externo(0, "na")
-            return
-
-        # Verifica largura do canal
-        try:
-            largura_canal = canal_obj.largura
-            if largura_canal is None:
-                _atualizar_label_z_externo(0, "na")
-                return
-        except (AttributeError, ValueError, TypeError):
-            _atualizar_label_z_externo(0, "na")
-            return
-
-        # Calcula Z mínimo externo
-        if deducao_valor > 0:
-            valor_z_min_ext = espessura + \
-                (deducao_valor / 2) + (largura_canal / 2) + 2
-            _atualizar_label_z_externo(valor_z_min_ext)
-        else:
-            _atualizar_label_z_externo(0, "orange")
-
-    except ValueError as e:
-        print(
-            f"Erro ao converter valores para o cálculo do Z mínimo externo: {e}")
-        _atualizar_label_z_externo(0, "na")
-    except (AttributeError, TypeError) as e:
-        print(f"Erro de atributo ou tipo no cálculo do Z mínimo externo: {e}")
-
-
-def _obter_valores_dobras(w):
-    """Obtém os valores das dobras dos widgets de entrada para uma coluna específica."""
-    return [
-        getattr(g, f'aba{i}_entry_{w}').text() or ''
-        if getattr(g, f'aba{i}_entry_{w}', None) is not None else ''
-        for i in range(1, g.N)
-    ]
-
-
-def _obter_valor_deducao():
-    """Obtém o valor da dedução dos widgets correspondentes."""
-    deducao_valor = str(verificar_widget_inicializado(
-        g.DED_LBL, 'text', '')).replace(' Copiado!', '')
-    deducao_espec_str = verificar_widget_inicializado(
-        g.DED_ESPEC_ENTRY, 'text', '') or ''
-    deducao_espec = deducao_espec_str.replace(',', '.')
-
-    if deducao_espec != "":
-        return deducao_espec
-    return deducao_valor
-
-
-def _calcular_medida_dobra(dobra, deducao_valor, i, valores_dobras):
-    """
-    Calcula a medida da dobra baseada na posição e valor de dedução,
-    considerando blocos contínuos de abas preenchidas.
-    """
-    deducao_valor = float(deducao_valor)
-    preenchidos = [bool(v.strip()) for v in valores_dobras]
-    blocos = []
-    bloco_atual = []
-    for idx, preenchido in enumerate(preenchidos):
-        if preenchido:
-            bloco_atual.append(idx)
-        else:
-            if bloco_atual:
-                blocos.append(bloco_atual)
-                bloco_atual = []
-    if bloco_atual:
-        blocos.append(bloco_atual)
-    pos = i - 1
-    bloco_encontrado = None
-    for bloco in blocos:
-        if pos in bloco:
-            bloco_encontrado = bloco
-            break
-    if bloco_encontrado is None:
-        return None
-    pos_bloco = bloco_encontrado.index(pos)
-    valor = float(dobra)
-    if len(bloco_encontrado) == 1:
-        resultado = valor - deducao_valor / 2
-    else:
-        if pos_bloco in (0, len(bloco_encontrado) - 1):
-            resultado = valor - deducao_valor / 2
-        else:
-            resultado = valor - deducao_valor
-    return resultado
-
-
-def _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra):
-    """Atualiza os widgets com os valores calculados de dobra."""
-    def atualizar_widget_seguro(widget, valor):
-        """Atualiza um widget de forma segura"""
-        if widget is not None and hasattr(widget, 'setText'):
-            widget.setText(f"{valor:.2f}")
-            if hasattr(widget, 'setStyleSheet'):
-                widget.setStyleSheet("")
-
-    widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
-    widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-
-    atualizar_widget_seguro(widget_medida, medidadobra)
-    atualizar_widget_seguro(widget_metade, metade_dobra)
-
-
-def _limpar_widgets_dobra(i, w):
-    """Limpa os widgets de dobra quando o valor está vazio."""
-    def limpar_widget_seguro(widget):
-        """Limpa um widget de forma segura"""
-        if widget is not None and hasattr(widget, 'setText'):
-            widget.setText("")
-
-    widget_medida = getattr(g, f'medidadobra{i}_label_{w}', None)
-    widget_metade = getattr(g, f'metadedobra{i}_label_{w}', None)
-
-    limpar_widget_seguro(widget_medida)
-    limpar_widget_seguro(widget_metade)
-
-
-def _calcular_e_atualizar_blank(w):
-    """Calcula e atualiza os valores de blank para uma coluna."""
-    blank = sum(
-        float(getattr(g, f'medidadobra{row}_label_{w}').text().replace(
-            ' Copiado!', ''))
-        for row in range(1, g.N)
-        if getattr(g, f'medidadobra{row}_label_{w}', None) is not None
-        and hasattr(getattr(g, f'medidadobra{row}_label_{w}'), 'text')
-        and getattr(g, f'medidadobra{row}_label_{w}').text()
-    )
-
-    metade_blank = blank / 2
-
-    # Atualizar os widgets com os valores calculados
-    label = getattr(g, f'medida_blank_label_{w}', None)
-    if label and hasattr(label, 'setText'):
-        if blank:
-            label.setText(f"{blank:.2f}")
-            if hasattr(label, 'setStyleSheet'):
-                label.setStyleSheet("")
-        else:
-            label.setText("")
-
-    label = getattr(g, f'metade_blank_label_{w}', None)
-    if label and hasattr(label, 'setText'):
-        if metade_blank:
-            label.setText(f"{metade_blank:.2f}")
-            if hasattr(label, 'setStyleSheet'):
-                label.setStyleSheet("")
-        else:
-            label.setText("")
-
-
-def calcular_dobra(w):
-    """
-    Calcula as medidas de dobra e metade de dobra com base nos valores de entrada.
-    """
-    # Obter valores das dobras diretamente dos widgets para a coluna específica
-    valores_dobras = _obter_valores_dobras(w)
-
-    # Obter valor da dedução
-    deducao_valor = _obter_valor_deducao()
-
-    if not deducao_valor:
-        return
-
-    # Iterar pelas linhas para calcular as medidas
-    for i in range(1, g.N):
-        indice_lista = i - 1  # Índice na lista valores_dobras (base 0)
-
-        if indice_lista >= len(valores_dobras):
-            continue
-
-        dobra = valores_dobras[indice_lista].replace(',', '.')
-
-        if dobra == "":
-            _limpar_widgets_dobra(i, w)
-        else:
-            medidadobra = _calcular_medida_dobra(
-                dobra, deducao_valor, i, valores_dobras)
-            metade_dobra = medidadobra / 2
-
-            _atualizar_widgets_dobra(i, w, medidadobra, metade_dobra)
-
-            # Verificar aba mínima usando o valor atual
-            valor_atual = valores_dobras[indice_lista] if indice_lista < len(
-                valores_dobras) else ""
-            verificar_aba_minima(valor_atual, i, w)
-
-    # Calcular e atualizar blank para esta coluna (fora do loop)
-    _calcular_e_atualizar_blank(w)
-
-
-def verificar_aba_minima(dobra, i, w):
-    """
-    Verifica se a dobra é menor que a aba mínima e atualiza o widget correspondente.
-    """
-    # Verificar se a dobra é menor que a aba mínima
-    aba_minima = aba_minima_externa()
-
-    # Obter o widget dinamicamente
-    entry_widget = getattr(g, f'aba{i}_entry_{w}', None)
-
-    if entry_widget is None:
-        return
-
-    # Verificar se o campo está vazio
-    if not dobra.strip():  # Se o campo estiver vazio ou contiver apenas espaços
-        if hasattr(entry_widget, 'setStyleSheet'):
-            entry_widget.setStyleSheet("")
-        return
-
-    # Corrigido R1705: Removido else desnecessário após return
-    try:
-        if float(dobra) < aba_minima:
-            if hasattr(entry_widget, 'setStyleSheet'):
-                entry_widget.setStyleSheet(
-                    "color: white; background-color: red")
-                entry_widget.setToolTip(
-                    f"Aba {dobra} menor que a aba mínima {aba_minima:.0f}.")
-        else:
-            if hasattr(entry_widget, 'setStyleSheet'):
-                entry_widget.setStyleSheet("")
-                entry_widget.setToolTip("Insira o valor da dobra.")
-    except ValueError:
-        # Tratar erros de conversão
-        if hasattr(entry_widget, 'setStyleSheet'):
-            entry_widget.setStyleSheet("")
-            entry_widget.setToolTip("Insira o valor da dobra.")
-        print(f"Erro: Valor inválido na aba {i}, coluna {w}.")
-
-
-def razao_ri_espessura():
-    """
-    Calcula a razão entre o raio interno e a espessura, atualizando o label correspondente.
-    razao = raio_interno / espessura
-    """
-    # Verifica se o widget existe
-    if not g.RAZAO_RIE_LBL or not hasattr(g.RAZAO_RIE_LBL, 'setText'):
-        return
-
-    try:
-        # Obtém os valores dos widgets e valida
-        espessura_text = verificar_widget_inicializado(
-            g.ESP_COMB, 'currentText', '0') or '0'
-        espessura = float(espessura_text.replace(',', '.'))
-
-        raio_interno_str = verificar_widget_inicializado(
-            g.RI_ENTRY, 'text', '0') or '0'
-        raio_interno = float(raio_interno_str.replace(',', '.'))
-
-        # Valida se os valores necessários são maiores que zero
-        if raio_interno <= 0 or espessura <= 0:
-            g.RAZAO_RIE_LBL.setText('')
-            return
+    def calcular(self):
+        """
+        Executa o cálculo da aba mínima externa.
+
+        Returns:
+            float: O valor da aba mínima, ou None em caso de erro.
+        """
+        canal_str = obter_valor_widget(g.CANAL_COMB, 'currentText')
+        espessura = converter_para_float(
+            obter_valor_widget(g.ESP_COMB, 'currentText'))
+
+        if not canal_str or espessura <= 0:
+            return None
+
+        valor_canal = self._extrair_valor_canal(canal_str)
+        if valor_canal is None:
+            return None
+
+        return (valor_canal / 2) + espessura + 2
+
+
+class CalculoZMinimo:
+    """Calcula o Z mínimo externo."""
+
+    def calcular(self):
+        """
+        Executa o cálculo do Z mínimo externo.
+
+        Returns:
+            float: O valor do Z mínimo, ou None se os dados forem insuficientes.
+        """
+        espessura = converter_para_float(
+            obter_valor_widget(g.ESP_COMB, 'currentText'))
+        deducao, _ = CalculoDeducao.obter_deducao_usada()
+        canal_str = obter_valor_widget(g.CANAL_COMB, 'currentText')
+
+        if espessura <= 0 or deducao <= 0 or not canal_str:
+            return None
+
+        canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
+        if not canal_obj or canal_obj.largura is None:
+            return None
+
+        return espessura + (deducao / 2) + (canal_obj.largura / 2) + 2
+
+
+class CalculoRazaoRIE:
+    """Calcula a razão entre Raio Interno e Espessura."""
+
+    def calcular(self):
+        """
+        Executa o cálculo da razão RI/E.
+
+        Returns:
+            float: O valor da razão, ou None se os dados forem insuficientes.
+        """
+        espessura = converter_para_float(
+            obter_valor_widget(g.ESP_COMB, 'currentText'))
+        raio_interno = converter_para_float(
+            obter_valor_widget(g.RI_ENTRY, 'text'))
+
+        if espessura <= 0 or raio_interno <= 0:
+            return None
 
         razao = raio_interno / espessura
+        return min(razao, 10.0)
 
-        # Limita a razão a valores razoáveis (conforme tabela de referência)
-        razao = min(razao, 10.0)
 
-        # Atualiza o label com o valor calculado
-        g.RAZAO_RIE_LBL.setText(f"{razao:.1f}")
+class CalculoForca:
+    """Calcula a força de dobra necessária."""
 
-        # Sempre mantém a cor padrão do label
-        if hasattr(g.RAZAO_RIE_LBL, 'setStyleSheet'):
-            g.RAZAO_RIE_LBL.setStyleSheet("")
+    @staticmethod
+    def _obter_forca_db(espessura_valor, material_nome, canal_valor):
+        """Busca o valor da força no banco de dados."""
+        try:
+            espessura_obj = session.query(Espessura).filter_by(
+                valor=espessura_valor).first()
+            material_obj = session.query(Material).filter_by(
+                nome=material_nome).first()
+            canal_obj = session.query(Canal).filter_by(
+                valor=canal_valor).first()
 
-    except ValueError as e:
-        print(f"Erro ao converter valores para o cálculo da razão: {e}")
-        g.RAZAO_RIE_LBL.setText('N/A')
-        if hasattr(g.RAZAO_RIE_LBL, 'setStyleSheet'):
-            g.RAZAO_RIE_LBL.setStyleSheet("")
-    except (AttributeError, TypeError) as e:
-        print(
-            f"Erro de atributo ou tipo no cálculo da razão ri/espessura: {e}")
+            if not all([espessura_obj, material_obj, canal_obj]):
+                return None, None
+
+            deducao_obj = session.query(Deducao).filter(
+                Deducao.espessura_id == espessura_obj.id,
+                Deducao.material_id == material_obj.id,
+                Deducao.canal_id == canal_obj.id
+            ).first()
+
+            return deducao_obj.forca if deducao_obj else None, canal_obj
+        except (AttributeError, TypeError, ValueError):
+            return None, None
+
+    def calcular(self):
+        """
+        Executa o cálculo da força em toneladas/m.
+
+        Returns:
+            dict: {'forca': float, 'canal_obj': Canal, 'comprimento': float} ou None
+        """
+        comprimento = converter_para_float(
+            obter_valor_widget(g.COMPR_ENTRY, 'text'))
+        espessura = converter_para_float(
+            obter_valor_widget(g.ESP_COMB, 'currentText'))
+        material = obter_valor_widget(g.MAT_COMB, 'currentText')
+        canal = obter_valor_widget(g.CANAL_COMB, 'currentText')
+
+        if not all([espessura, material, canal]):
+            return None
+
+        forca_base, canal_obj = self._obter_forca_db(
+            espessura, material, canal)
+
+        if forca_base is None:
+            return {'forca': None, 'canal_obj': canal_obj, 'comprimento': comprimento}
+
+        toneladas_m = (forca_base * comprimento) / \
+            1000 if comprimento > 0 else forca_base
+        return {'forca': toneladas_m, 'canal_obj': canal_obj, 'comprimento': comprimento}
+
+
+class CalculoDobra:
+    """Calcula as medidas de dobra, metade e blank."""
+
+    @staticmethod
+    def _calcular_medida_individual(dobra, deducao, pos_atual, blocos_preenchidos):
+        """
+        Calcula a medida de uma única dobra, considerando sua posição no bloco.
+        """
+        bloco_encontrado = None
+        for bloco in blocos_preenchidos:
+            if pos_atual in bloco:
+                bloco_encontrado = bloco
+                break
+
+        if bloco_encontrado is None:
+            return 0.0
+
+        pos_no_bloco = bloco_encontrado.index(pos_atual)
+        valor_dobra = converter_para_float(dobra)
+
+        # PYLINT R1714: Corrigido para usar 'in'
+        if len(bloco_encontrado) == 1 or pos_no_bloco in (0, len(bloco_encontrado) - 1):
+            return valor_dobra - deducao / 2
+
+        return valor_dobra - deducao
+
+    def calcular_coluna(self, w):
+        """
+        Calcula todas as dobras e o blank para uma coluna específica.
+
+        Args:
+            w (str): O identificador da coluna ('a' ou 'b').
+
+        Returns:
+            dict: {'resultados': list, 'blank_total': float} ou None
+        """
+        deducao, _ = CalculoDeducao.obter_deducao_usada()
+        if deducao <= 0:
+            return None
+
+        valores_dobras_str = [
+            obter_valor_widget(getattr(g, f'aba{i}_entry_{w}', None), 'text')
+            for i in range(1, g.N)
+        ]
+
+        preenchidos = [bool(v.strip()) for v in valores_dobras_str]
+        blocos = []
+        bloco_atual = []
+        for i, preenchido in enumerate(preenchidos):
+            if preenchido:
+                bloco_atual.append(i)
+            elif bloco_atual:
+                blocos.append(bloco_atual)
+                bloco_atual = []
+        if bloco_atual:
+            blocos.append(bloco_atual)
+
+        resultados = []
+        blank_total = 0
+        for i, dobra_str in enumerate(valores_dobras_str):
+            if not dobra_str.strip():
+                resultados.append({'medida': None, 'metade': None})
+                continue
+
+            medida = self._calcular_medida_individual(
+                dobra_str, deducao, i, blocos)
+            metade = medida / 2
+            blank_total += medida
+            resultados.append({'medida': medida, 'metade': metade})
+
+        return {'resultados': resultados, 'blank_total': blank_total}
