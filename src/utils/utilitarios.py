@@ -1,5 +1,5 @@
 """
-Funções utilitárias para o aplicativo de cálculo de dobras.
+Funções utilitárias genéricas para o aplicativo de cálculo de dobras.
 """
 import os
 import sys
@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QMessageBox, QInputDialog
 
 def obter_caminho_icone():
     """
-    Retorna o caminho correto para o arquivo de ícone, 
+    Retorna o caminho correto para o arquivo de ícone,
     considerando o modo de execução (normal ou empacotado).
     """
     if getattr(sys, 'frozen', False):  # Verifica se está empacotado
@@ -17,6 +17,22 @@ def obter_caminho_icone():
         base_path = os.path.abspath(".")  # Diretório atual no modo normal
 
     return os.path.join(base_path, "assets", "icone_2.ico")
+
+
+def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
+    """
+    Aplica bordas e espaçamento a um layout ou widget. (MOVIDO DE interface.py)
+    """
+    if hasattr(layout_ou_widget, 'setContentsMargins'):
+        layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
+    if hasattr(layout_ou_widget, 'setSpacing'):
+        layout_ou_widget.setSpacing(espaco)
+    elif hasattr(layout_ou_widget, 'layout') and layout_ou_widget.layout():
+        layout = layout_ou_widget.layout()
+        if hasattr(layout, 'setContentsMargins'):
+            layout.setContentsMargins(margem, margem, margem, margem)
+        if hasattr(layout, 'setSpacing'):
+            layout.setSpacing(espaco)
 
 
 def ask_string(title, prompt, parent=None):
