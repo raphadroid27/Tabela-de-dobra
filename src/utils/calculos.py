@@ -12,33 +12,13 @@ import re
 from src.config import globals as g
 from src.models.models import Canal, Espessura, Material, Deducao
 from src.utils.banco_dados import session
-
+# Importa o WidgetManager centralizado
+from src.utils.widget import WidgetManager
 
 # --- FUNÇÕES DE CAPTURA E CONVERSÃO DE DADOS DE WIDGETS ---
 
-def obter_valor_widget(widget, metodo='get', default_value=''):
-    """
-    Verifica se um widget está inicializado e obtém seu valor.
-
-    Args:
-        widget: O widget a ser verificado.
-        metodo (str): O método a ser chamado ('get', 'text', 'currentText').
-        default_value: Valor padrão a ser retornado se o widget for inválido.
-
-    Returns:
-        O valor do widget ou o valor padrão.
-    """
-    if widget is None:
-        return default_value
-
-    try:
-        if metodo in ('get', 'text') and hasattr(widget, 'text'):
-            return widget.text()
-        if metodo == 'currentText' and hasattr(widget, 'currentText'):
-            return widget.currentText() or default_value
-    except (AttributeError, TypeError):
-        return default_value
-    return default_value
+# A função obter_valor_widget foi removida para usar o WidgetManager,
+# centralizando a lógica de acesso aos widgets.
 
 
 def converter_para_float(valor_str, default_value=0.0):
@@ -72,9 +52,10 @@ class CalculoDeducaoDB:
         Returns:
             dict: {'valor': float/str, 'obs': str} ou None
         """
-        material_nome = obter_valor_widget(g.MAT_COMB, 'currentText')
-        espessura_str = obter_valor_widget(g.ESP_COMB, 'currentText')
-        canal_valor = obter_valor_widget(g.CANAL_COMB, 'currentText')
+        # Utiliza WidgetManager para obter os valores dos widgets de forma padronizada
+        material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
+        espessura_str = WidgetManager.get_widget_value(g.ESP_COMB)
+        canal_valor = WidgetManager.get_widget_value(g.CANAL_COMB)
 
         if not all([material_nome, espessura_str, canal_valor]):
             return None
@@ -117,13 +98,13 @@ class CalculoDeducao:
         Returns:
             tuple: (valor_deducao, usa_deducao_especifica)
         """
-        deducao_espec_str = obter_valor_widget(g.DED_ESPEC_ENTRY, 'text')
+        deducao_espec_str = WidgetManager.get_widget_value(g.DED_ESPEC_ENTRY)
         deducao_espec = converter_para_float(deducao_espec_str)
 
         if deducao_espec > 0:
             return deducao_espec, True
 
-        deducao_label_str = obter_valor_widget(g.DED_LBL, 'text')
+        deducao_label_str = WidgetManager.get_widget_value(g.DED_LBL)
         deducao_label = converter_para_float(deducao_label_str)
         return deducao_label, False
 
@@ -165,9 +146,9 @@ class CalculoFatorK:
             dict: {'fator_k': float, 'offset': float, 'especifico': bool} ou None
         """
         espessura = converter_para_float(
-            obter_valor_widget(g.ESP_COMB, 'currentText'))
+            WidgetManager.get_widget_value(g.ESP_COMB))
         raio_interno = converter_para_float(
-            obter_valor_widget(g.RI_ENTRY, 'text'))
+            WidgetManager.get_widget_value(g.RI_ENTRY))
 
         if raio_interno <= 0 or espessura <= 0:
             return None
@@ -201,9 +182,9 @@ class CalculoAbaMinima:
         Returns:
             float: O valor da aba mínima, ou None em caso de erro.
         """
-        canal_str = obter_valor_widget(g.CANAL_COMB, 'currentText')
+        canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
         espessura = converter_para_float(
-            obter_valor_widget(g.ESP_COMB, 'currentText'))
+            WidgetManager.get_widget_value(g.ESP_COMB))
 
         if not canal_str or espessura <= 0:
             return None
@@ -226,9 +207,9 @@ class CalculoZMinimo:
             float: O valor do Z mínimo, ou None se os dados forem insuficientes.
         """
         espessura = converter_para_float(
-            obter_valor_widget(g.ESP_COMB, 'currentText'))
+            WidgetManager.get_widget_value(g.ESP_COMB))
         deducao, _ = CalculoDeducao.obter_deducao_usada()
-        canal_str = obter_valor_widget(g.CANAL_COMB, 'currentText')
+        canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
 
         if espessura <= 0 or deducao <= 0 or not canal_str:
             return None
@@ -251,9 +232,9 @@ class CalculoRazaoRIE:
             float: O valor da razão, ou None se os dados forem insuficientes.
         """
         espessura = converter_para_float(
-            obter_valor_widget(g.ESP_COMB, 'currentText'))
+            WidgetManager.get_widget_value(g.ESP_COMB))
         raio_interno = converter_para_float(
-            obter_valor_widget(g.RI_ENTRY, 'text'))
+            WidgetManager.get_widget_value(g.RI_ENTRY))
 
         if espessura <= 0 or raio_interno <= 0:
             return None
@@ -297,11 +278,11 @@ class CalculoForca:
             dict: {'forca': float, 'canal_obj': Canal, 'comprimento': float} ou None
         """
         comprimento = converter_para_float(
-            obter_valor_widget(g.COMPR_ENTRY, 'text'))
+            WidgetManager.get_widget_value(g.COMPR_ENTRY))
         espessura = converter_para_float(
-            obter_valor_widget(g.ESP_COMB, 'currentText'))
-        material = obter_valor_widget(g.MAT_COMB, 'currentText')
-        canal = obter_valor_widget(g.CANAL_COMB, 'currentText')
+            WidgetManager.get_widget_value(g.ESP_COMB))
+        material = WidgetManager.get_widget_value(g.MAT_COMB)
+        canal = WidgetManager.get_widget_value(g.CANAL_COMB)
 
         if not all([espessura, material, canal]):
             return None
@@ -358,7 +339,8 @@ class CalculoDobra:
             return None
 
         valores_dobras_str = [
-            obter_valor_widget(getattr(g, f'aba{i}_entry_{w}', None), 'text')
+            WidgetManager.get_widget_value(
+                getattr(g, f'aba{i}_entry_{w}', None))
             for i in range(1, g.N)
         ]
 
