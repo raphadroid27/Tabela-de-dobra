@@ -17,6 +17,7 @@ from PySide6.QtCore import QTimer
 from src.models.models import Espessura, Material, Canal, Deducao
 from src.utils.banco_dados import session, obter_configuracoes
 from src.utils import calculos
+from src.utils.widget import WidgetManager
 from src.config import globals as g
 
 # --- CLASSES DE MANIPULAÇÃO DA INTERFACE ---
@@ -140,13 +141,14 @@ limpar_busca = LimparBusca().limpar_busca
 
 
 class WidgetUpdater:
-    """Gerencia a atualização de comboboxes e seus dados dependentes."""
+    """Gerencia a atualização de comboboxes do CABEÇALHO e seus dados dependentes."""
 
     def __init__(self):
         self.acoes = {
             'material': self._atualizar_material,
             'espessura': self._atualizar_espessura,
-            'canal': self._atualizar_canal
+            'canal': self._atualizar_canal,
+            'dedução': self._atualizar_deducao
         }
 
     def atualizar(self, tipo):
@@ -163,13 +165,12 @@ class WidgetUpdater:
     def _preservar_valores(self, tipo):
         valores = {}
         if tipo == 'material':
-            valores['ESP_COMB'] = calculos.obter_valor_widget(
-                g.ESP_COMB, 'currentText')
-            valores['CANAL_COMB'] = calculos.obter_valor_widget(
-                g.CANAL_COMB, 'currentText')
+            valores['ESP_COMB'] = WidgetManager.get_widget_value(g.ESP_COMB)
+            valores['CANAL_COMB'] = WidgetManager.get_widget_value(
+                g.CANAL_COMB)
         elif tipo == 'espessura':
-            valores['CANAL_COMB'] = calculos.obter_valor_widget(
-                g.CANAL_COMB, 'currentText')
+            valores['CANAL_COMB'] = WidgetManager.get_widget_value(
+                g.CANAL_COMB)
         return valores
 
     def _restaurar_valores(self, valores):
@@ -180,19 +181,23 @@ class WidgetUpdater:
                     widget.setCurrentText(valor)
 
     def _atualizar_material(self):
+        """Atualiza o combobox de material APENAS no cabeçalho."""
         materiais = [m.nome for m in session.query(
-            Material).order_by(Material.nome)]
-        for combo_global in [g.MAT_COMB, g.DED_MATER_COMB]:
-            if combo_global and hasattr(combo_global, 'clear'):
-                combo_global.clear()
-                combo_global.addItems(materiais)
-                combo_global.setCurrentIndex(-1)
+            Material).order_by(Material.nome).all()]
+
+        if hasattr(g, 'MAT_COMB') and g.MAT_COMB:
+            current_value_main = g.MAT_COMB.currentText()
+            g.MAT_COMB.clear()
+            g.MAT_COMB.addItems(materiais)
+            if current_value_main in materiais:
+                g.MAT_COMB.setCurrentText(current_value_main)
+            else:
+                g.MAT_COMB.setCurrentIndex(-1)
 
     def _atualizar_espessura(self):
         if hasattr(g, 'ESP_COMB') and g.ESP_COMB and hasattr(g.ESP_COMB, 'clear'):
             g.ESP_COMB.clear()
-            material_nome = calculos.obter_valor_widget(
-                g.MAT_COMB, 'currentText')
+            material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
             if material_nome:
                 material_obj = session.query(Material).filter_by(
                     nome=material_nome).first()
@@ -202,43 +207,94 @@ class WidgetUpdater:
                     ).order_by(Espessura.valor).distinct()
                     g.ESP_COMB.addItems([str(e.valor) for e in espessuras])
 
-        if hasattr(g, 'DED_ESPES_COMB') and g.DED_ESPES_COMB and hasattr(g.DED_ESPES_COMB, 'clear'):
-            espessuras_form = session.query(
-                Espessura.valor).distinct().order_by(Espessura.valor).all()
-            g.DED_ESPES_COMB.clear()
-            g.DED_ESPES_COMB.addItems([str(val[0])
-                                      for val in espessuras_form if val[0]])
-            g.DED_ESPES_COMB.setCurrentIndex(-1)
-
     def _atualizar_canal(self):
         if hasattr(g, 'CANAL_COMB') and g.CANAL_COMB and hasattr(g.CANAL_COMB, 'clear'):
             g.CANAL_COMB.clear()
-            material_nome = calculos.obter_valor_widget(
-                g.MAT_COMB, 'currentText')
-            espessura_valor = calculos.obter_valor_widget(
-                g.ESP_COMB, 'currentText')
+            material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
+            espessura_valor = WidgetManager.get_widget_value(g.ESP_COMB)
             if material_nome and espessura_valor:
-                espessura_obj = session.query(Espessura).filter_by(
-                    valor=float(espessura_valor)).first()
-                material_obj = session.query(Material).filter_by(
-                    nome=material_nome).first()
-                if espessura_obj and material_obj:
-                    canais = session.query(Canal).join(Deducao).filter(
-                        Deducao.espessura_id == espessura_obj.id,
-                        Deducao.material_id == material_obj.id
-                    ).order_by(Canal.valor).distinct()
-                    g.CANAL_COMB.addItems([str(c.valor) for c in canais])
+                try:
+                    espessura_obj = session.query(Espessura).filter_by(
+                        valor=float(espessura_valor)).first()
+                    material_obj = session.query(Material).filter_by(
+                        nome=material_nome).first()
+                    if espessura_obj and material_obj:
+                        canais = session.query(Canal).join(Deducao).filter(
+                            Deducao.espessura_id == espessura_obj.id,
+                            Deducao.material_id == material_obj.id
+                        ).order_by(Canal.valor).distinct()
+                        g.CANAL_COMB.addItems([str(c.valor) for c in canais])
+                except ValueError:
+                    pass
 
-        if hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB and hasattr(g.DED_CANAL_COMB, 'clear'):
-            canais_form = session.query(
-                Canal.valor).distinct().order_by(Canal.valor).all()
+    def _atualizar_deducao(self):
+        calcular_valores()
+
+
+class FormWidgetUpdater:
+    """Gerencia a atualização de comboboxes APENAS DENTRO DOS FORMULÁRIOS."""
+
+    def __init__(self):
+        self.acoes = {
+            'material': self._atualizar_material_form,
+            'espessura': self._atualizar_espessura_form,
+            'canal': self._atualizar_canal_form,
+        }
+
+    def atualizar(self, tipos):
+        """Atualiza os comboboxes do formulário para os tipos especificados."""
+        for tipo in tipos:
+            if tipo in self.acoes:
+                self.acoes[tipo]()
+
+    def _atualizar_material_form(self):
+        """Atualiza o combobox de material no formulário de dedução."""
+        if hasattr(g, 'DED_MATER_COMB') and g.DED_MATER_COMB:
+            materiais = [m.nome for m in session.query(
+                Material).order_by(Material.nome).all()]
+            current_value_form = g.DED_MATER_COMB.currentText()
+            g.DED_MATER_COMB.clear()
+            g.DED_MATER_COMB.addItems(materiais)
+            if current_value_form in materiais:
+                g.DED_MATER_COMB.setCurrentText(current_value_form)
+            else:
+                g.DED_MATER_COMB.setCurrentIndex(-1)
+
+    def _atualizar_espessura_form(self):
+        if hasattr(g, 'DED_ESPES_COMB') and g.DED_ESPES_COMB:
+            espessuras = [str(e.valor) for e in session.query(
+                Espessura).order_by(Espessura.valor).all()]
+            g.DED_ESPES_COMB.clear()
+            g.DED_ESPES_COMB.addItems(espessuras)
+            g.DED_ESPES_COMB.setCurrentIndex(-1)
+
+    def _atualizar_canal_form(self):
+        if hasattr(g, 'DED_CANAL_COMB') and g.DED_CANAL_COMB:
+            canais = [str(c.valor) for c in session.query(
+                Canal).order_by(Canal.valor).all()]
             g.DED_CANAL_COMB.clear()
-            g.DED_CANAL_COMB.addItems([str(val[0])
-                                      for val in canais_form if val[0]])
+            g.DED_CANAL_COMB.addItems(canais)
             g.DED_CANAL_COMB.setCurrentIndex(-1)
 
 
-atualizar_widgets = WidgetUpdater().atualizar
+def atualizar_widgets_global(tipo):
+    """
+    Atualiza os widgets relevantes tanto no cabeçalho quanto nos formulários abertos,
+    garantindo que as alterações (ex: novo material) sejam refletidas globalmente.
+    """
+    # 1. Atualiza widgets dependentes no cabeçalho
+    WidgetUpdater().atualizar(tipo)
+
+    # 2. Atualiza as listas de todos os itens nos formulários
+    if tipo in ['material', 'espessura', 'canal']:
+        FormWidgetUpdater().atualizar([tipo])
+
+
+# A função principal de atualização agora chama a função global
+atualizar_widgets = atualizar_widgets_global
+
+# A função para a inicialização do formulário continua a mesma
+atualizar_comboboxes_formulario = FormWidgetUpdater().atualizar
 
 
 # --- FUNÇÕES DE LIMPEZA (MOVIDAS DE limpeza.py) ---
@@ -265,7 +321,6 @@ def limpar_dobras():
 
 def limpar_tudo():
     """Limpa todos os campos e labels da interface principal."""
-    # Limpar comboboxes do cabeçalho
     for combo_global in [g.ESP_COMB, g.CANAL_COMB]:
         if combo_global and hasattr(combo_global, 'setCurrentIndex'):
             combo_global.setCurrentIndex(-1)
@@ -274,7 +329,6 @@ def limpar_tudo():
     if hasattr(g, 'MAT_COMB') and g.MAT_COMB:
         g.MAT_COMB.setCurrentIndex(-1)
 
-    # Limpar campos de entrada
     for entry_global in [g.RI_ENTRY, g.COMPR_ENTRY]:
         if entry_global and hasattr(entry_global, 'clear'):
             entry_global.clear()
@@ -401,7 +455,7 @@ def _atualizar_coluna_dobras_ui(w):
             _atualizar_label(
                 getattr(g, f'metadedobra{i}_label_{w}', None), res.get('metade'))
             entry_widget = getattr(g, f'aba{i}_entry_{w}', None)
-            valor_str = calculos.obter_valor_widget(entry_widget, 'text')
+            valor_str = WidgetManager.get_widget_value(entry_widget)
             _verificar_aba_minima(entry_widget, valor_str)
     else:
         for i in range(1, g.N):
@@ -458,7 +512,7 @@ def canal_tooltip():
     """Atualiza o tooltip do combobox de canais."""
     if not g.CANAL_COMB:
         return
-    canal_str = calculos.obter_valor_widget(g.CANAL_COMB, 'currentText')
+    canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
     if not canal_str:
         g.CANAL_COMB.setToolTip("Selecione o canal de dobra.")
         return
