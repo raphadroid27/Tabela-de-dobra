@@ -36,19 +36,18 @@ def adicionar(tipo):
     elif tipo == 'canal':
         adicionar_canal()
 
+    # As chamadas de atualização agora são centralizadas aqui,
+    # após a conclusão de qualquer operação de adição.
     _limpar_campos(tipo)
     listar(tipo)
-    atualizar_widgets(tipo)
+    atualizar_widgets(tipo)  # Esta chamada agora aciona a atualização global
     buscar(tipo)
 
 
 def adicionar_deducao():
     """
     Lógica para adicionar uma nova dedução.
-    Versão refatorada usando WidgetValidator.
     """
-
-    # Validar widgets e obter valores
     is_valid, values = OperationHelper.validate_deducao_operation()
     if not is_valid:
         show_error(
@@ -56,7 +55,6 @@ def adicionar_deducao():
             parent=g.DEDUC_FORM)
         return
 
-    # Extrair valores
     espessura_valor = values['DED_ESPES_COMB']
     canal_valor = values['DED_CANAL_COMB']
     material_nome = values['DED_MATER_COMB']
@@ -70,7 +68,6 @@ def adicionar_deducao():
     material_obj = session.query(Material).filter_by(
         nome=material_nome).first()
 
-    # Verificar se os objetos foram encontrados no banco
     if not espessura_obj:
         show_error(
             "Erro", f"Espessura '{espessura_valor}' não encontrada no banco.")
@@ -107,19 +104,11 @@ def adicionar_deducao():
                     f'material: {material_nome}, '
                     f'valor: {nova_deducao_valor}')
 
-    # Atualizar interface após salvar
-    _limpar_campos('dedução')
-    listar('dedução')
-    atualizar_widgets('dedução')
-
 
 def adicionar_espessura():
     """
     Lógica para adicionar uma nova espessura.
-    Versão refatorada usando WidgetValidator.
     """
-
-    # Validar widgets e obter valores
     is_valid, values = OperationHelper.validate_espessura_operation()
     if not is_valid:
         show_error("Erro", "Campo de espessura não inicializado ou vazio.")
@@ -144,19 +133,11 @@ def adicionar_espessura():
     nova_espessura = Espessura(valor=espessura_valor)
     salvar_no_banco(nova_espessura, 'espessura', f'valor: {espessura_valor}')
 
-    # Atualizar interface após salvar
-    _limpar_campos('espessura')
-    listar('espessura')
-    atualizar_widgets('espessura')
-
 
 def adicionar_material():
     """
     Lógica para adicionar um novo material.
-    Versão refatorada usando WidgetValidator.
     """
-
-    # Validar widgets e obter valores
     is_valid, values = OperationHelper.validate_material_operation()
     if not is_valid:
         show_error(
@@ -189,17 +170,11 @@ def adicionar_material():
                     f'escoamento: {escoamento_material}, '
                     f'elasticidade: {elasticidade_material}')
 
-    # Atualizar interface após salvar
-    _limpar_campos('material')
-    listar('material')
-    atualizar_widgets('material')
-
 
 def adicionar_canal():
     """
     Lógica para adicionar um novo canal.
     """
-    # Verificar se os widgets foram inicializados
     if (g.CANAL_VALOR_ENTRY is None or g.CANAL_LARGU_ENTRY is None or
         g.CANAL_ALTUR_ENTRY is None or g.CANAL_COMPR_ENTRY is None or
             g.CANAL_OBSER_ENTRY is None):
@@ -237,11 +212,6 @@ def adicionar_canal():
                     f'comprimento_total: {comprimento_total_canal}, '
                     f'observacao: {observacao_canal}')
 
-    # Atualizar interface após salvar
-    _limpar_campos('canal')
-    listar('canal')
-    atualizar_widgets('canal')
-
 
 def _processar_campo_edicao(obj, campo, entry, tipo):
     """Processa a edição de um campo individual."""
@@ -267,7 +237,7 @@ def _processar_campo_edicao(obj, campo, entry, tipo):
                 valor_novo = float(valor_novo.replace(",", "."))
             except ValueError:
                 show_error("Erro", f"Valor inválido para o campo '{campo}'.")
-                return None  # Indica erro
+                return None
 
     valor_antigo = getattr(obj, campo)
     if valor_antigo != valor_novo:
@@ -288,11 +258,6 @@ def _limpar_campos_edicao(config):
 def editar(tipo):
     """
     Edita um item existente no banco de dados com base no tipo especificado.
-    Os tipos disponíveis são:
-    - dedução
-    - espessura
-    - material
-    - canal
     """
     if not tem_permissao(tipo, 'editor'):
         return
@@ -311,21 +276,18 @@ def editar(tipo):
     obj_id = obj.id
     alteracoes = []
 
-    # Processar cada campo
     for campo, entry in config['campos'].items():
         resultado = _processar_campo_edicao(obj, campo, entry, tipo)
-        if resultado is None:  # Erro de validação
+        if resultado is None:
             return
         alteracoes.extend(resultado)
 
     tratativa_erro()
     detalhes = "; ".join(alteracoes)
 
-    # Registrar a edição com detalhes
     registrar_log(g.USUARIO_NOME, "editar", tipo, obj_id, detalhes)
     show_info("Sucesso", f"{tipo.capitalize()} editado(a) com sucesso!")
 
-    # Limpar campos e atualizar interface
     _limpar_campos_edicao(config)
     _limpar_campos(tipo)
     listar(tipo)
@@ -336,11 +298,6 @@ def editar(tipo):
 def excluir(tipo):
     """
     Exclui um item do banco de dados com base no tipo especificado.
-    Os tipos disponíveis são:
-    - dedução
-    - espessura
-    - material
-    - canal
     """
     if not tem_permissao(tipo, 'editor'):
         return
@@ -351,7 +308,6 @@ def excluir(tipo):
     if config['lista'] is None:
         return
 
-    # Verificar se há um item selecionado usando métodos do PySide6/Qt
     selected_items = config['lista'].selectedItems()
     if not selected_items:
         show_error(
@@ -365,7 +321,6 @@ def excluir(tipo):
     if not aviso:
         return
 
-    # Usar item_selecionado para buscar o objeto corretamente
     obj = _item_selecionado(tipo)
     if obj is None:
         show_error("Erro",
@@ -373,7 +328,6 @@ def excluir(tipo):
                    parent=config['form'])
         return
 
-    # Excluir deduções relacionadas (apenas se não for do tipo dedução)
     if tipo != 'dedução':
         if tipo == 'canal':
             deducao_objs = session.query(Deducao).filter(
@@ -390,11 +344,9 @@ def excluir(tipo):
         for d in deducao_objs:
             session.delete(d)
 
-    # Excluir o objeto principal
     session.delete(obj)
     tratativa_erro()
 
-    # Registrar a exclusão
     registrar_log(g.USUARIO_NOME,
                   "excluir",
                   tipo,
@@ -405,7 +357,6 @@ def excluir(tipo):
               f"{tipo.capitalize()} excluído(a) com sucesso!",
               parent=config['form'])
 
-    # Atualizar interface após exclusão
     _limpar_campos(tipo)
     listar(tipo)
     atualizar_widgets(tipo)
@@ -423,14 +374,13 @@ def preencher_campos(tipo):
 
     if obj:
         for campo, entry in config['campos'].items():
-            # Verificar se é QLineEdit ou QComboBox
             if hasattr(entry, 'clear'):
                 entry.clear()
                 if getattr(obj, campo) is not None:
                     valor = str(getattr(obj, campo))
-                    if hasattr(entry, 'setText'):  # QLineEdit
+                    if hasattr(entry, 'setText'):
                         entry.setText(valor)
-                    elif hasattr(entry, 'setCurrentText'):  # QComboBox
+                    elif hasattr(entry, 'setCurrentText'):
                         entry.setCurrentText(valor)
                 else:
                     if hasattr(entry, 'setText'):
@@ -440,11 +390,6 @@ def preencher_campos(tipo):
 def _limpar_campos(tipo):
     """
     Limpa os campos de entrada na aba correspondente ao tipo especificado.
-    Os tipos disponíveis são:
-    - dedução
-    - espessura
-    - material
-    - canal
     """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
@@ -459,44 +404,30 @@ def _limpar_campos(tipo):
 def _item_selecionado(tipo):
     """
     Retorna o objeto selecionado na lista correspondente ao tipo especificado.
-    Os tipos disponíveis são:
-    - dedução
-    - espessura
-    - material
-    - canal
     """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
-    # Verificar se há um item selecionado no QTreeWidget
     selected_items = config['lista'].selectedItems()
     if not selected_items:
-        # Retorna None silenciosamente quando não há seleção
         return None
 
     selected_item = selected_items[0]
 
     try:
-        # Para QTreeWidget, precisamos obter o texto das colunas e buscar no banco
-        # Como removemos o ID das colunas visíveis, vamos usar outros campos para identificar
-
         if tipo == 'dedução':
-            # Para dedução: Material, Espessura, Canal, Valor, Observação, Força
             material_nome = selected_item.text(0)
             espessura_texto = selected_item.text(1)
             canal_valor = selected_item.text(2)
             valor_texto = selected_item.text(3)
 
-            # Converter espessura e valor para float com tratamento de erro
             try:
                 espessura_valor = float(
                     espessura_texto) if espessura_texto else None
                 valor_deducao = float(valor_texto) if valor_texto else None
             except ValueError:
-                # Retorna None silenciosamente se valores são inválidos
                 return None
 
-            # Buscar no banco usando os valores únicos
             obj = session.query(config['modelo']).join(Material).join(Espessura).join(Canal).filter(
                 Material.nome == material_nome,
                 Espessura.valor == espessura_valor,
@@ -505,36 +436,30 @@ def _item_selecionado(tipo):
             ).first()
 
         elif tipo == 'material':
-            # Para material: Nome, Densidade, Escoamento, Elasticidade
             nome = selected_item.text(0)
             obj = session.query(config['modelo']).filter_by(nome=nome).first()
 
         elif tipo == 'canal':
-            # Para canal: Valor, Largura, Altura, Compr., Obs.
             valor = selected_item.text(0)
             obj = session.query(config['modelo']).filter_by(
                 valor=valor).first()
 
         elif tipo == 'espessura':
-            # Para espessura: Valor
             valor_texto = selected_item.text(0)
             try:
                 valor = float(valor_texto) if valor_texto else None
                 obj = session.query(config['modelo']).filter_by(
                     valor=valor).first()
             except ValueError:
-                # Retorna None silenciosamente se valor é inválido
                 return None
 
         else:
             show_error("Erro", f"Tipo '{tipo}' não suportado para seleção.")
             return None
 
-        # Retorna o objeto se encontrado, None caso contrário (sem mostrar erro aqui)
         return obj
 
     except (AttributeError, ValueError, TypeError) as e:
-        # Erro de programação ou tipo inválido - pode mostrar erro
         show_error("Erro", f"Erro ao buscar {tipo}: {str(e)}")
         return None
 
@@ -542,7 +467,6 @@ def _item_selecionado(tipo):
 def buscar(tipo):
     """
     Realiza a busca de itens no banco de dados com base nos critérios especificados.
-    Evita buscas automáticas durante recarregamentos ou atualizações de interface.
     """
     if _deve_ignorar_busca(tipo):
         return
@@ -595,6 +519,10 @@ def _buscar_itens(tipo, config):
 
 
 def _obter_itens_deducao(config):
+    """
+    Obtém e ordena os itens de dedução para a lista.
+    A ordenação é feita pelo valor da dedução, conforme a configuração.
+    """
     material = config['entries']['material_combo'].currentText()
     espessura = config['entries']['espessura_combo'].currentText()
     canal = config['entries']['canal_combo'].currentText()
@@ -605,6 +533,10 @@ def _obter_itens_deducao(config):
         query = query.filter(Espessura.valor == espessura)
     if canal:
         query = query.filter(Canal.valor == canal)
+
+    # Adiciona ordenação pelo valor da dedução, conforme a configuração
+    query = query.order_by(Deducao.valor)
+
     return query.all()
 
 
