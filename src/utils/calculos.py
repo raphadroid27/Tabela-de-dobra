@@ -3,8 +3,8 @@ Módulo de Cálculos para o Aplicativo de Dobras.
 
 Este módulo contém todas as funções e classes responsáveis por realizar
 os cálculos matemáticos e lógicos do sistema. As funções aqui presentes
-capturam os dados brutos dos widgets (passados como argumentos),
-processam-nos e retornam os resultados, sem modificar diretamente a interface.
+recebem dados brutos como argumentos, processam-nos e retornam os resultados,
+sem modificar ou sequer conhecer a interface gráfica.
 """
 
 from math import pi
@@ -12,16 +12,11 @@ import re
 from src.config import globals as g
 from src.models.models import Canal, Espessura, Material, Deducao
 from src.utils.banco_dados import session
-# Importa o WidgetManager centralizado
-from src.utils.widget import WidgetManager
 
-# --- FUNÇÕES DE CAPTURA E CONVERSÃO DE DADOS DE WIDGETS ---
-
-# A função obter_valor_widget foi removida para usar o WidgetManager,
-# centralizando a lógica de acesso aos widgets.
+# --- FUNÇÕES DE CONVERSÃO DE DADOS ---
 
 
-def converter_para_float(valor_str, default_value=0.0):
+def converter_para_float(valor_str: str, default_value=0.0) -> float:
     """
     Converte uma string para float, tratando vírgulas e valores vazios.
 
@@ -35,28 +30,24 @@ def converter_para_float(valor_str, default_value=0.0):
     if not isinstance(valor_str, str) or not valor_str.strip():
         return default_value
     try:
+        # Remove " Copiado!" e substitui vírgula por ponto
         return float(valor_str.replace(' Copiado!', '').replace(',', '.'))
     except (ValueError, TypeError):
         return default_value
 
+# --- CLASSES DE CÁLCULO (INDEPENDENTES DA UI) ---
 
-# --- CLASSES DE CÁLCULO ---
 
 class CalculoDeducaoDB:
     """Busca a dedução e observação do banco de dados."""
 
-    def buscar(self):
+    def buscar(self, material_nome: str, espessura_str: str, canal_valor: str):
         """
-        Busca a dedução no banco de dados com base nos widgets selecionados.
+        Busca a dedução no banco de dados com base nos valores fornecidos.
 
         Returns:
             dict: {'valor': float/str, 'obs': str} ou None
         """
-        # Utiliza WidgetManager para obter os valores dos widgets de forma padronizada
-        material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
-        espessura_str = WidgetManager.get_widget_value(g.ESP_COMB)
-        canal_valor = WidgetManager.get_widget_value(g.CANAL_COMB)
-
         if not all([material_nome, espessura_str, canal_valor]):
             return None
 
@@ -81,32 +72,10 @@ class CalculoDeducaoDB:
             if deducao_obj:
                 return {'valor': deducao_obj.valor, 'obs': deducao_obj.observacao or ''}
 
-            return {'valor': 'N/A', 'obs': 'Dedução não encontrada para esta combinação.'}
+            return {'valor': 'N/A', 'obs': 'Dedução não encontrada.'}
 
-        except ValueError:
+        except (ValueError, TypeError):
             return None
-
-
-class CalculoDeducao:
-    """Calcula a dedução a ser utilizada, lendo da UI."""
-
-    @staticmethod
-    def obter_deducao_usada():
-        """
-        Obtém o valor da dedução, priorizando a dedução específica.
-
-        Returns:
-            tuple: (valor_deducao, usa_deducao_especifica)
-        """
-        deducao_espec_str = WidgetManager.get_widget_value(g.DED_ESPEC_ENTRY)
-        deducao_espec = converter_para_float(deducao_espec_str)
-
-        if deducao_espec > 0:
-            return deducao_espec, True
-
-        deducao_label_str = WidgetManager.get_widget_value(g.DED_LBL)
-        deducao_label = converter_para_float(deducao_label_str)
-        return deducao_label, False
 
 
 class CalculoFatorK:
@@ -138,22 +107,12 @@ class CalculoFatorK:
                 return k1 + (k2 - k1) * (razao_re - r1) / (r2 - r1)
         return g.RAIO_K[razoes[-1]]
 
-    def calcular(self):
+    def calcular(self, espessura: float, raio_interno: float, deducao_usada: float):
         """
         Executa o cálculo do Fator K e Offset.
-
-        Returns:
-            dict: {'fator_k': float, 'offset': float, 'especifico': bool} ou None
         """
-        espessura = converter_para_float(
-            WidgetManager.get_widget_value(g.ESP_COMB))
-        raio_interno = converter_para_float(
-            WidgetManager.get_widget_value(g.RI_ENTRY))
-
         if raio_interno <= 0 or espessura <= 0:
             return None
-
-        deducao_usada, usa_especifica = CalculoDeducao.obter_deducao_usada()
 
         if deducao_usada > 0:
             fator_k = self._formula_fator_k(
@@ -163,7 +122,7 @@ class CalculoFatorK:
             fator_k = self._obter_fator_k_tabela(razao_re)
 
         offset = fator_k * espessura
-        return {'fator_k': fator_k, 'offset': offset, 'especifico': usa_especifica}
+        return {'fator_k': fator_k, 'offset': offset}
 
 
 class CalculoAbaMinima:
@@ -172,20 +131,15 @@ class CalculoAbaMinima:
     @staticmethod
     def _extrair_valor_canal(canal_str):
         """Extrai o valor numérico de uma string de canal."""
+        if not canal_str:
+            return None
         numeros = re.findall(r'\d+\.?\d*', canal_str)
         return float(numeros[0]) if numeros else None
 
-    def calcular(self):
+    def calcular(self, canal_str: str, espessura: float):
         """
         Executa o cálculo da aba mínima externa.
-
-        Returns:
-            float: O valor da aba mínima, ou None em caso de erro.
         """
-        canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
-        espessura = converter_para_float(
-            WidgetManager.get_widget_value(g.ESP_COMB))
-
         if not canal_str or espessura <= 0:
             return None
 
@@ -199,18 +153,10 @@ class CalculoAbaMinima:
 class CalculoZMinimo:
     """Calcula o Z mínimo externo."""
 
-    def calcular(self):
+    def calcular(self, espessura: float, deducao: float, canal_str: str):
         """
         Executa o cálculo do Z mínimo externo.
-
-        Returns:
-            float: O valor do Z mínimo, ou None se os dados forem insuficientes.
         """
-        espessura = converter_para_float(
-            WidgetManager.get_widget_value(g.ESP_COMB))
-        deducao, _ = CalculoDeducao.obter_deducao_usada()
-        canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
-
         if espessura <= 0 or deducao <= 0 or not canal_str:
             return None
 
@@ -224,18 +170,10 @@ class CalculoZMinimo:
 class CalculoRazaoRIE:
     """Calcula a razão entre Raio Interno e Espessura."""
 
-    def calcular(self):
+    def calcular(self, espessura: float, raio_interno: float):
         """
         Executa o cálculo da razão RI/E.
-
-        Returns:
-            float: O valor da razão, ou None se os dados forem insuficientes.
         """
-        espessura = converter_para_float(
-            WidgetManager.get_widget_value(g.ESP_COMB))
-        raio_interno = converter_para_float(
-            WidgetManager.get_widget_value(g.RI_ENTRY))
-
         if espessura <= 0 or raio_interno <= 0:
             return None
 
@@ -270,20 +208,10 @@ class CalculoForca:
         except (AttributeError, TypeError, ValueError):
             return None, None
 
-    def calcular(self):
+    def calcular(self, comprimento: float, espessura: float, material: str, canal: str):
         """
         Executa o cálculo da força em toneladas/m.
-
-        Returns:
-            dict: {'forca': float, 'canal_obj': Canal, 'comprimento': float} ou None
         """
-        comprimento = converter_para_float(
-            WidgetManager.get_widget_value(g.COMPR_ENTRY))
-        espessura = converter_para_float(
-            WidgetManager.get_widget_value(g.ESP_COMB))
-        material = WidgetManager.get_widget_value(g.MAT_COMB)
-        canal = WidgetManager.get_widget_value(g.CANAL_COMB)
-
         if not all([espessura, material, canal]):
             return None
 
@@ -291,18 +219,18 @@ class CalculoForca:
             espessura, material, canal)
 
         if forca_base is None:
-            return {'forca': None, 'canal_obj': canal_obj, 'comprimento': comprimento}
+            return {'forca': None, 'canal_obj': canal_obj}
 
         toneladas_m = (forca_base * comprimento) / \
             1000 if comprimento > 0 else forca_base
-        return {'forca': toneladas_m, 'canal_obj': canal_obj, 'comprimento': comprimento}
+        return {'forca': toneladas_m, 'canal_obj': canal_obj}
 
 
 class CalculoDobra:
     """Calcula as medidas de dobra, metade e blank."""
 
     @staticmethod
-    def _calcular_medida_individual(dobra, deducao, pos_atual, blocos_preenchidos):
+    def _calcular_medida_individual(valor_dobra, deducao, pos_atual, blocos_preenchidos):
         """
         Calcula a medida de uma única dobra, considerando sua posição no bloco.
         """
@@ -316,7 +244,6 @@ class CalculoDobra:
             return 0.0
 
         pos_no_bloco = bloco_encontrado.index(pos_atual)
-        valor_dobra = converter_para_float(dobra)
 
         # PYLINT R1714: Corrigido para usar 'in'
         if len(bloco_encontrado) == 1 or pos_no_bloco in (0, len(bloco_encontrado) - 1):
@@ -324,27 +251,14 @@ class CalculoDobra:
 
         return valor_dobra - deducao
 
-    def calcular_coluna(self, w):
+    def calcular_coluna(self, valores_dobras: list[float], deducao: float):
         """
         Calcula todas as dobras e o blank para uma coluna específica.
-
-        Args:
-            w (str): O identificador da coluna ('a' ou 'b').
-
-        Returns:
-            dict: {'resultados': list, 'blank_total': float} ou None
         """
-        deducao, _ = CalculoDeducao.obter_deducao_usada()
         if deducao <= 0:
             return None
 
-        valores_dobras_str = [
-            WidgetManager.get_widget_value(
-                getattr(g, f'aba{i}_entry_{w}', None))
-            for i in range(1, g.N)
-        ]
-
-        preenchidos = [bool(v.strip()) for v in valores_dobras_str]
+        preenchidos = [v > 0 for v in valores_dobras]
         blocos = []
         bloco_atual = []
         for i, preenchido in enumerate(preenchidos):
@@ -358,13 +272,13 @@ class CalculoDobra:
 
         resultados = []
         blank_total = 0
-        for i, dobra_str in enumerate(valores_dobras_str):
-            if not dobra_str.strip():
+        for i, dobra_valor in enumerate(valores_dobras):
+            if dobra_valor <= 0:
                 resultados.append({'medida': None, 'metade': None})
                 continue
 
             medida = self._calcular_medida_individual(
-                dobra_str, deducao, i, blocos)
+                dobra_valor, deducao, i, blocos)
             metade = medida / 2
             blank_total += medida
             resultados.append({'medida': medida, 'metade': metade})
