@@ -32,7 +32,7 @@ class ExpansionManager:
         """Remove todas as janelas órfãs - usa função centralizada"""
         try:
             remover_janelas_orfas()
-        except (ImportError, ValueError):
+        except (ImportError, ValueError, RuntimeError):
             pass
 
     def update_interface_size(self, exp_h, exp_v):
@@ -42,13 +42,10 @@ class ExpansionManager:
 
         self.is_updating = True
         try:
-            self.force_cleanup_orphans()
-
             # Calcular novo tamanho baseado na expansão
             largura = 720 if exp_h else 360
             altura = 650 if exp_v else 500
             colunas = 2 if exp_h else 1
-            num_abas = 10 if exp_v else 5
 
             # Atualizar estados globais
             g.EXP_H = exp_h
@@ -56,7 +53,7 @@ class ExpansionManager:
             g.VALORES_W = [1, 2] if exp_h else [1]
 
             print(
-                f"Atualizando interface: {largura}x{altura}, {colunas} colunas, {num_abas} abas")
+                f"Atualizando interface para: {largura}x{altura}, {colunas} colunas")
 
             # Aplicar setFixedSize para o tamanho atual
             g.PRINC_FORM.setFixedSize(largura, altura)
@@ -65,78 +62,22 @@ class ExpansionManager:
             if hasattr(g, 'CARREGAR_INTERFACE_FUNC') and callable(g.CARREGAR_INTERFACE_FUNC):
                 g.CARREGAR_INTERFACE_FUNC(colunas, g.MAIN_LAYOUT)
 
-            # Forçar limpeza completa do layout quando voltando ao estado normal
-            if not exp_h and not exp_v:
-                print("Estado normal detectado - aplicando ajustes básicos...")
-                QTimer.singleShot(100, self._basic_layout_fix)
-
-            # Forçar atualização do layout
-            if g.MAIN_LAYOUT:
-                g.MAIN_LAYOUT.invalidate()
-                g.MAIN_LAYOUT.activate()
+            # OTIMIZAÇÃO: Removidos QTimers para _basic_layout_fix e _restore_limits.
+            # A nova abordagem com setUpdatesEnabled torna esses ajustes desnecessários,
+            # pois o layout é calculado e pintado de uma só vez no final.
 
             # Processar eventos para garantir atualização visual
             app = QApplication.instance()
             if app:
                 app.processEvents()
 
-            # Restaurar configuração final após delay
-            QTimer.singleShot(200, self._restore_limits)
+            # Agendar limpeza de órfãos após mudanças (mantido por segurança)
+            self.cleanup_timer.start(500)
 
-            # Agendar limpeza de órfãos após mudanças
-            self.cleanup_timer.start(300)
-
-        except (ValueError, TypeError):
-            print("Erro de valor ou tipo.")
+        except (ValueError, TypeError, RuntimeError) as e:
+            print(f"Erro ao atualizar o tamanho da interface: {e}")
         finally:
             self.is_updating = False
-
-    def _basic_layout_fix(self):
-        """Correção básica e conservadora para o layout no estado normal."""
-        try:
-            if not g.PRINC_FORM or not g.MAIN_LAYOUT:
-                return
-
-            print("Aplicando ajuste básico do layout...")
-
-            # Apenas resetar a segunda coluna se ela existir
-            g.MAIN_LAYOUT.setColumnStretch(1, 0)
-            g.MAIN_LAYOUT.setColumnStretch(0, 1)
-
-            # Forçar tamanho da janela
-            g.PRINC_FORM.setFixedSize(360, 500)
-
-            print("Ajuste básico aplicado!")
-
-        except RuntimeError as e:
-            print(f"Erro no ajuste básico: {e}")
-
-    def _restore_limits(self):
-        """Restaura configurações finais após mudanças de layout"""
-        if not g.PRINC_FORM:
-            return
-
-        # Manter o tamanho fixo baseado no estado atual de expansão
-        final_largura = 720 if g.EXP_H else 360
-        final_altura = 650 if g.EXP_V else 500
-        g.PRINC_FORM.setFixedSize(final_largura, final_altura)
-
-        # Forçar reajuste completo do layout
-        if g.MAIN_LAYOUT:
-            g.MAIN_LAYOUT.invalidate()
-            g.MAIN_LAYOUT.activate()
-            g.MAIN_LAYOUT.update()
-
-        # Atualizar widget central
-        central_widget = g.PRINC_FORM.centralWidget()
-        if central_widget:
-            central_widget.updateGeometry()
-            central_widget.adjustSize()
-
-        # Processar eventos novamente
-        app = QApplication.instance()
-        if app:
-            app.processEvents()
 
 
 def criar_botoes():
