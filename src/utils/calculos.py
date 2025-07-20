@@ -9,6 +9,7 @@ sem modificar ou sequer conhecer a interface gráfica.
 
 from math import pi
 import re
+from typing import List
 from src.config import globals as g
 from src.models.models import Canal, Espessura, Material, Deducao
 from src.utils.banco_dados import session
@@ -251,7 +252,7 @@ class CalculoDobra:
 
         return valor_dobra - deducao
 
-    def calcular_coluna(self, valores_dobras: list[float], deducao: float):
+    def calcular_coluna(self, valores_dobras: List[float], deducao: float):
         """
         Calcula todas as dobras e o blank para uma coluna específica.
         """
