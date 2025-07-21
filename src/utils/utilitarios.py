@@ -3,7 +3,7 @@ Funções utilitárias genéricas para o aplicativo de cálculo de dobras.
 """
 import os
 import sys
-from PySide6.QtWidgets import QMessageBox, QInputDialog
+from PySide6.QtWidgets import QMessageBox, QInputDialog, QLineEdit
 
 
 def obter_caminho_icone():
@@ -38,7 +38,7 @@ def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
 def ask_string(title, prompt, parent=None):
     """Pede uma string usando QInputDialog"""
     text, ok = QInputDialog.getText(
-        parent, title, prompt, QInputDialog.Password)
+        parent, title, prompt, QLineEdit.Password)
     return text if ok else None
 
 
