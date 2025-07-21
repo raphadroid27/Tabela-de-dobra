@@ -323,7 +323,7 @@ def limpar_dobras():
 
     calcular_valores()
 
-    if g.VALORES_W:
+    if hasattr(g, 'VALORES_W') and g.VALORES_W:
         primeiro_entry = getattr(g, f"aba1_entry_{g.VALORES_W[0]}", None)
         if primeiro_entry and hasattr(primeiro_entry, 'setFocus'):
             primeiro_entry.setFocus()
@@ -493,6 +493,13 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                 getattr(g, f'medidadobra{i}_label_{w}', None), res.get('medida'))
             _atualizar_label(
                 getattr(g, f'metadedobra{i}_label_{w}', None), res.get('metade'))
+    else:
+        # Se res_coluna for None (ex: dedução <= 0), limpa os labels de resultado
+        for i in range(1, g.N):
+            _atualizar_label(
+                getattr(g, f'medidadobra{i}_label_{w}', None), None)
+            _atualizar_label(
+                getattr(g, f'metadedobra{i}_label_{w}', None), None)
 
     _atualizar_label(getattr(g, f'medida_blank_label_{w}', None),
                      blank_total if blank_total > 0 else None)
@@ -529,8 +536,9 @@ def calcular_valores():
         aba_min = _atualizar_parametros_auxiliares_ui(ui_data, deducao_usada)
         _atualizar_forca_ui(ui_data)
 
-        for w in g.VALORES_W:
-            _atualizar_coluna_dobras_ui(w, deducao_usada, aba_min)
+        if hasattr(g, 'VALORES_W'):
+            for w in g.VALORES_W:
+                _atualizar_coluna_dobras_ui(w, deducao_usada, aba_min)
 
     except (AttributeError, RuntimeError, ValueError, KeyError, TypeError) as e:
         print(f"Erro inesperado em calcular_valores: {e}")
