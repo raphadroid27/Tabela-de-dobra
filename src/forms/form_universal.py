@@ -18,7 +18,7 @@ from src.utils.interface import (
     listar, limpar_busca,
     atualizar_comboboxes_formulario)  # <--- IMPORTA A NOVA FUNÇÃO
 from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
-from src.utils.operacoes_crud import buscar, preencher_campos, excluir, editar, adicionar
+from src.utils.controlador import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
                               obter_estilo_botao_azul, obter_estilo_botao_vermelho)
 from src.config import globals as g

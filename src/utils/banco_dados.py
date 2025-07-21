@@ -1,9 +1,7 @@
-
 """
 Módulo utilitário para manipulação de banco de dados no aplicativo de cálculo de dobras.
 """
 import os
-from PySide6.QtWidgets import QMessageBox
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -22,6 +20,8 @@ session = Session()
 def obter_configuracoes():
     """
     Retorna um dicionário com as configurações de cada tipo de item.
+    Esta função mapeia os tipos de dados para os widgets da UI correspondentes,
+    sendo essencial para a camada de handlers.
     """
     return {
         'principal': {
@@ -60,7 +60,7 @@ def obter_configuracoes():
                 'escoamento': g.MAT_ESCO_ENTRY,
                 'elasticidade': g.MAT_ELAS_ENTRY
             },
-            'item_id': Material.id,  # Corrigido de Deducao.material_id
+            'item_id': Material.id,
             'valores': lambda m: (m.nome, m.densidade, m.escoamento, m.elasticidade),
             'ordem': Material.id,
             'entry': g.MAT_NOME_ENTRY,
@@ -74,17 +74,17 @@ def obter_configuracoes():
             'campos': {
                 'valor': g.ESP_VALOR_ENTRY
             },
-            'item_id': Espessura.id,  # Corrigido de Deducao.espessura_id
+            'item_id': Espessura.id,
             'valores': lambda e: (e.valor,),
             'ordem': Espessura.valor,
             'entry': g.ESP_VALOR_ENTRY,
             'busca': g.ESP_BUSCA_ENTRY,
-            'campo_busca': Espessura.valor  # Corrigido de espessura.valor
+            'campo_busca': Espessura.valor
         },
         'canal': {
             'form': g.CANAL_FORM,
             'lista': g.LIST_CANAL,
-            'modelo': Canal,  # Corrigido de canal
+            'modelo': Canal,
             'campos': {
                 'valor': g.CANAL_VALOR_ENTRY,
                 'largura': g.CANAL_LARGU_ENTRY,
@@ -92,62 +92,40 @@ def obter_configuracoes():
                 'comprimento_total': g.CANAL_COMPR_ENTRY,
                 'observacao': g.CANAL_OBSER_ENTRY
             },
-            'item_id': Canal.id,  # Corrigido de deducao.canal_id
+            'item_id': Canal.id,
             'valores': lambda c: (c.valor,
                                   c.largura,
                                   c.altura,
                                   c.comprimento_total,
                                   c.observacao),
-            'ordem': Canal.valor,  # Corrigido de canal.valor
+            'ordem': Canal.valor,
             'entry': g.CANAL_VALOR_ENTRY,
             'busca': g.CANAL_BUSCA_ENTRY,
-            'campo_busca': Canal.valor  # Corrigido de canal.valor
+            'campo_busca': Canal.valor
         },
         'usuario': {
             'form': g.USUAR_FORM,
             'lista': g.LIST_USUARIO,
-            'modelo': Usuario,  # Corrigido de usuario
+            'modelo': Usuario,
             'valores': lambda u: (u.id, u.nome, u.role),
-            'ordem': Usuario.nome,  # Corrigido de usuario.nome
-            'busca': g.USUARIO_BUSCA_ENTRY,  # Corrigido de usuario.busca
-            'campo_busca': Usuario.nome  # Corrigido de usuario.nome
+            'ordem': Usuario.nome,
+            'busca': g.USUARIO_BUSCA_ENTRY,
+            'campo_busca': Usuario.nome
         }
     }
 
 
-def salvar_no_banco(obj, tipo, detalhes):
-    """
-    Salva um objeto no banco de dados e registra o log.
-    """
-    session.add(obj)
-    tratativa_erro()
-    registrar_log(g.USUARIO_NOME, 'adicionar', tipo,
-                  obj.id, f'{tipo} {detalhes}')
-
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
-    # Usar QMessageBox em vez do módulo messagebox do Tkinter
-    msg = QMessageBox(config['form'])
-    msg.setIcon(QMessageBox.Information)
-    msg.setWindowTitle("Sucesso")
-    msg.setText(f"Novo(a) {tipo} adicionado(a) com sucesso!")
-    msg.exec()
-
-
 def tratativa_erro():
     """
-    Trata erros de integridade e operacionais no banco de dados.
+    Realiza o commit da sessão e trata erros de integridade e operacionais.
     """
     try:
         session.commit()
-        print("Operação realizada com sucesso!")
-    except IntegrityError as e:
+    except (IntegrityError, OperationalError) as e:
         session.rollback()
-        print(f"Erro de integridade no banco de dados: {e}")
-    except OperationalError as e:
-        session.rollback()
-        print(f"Erro operacional no banco de dados: {e}")
+        print(f"Erro de banco de dados: {e}")
+        # Lançar a exceção permite que a camada de chamada saiba que a operação falhou
+        raise
     except Exception as e:
         session.rollback()
         print(f"Erro inesperado: {e}")
@@ -160,12 +138,15 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
     """
     Registra uma ação no banco de dados.
     """
-    log = Log(
-        usuario_nome=usuario_nome,
-        acao=acao,
-        tabela=tabela,
-        registro_id=registro_id,
-        detalhes=detalhes
-    )
-    session.add(log)
-    tratativa_erro()
+    try:
+        log = Log(
+            usuario_nome=usuario_nome,
+            acao=acao,
+            tabela=tabela,
+            registro_id=registro_id,
+            detalhes=detalhes
+        )
+        session.add(log)
+        # O commit será feito pela função principal que chama o registro
+    except (IntegrityError, OperationalError) as e:
+        print(f"Erro de banco de dados ao criar log: {e}")
