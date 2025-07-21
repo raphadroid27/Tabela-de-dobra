@@ -2,6 +2,19 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 2.2.0 (21/07/2025)
+
+- Refatoração geral do código para melhorar modularidade, clareza e manutenção, incluindo:
+    - Centralização e simplificação da lógica de cálculo e atualização da interface.
+    - Introdução e reorganização de módulos utilitários, controladores e gerenciadores de widgets.
+    - Renomeação e padronização de funções e métodos para maior consistência.
+    - Implementação de classes para limpeza de campos e gerenciamento de cópia/listagem.
+    - Otimização do tratamento de erros e atualização de documentação.
+    - Backup e reorganização de arquivos e pastas legadas.
+- Ajustes em importações e remoção de módulos obsoletos.
+- Melhorias na gestão e posicionamento de janelas da interface.
+- Adicionado suporte à detecção de tema do sistema e atualiza a lógica de mudança de tema
+
 ## 2.1.1 (15/07/2025)
 
 - Exibe dicas explicativas (tooltips) na validação da aba mínima para facilitar o preenchimento.
