@@ -15,7 +15,7 @@ import signal
 import uuid
 import socket
 from datetime import datetime
-
+from sqlalchemy.exc import SQLAlchemyError
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout)
 from PySide6.QtCore import Qt, QTimer
@@ -111,7 +111,7 @@ def registrar_sessao():
         db_session.add(nova_sessao)
         db_session.commit()
         print(f"Sessão {g.SESSION_ID} registrada para {hostname}.")
-    except Exception as e:
+    except SQLAlchemyError as e:
         print(f"Erro ao registrar sessão: {e}")
         db_session.rollback()
 
@@ -125,7 +125,7 @@ def remover_sessao():
             db_session.delete(sessao_para_remover)
             db_session.commit()
             print(f"Sessão {g.SESSION_ID} removida.")
-    except Exception as e:
+    except SQLAlchemyError as e:
         print(f"Erro ao remover sessão: {e}")
         db_session.rollback()
 
@@ -153,7 +153,7 @@ def verificar_comandos_sistema():
             print("Comando de desligamento recebido. Fechando a aplicação...")
             fechar_aplicativo()
 
-    except Exception as e:
+    except SQLAlchemyError as e:
         print(f"Erro ao verificar comandos do sistema: {e}")
         db_session.rollback()
 
@@ -438,7 +438,7 @@ def main():
                 print(''.join(traceback.format_exception(
                     exc_type, exc_value, exc_traceback)))
 
-        def signal_handler(signum, frame):
+        def signal_handler(signum, _):
             print(f"Sinal recebido: {signum}")
             fechar_aplicativo()
 
@@ -476,7 +476,7 @@ def main():
         if app:
             app.quit()
         return 0
-    except Exception as e:
+    except SQLAlchemyError as e:
         print(f"ERRO CRÍTICO na inicialização: {e}")
         traceback.print_exc()
         if app:
