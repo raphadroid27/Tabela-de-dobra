@@ -286,7 +286,8 @@ def start_application() -> None:
         return
     logging.info("Iniciando a aplicação: %s", APP_PATH)
     try:
-        subprocess.Popen([APP_PATH])
+        with subprocess.Popen([APP_PATH]):
+            pass  # O processo é iniciado e o contexto é gerenciado
     except (OSError, ValueError) as e:
         logging.error("Erro ao iniciar a aplicação: %s", e)
 
