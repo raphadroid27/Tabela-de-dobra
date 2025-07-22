@@ -21,6 +21,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QAction
 
+# Importa o engine, Base e SessionLocal para garantir a criação do banco de dados.
+from src.models.models import Base, engine, SessionLocal
+
 from src.utils.utilitarios import obter_caminho_icone
 from src.utils.usuarios import logout
 from src.utils.janelas import (
@@ -59,10 +62,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # --- Variáveis Globais de Configuração e Versão ---
 APP_VERSION = "2.2.0"  # Versão atual da aplicação
+
+# --- CAMINHO PARA O ARQUIVO DE CONFIGURAÇÃO (EM DOCUMENTOS) ---
 DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
 CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+
 
 # ID único para esta instância da aplicação
 g.SESSION_ID = str(uuid.uuid4())
@@ -103,14 +109,18 @@ def registrar_sessao():
     """Registra a sessão atual no banco de dados."""
     try:
         hostname = socket.gethostname()
-        nova_sessao = SystemControl(
-            type='SESSION',
-            key=g.SESSION_ID,
-            value=hostname
-        )
-        db_session.add(nova_sessao)
-        db_session.commit()
-        print(f"Sessão {g.SESSION_ID} registrada para {hostname}.")
+        # Verifica se a sessão já existe para evitar duplicatas
+        sessao_existente = db_session.query(
+            SystemControl).filter_by(key=g.SESSION_ID).first()
+        if not sessao_existente:
+            nova_sessao = SystemControl(
+                type='SESSION',
+                key=g.SESSION_ID,
+                value=hostname
+            )
+            db_session.add(nova_sessao)
+            db_session.commit()
+            print(f"Sessão {g.SESSION_ID} registrada para {hostname}.")
     except SQLAlchemyError as e:
         print(f"Erro ao registrar sessão: {e}")
         db_session.rollback()
@@ -315,7 +325,7 @@ def _criar_menu_usuario(menu_bar):
         ("👥 Novo Usuário", _executar_novo_usuario),
         ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
         ("separator", None),
-        ("� Sair", logout)
+        ("🚪 Sair", logout)
     ]
     _adicionar_acoes_ao_menu(usuario_menu, acoes_usuario)
 
@@ -429,6 +439,21 @@ def main():
     """
     app = None
     try:
+        # Garante que as tabelas sejam criadas no banco de dados.
+        Base.metadata.create_all(engine)
+
+        # Inicializa o comando de atualização se não existir.
+        # Isso é feito aqui para garantir que as tabelas já existam.
+        session = SessionLocal()
+        try:
+            if not session.query(SystemControl).filter_by(key='UPDATE_CMD').first():
+                initial_command = SystemControl(
+                    type='COMMAND', key='UPDATE_CMD', value='NONE')
+                session.add(initial_command)
+                session.commit()
+        finally:
+            session.close()
+
         app = QApplication(sys.argv)
         aplicar_tema_inicial("dark")
 
