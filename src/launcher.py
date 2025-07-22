@@ -1,260 +1,345 @@
-# -*- coding: utf-8 -*-
 """
 Launcher da Aplicação de Cálculo de Dobra.
 
 Responsável por:
-1. Verificar a existência de novas versões da aplicação.
+1. Verificar a existência de novas versões da aplicação a partir de uma pasta local.
 2. Forçar o encerramento seguro de todas as instâncias em execução.
-3. Aplicar a atualização de forma atómica para evitar corrupção de ficheiros.
+3. Aplicar a atualização de forma atômica para evitar corrupção de arquivos.
 4. Iniciar a aplicação principal.
-5. Gravar todas as operações num ficheiro de log.
+
+Este módulo foi projetado para ser executado como um executável independente.
 """
 
-import json
-import logging
-import os
-import shutil
-import subprocess
 import sys
-import time
+import os
+import json
+import subprocess
 import zipfile
+import time
+import shutil
 from datetime import datetime, timedelta
 from typing import Tuple, Optional, Type
 
-from semantic_version import Version
 from sqlalchemy import create_engine
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.exc import SQLAlchemyError
+from semantic_version import Version
 
-# --- Configuração de Caminhos e Constantes ---
+# --- Configuração de Caminhos de Forma Robusta ---
+
 
 def get_base_dir() -> str:
     """Retorna o diretório base da aplicação, seja em modo script ou executável."""
+    # Se estiver rodando como um executável (criado pelo PyInstaller, por exemplo)
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
+    # Se estiver rodando como um script python normal
     return os.path.dirname(os.path.abspath(__file__))
 
+
+# --- Constantes e Caminhos Globais ---
 BASE_DIR = get_base_dir()
 APP_EXECUTABLE = "app.exe"
 APP_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE)
 DB_DIR = os.path.join(BASE_DIR, "database")
 DB_PATH = os.path.join(DB_DIR, "tabela_de_dobra.db")
-LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+# Pasta de onde as atualizações serão lidas
 UPDATES_DIR = os.path.join(BASE_DIR, 'updates')
+# Caminho completo para o arquivo de versão
 VERSION_FILE_PATH = os.path.join(UPDATES_DIR, 'versao.json')
 
 # Adiciona o diretório 'src' ao path para encontrar os modelos
+# Isso é necessário para que o launcher encontre os módulos da aplicação principal
 sys.path.append(os.path.abspath(os.path.join(BASE_DIR, '.')))
 
-# --- Importações de Módulos Locais ---
-# As importações são feitas no topo para seguir as boas práticas (PEP 8)
+# Importa o modelo e a versão APÓS a configuração do path
 try:
-    from src.models.models import SystemControl
+    from src.models.models import SystemControl as SystemControlModel
+    from src.app import APP_VERSION as LOCAL_APP_VERSION
 except ImportError as e:
-    # Se a importação falhar, o launcher não pode funcionar.
-    # Logamos o erro e saímos.
-    logging.basicConfig(level=logging.CRITICAL)
-    logging.critical("Falha CRÍTICA ao importar 'SystemControl': %s. PYTHONPATH está correto?", e)
+    print(
+        f"[LAUNCHER] ERRO CRÍTICO: Não foi possível importar módulos da aplicação: {e}")
+    print("[LAUNCHER] Verifique se o launcher está no diretório correto.")
+    # Permite que o usuário veja o erro antes de fechar
+    time.sleep(10)
     sys.exit(1)
-
-# A versão deve ser mantida em sincronia com a versão em app.py
-# A melhor prática seria ter um único ficheiro de versão partilhado.
-LOCAL_APP_VERSION = "1.0.1"
 
 
 # --- Funções do Launcher ---
 
-def setup_logging() -> None:
-    """Configura o sistema de logging para guardar em ficheiro e na consola."""
-    os.makedirs(LOGS_DIR, exist_ok=True)
-    log_file_path = os.path.join(LOGS_DIR, 'launcher.log')
+def print_message(message: str) -> None:
+    """Imprime uma mensagem formatada para o log do launcher."""
+    print(f"[LAUNCHER] {datetime.now():%Y-%m-%d %H:%M:%S} - {message}")
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format='[LAUNCHER] %(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        handlers=[
-            logging.FileHandler(log_file_path, 'a', 'utf-8'),
-            logging.StreamHandler(sys.stdout)
-        ],
-        force=True
-    )
 
-def get_db_session() -> Tuple[Optional[Session], Optional[Type[SystemControl]]]:
-    """Cria e retorna uma sessão do SQLAlchemy para interagir com o banco."""
+def get_db_session() -> Tuple[Optional[Session], Optional[Type[SystemControlModel]]]:
+    """
+    Cria e retorna uma sessão do SQLAlchemy para interagir com o banco de dados.
+
+    Returns:
+        Uma tupla contendo a instância da sessão e a classe do modelo,
+        ou (None, None) em caso de falha.
+    """
     if not os.path.exists(DB_PATH):
-        logging.error("Base de dados não encontrada em: %s", DB_PATH)
+        print_message(f"ERRO: Banco de dados não encontrado em: {DB_PATH}")
         return None, None
     try:
         engine = create_engine(f'sqlite:///{DB_PATH}')
         session_factory = sessionmaker(bind=engine)
-        return session_factory(), SystemControl
+        session = session_factory()
+        return session, SystemControlModel
     except SQLAlchemyError as e:
-        logging.error("Não foi possível conectar à base de dados: %s", e, exc_info=True)
+        print_message(
+            f"ERRO: Não foi possível conectar ao banco de dados: {e}")
         return None, None
 
-def force_shutdown_all_instances(session: Session, model: Type[SystemControl]) -> bool:
-    """Envia comando de desligamento e aguarda o fecho de todas as sessões."""
-    logging.info("Enviando comando de desligamento para todas as instâncias...")
+
+def force_shutdown_all_instances(
+    session: Session, system_control_model: Type[SystemControlModel]
+) -> bool:
+    """
+    Envia comando de desligamento e aguarda o fechamento de todas as sessões ativas.
+
+    Args:
+        session: A sessão do banco de dados ativa.
+        system_control_model: A classe do modelo SystemControl.
+
+    Returns:
+        True se todas as instâncias foram fechadas, False caso contrário.
+    """
+    print_message(
+        "Enviando comando de desligamento para todas as instâncias...")
     try:
-        cmd_entry = session.query(model).filter_by(key='UPDATE_CMD').first()
+        # 1. Envia o comando de desligamento para a tabela de controle
+        cmd_entry = session.query(system_control_model).filter_by(
+            key='UPDATE_CMD').first()
         if cmd_entry:
             cmd_entry.value = 'SHUTDOWN'
             cmd_entry.last_updated = datetime.utcnow()
             session.commit()
 
-        logging.info("Aguardando o fecho das aplicações abertas...")
+        # 2. Aguarda o fechamento das instâncias (timeout de 2 minutos)
+        print_message("Aguardando o fechamento das aplicações abertas...")
         start_time = time.time()
-        while (time.time() - start_time) < 120:  # Timeout de 2 minutos
+        while (time.time() - start_time) < 120:
+            # Limpa sessões "mortas" (sem heartbeat há mais de 30 segundos)
             timeout_threshold = datetime.utcnow() - timedelta(seconds=30)
-            session.query(model).filter(
-                model.type == 'SESSION',
-                model.last_updated < timeout_threshold
+            session.query(system_control_model).filter(
+                system_control_model.type == 'SESSION',
+                system_control_model.last_updated < timeout_threshold
             ).delete(synchronize_session=False)
             session.commit()
 
-            active_sessions = session.query(model).filter_by(type='SESSION').count()
-            logging.info("Sessões ativas restantes: %d", active_sessions)
+            active_sessions = session.query(
+                system_control_model).filter_by(type='SESSION').count()
+            print_message(f"Sessões ativas restantes: {active_sessions}")
 
             if active_sessions == 0:
-                logging.info("Todas as instâncias foram fechadas com sucesso.")
+                print_message(
+                    "Todas as instâncias foram fechadas com sucesso.")
                 return True
-            time.sleep(5)
+            time.sleep(5)  # Aguarda 5 segundos antes de verificar novamente
 
-        logging.error("Timeout! Algumas instâncias não fecharam a tempo.")
+        print_message(
+            "ERRO: Timeout! Algumas instâncias não fecharam a tempo.")
         return False
     except SQLAlchemyError as e:
-        logging.error("Erro de base de dados ao forçar o desligamento: %s", e, exc_info=True)
+        print_message(f"ERRO ao forçar o desligamento: {e}")
+        session.rollback()
         return False
     finally:
+        # 3. Limpa o comando de desligamento para evitar que futuras instâncias fechem sozinhas
         try:
-            cmd_entry = session.query(model).filter_by(key='UPDATE_CMD').first()
+            cmd_entry = session.query(system_control_model).filter_by(
+                key='UPDATE_CMD').first()
             if cmd_entry:
                 cmd_entry.value = 'NONE'
                 session.commit()
-        except SQLAlchemyError:
-            logging.error("Falha ao redefinir o comando de atualização.")
+        except SQLAlchemyError as e:
+            print_message(f"ERRO ao limpar o comando de desligamento: {e}")
+            session.rollback()
+
 
 def check_for_updates() -> Tuple[bool, Optional[str]]:
-    """Verifica se há uma nova versão da aplicação disponível."""
-    logging.info("Versão local da aplicação: %s", LOCAL_APP_VERSION)
-    logging.info("Verificando atualizações em: %s", VERSION_FILE_PATH)
+    """
+    Verifica se há uma nova versão da aplicação disponível na pasta 'updates'.
+
+    Returns:
+        Uma tupla (bool, str) indicando se há atualização e o caminho completo
+        para o arquivo de download.
+    """
+    print_message(f"Versão local do app: {LOCAL_APP_VERSION}")
+    print_message(f"Verificando atualizações em: {VERSION_FILE_PATH}")
 
     if not os.path.exists(VERSION_FILE_PATH):
-        logging.warning("Ficheiro 'versao.json' não encontrado. A pular atualização.")
+        print_message(
+            "Arquivo 'versao.json' não encontrado na pasta 'updates'. Pulando verificação.")
         return False, None
 
     try:
         with open(VERSION_FILE_PATH, 'r', encoding='utf-8') as f:
             server_info = json.load(f)
+
         server_version_str = server_info["versao"]
-        download_url = server_info["url_download"]
+        # Agora esperamos apenas o nome do arquivo
+        download_filename = server_info["url_download"]
 
-        logging.info("Versão disponível no servidor: %s", server_version_str)
+        print_message(f"Versão disponível no servidor: {server_version_str}")
 
+        # Compara as versões usando o padrão de versionamento semântico
         if Version(server_version_str) > Version(LOCAL_APP_VERSION):
-            logging.info("Nova versão encontrada!")
-            return True, download_url
+            print_message("Nova versão encontrada!")
 
-        logging.info("A sua aplicação já está atualizada.")
+            # *** LÓGICA MODIFICADA ***
+            # Monta o caminho completo para o arquivo de atualização,
+            # considerando que ele está na pasta 'updates'.
+            full_download_path = os.path.join(UPDATES_DIR, download_filename)
+            print_message(
+                f"Caminho do arquivo de atualização: {full_download_path}")
+
+            return True, full_download_path
+
+        print_message("Sua aplicação já está atualizada.")
         return False, None
-    except (json.JSONDecodeError, KeyError, TypeError, IOError) as e:
-        logging.error("Erro ao ler o ficheiro de versão: %s", e, exc_info=True)
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:
+        print_message(f"ERRO ao verificar atualizações: {e}")
         return False, None
 
-def _rollback_update(backup_dir: str, app_dir: str):
-    """Restaura os ficheiros a partir do backup em caso de falha."""
-    logging.info("...Iniciando rollback da atualização...")
-    if not os.path.isdir(backup_dir):
-        return
-    try:
-        for item in os.listdir(backup_dir):
-            shutil.move(os.path.join(backup_dir, item), os.path.join(app_dir, item))
-        logging.info("Rollback concluído. A versão anterior foi restaurada.")
-    except (IOError, OSError) as e:
-        logging.critical("ERRO CRÍTICO DURANTE O ROLLBACK: %s.", e, exc_info=True)
 
-def apply_update(download_url: str) -> bool:
-    """Baixa e aplica a atualização de forma atómica."""
-    app_dir = os.path.dirname(APP_PATH)
-    zip_path = os.path.join(UPDATES_DIR, download_url)
+def apply_update(zip_filepath: str) -> bool:
+    """
+    Aplica a atualização a partir de um arquivo .zip de forma atômica.
+    CUIDADO: Pode falhar por falta de permissão de escrita.
+    Execute o launcher como administrador se necessário.
+
+    Args:
+        zip_filepath: O caminho completo para o arquivo zip da atualização.
+
+    Returns:
+        True se a atualização foi bem-sucedida, False caso contrário.
+    """
+    app_dir = BASE_DIR
     temp_extract_dir = os.path.join(app_dir, "_temp_update")
     backup_dir = os.path.join(app_dir, "_backup")
 
-    if not os.path.exists(zip_path):
-        logging.error("Ficheiro de atualização não encontrado em %s", zip_path)
+    if not os.path.exists(zip_filepath):
+        print_message(
+            f"ERRO: Arquivo de atualização não encontrado em {zip_filepath}")
         return False
 
     try:
-        logging.info("Extraindo ficheiros para pasta temporária: %s", temp_extract_dir)
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        # Limpa diretórios antigos se existirem de uma tentativa anterior
+        if os.path.isdir(temp_extract_dir):
+            shutil.rmtree(temp_extract_dir)
+        if os.path.isdir(backup_dir):
+            shutil.rmtree(backup_dir)
+
+        print_message(
+            f"Extraindo arquivos para pasta temporária: {temp_extract_dir}")
+        os.makedirs(temp_extract_dir, exist_ok=True)
+        with zipfile.ZipFile(zip_filepath, 'r') as zip_ref:
             zip_ref.extractall(temp_extract_dir)
 
-        logging.info("Criando backup dos ficheiros antigos...")
+        print_message("Criando backup dos arquivos antigos...")
         os.makedirs(backup_dir, exist_ok=True)
-        for item in os.listdir(temp_extract_dir):
-            old_path = os.path.join(app_dir, item)
-            if os.path.exists(old_path):
-                shutil.move(old_path, os.path.join(backup_dir, item))
+        # Itera sobre os novos arquivos para saber o que substituir
+        for item_name in os.listdir(temp_extract_dir):
+            old_item_path = os.path.join(app_dir, item_name)
+            if os.path.exists(old_item_path):
+                shutil.move(old_item_path, os.path.join(backup_dir, item_name))
 
-        logging.info("Movendo novos ficheiros para o diretório da aplicação...")
-        for item in os.listdir(temp_extract_dir):
-            shutil.move(os.path.join(temp_extract_dir, item), os.path.join(app_dir, item))
+        print_message(
+            "Movendo novos arquivos para o diretório da aplicação...")
+        for item_name in os.listdir(temp_extract_dir):
+            shutil.move(os.path.join(temp_extract_dir, item_name),
+                        os.path.join(app_dir, item_name))
 
-        logging.info("Atualização aplicada com sucesso!")
+        print_message("Atualização aplicada com sucesso!")
         return True
+
     except (IOError, OSError, zipfile.BadZipFile) as e:
-        logging.error("Erro ao aplicar a atualização: %s", e, exc_info=True)
-        logging.warning("Permissão negada? Tente executar o launcher como Administrador.")
+        print_message(f"ERRO ao aplicar a atualização: {e}")
+        print_message(
+            "Permissão negada? Tente executar o launcher como Administrador.")
+        # Tenta restaurar o backup em caso de falha
         _rollback_update(backup_dir, app_dir)
         return False
     finally:
-        logging.info("Limpando ficheiros temporários...")
-        shutil.rmtree(temp_extract_dir, ignore_errors=True)
-        shutil.rmtree(backup_dir, ignore_errors=True)
+        print_message("Limpando arquivos temporários...")
+        if os.path.isdir(temp_extract_dir):
+            shutil.rmtree(temp_extract_dir)
+        if os.path.isdir(backup_dir):
+            shutil.rmtree(backup_dir)
 
-def start_application():
-    """Inicia a aplicação principal."""
-    if not os.path.exists(APP_PATH):
-        logging.error("Executável da aplicação não encontrado em: %s", APP_PATH)
+
+def _rollback_update(backup_dir: str, app_dir: str) -> None:
+    """Restaura os arquivos a partir do backup em caso de falha na atualização."""
+    print_message("...Iniciando rollback da atualização...")
+    if not os.path.isdir(backup_dir):
+        print_message(
+            "Diretório de backup não encontrado. Rollback impossível.")
         return
-    logging.info("Iniciando a aplicação: %s", APP_PATH)
     try:
-        subprocess.Popen([APP_PATH])
+        # Move os arquivos de volta do backup para o diretório principal
+        for item in os.listdir(backup_dir):
+            shutil.move(os.path.join(backup_dir, item),
+                        os.path.join(app_dir, item))
+        print_message("Rollback concluído. A versão anterior foi restaurada.")
     except OSError as e:
-        logging.error("Erro ao iniciar a aplicação: %s", e, exc_info=True)
+        print_message(
+            f"ERRO CRÍTICO DURANTE O ROLLBACK: {e}. A instalação pode estar corrompida.")
+
+
+def start_application() -> None:
+    """Inicia a aplicação principal (app.exe)."""
+    if not os.path.exists(APP_PATH):
+        print_message(
+            f"ERRO: Executável da aplicação não encontrado em: {APP_PATH}")
+        return
+    print_message(f"Iniciando a aplicação: {APP_PATH}")
+    try:
+        # Inicia o app como um processo separado
+        subprocess.Popen([APP_PATH])
+    except (OSError, ValueError) as e:
+        print_message(f"ERRO ao iniciar a aplicação: {e}")
+
 
 def main() -> int:
     """Fluxo principal do Launcher."""
-    setup_logging()
-    logging.info("=" * 50)
-    logging.info("Launcher iniciado.")
-    logging.warning("A atualização pode exigir permissões de Administrador.")
+    print_message("=" * 50)
+    print_message("Launcher iniciado.")
+    print_message(
+        "AVISO: A atualização pode exigir permissões de Administrador.")
 
-    update_available, download_url = check_for_updates()
+    update_available, download_path = check_for_updates()
 
-    if update_available and download_url:
-        logging.info("Atualização encontrada. A preparar para instalar...")
+    if update_available and download_path:
+        print_message("Atualização encontrada. Preparando para instalar...")
         db_session, model = get_db_session()
-        if not (db_session and model):
-            logging.error("Não foi possível conectar à BD. Atualização cancelada.")
+        if not db_session:
+            print_message(
+                "Não foi possível conectar ao DB. A atualização foi cancelada.")
         else:
-            try:
-                if force_shutdown_all_instances(db_session, model):
-                    if apply_update(download_url):
-                        logging.info("Processo de atualização finalizado com sucesso.")
-                    else:
-                        logging.error("Falha ao aplicar a atualização. Versão anterior mantida.")
+            if force_shutdown_all_instances(db_session, model):
+                if apply_update(download_path):
+                    print_message(
+                        "Processo de atualização finalizado com sucesso.")
                 else:
-                    logging.error("Não foi possível fechar instâncias. Atualização cancelada.")
-            finally:
-                db_session.close()
+                    print_message(
+                        "Falha ao aplicar a atualização. A versão anterior foi mantida.")
+            else:
+                print_message(
+                    "Não foi possível fechar todas as instâncias do app. "
+                    "A atualização foi cancelada."
+                )
+            db_session.close()
 
     start_application()
-    logging.info("Launcher finalizado.")
-    logging.info("=" * 50)
-    logging.shutdown()
+    print_message("Launcher finalizado.")
+    print_message("=" * 50)
+    time.sleep(3)  # Pequena pausa para o usuário poder ler a saída final
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
