@@ -92,7 +92,7 @@ def _configurar_modo_login(main_layout):
 
 def _configurar_checkbox_admin(main_layout):
     """Configura o checkbox de administrador."""
-    g.AUTEN_FORM.setFixedSize(200, 150)
+    g.AUTEN_FORM.setFixedSize(200, 180)
     main_layout.addWidget(QLabel("Admin:"), 2, 0)
     admin_checkbox = QCheckBox()
 
