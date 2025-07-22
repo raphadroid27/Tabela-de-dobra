@@ -1,28 +1,42 @@
 """
-Modelo de dados para o sistema de cálculo de dobra de chapas. Este módulo define as classes que 
-representam as tabelas do banco de dados, utilizando SQLAlchemy para ORM.
-As classes definem os atributos e relacionamentos entre as tabelas, permitindo a manipulação dos 
-dados de forma orientada a objetos. As tabelas incluem informações sobre usuários, espessuras, 
-materiais, canais, deduções e logs de ações realizadas no sistema.
-"""
-import os
-from datetime import datetime
-from os import path, makedirs
-from sqlalchemy import (
-    Column, Integer, String, Float, ForeignKey, DateTime, create_engine, UniqueConstraint
-)
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+Modelo de dados para o sistema de cálculo de dobra de chapas.
 
+Este módulo define as classes que representam as tabelas do banco de dados,
+utilizando SQLAlchemy para ORM.
+"""
+
+import os
+import sys
+from datetime import datetime
+from sqlalchemy import (
+    Column, Integer, String, Float, ForeignKey, DateTime, create_engine,
+    UniqueConstraint
+)
+from sqlalchemy.orm import relationship, sessionmaker, declarative_base
+
+# --- Configuração de Caminhos de Forma Robusta ---
+
+
+def get_base_dir() -> str:
+    """Retorna o diretório base da aplicação, seja em modo script ou executável."""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+BASE_DIR = get_base_dir()
+DATABASE_DIR = os.path.join(BASE_DIR, "database")
+
+os.makedirs(DATABASE_DIR, exist_ok=True)
+DB_PATH = os.path.join(DATABASE_DIR, "tabela_de_dobra.db")
+
+# --- Modelos ORM ---
 
 Base = declarative_base()
 
 
-class Usuario(Base):  # pylint: disable=too-few-public-methods
-    """
-    Representa a tabela de usuários no banco de dados.
-    Contém informações sobre o nome, senha e o papel do usuário no sistema.
-    """
+class Usuario(Base):
+    """Modelo da tabela de usuários."""
     __tablename__ = 'usuario'
     id = Column(Integer, primary_key=True)
     nome = Column(String, unique=True, nullable=False)
@@ -30,21 +44,15 @@ class Usuario(Base):  # pylint: disable=too-few-public-methods
     role = Column(String, default="viewer")
 
 
-class Espessura(Base):  # pylint: disable=too-few-public-methods
-    """
-    Representa a tabela de espessuras no banco de dados.
-    Contém o valor da espessura em milímetros.
-    """
+class Espessura(Base):
+    """Modelo da tabela de espessuras."""
     __tablename__ = 'espessura'
     id = Column(Integer, primary_key=True, autoincrement=True)
     valor = Column(Float, nullable=False)
 
 
-class Material(Base):  # pylint: disable=too-few-public-methods
-    """
-    Representa a tabela de materiais no banco de dados.
-    Contém informações como nome, densidade, limite de escoamento e módulo de elasticidade.
-    """
+class Material(Base):
+    """Modelo da tabela de materiais."""
     __tablename__ = 'material'
     id = Column(Integer, primary_key=True)
     nome = Column(String, nullable=False)
@@ -53,11 +61,8 @@ class Material(Base):  # pylint: disable=too-few-public-methods
     elasticidade = Column(Float)
 
 
-class Canal(Base):  # pylint: disable=too-few-public-methods
-    """
-    Representa a tabela de canais no banco de dados.
-    Contém informações sobre as dimensões do canal e observações adicionais.
-    """
+class Canal(Base):
+    """Modelo da tabela de canais (ferramentas)."""
     __tablename__ = 'canal'
     id = Column(Integer, primary_key=True, autoincrement=True)
     valor = Column(String, nullable=False)
@@ -67,12 +72,8 @@ class Canal(Base):  # pylint: disable=too-few-public-methods
     observacao = Column(String)
 
 
-class Deducao(Base):  # pylint: disable=too-few-public-methods
-    """
-    Representa a tabela de deduções no banco de dados.
-    Relaciona canais, espessuras e materiais, armazenando o valor da dedução,
-    observações e a força associada.
-    """
+class Deducao(Base):
+    """Modelo da tabela de deduções, relacionando os outros elementos."""
     __tablename__ = 'deducao'
     id = Column(Integer, primary_key=True)
     canal_id = Column(Integer, ForeignKey('canal.id'), nullable=False)
@@ -87,19 +88,13 @@ class Deducao(Base):  # pylint: disable=too-few-public-methods
     material = relationship("Material")
 
     __table_args__ = (
-        UniqueConstraint('canal_id',
-                         'espessura_id',
-                         'material_id',
+        UniqueConstraint('canal_id', 'espessura_id', 'material_id',
                          name='_canal_espessura_material_uc'),
     )
 
 
-class Log(Base):  # pylint: disable=too-few-public-methods
-    """
-    Representa a tabela de logs no banco de dados.
-    Armazena informações sobre ações realizadas no sistema, incluindo o nome do usuário,
-    a ação executada, a tabela afetada, o ID do registro e detalhes adicionais.
-    """
+class Log(Base):
+    """Modelo da tabela de logs de ações do sistema."""
     __tablename__ = 'log'
     id = Column(Integer, primary_key=True)
     usuario_nome = Column(String, nullable=False)
@@ -110,10 +105,34 @@ class Log(Base):  # pylint: disable=too-few-public-methods
     data_hora = Column(DateTime, default=datetime.utcnow)
 
 
-# Configuração do banco de dados
-DATABASE_DIR = os.path.abspath("database")
-makedirs(DATABASE_DIR, exist_ok=True)
-engine = create_engine(
-    f'sqlite:///{path.join(DATABASE_DIR, "tabela_de_dobra.db")}'
-)
-Base.metadata.create_all(engine)
+class SystemControl(Base):
+    """
+    Tabela de controle do sistema para atualizações e sessões ativas.
+
+    - type: 'SESSION' ou 'COMMAND'.
+    - key: ID da sessão ou nome do comando (ex: 'UPDATE_CMD').
+    - value: Nome do host da sessão ou valor do comando (ex: 'SHUTDOWN').
+    """
+    __tablename__ = 'system_control'
+    id = Column(Integer, primary_key=True)
+    type = Column(String, nullable=False)
+    key = Column(String, unique=True, nullable=False)
+    value = Column(String)
+    last_updated = Column(DateTime, default=datetime.utcnow,
+                          onupdate=datetime.utcnow)
+
+
+# --- Configuração do Banco de Dados e Sessão ---
+engine = create_engine(f'sqlite:///{DB_PATH}')
+Base.metadata.create_all(engine, checkfirst=True)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Inicializa o comando de atualização se não existir
+db_session = SessionLocal()
+if not db_session.query(SystemControl).filter_by(key='UPDATE_CMD').first():
+    initial_command = SystemControl(
+        type='COMMAND', key='UPDATE_CMD', value='NONE')
+    db_session.add(initial_command)
+    db_session.commit()
+db_session.close()
