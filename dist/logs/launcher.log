@@ -1,0 +1,248 @@
+2025-07-22 17:04:52 - [INFO] - ==================================================
+2025-07-22 17:04:52 - [INFO] - Launcher iniciado.
+2025-07-22 17:04:52 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:04:52 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:04:52 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:04:52 - [INFO] - Arquivo 'versao.json' não encontrado. Pulando verificação.
+2025-07-22 17:04:52 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:05:28 - [INFO] - Launcher finalizado.
+2025-07-22 17:05:28 - [INFO] - ==================================================
+2025-07-22 17:06:56 - [INFO] - ==================================================
+2025-07-22 17:06:56 - [INFO] - Launcher iniciado.
+2025-07-22 17:06:56 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:06:56 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:06:56 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:06:56 - [INFO] - Versão disponível no servidor: 2.2.0
+2025-07-22 17:06:56 - [INFO] - Sua aplicação já está atualizada.
+2025-07-22 17:06:56 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:07:33 - [INFO] - Launcher finalizado.
+2025-07-22 17:07:33 - [INFO] - ==================================================
+2025-07-22 17:07:37 - [INFO] - ==================================================
+2025-07-22 17:07:37 - [INFO] - Launcher iniciado.
+2025-07-22 17:07:37 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:07:37 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:07:37 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:07:37 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:07:37 - [INFO] - Nova versão encontrada!
+2025-07-22 17:07:37 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:07:37 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:07:37 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:07:37 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:07:37 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:07:37 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:07:37 - [ERROR] - Arquivo de atualização não encontrado em C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:07:37 - [ERROR] - Falha ao aplicar a atualização. A versão anterior foi mantida.
+2025-07-22 17:07:37 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:08:32 - [INFO] - ==================================================
+2025-07-22 17:08:32 - [INFO] - Launcher iniciado.
+2025-07-22 17:08:32 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:08:32 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:08:32 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:08:32 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:08:32 - [INFO] - Nova versão encontrada!
+2025-07-22 17:08:32 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:08:32 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:08:32 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:08:32 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:08:32 - [INFO] - Sessões ativas restantes: 1
+2025-07-22 17:08:35 - [INFO] - Launcher finalizado.
+2025-07-22 17:08:35 - [INFO] - ==================================================
+2025-07-22 17:08:37 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:08:37 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:08:37 - [ERROR] - Arquivo de atualização não encontrado em C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:08:37 - [ERROR] - Falha ao aplicar a atualização. A versão anterior foi mantida.
+2025-07-22 17:08:37 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:08:43 - [INFO] - ==================================================
+2025-07-22 17:08:43 - [INFO] - Launcher iniciado.
+2025-07-22 17:08:43 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:08:43 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:08:43 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:08:43 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:08:43 - [INFO] - Nova versão encontrada!
+2025-07-22 17:08:43 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:08:43 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:08:43 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:08:43 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:08:43 - [INFO] - Sessões ativas restantes: 2
+2025-07-22 17:08:46 - [INFO] - Launcher finalizado.
+2025-07-22 17:08:46 - [INFO] - ==================================================
+2025-07-22 17:08:48 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:08:48 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:08:48 - [ERROR] - Arquivo de atualização não encontrado em C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:08:48 - [ERROR] - Falha ao aplicar a atualização. A versão anterior foi mantida.
+2025-07-22 17:08:48 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:09:31 - [INFO] - ==================================================
+2025-07-22 17:09:31 - [INFO] - Launcher iniciado.
+2025-07-22 17:09:31 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:09:31 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:09:31 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:09:31 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:09:31 - [INFO] - Nova versão encontrada!
+2025-07-22 17:09:31 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:09:31 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:09:31 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:09:31 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:09:31 - [INFO] - Sessões ativas restantes: 1
+2025-07-22 17:09:36 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:09:36 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:09:36 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:09:36 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:09:36 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:09:36 - [INFO] - Atualização aplicada com sucesso!
+2025-07-22 17:09:36 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:09:37 - [INFO] - Launcher finalizado.
+2025-07-22 17:09:37 - [INFO] - ==================================================
+2025-07-22 17:10:10 - [INFO] - ==================================================
+2025-07-22 17:10:10 - [INFO] - Launcher iniciado.
+2025-07-22 17:10:10 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:10:10 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:10:10 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:10:10 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:10:10 - [INFO] - Nova versão encontrada!
+2025-07-22 17:10:10 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:10:10 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:10:10 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:10:10 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:10:10 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:10:10 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:10:10 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:10:10 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:10:10 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:10:10 - [INFO] - Atualização aplicada com sucesso!
+2025-07-22 17:10:10 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:10:10 - [INFO] - Processo de atualização finalizado com sucesso.
+2025-07-22 17:10:10 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:10:23 - [INFO] - Launcher finalizado.
+2025-07-22 17:10:23 - [INFO] - ==================================================
+2025-07-22 17:10:48 - [INFO] - ==================================================
+2025-07-22 17:10:48 - [INFO] - Launcher iniciado.
+2025-07-22 17:10:48 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:10:48 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:10:48 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:10:48 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:10:48 - [INFO] - Nova versão encontrada!
+2025-07-22 17:10:48 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:10:48 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:10:48 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:10:48 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:10:48 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:10:48 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:10:48 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:10:48 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:10:48 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:10:48 - [INFO] - Atualização aplicada com sucesso!
+2025-07-22 17:10:48 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:10:48 - [INFO] - Processo de atualização finalizado com sucesso.
+2025-07-22 17:10:48 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:10:57 - [INFO] - Launcher finalizado.
+2025-07-22 17:10:57 - [INFO] - ==================================================
+2025-07-22 17:11:56 - [INFO] - ==================================================
+2025-07-22 17:11:56 - [INFO] - Launcher iniciado.
+2025-07-22 17:11:56 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:11:56 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:11:56 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:11:56 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:11:56 - [INFO] - Nova versão encontrada!
+2025-07-22 17:11:56 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:11:56 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:11:56 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:11:56 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:11:56 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:11:56 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:11:56 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:11:59 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:11:59 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:11:59 - [ERROR] - Erro ao aplicar a atualização: [WinError 32] O arquivo já está sendo usado por outro processo: 'C:\\Users\\Luma\\Documents\\GitHub\\Tabela-de-dobra\\dist\\_temp_update\\app.exe'
+2025-07-22 17:11:59 - [WARNING] - Permissão negada? Tente executar o launcher como Administrador.
+2025-07-22 17:11:59 - [INFO] - ...Iniciando rollback da atualização...
+2025-07-22 17:11:59 - [INFO] - Rollback concluído. A versão anterior foi restaurada.
+2025-07-22 17:11:59 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:12:18 - [INFO] - ==================================================
+2025-07-22 17:12:18 - [INFO] - Launcher iniciado.
+2025-07-22 17:12:18 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:12:18 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:12:18 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:12:18 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:12:18 - [INFO] - Nova versão encontrada!
+2025-07-22 17:12:18 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:12:18 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:12:18 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:12:18 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:12:18 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:12:18 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:12:18 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:12:18 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:12:18 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:12:18 - [INFO] - Atualização aplicada com sucesso!
+2025-07-22 17:12:18 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:12:18 - [INFO] - Processo de atualização finalizado com sucesso.
+2025-07-22 17:12:18 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:12:32 - [INFO] - Launcher finalizado.
+2025-07-22 17:12:32 - [INFO] - ==================================================
+2025-07-22 17:12:37 - [INFO] - ==================================================
+2025-07-22 17:12:37 - [INFO] - Launcher iniciado.
+2025-07-22 17:12:37 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:12:37 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:12:37 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:12:37 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:12:37 - [INFO] - Nova versão encontrada!
+2025-07-22 17:12:37 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:12:37 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:12:37 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:12:37 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:12:37 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:12:37 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:12:37 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:12:38 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:12:38 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:12:38 - [INFO] - Atualização aplicada com sucesso!
+2025-07-22 17:12:38 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:12:38 - [INFO] - Processo de atualização finalizado com sucesso.
+2025-07-22 17:12:38 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:12:56 - [INFO] - Launcher finalizado.
+2025-07-22 17:12:56 - [INFO] - ==================================================
+2025-07-22 17:13:00 - [INFO] - ==================================================
+2025-07-22 17:13:00 - [INFO] - Launcher iniciado.
+2025-07-22 17:13:00 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:13:00 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:13:00 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:13:00 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:13:00 - [INFO] - Nova versão encontrada!
+2025-07-22 17:13:00 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:13:00 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:13:00 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:13:00 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:13:00 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:13:00 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:13:01 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:13:01 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:13:01 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:13:01 - [INFO] - Atualização aplicada com sucesso!
+2025-07-22 17:13:01 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:13:01 - [INFO] - Processo de atualização finalizado com sucesso.
+2025-07-22 17:13:01 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:13:12 - [INFO] - Launcher finalizado.
+2025-07-22 17:13:12 - [INFO] - ==================================================
+2025-07-22 17:16:01 - [INFO] - ==================================================
+2025-07-22 17:16:01 - [INFO] - Launcher iniciado.
+2025-07-22 17:16:01 - [WARNING] - A atualização pode exigir permissões de Administrador.
+2025-07-22 17:16:01 - [INFO] - Versão local do app: 2.2.0
+2025-07-22 17:16:01 - [INFO] - Verificando atualizações em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\versao.json
+2025-07-22 17:16:01 - [INFO] - Versão disponível no servidor: 2.3.0
+2025-07-22 17:16:01 - [INFO] - Nova versão encontrada!
+2025-07-22 17:16:01 - [INFO] - Caminho do arquivo de atualização: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\updates\app_v2.3.0.zip
+2025-07-22 17:16:01 - [INFO] - Atualização encontrada. Preparando para instalar...
+2025-07-22 17:16:01 - [INFO] - Enviando comando de desligamento para todas as instâncias...
+2025-07-22 17:16:01 - [INFO] - Aguardando o fechamento das aplicações abertas...
+2025-07-22 17:16:01 - [INFO] - Sessões ativas restantes: 3
+2025-07-22 17:16:06 - [INFO] - Sessões ativas restantes: 0
+2025-07-22 17:16:06 - [INFO] - Todas as instâncias foram fechadas com sucesso.
+2025-07-22 17:16:07 - [INFO] - Extraindo arquivos para pasta temporária: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\_temp_update
+2025-07-22 17:16:07 - [INFO] - Criando backup dos arquivos antigos...
+2025-07-22 17:16:07 - [INFO] - Movendo novos arquivos para o diretório da aplicação...
+2025-07-22 17:16:07 - [INFO] - Atualização aplicada com sucesso!
+2025-07-22 17:16:07 - [INFO] - Limpando arquivos temporários...
+2025-07-22 17:16:07 - [INFO] - Processo de atualização finalizado com sucesso.
+2025-07-22 17:16:07 - [INFO] - Iniciando a aplicação: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\dist\app.exe
+2025-07-22 17:16:25 - [INFO] - Launcher finalizado.
+2025-07-22 17:16:25 - [INFO] - ==================================================
