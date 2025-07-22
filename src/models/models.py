@@ -20,13 +20,18 @@ from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 def get_base_dir() -> str:
     """Retorna o diretório base da aplicação, seja em modo script ou executável."""
     if getattr(sys, 'frozen', False):
+        # Se o aplicativo for um executável (gerado por PyInstaller, por exemplo),
+        # o diretório base é onde o executável está localizado.
         return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.abspath(__file__))
+    # Em modo de script, assume que este arquivo está em 'src/models',
+    # então o diretório base está dois níveis acima.
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
 BASE_DIR = get_base_dir()
 DATABASE_DIR = os.path.join(BASE_DIR, "database")
 
+# Garante que o diretório do banco de dados exista.
 os.makedirs(DATABASE_DIR, exist_ok=True)
 DB_PATH = os.path.join(DATABASE_DIR, "tabela_de_dobra.db")
 
@@ -108,10 +113,6 @@ class Log(Base):
 class SystemControl(Base):
     """
     Tabela de controle do sistema para atualizações e sessões ativas.
-
-    - type: 'SESSION' ou 'COMMAND'.
-    - key: ID da sessão ou nome do comando (ex: 'UPDATE_CMD').
-    - value: Nome do host da sessão ou valor do comando (ex: 'SHUTDOWN').
     """
     __tablename__ = 'system_control'
     id = Column(Integer, primary_key=True)
@@ -124,15 +125,4 @@ class SystemControl(Base):
 
 # --- Configuração do Banco de Dados e Sessão ---
 engine = create_engine(f'sqlite:///{DB_PATH}')
-Base.metadata.create_all(engine, checkfirst=True)
-
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Inicializa o comando de atualização se não existir
-db_session = SessionLocal()
-if not db_session.query(SystemControl).filter_by(key='UPDATE_CMD').first():
-    initial_command = SystemControl(
-        type='COMMAND', key='UPDATE_CMD', value='NONE')
-    db_session.add(initial_command)
-    db_session.commit()
-db_session.close()
