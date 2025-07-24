@@ -4,7 +4,7 @@ Formulário Principal do Aplicativo de Cálculo de Dobra.
 Este módulo implementa a interface principal do aplicativo, permitindo a gestão
 de deduções, materiais, espessuras e canais. Utiliza PySide6 para a interface
 gráfica, além de módulos auxiliares para banco de dados, variáveis globais e
-funcionalidades específicas.
+funcionalidades específicas, incluindo um sistema de atualização controlado.
 """
 
 import json
@@ -17,15 +17,15 @@ import socket
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout)
+    QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout, QMessageBox)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QAction
 
 # Importa o engine, Base e SessionLocal para garantir a criação do banco de dados.
 from src.models.models import Base, engine, SessionLocal
 
-from src.utils.utilitarios import obter_caminho_icone
-from src.utils.usuarios import logout
+from src.utils.utilitarios import obter_caminho_icone, show_info, show_error
+from src.utils.usuarios import logout, tem_permissao
 from src.utils.janelas import (
     aplicar_no_topo_app_principal, remover_janelas_orfas)
 from src.utils.interface_manager import carregar_interface
@@ -52,10 +52,12 @@ from src.utils.estilo import (
     obter_temas_disponiveis,
     registrar_tema_actions,
     obter_tema_atual
-
 )
 from src.components.barra_titulo import BarraTitulo
 from src.components.menu_custom import MenuCustom
+
+# --- MÓDULO DE ATUALIZAÇÃO ---
+from src.utils import update_manager
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -69,16 +71,13 @@ CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
-
 # ID único para esta instância da aplicação
 g.SESSION_ID = str(uuid.uuid4())
+g.UPDATE_INFO = None  # Armazena dados da atualização disponível
 
 
 def verificar_admin_existente():
-    """
-    Verifica se existe um administrador cadastrado no banco de dados.
-    Caso contrário, abre a tela de autenticação para criar um.
-    """
+    """Verifica se existe um administrador cadastrado."""
     admin_existente = db_session.query(Usuario).filter(
         Usuario.role == "admin").first()
     if not admin_existente:
@@ -86,9 +85,7 @@ def verificar_admin_existente():
 
 
 def carregar_configuracao():
-    """
-    Carrega a configuração do aplicativo a partir de um arquivo JSON.
-    """
+    """Carrega a configuração do aplicativo."""
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -96,31 +93,24 @@ def carregar_configuracao():
 
 
 def salvar_configuracao(config):
-    """
-    Salva a configuração do aplicativo em um arquivo JSON.
-    """
+    """Salva a configuração do aplicativo."""
     with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(config, f)
 
-
 # --- Funções de Gerenciamento da Aplicação e Sessão ---
+
 
 def registrar_sessao():
     """Registra a sessão atual no banco de dados."""
     try:
         hostname = socket.gethostname()
-        # Verifica se a sessão já existe para evitar duplicatas
         sessao_existente = db_session.query(
             SystemControl).filter_by(key=g.SESSION_ID).first()
         if not sessao_existente:
             nova_sessao = SystemControl(
-                type='SESSION',
-                key=g.SESSION_ID,
-                value=hostname
-            )
+                type='SESSION', key=g.SESSION_ID, value=hostname)
             db_session.add(nova_sessao)
             db_session.commit()
-            print(f"Sessão {g.SESSION_ID} registrada para {hostname}.")
     except SQLAlchemyError as e:
         print(f"Erro ao registrar sessão: {e}")
         db_session.rollback()
@@ -129,52 +119,42 @@ def registrar_sessao():
 def remover_sessao():
     """Remove a sessão atual do banco de dados ao fechar."""
     try:
-        sessao_para_remover = db_session.query(SystemControl).filter_by(
-            key=g.SESSION_ID).first()
+        sessao_para_remover = db_session.query(
+            SystemControl).filter_by(key=g.SESSION_ID).first()
         if sessao_para_remover:
             db_session.delete(sessao_para_remover)
             db_session.commit()
-            print(f"Sessão {g.SESSION_ID} removida.")
     except SQLAlchemyError as e:
         print(f"Erro ao remover sessão: {e}")
         db_session.rollback()
 
 
 def verificar_comandos_sistema():
-    """
-    Verifica comandos do sistema (como SHUTDOWN) e atualiza o heartbeat.
-    Esta função é chamada periodicamente por um QTimer.
-    """
+    """Verifica comandos do sistema (como SHUTDOWN) e atualiza o heartbeat."""
     try:
-        # 1. Atualizar o heartbeat da sessão
-        sessao_atual = db_session.query(SystemControl).filter_by(
-            key=g.SESSION_ID).first()
+        sessao_atual = db_session.query(
+            SystemControl).filter_by(key=g.SESSION_ID).first()
         if sessao_atual:
             sessao_atual.last_updated = datetime.utcnow()
             db_session.commit()
         else:
-            # Se a sessão não existe por algum motivo, registra novamente
             registrar_sessao()
 
-        # 2. Verificar comando de desligamento
-        cmd_entry = db_session.query(SystemControl).filter_by(
-            key='UPDATE_CMD').first()
+        cmd_entry = db_session.query(
+            SystemControl).filter_by(key='UPDATE_CMD').first()
         if cmd_entry and cmd_entry.value == 'SHUTDOWN':
             print("Comando de desligamento recebido. Fechando a aplicação...")
             fechar_aplicativo()
-
     except SQLAlchemyError as e:
         print(f"Erro ao verificar comandos do sistema: {e}")
         db_session.rollback()
 
 
 def fechar_aplicativo():
-    """
-    Fecha o aplicativo de forma segura, removendo a sessão.
-    """
+    """Fecha o aplicativo de forma segura."""
     remover_sessao()
     try:
-        if g.PRINC_FORM is not None:
+        if g.PRINC_FORM:
             g.PRINC_FORM.close()
         app = QApplication.instance()
         if app:
@@ -185,12 +165,9 @@ def fechar_aplicativo():
 
 
 def configurar_janela_principal(config):
-    """
-    Configura a janela principal do aplicativo com lógica melhorada.
-    """
+    """Configura a janela principal do aplicativo."""
     remover_janelas_orfas()
-
-    if g.PRINC_FORM is not None:
+    if g.PRINC_FORM:
         try:
             g.PRINC_FORM.close()
             g.PRINC_FORM.deleteLater()
@@ -218,34 +195,113 @@ def configurar_janela_principal(config):
 
     def on_closing():
         remover_janelas_orfas()
-        if g.PRINC_FORM is not None:
+        if g.PRINC_FORM:
             pos = g.PRINC_FORM.pos()
             config['geometry'] = f"+{pos.x()}+{pos.y()}"
             salvar_configuracao(config)
         remover_sessao()
 
     def custom_close_event(event):
-        try:
-            on_closing()
-            QApplication.instance().quit()
-        except (RuntimeError, AttributeError) as e:
-            print(f"Erro ao fechar aplicativo: {e}")
-        finally:
-            event.accept()
+        on_closing()
+        QApplication.instance().quit()
+        event.accept()
 
     g.PRINC_FORM.closeEvent = custom_close_event
     g.PRINC_FORM.setAttribute(Qt.WA_QuitOnClose, True)
 
+# --- Funções de Atualização ---
 
-def configurar_menu():
-    """
-    Configura o menu superior da janela principal.
-    """
-    if not hasattr(g, 'MENU_CUSTOM') or g.MENU_CUSTOM is None:
+
+def _periodic_update_check():
+    """Verifica periodicamente se há atualizações disponíveis."""
+    print("Verificando atualizações em segundo plano...")
+    update_info = update_manager.check_for_updates(APP_VERSION)
+    if update_info:
+        g.UPDATE_INFO = update_info
+        _update_ui_for_status(True)
+    else:
+        g.UPDATE_INFO = None
+        _update_ui_for_status(False)
+
+
+def _handle_update_click():
+    """Gerencia o clique no botão de atualização."""
+    if g.UPDATE_INFO:
+        is_admin = tem_permissao('usuario', 'admin')
+        if not is_admin:
+            show_info("Atualização Disponível",
+                      f"Uma nova versão ({g.UPDATE_INFO['ultima_versao']}) está disponível. "
+                      "Por favor, peça a um administrador para instalar a atualização.",
+                      parent=g.PRINC_FORM)
+            return
+
+        reply = QMessageBox.question(g.PRINC_FORM, "Confirmar Atualização",
+                                     f"Uma nova versão ({g.UPDATE_INFO['ultima_versao']}) está disponível.\n\n"
+                                     "Deseja preparar a atualização? O sistema notificará todos os usuários para salvar seu trabalho e fechar o aplicativo.",
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            _initiate_update_process()
+    else:
+        show_info("Verificar Atualizações",
+                  "Buscando por novas versões...", parent=g.PRINC_FORM)
+        QApplication.processEvents()
+        _periodic_update_check()
+        if g.UPDATE_INFO:
+            show_info("Atualização Encontrada",
+                      f"A versão {g.UPDATE_INFO['ultima_versao']} está disponível!\n"
+                      "Clique novamente no menu 'Ajuda -> Aplicar Atualização' para instalar.",
+                      parent=g.PRINC_FORM)
+        else:
+            show_info("Verificar Atualizações",
+                      "Você já está usando a versão mais recente.", parent=g.PRINC_FORM)
+
+
+def _initiate_update_process():
+    """Baixa, prepara o flag e dispara o comando de shutdown."""
+    try:
+        show_info(
+            "Atualização", "Baixando e preparando a atualização... Por favor, aguarde.", parent=g.PRINC_FORM)
+        QApplication.processEvents()
+
+        update_manager.download_update(g.UPDATE_INFO['file_name'])
+        update_manager.prepare_update_flag()
+
+        cmd_entry = db_session.query(
+            SystemControl).filter_by(key='UPDATE_CMD').first()
+        if cmd_entry:
+            cmd_entry.value = 'SHUTDOWN'
+            db_session.commit()
+
+        QMessageBox.information(g.PRINC_FORM, "Sucesso",
+                                "A atualização foi preparada. Ela será instalada na próxima vez que o programa for iniciado.\n"
+                                "O aplicativo será encerrado em breve.")
+    except Exception as e:
+        show_error("Erro de Atualização",
+                   f"Não foi possível preparar a atualização: {e}", parent=g.PRINC_FORM)
+
+
+def _update_ui_for_status(update_available: bool):
+    """Atualiza o texto e o estado do botão de atualização."""
+    if not hasattr(g, 'update_action') or not g.update_action:
         return
 
-    menu_bar = g.MENU_CUSTOM.get_menu_bar()
+    if update_available:
+        g.update_action.setText("⬇️ Aplicar Atualização")
+        g.update_action.setToolTip(
+            f"Versão {g.UPDATE_INFO.get('ultima_versao', '')} disponível!")
+    else:
+        g.update_action.setText("🔄 Verificar Atualizações")
+        g.update_action.setToolTip(
+            "Verificar se há uma nova versão do aplicativo.")
 
+# --- Configuração de Menus e Interface ---
+
+
+def configurar_menu():
+    """Configura o menu superior da janela principal."""
+    if not hasattr(g, 'MENU_CUSTOM') or g.MENU_CUSTOM is None:
+        return
+    menu_bar = g.MENU_CUSTOM.get_menu_bar()
     _criar_menu_arquivo(menu_bar)
     _criar_menu_editar(menu_bar)
     _criar_menu_opcoes(menu_bar)
@@ -254,29 +310,37 @@ def configurar_menu():
     _criar_menu_ajuda(menu_bar)
 
 
+def _criar_menu_ajuda(menu_bar):
+    """Cria o menu Ajuda, incluindo a opção de atualização."""
+    help_menu = menu_bar.addMenu("❓ Ajuda")
+
+    sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
+    sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
+    help_menu.addAction(sobre_action)
+
+    help_menu.addSeparator()
+
+    g.update_action = QAction("🔄 Verificar Atualizações", g.PRINC_FORM)
+    g.update_action.triggered.connect(_handle_update_click)
+    help_menu.addAction(g.update_action)
+
+# (O restante das funções de criação de menu (_criar_menu_arquivo, etc.) e
+# de execução (_executar_nova_deducao, etc.) permanecem as mesmas)
+
+
 def _criar_menu_arquivo(menu_bar):
     """Cria o menu Arquivo."""
     file_menu = menu_bar.addMenu("📁 Arquivo")
-    acoes_arquivo = [
-        ("➕ Nova Dedução", _executar_nova_deducao),
-        ("➕ Novo Material", _executar_novo_material),
-        ("➕ Nova Espessura", _executar_nova_espessura),
-        ("➕ Novo Canal", _executar_novo_canal),
-        ("separator", None),
-        ("🚪 Sair", fechar_aplicativo)
-    ]
+    acoes_arquivo = [("➕ Nova Dedução", _executar_nova_deducao), ("➕ Novo Material", _executar_novo_material), ("➕ Nova Espessura",
+                                                                                                                _executar_nova_espessura), ("➕ Novo Canal", _executar_novo_canal), ("separator", None), ("🚪 Sair", fechar_aplicativo)]
     _adicionar_acoes_ao_menu(file_menu, acoes_arquivo)
 
 
 def _criar_menu_editar(menu_bar):
     """Cria o menu Editar."""
     edit_menu = menu_bar.addMenu("✏️ Editar")
-    acoes_editar = [
-        ("📝 Editar Dedução", _executar_editar_deducao),
-        ("📝 Editar Material", _executar_editar_material),
-        ("📝 Editar Espessura", _executar_editar_espessura),
-        ("📝 Editar Canal", _executar_editar_canal)
-    ]
+    acoes_editar = [("📝 Editar Dedução", _executar_editar_deducao), ("📝 Editar Material", _executar_editar_material),
+                    ("📝 Editar Espessura", _executar_editar_espessura), ("📝 Editar Canal", _executar_editar_canal)]
     _adicionar_acoes_ao_menu(edit_menu, acoes_editar)
 
 
@@ -285,17 +349,14 @@ def _criar_menu_opcoes(menu_bar):
     opcoes_menu = menu_bar.addMenu("⚙️ Opções")
     if not hasattr(g, 'NO_TOPO_VAR') or g.NO_TOPO_VAR is None:
         g.NO_TOPO_VAR = False
-
     no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
     no_topo_action.setChecked(g.NO_TOPO_VAR)
     no_topo_action.triggered.connect(_toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
-
     temas_disponiveis = obter_temas_disponiveis()
     temas_menu = opcoes_menu.addMenu("🎨 Temas")
     temas_actions = {}
-
     for tema in temas_disponiveis:
         action = QAction(tema.capitalize(), g.PRINC_FORM)
         action.setCheckable(True)
@@ -310,32 +371,17 @@ def _criar_menu_opcoes(menu_bar):
 def _criar_menu_utilidades(menu_bar):
     """Cria o menu Utilidades."""
     ferramentas_menu = menu_bar.addMenu("🔧 Utilidades")
-    acoes_utilidades = [
-        ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
-        ("🖨️ Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM))
-    ]
+    acoes_utilidades = [("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
+                        ("🖨️ Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM))]
     _adicionar_acoes_ao_menu(ferramentas_menu, acoes_utilidades)
 
 
 def _criar_menu_usuario(menu_bar):
     """Cria o menu Usuário."""
     usuario_menu = menu_bar.addMenu("👤 Usuário")
-    acoes_usuario = [
-        ("🔐 Login", _executar_login),
-        ("👥 Novo Usuário", _executar_novo_usuario),
-        ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
-        ("separator", None),
-        ("🚪 Sair", logout)
-    ]
+    acoes_usuario = [("🔐 Login", _executar_login), ("👥 Novo Usuário", _executar_novo_usuario), (
+        "⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)), ("separator", None), ("🚪 Sair", logout)]
     _adicionar_acoes_ao_menu(usuario_menu, acoes_usuario)
-
-
-def _criar_menu_ajuda(menu_bar):
-    """Cria o menu Ajuda."""
-    help_menu = menu_bar.addMenu("❓ Ajuda")
-    sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
-    sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
-    help_menu.addAction(sobre_action)
 
 
 def _adicionar_acoes_ao_menu(menu, acoes):
@@ -349,82 +395,60 @@ def _adicionar_acoes_ao_menu(menu, acoes):
             menu.addAction(action)
 
 
-def _executar_nova_deducao():
-    setattr(g, 'EDIT_DED', False)
-    FormDeducao.main(g.PRINC_FORM)
+def _executar_nova_deducao(): setattr(
+    g, 'EDIT_DED', False); FormDeducao.main(g.PRINC_FORM)
 
 
-def _executar_novo_material():
-    setattr(g, 'EDIT_MAT', False)
-    FormMaterial.main(g.PRINC_FORM)
+def _executar_novo_material(): setattr(
+    g, 'EDIT_MAT', False); FormMaterial.main(g.PRINC_FORM)
 
 
-def _executar_nova_espessura():
-    setattr(g, 'EDIT_ESP', False)
-    FormEspessura.main(g.PRINC_FORM)
+def _executar_nova_espessura(): setattr(
+    g, 'EDIT_ESP', False); FormEspessura.main(g.PRINC_FORM)
 
 
-def _executar_novo_canal():
-    setattr(g, 'EDIT_CANAL', False)
-    FormCanal.main(g.PRINC_FORM)
+def _executar_novo_canal(): setattr(
+    g, 'EDIT_CANAL', False); FormCanal.main(g.PRINC_FORM)
 
 
-def _executar_editar_deducao():
-    setattr(g, 'EDIT_DED', True)
-    FormDeducao.main(g.PRINC_FORM)
+def _executar_editar_deducao(): setattr(
+    g, 'EDIT_DED', True); FormDeducao.main(g.PRINC_FORM)
 
 
-def _executar_editar_material():
-    setattr(g, 'EDIT_MAT', True)
-    FormMaterial.main(g.PRINC_FORM)
+def _executar_editar_material(): setattr(
+    g, 'EDIT_MAT', True); FormMaterial.main(g.PRINC_FORM)
 
 
-def _executar_editar_espessura():
-    setattr(g, 'EDIT_ESP', True)
-    FormEspessura.main(g.PRINC_FORM)
+def _executar_editar_espessura(): setattr(
+    g, 'EDIT_ESP', True); FormEspessura.main(g.PRINC_FORM)
+def _executar_editar_canal(): setattr(
+    g, 'EDIT_CANAL', True); FormCanal.main(g.PRINC_FORM)
 
 
-def _executar_editar_canal():
-    setattr(g, 'EDIT_CANAL', True)
-    FormCanal.main(g.PRINC_FORM)
+def _executar_login(): setattr(g, "LOGIN", True); form_aut.main(g.PRINC_FORM)
+def _executar_novo_usuario(): setattr(
+    g, "LOGIN", False); form_aut.main(g.PRINC_FORM)
 
 
-def _executar_login():
-    setattr(g, "LOGIN", True)
-    form_aut.main(g.PRINC_FORM)
-
-
-def _executar_novo_usuario():
-    setattr(g, "LOGIN", False)
-    form_aut.main(g.PRINC_FORM)
-
-
-def _toggle_no_topo():
-    aplicar_no_topo_app_principal()
+def _toggle_no_topo(): aplicar_no_topo_app_principal()
 
 
 def configurar_frames():
-    """
-    Configura os frames principais da janela.
-    """
+    """Configura os frames principais da janela."""
     central_widget = QWidget()
     g.PRINC_FORM.setCentralWidget(central_widget)
     vlayout = QVBoxLayout(central_widget)
     aplicar_medida_borda_espaco(vlayout, 0, 0)
-
     tema_atual = getattr(g, 'TEMA_ATUAL', 'dark')
     g.BARRA_TITULO = BarraTitulo(g.PRINC_FORM, tema=tema_atual)
     vlayout.addWidget(g.BARRA_TITULO)
     if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
         g.BARRA_TITULO.set_tema(obter_tema_atual())
-
     g.MENU_CUSTOM = MenuCustom(g.PRINC_FORM)
     vlayout.addWidget(g.MENU_CUSTOM)
-
     conteudo_widget = QWidget()
     layout = QGridLayout(conteudo_widget)
     vlayout.addWidget(conteudo_widget)
-
     g.VALORES_W = [1]
     g.EXP_V = False
     g.EXP_H = False
@@ -434,16 +458,10 @@ def configurar_frames():
 
 
 def main():
-    """
-    Função principal que inicializa a interface gráfica do aplicativo.
-    """
+    """Função principal que inicializa a aplicação."""
     app = None
     try:
-        # Garante que as tabelas sejam criadas no banco de dados.
         Base.metadata.create_all(engine)
-
-        # Inicializa o comando de atualização se não existir.
-        # Isso é feito aqui para garantir que as tabelas já existam.
         session = SessionLocal()
         try:
             if not session.query(SystemControl).filter_by(key='UPDATE_CMD').first():
@@ -475,19 +493,22 @@ def main():
         configurar_janela_principal(config)
         configurar_frames()
         configurar_menu()
-
-        # Registrar esta sessão no banco de dados
         registrar_sessao()
-
         verificar_admin_existente()
 
-        if g.PRINC_FORM is not None:
+        if g.PRINC_FORM:
             g.PRINC_FORM.show()
 
-            # Iniciar timer para verificar comandos e atualizar heartbeat
+            # Timer para comandos do sistema (shutdown)
             g.timer_sistema = QTimer()
             g.timer_sistema.timeout.connect(verificar_comandos_sistema)
-            g.timer_sistema.start(5000)  # Verifica a cada 5 segundos
+            g.timer_sistema.start(5000)  # A cada 5 segundos
+
+            # Timer para verificação de atualização em segundo plano
+            g.update_check_timer = QTimer()
+            g.update_check_timer.timeout.connect(_periodic_update_check)
+            g.update_check_timer.start(300000)  # A cada 5 minutos
+            _periodic_update_check()  # Verifica uma vez ao iniciar
 
             print("Aplicativo iniciado com sucesso!")
             app.aboutToQuit.connect(remover_sessao)
@@ -495,20 +516,13 @@ def main():
 
         print("ERRO: Janela principal não foi criada!")
         return 1
-
-    except KeyboardInterrupt:
-        print("Aplicativo interrompido pelo usuário")
-        if app:
-            app.quit()
-        return 0
-    except SQLAlchemyError as e:
+    except Exception as e:
         print(f"ERRO CRÍTICO na inicialização: {e}")
         traceback.print_exc()
         if app:
             app.quit()
         return 1
     finally:
-        # Garante que a sessão seja removida em caso de falha na inicialização
         if 'g' in globals() and hasattr(g, 'SESSION_ID'):
             remover_sessao()
         if db_session:
@@ -516,5 +530,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)
+    sys.exit(main())
