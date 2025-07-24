@@ -2,12 +2,10 @@
 Launcher da Aplicação de Cálculo de Dobra.
 
 Responsável por:
-1. Verificar a existência de novas versões da aplicação a partir de uma pasta local.
-2. Forçar o encerramento seguro de todas as instâncias em execução.
-3. Aplicar a atualização de forma atômica para evitar corrupção de arquivos.
+1. Verificar se uma atualização foi autorizada pelo administrador (via arquivo .flag).
+2. Se autorizada, forçar o encerramento seguro de todas as instâncias.
+3. Aplicar a atualização.
 4. Iniciar a aplicação principal.
-
-Este módulo foi projetado para ser executado como um executável independente.
 """
 
 import sys
@@ -28,8 +26,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from semantic_version import Version
 
 # --- Configuração de Logging e Console ---
-# Altere para False para desabilitar a saída de logs no console/terminal.
-# Os logs sempre serão salvos no arquivo 'logs/launcher.log'.
 LOG_TO_CONSOLE = True
 
 # --- Configuração de Caminhos de Forma Robusta ---
@@ -49,7 +45,9 @@ APP_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE)
 DB_DIR = os.path.join(BASE_DIR, "database")
 DB_PATH = os.path.join(DB_DIR, "tabela_de_dobra.db")
 UPDATES_DIR = os.path.join(BASE_DIR, 'updates')
+UPDATE_TEMP_DIR = os.path.join(BASE_DIR, 'update_temp')
 VERSION_FILE_PATH = os.path.join(UPDATES_DIR, 'versao.json')
+UPDATE_FLAG_FILE = os.path.join(BASE_DIR, 'update_pending.flag')
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 
 # Adiciona o diretório 'src' ao path para encontrar os modelos
@@ -67,45 +65,38 @@ def setup_logging():
         '%(asctime)s - [%(levelname)s] - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-
-    # Configura o logger principal
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    # Handler para salvar logs em arquivo com rotação
-    # Cria um novo arquivo quando o atual atinge 1MB, mantém até 5 backups.
+    # Limpa handlers antigos para evitar duplicação de logs
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
     file_handler = logging.handlers.RotatingFileHandler(
         log_filepath, maxBytes=1024*1024, backupCount=5, encoding='utf-8'
     )
     file_handler.setFormatter(log_format)
     logger.addHandler(file_handler)
 
-    # Handler para exibir logs no console (se habilitado)
     if LOG_TO_CONSOLE:
         stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setFormatter(log_format)
         logger.addHandler(stream_handler)
 
 
-# Importa o modelo e a versão APÓS a configuração do path
+# Importa o modelo APÓS a configuração do path
 try:
     from src.models.models import SystemControl as SystemControlModel
-    from src.app import APP_VERSION as LOCAL_APP_VERSION
 except ImportError as e:
-    # O logging pode não estar configurado aqui, então usamos print e saímos.
-    print(
-        f"ERRO CRÍTICO: Não foi possível importar módulos da aplicação: {e}")
-    print("Verifique se o launcher está no diretório correto.")
+    print(f"ERRO CRÍTICO: Não foi possível importar módulos da aplicação: {e}")
     time.sleep(10)
     sys.exit(1)
 
-
 # --- Funções do Launcher ---
 
+
 def get_db_session() -> Tuple[Optional[Session], Optional[Type[SystemControlModel]]]:
-    """
-    Cria e retorna uma sessão do SQLAlchemy para interagir com o banco de dados.
-    """
+    """Cria e retorna uma sessão do SQLAlchemy."""
     if not os.path.exists(DB_PATH):
         logging.error("Banco de dados não encontrado em: %s", DB_PATH)
         return None, None
@@ -119,12 +110,8 @@ def get_db_session() -> Tuple[Optional[Session], Optional[Type[SystemControlMode
         return None, None
 
 
-def force_shutdown_all_instances(
-    session: Session, system_control_model: Type[SystemControlModel]
-) -> bool:
-    """
-    Envia comando de desligamento e aguarda o fechamento de todas as sessões ativas.
-    """
+def force_shutdown_all_instances(session: Session, system_control_model: Type[SystemControlModel]) -> bool:
+    """Envia comando de desligamento e aguarda o fechamento das sessões."""
     logging.info(
         "Enviando comando de desligamento para todas as instâncias...")
     try:
@@ -164,7 +151,7 @@ def force_shutdown_all_instances(
         try:
             cmd_entry = session.query(system_control_model).filter_by(
                 key='UPDATE_CMD').first()
-            if cmd_entry:
+            if cmd_entry and cmd_entry.value == 'SHUTDOWN':
                 cmd_entry.value = 'NONE'
                 session.commit()
         except SQLAlchemyError as e:
@@ -172,80 +159,40 @@ def force_shutdown_all_instances(
             session.rollback()
 
 
-def check_for_updates() -> Tuple[bool, Optional[str]]:
-    """
-    Verifica se há uma nova versão da aplicação disponível na pasta 'updates'.
-    """
-    logging.info("Versão local do app: %s", LOCAL_APP_VERSION)
-    logging.info("Verificando atualizações em: %s", VERSION_FILE_PATH)
-
-    if not os.path.exists(VERSION_FILE_PATH):
-        logging.info(
-            "Arquivo 'versao.json' não encontrado. Pulando verificação.")
-        return False, None
-
-    try:
-        with open(VERSION_FILE_PATH, 'r', encoding='utf-8') as f:
-            server_info = json.load(f)
-
-        server_version_str = server_info["versao"]
-        download_filename = server_info["url_download"]
-        logging.info("Versão disponível no servidor: %s", server_version_str)
-
-        if Version(server_version_str) > Version(LOCAL_APP_VERSION):
-            logging.info("Nova versão encontrada!")
-            full_download_path = os.path.join(UPDATES_DIR, download_filename)
-            logging.info("Caminho do arquivo de atualização: %s",
-                         full_download_path)
-            return True, full_download_path
-
-        logging.info("Sua aplicação já está atualizada.")
-        return False, None
-    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:
-        logging.error("Erro ao verificar atualizações: %s", e)
-        return False, None
-
-
-def apply_update(zip_filepath: str) -> bool:
-    """
-    Aplica a atualização a partir de um arquivo .zip de forma atômica.
-    """
-    app_dir = BASE_DIR
-    temp_extract_dir = os.path.join(app_dir, "_temp_update")
-    backup_dir = os.path.join(app_dir, "_backup")
-
+def apply_update(zip_filename: str) -> bool:
+    """Aplica a atualização a partir de um arquivo .zip na pasta temporária."""
+    zip_filepath = os.path.join(UPDATE_TEMP_DIR, zip_filename)
     if not os.path.exists(zip_filepath):
         logging.error(
             "Arquivo de atualização não encontrado em %s", zip_filepath)
         return False
 
-    try:
-        if os.path.isdir(temp_extract_dir):
-            shutil.rmtree(temp_extract_dir)
-        if os.path.isdir(backup_dir):
-            shutil.rmtree(backup_dir)
+    app_dir = BASE_DIR
+    backup_dir = os.path.join(app_dir, "_backup_" +
+                              datetime.now().strftime("%Y%m%d%H%M%S"))
 
-        logging.info(
-            "Extraindo arquivos para pasta temporária: %s", temp_extract_dir)
-        os.makedirs(temp_extract_dir, exist_ok=True)
+    try:
+        logging.info("Extraindo arquivos da atualização...")
         with zipfile.ZipFile(zip_filepath, 'r') as zip_ref:
-            zip_ref.extractall(temp_extract_dir)
+            # Extrai para o próprio diretório temporário para listar os arquivos
+            zip_ref.extractall(UPDATE_TEMP_DIR)
+            update_files = [f for f in os.listdir(
+                UPDATE_TEMP_DIR) if not f.endswith('.zip')]
 
         logging.info("Criando backup dos arquivos antigos...")
         os.makedirs(backup_dir, exist_ok=True)
-        for item_name in os.listdir(temp_extract_dir):
+        for item_name in update_files:
             old_item_path = os.path.join(app_dir, item_name)
             if os.path.exists(old_item_path):
                 shutil.move(old_item_path, os.path.join(backup_dir, item_name))
 
         logging.info("Movendo novos arquivos para o diretório da aplicação...")
-        for item_name in os.listdir(temp_extract_dir):
-            shutil.move(os.path.join(temp_extract_dir, item_name),
+        for item_name in update_files:
+            shutil.move(os.path.join(UPDATE_TEMP_DIR, item_name),
                         os.path.join(app_dir, item_name))
 
         logging.info("Atualização aplicada com sucesso!")
         return True
-
     except (IOError, OSError, zipfile.BadZipFile) as e:
         logging.error("Erro ao aplicar a atualização: %s", e)
         logging.warning(
@@ -254,14 +201,20 @@ def apply_update(zip_filepath: str) -> bool:
         return False
     finally:
         logging.info("Limpando arquivos temporários...")
-        if os.path.isdir(temp_extract_dir):
-            shutil.rmtree(temp_extract_dir)
+        if os.path.isdir(UPDATE_TEMP_DIR):
+            shutil.rmtree(UPDATE_TEMP_DIR)
         if os.path.isdir(backup_dir):
-            shutil.rmtree(backup_dir)
+            try:
+                # Opcional: manter backup por um tempo ou apagar
+                shutil.rmtree(backup_dir)
+                logging.info("Backup removido.")
+            except OSError as e:
+                logging.error(
+                    f"Não foi possível remover a pasta de backup: {e}")
 
 
-def _rollback_update(backup_dir: str, app_dir: str) -> None:
-    """Restaura os arquivos a partir do backup em caso de falha na atualização."""
+def _rollback_update(backup_dir: str, app_dir: str):
+    """Restaura os arquivos a partir do backup em caso de falha."""
     logging.info("...Iniciando rollback da atualização...")
     if not os.path.isdir(backup_dir):
         logging.warning(
@@ -274,11 +227,10 @@ def _rollback_update(backup_dir: str, app_dir: str) -> None:
         logging.info("Rollback concluído. A versão anterior foi restaurada.")
     except OSError as e:
         logging.critical(
-            "ERRO CRÍTICO DURANTE O ROLLBACK: %s. A instalação pode estar corrompida.", e
-        )
+            "ERRO CRÍTICO DURANTE O ROLLBACK: %s. A instalação pode estar corrompida.", e)
 
 
-def start_application() -> None:
+def start_application():
     """Inicia a aplicação principal (app.exe)."""
     if not os.path.exists(APP_PATH):
         logging.error(
@@ -286,8 +238,7 @@ def start_application() -> None:
         return
     logging.info("Iniciando a aplicação: %s", APP_PATH)
     try:
-        with subprocess.Popen([APP_PATH]):
-            pass  # O processo é iniciado e o contexto é gerenciado
+        subprocess.Popen([APP_PATH])
     except (OSError, ValueError) as e:
         logging.error("Erro ao iniciar a aplicação: %s", e)
 
@@ -297,30 +248,44 @@ def main() -> int:
     setup_logging()
     logging.info("=" * 50)
     logging.info("Launcher iniciado.")
-    logging.warning("A atualização pode exigir permissões de Administrador.")
 
-    update_available, download_path = check_for_updates()
+    if os.path.exists(UPDATE_FLAG_FILE):
+        logging.info(
+            "Sinalizador de atualização encontrado. Iniciando processo de atualização.")
+        logging.warning(
+            "Este processo pode exigir permissões de Administrador.")
 
-    if update_available and download_path:
-        logging.info("Atualização encontrada. Preparando para instalar...")
-        db_session, model = get_db_session()
-        if not db_session:
-            logging.error(
-                "Não foi possível conectar ao DB. A atualização foi cancelada.")
-        else:
-            if force_shutdown_all_instances(db_session, model):
-                if apply_update(download_path):
-                    logging.info(
-                        "Processo de atualização finalizado com sucesso.")
-                else:
-                    logging.error(
-                        "Falha ao aplicar a atualização. A versão anterior foi mantida.")
-            else:
+        update_info = {}
+        try:
+            with open(VERSION_FILE_PATH, 'r', encoding='utf-8') as f:
+                update_info = json.load(f)
+            # Alterado de 'url_download'
+            zip_filename = update_info.get("file_name")
+
+            if not zip_filename:
                 logging.error(
-                    "Não foi possível fechar todas as instâncias do app. "
-                    "A atualização foi cancelada."
-                )
-            db_session.close()
+                    "Chave 'file_name' não encontrada no versao.json. Cancelando atualização.")
+            else:
+                db_session, model = get_db_session()
+                if not db_session:
+                    logging.error(
+                        "Não foi possível conectar ao DB. A atualização foi cancelada.")
+                else:
+                    if force_shutdown_all_instances(db_session, model):
+                        if apply_update(zip_filename):
+                            logging.info(
+                                "Processo de atualização finalizado com sucesso.")
+                            os.remove(UPDATE_FLAG_FILE)
+                        else:
+                            logging.error(
+                                "Falha ao aplicar a atualização. A versão anterior foi mantida.")
+                    else:
+                        logging.error(
+                            "Não foi possível fechar todas as instâncias. A atualização foi cancelada.")
+                    db_session.close()
+        except Exception as e:
+            logging.error(
+                f"Erro crítico durante o processo de atualização: {e}")
 
     start_application()
     logging.info("Launcher finalizado.")
