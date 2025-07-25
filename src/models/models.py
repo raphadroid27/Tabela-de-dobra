@@ -7,7 +7,7 @@ utilizando SQLAlchemy para ORM.
 
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column, Integer, String, Float, ForeignKey, DateTime, create_engine,
     UniqueConstraint
@@ -107,7 +107,7 @@ class Log(Base):
     tabela = Column(String, nullable=False)
     registro_id = Column(Integer, nullable=False)
     detalhes = Column(String)
-    data_hora = Column(DateTime, default=datetime.utcnow)
+    data_hora = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class SystemControl(Base):
@@ -119,8 +119,8 @@ class SystemControl(Base):
     type = Column(String, nullable=False)
     key = Column(String, unique=True, nullable=False)
     value = Column(String)
-    last_updated = Column(DateTime, default=datetime.utcnow,
-                          onupdate=datetime.utcnow)
+    last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                          onupdate=lambda: datetime.now(timezone.utc))
 
 
 # --- Configuração do Banco de Dados e Sessão ---
