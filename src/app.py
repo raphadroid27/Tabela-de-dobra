@@ -72,7 +72,6 @@ CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 g.SESSION_ID = str(uuid.uuid4())
-g.UPDATE_INFO = None
 
 
 # --- Funções de Gerenciamento da Aplicação ---
