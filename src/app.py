@@ -262,8 +262,7 @@ def _handle_update_click():
 
         if g.UPDATE_INFO:
             msg_found = (f"A versão {g.UPDATE_INFO.get('ultima_versao', 'N/A')} "
-                         "está disponível!\nClique novamente no menu 'Ajuda -> "
-                         "Aplicar Atualização' para instalar.")
+                         "está disponível!")
             show_info("Atualização Encontrada", msg_found, parent=g.PRINC_FORM)
         else:
             show_info("Verificar Atualizações",
