@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Modelo de dados para o sistema de cálculo de dobra de chapas.
 
@@ -5,8 +6,6 @@ Este módulo define as classes que representam as tabelas do banco de dados,
 utilizando SQLAlchemy para ORM.
 """
 
-import os
-import sys
 from datetime import datetime, timezone
 from sqlalchemy import (
     Column, Integer, String, Float, ForeignKey, DateTime, create_engine,
@@ -14,26 +13,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 
-# --- Configuração de Caminhos de Forma Robusta ---
-
-
-def get_base_dir() -> str:
-    """Retorna o diretório base da aplicação, seja em modo script ou executável."""
-    if getattr(sys, 'frozen', False):
-        # Se o aplicativo for um executável (gerado por PyInstaller, por exemplo),
-        # o diretório base é onde o executável está localizado.
-        return os.path.dirname(sys.executable)
-    # Em modo de script, assume que este arquivo está em 'src/models',
-    # então o diretório base está dois níveis acima.
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-
-
-BASE_DIR = get_base_dir()
-DATABASE_DIR = os.path.join(BASE_DIR, "database")
-
-# Garante que o diretório do banco de dados exista.
-os.makedirs(DATABASE_DIR, exist_ok=True)
-DB_PATH = os.path.join(DATABASE_DIR, "tabela_de_dobra.db")
+# Importa o caminho do banco de dados do módulo utilitário centralizado
+from src.utils.utilitarios import DB_PATH
 
 # --- Modelos ORM ---
 
@@ -116,7 +97,7 @@ class SystemControl(Base):
     """
     __tablename__ = 'system_control'
     id = Column(Integer, primary_key=True)
-    type = Column(String, nullable=False)
+    type = Column(String, nullable=False)  # pylint: disable=redefined-builtin
     key = Column(String, unique=True, nullable=False)
     value = Column(String)
     last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc),
@@ -124,5 +105,6 @@ class SystemControl(Base):
 
 
 # --- Configuração do Banco de Dados e Sessão ---
+# Usa o caminho centralizado para criar a engine do banco de dados.
 engine = create_engine(f'sqlite:///{DB_PATH}')
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

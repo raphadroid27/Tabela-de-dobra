@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Funções utilitárias genéricas para o aplicativo de cálculo de dobras.
+Funções e constantes utilitárias genéricas para a aplicação.
+
+Este módulo centraliza a gestão de caminhos, a configuração de logs e as
+funções de diálogo com o usuário (QMessageBox, QInputDialog).
 """
+
 import logging
 import logging.handlers
 import os
@@ -9,29 +13,79 @@ import sys
 
 from PySide6.QtWidgets import (QInputDialog, QLineEdit, QMessageBox)
 
+# --- 1. LÓGICA CENTRALIZADA DE CAMINHOS ---
 
-def obter_caminho_icone():
+
+def get_app_base_dir() -> str:
     """
-    Retorna o caminho correto para o arquivo de ícone.
+    Retorna o diretório base da aplicação de forma consistente.
 
-    Considera o modo de execução (normal ou empacotado com PyInstaller)
-    para encontrar a pasta 'assets'.
+    Verifica se a aplicação está rodando como um script ou como um executável
+    "congelado" para determinar o caminho raiz correto.
+
+    Returns:
+        str: O caminho absoluto para o diretório raiz da aplicação.
     """
     if getattr(sys, 'frozen', False):
-        # Em modo 'congelado', a base é o diretório do executável
-        base_path = os.path.dirname(sys.executable)
-    else:
-        # Em modo de script, sobe dois níveis de src/utils para a raiz
-        base_path = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), '..', '..'))
+        return os.path.dirname(sys.executable)
+    # Em modo de script, assume-se que este arquivo está em 'src/utils',
+    # então o diretório base está dois níveis acima.
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-    return os.path.join(base_path, "assets", "icone_2.ico")
+# --- Constantes de Caminhos Globais ---
+
+
+BASE_DIR = get_app_base_dir()
+
+# Diretório de banco de dados
+DATABASE_DIR = os.path.join(BASE_DIR, "database")
+DB_PATH = os.path.join(DATABASE_DIR, "tabela_de_dobra.db")
+
+# Diretório de assets (ícones, etc.)
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+ICON_PATH = os.path.join(ASSETS_DIR, "icone_2.ico")
+
+# Diretório de logs
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+
+# Diretórios e arquivos de atualização
+UPDATES_DIR = os.path.join(BASE_DIR, 'updates')
+UPDATE_TEMP_DIR = os.path.join(BASE_DIR, 'update_temp')
+VERSION_FILE_PATH = os.path.join(UPDATES_DIR, 'versao.json')
+UPDATE_FLAG_FILE = os.path.join(BASE_DIR, 'update_pending.flag')
+
+# Arquivo executável da aplicação principal
+APP_EXECUTABLE_NAME = "app.exe"
+APP_EXECUTABLE_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE_NAME)
+
+# Arquivos de configuração do usuário
+DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
+CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+
+
+def ensure_dirs_exist():
+    """
+    Garante que todos os diretórios essenciais para a aplicação existam.
+    """
+    os.makedirs(DATABASE_DIR, exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+
+
+# Garante a criação dos diretórios na importação do módulo.
+ensure_dirs_exist()
+
+
+# --- 2. FUNÇÕES UTILITÁRIAS ---
+
+def obter_caminho_icone():
+    """Retorna o caminho para o arquivo de ícone, definido centralmente."""
+    return ICON_PATH
 
 
 def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
-    """
-    Aplica margens e espaçamento a um layout ou widget.
-    """
+    """Aplica margens e espaçamento a um layout ou widget."""
     if hasattr(layout_ou_widget, 'setContentsMargins'):
         layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
     if hasattr(layout_ou_widget, 'setSpacing'):
@@ -46,8 +100,7 @@ def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
 
 def ask_string(title, prompt, parent=None):
     """Pede uma string usando QInputDialog."""
-    text, ok = QInputDialog.getText(
-        parent, title, prompt, QLineEdit.Normal)
+    text, ok = QInputDialog.getText(parent, title, prompt, QLineEdit.Normal)
     return text if ok else None
 
 
@@ -92,30 +145,9 @@ def ask_yes_no(title, message, parent=None):
 def setup_logging(log_filename: str, log_to_console: bool = True):
     """
     Configura o logging para arquivo e, opcionalmente, para o console.
-
-    A lógica foi revisada para garantir que o diretório 'logs' seja criado
-    corretamente no diretório base da aplicação, tanto em modo de script
-    quanto em modo 'congelado' (executável).
-
-    Args:
-        log_filename (str): O nome do arquivo de log (ex: 'app.log').
-        log_to_console (bool): Se True, os logs também serão enviados para a
-                               saída padrão.
     """
     try:
-        if getattr(sys, 'frozen', False):
-            # Modo 'congelado' (executável): o diretório base é onde o executável está.
-            base_dir = os.path.dirname(sys.executable)
-        else:
-            # Modo de script: __file__ está em src/utils, então subimos dois níveis.
-            base_dir = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..', '..'))
-
-        log_dir = os.path.join(base_dir, 'logs')
-        os.makedirs(log_dir, exist_ok=True)
-
-        log_filepath = os.path.join(log_dir, log_filename)
-
+        log_filepath = os.path.join(LOG_DIR, log_filename)
         log_format = logging.Formatter(
             '%(asctime)s - [%(levelname)s] - %(filename)s:%(lineno)d - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
@@ -123,18 +155,15 @@ def setup_logging(log_filename: str, log_to_console: bool = True):
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
 
-        # Limpa handlers antigos para evitar duplicação de logs
         if logger.hasHandlers():
             logger.handlers.clear()
 
-        # Handler para arquivo, com rotação (aumentado para 5MB)
         file_handler = logging.handlers.RotatingFileHandler(
             log_filepath, maxBytes=5*1024*1024, backupCount=5, encoding='utf-8'
         )
         file_handler.setFormatter(log_format)
         logger.addHandler(file_handler)
 
-        # Handler para console, se habilitado
         if log_to_console:
             stream_handler = logging.StreamHandler(sys.stdout)
             stream_handler.setFormatter(log_format)
@@ -145,7 +174,6 @@ def setup_logging(log_filename: str, log_to_console: bool = True):
             "Logging configurado. Arquivo de log em: %s", log_filepath)
 
     except (OSError, IOError) as e:
-        # Fallback para o console se a configuração do arquivo falhar
         print(
             f"ERRO CRÍTICO: Não foi possível configurar o logging em arquivo: {e}")
         logging.basicConfig(
