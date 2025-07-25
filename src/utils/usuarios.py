@@ -129,26 +129,40 @@ def logado(tipo):
     return True
 
 
-def tem_permissao(tipo, role_requerida):
+def tem_permissao(tipo, role_requerida, show_message=True):
     """
     Verifica se o usuário tem permissão para realizar uma ação específica.
+
+    Args:
+        tipo (str): O tipo de configuração a ser usado.
+        role_requerida (str): O nível de permissão necessário ('viewer', 'editor', 'admin').
+        show_message (bool): Se False, suprime a exibição de mensagens de erro.
     """
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
 
     usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
     if not usuario_obj:
-        show_error("Erro", "Você não tem permissão para acessar esta função.",
-                   parent=config['form'])
+        if show_message:
+            show_error("Erro", "Você não tem permissão para acessar esta função.",
+                       parent=config['form'])
         return False
 
     # Permitir hierarquia de permissões
     roles_hierarquia = ["viewer", "editor", "admin"]
     usuario_role = getattr(usuario_obj, 'role', 'viewer')
-    required_index = roles_hierarquia.index(role_requerida)
-    user_index = roles_hierarquia.index(usuario_role)
+
+    try:
+        required_index = roles_hierarquia.index(role_requerida)
+        user_index = roles_hierarquia.index(usuario_role)
+    except ValueError:
+        if show_message:
+            show_error("Erro", "Role de usuário inválida encontrada.")
+        return False
+
     if user_index < required_index:
-        show_error("Erro", f"Permissão '{role_requerida}' requerida.")
+        if show_message:
+            show_error("Erro", f"Permissão '{role_requerida}' requerida.")
         return False
     return True
 
