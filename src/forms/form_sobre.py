@@ -15,7 +15,7 @@ from PySide6.QtGui import QIcon, QFont
 from src import __version__
 from src.config import globals as g
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
-from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
 
@@ -35,8 +35,7 @@ def main(root):
     g.SOBRE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     # Define o ícone
-    icone_path = obter_caminho_icone()
-    g.SOBRE_FORM.setWindowIcon(QIcon(icone_path))
+    g.SOBRE_FORM.setWindowIcon(QIcon(ICON_PATH))
 
     aplicar_no_topo(g.SOBRE_FORM)
     posicionar_janela(g.SOBRE_FORM, 'centro')

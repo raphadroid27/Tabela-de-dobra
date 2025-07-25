@@ -78,12 +78,6 @@ ensure_dirs_exist()
 
 
 # --- 2. FUNÇÕES UTILITÁRIAS ---
-
-def obter_caminho_icone():
-    """Retorna o caminho para o arquivo de ícone, definido centralmente."""
-    return ICON_PATH
-
-
 def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
     """Aplica margens e espaçamento a um layout ou widget."""
     if hasattr(layout_ou_widget, 'setContentsMargins'):

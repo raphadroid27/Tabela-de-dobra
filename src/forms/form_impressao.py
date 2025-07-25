@@ -20,7 +20,7 @@ from src.utils.janelas import (aplicar_no_topo,
                                posicionar_janela,
                                HABILITAR_JANELAS,
                                DESABILITAR_JANELAS)
-from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.utils.estilo import (obter_estilo_botao_cinza,
                               obter_estilo_botao_azul,
                               obter_estilo_botao_amarelo,
@@ -387,8 +387,7 @@ def _inicializar_formulario(root):
     # Remover barra nativa
     g.IMPRESSAO_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
-    icone_path = obter_caminho_icone()
-    g.IMPRESSAO_FORM.setWindowIcon(QIcon(icone_path))
+    g.IMPRESSAO_FORM.setWindowIcon(QIcon(ICON_PATH))
 
     aplicar_no_topo(g.IMPRESSAO_FORM)
     posicionar_janela(g.IMPRESSAO_FORM, None)
