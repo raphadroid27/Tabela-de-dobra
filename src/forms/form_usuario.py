@@ -15,7 +15,7 @@ from PySide6.QtGui import QIcon
 
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
 from src.utils.interface import (listar, limpar_busca)
-from src.utils.utilitarios import obter_caminho_icone
+from src.utils.utilitarios import ICON_PATH
 from src.utils.controlador import buscar
 from src.utils.usuarios import (
     tem_permissao, tornar_editor, resetar_senha, excluir_usuario)
@@ -43,8 +43,7 @@ def _configurar_janela_base(root):
     g.USUAR_FORM.setFixedSize(330, 280)
     g.USUAR_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
-    icone_path = obter_caminho_icone()
-    g.USUAR_FORM.setWindowIcon(QIcon(icone_path))
+    g.USUAR_FORM.setWindowIcon(QIcon(ICON_PATH))
 
     aplicar_no_topo(g.USUAR_FORM)
     posicionar_janela(g.USUAR_FORM, 'centro')
