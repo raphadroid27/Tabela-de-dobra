@@ -12,7 +12,6 @@ formulários, centralizando a lógica e melhorando a manutenibilidade.
 
 import json
 import logging
-import logging.handlers
 import os
 import signal
 import socket
@@ -30,7 +29,10 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.utils.utilitarios import (obter_caminho_icone,
                                    show_info, show_error,
-                                   aplicar_medida_borda_espaco)
+                                   aplicar_medida_borda_espaco,
+                                   setup_logging,
+                                   CONFIG_FILE
+                                   )
 from src.utils.usuarios import logout, tem_permissao
 from src.utils.janelas import (
     aplicar_no_topo_app_principal, remover_janelas_orfas)
@@ -43,8 +45,6 @@ from src.utils.estilo import (
     obter_tema_atual
 )
 from src.utils import update_manager
-# Importa a nova função de logging centralizada
-from src.utils.utilitarios import setup_logging
 from src.forms.form_wrappers import (
     FormEspessura,
     FormDeducao,
@@ -67,10 +67,6 @@ from src.config import globals as g
 
 # --- Variáveis Globais de Configuração e Versão ---
 APP_VERSION = "2.2.0"
-DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
-CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
-os.makedirs(CONFIG_DIR, exist_ok=True)
-CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 g.SESSION_ID = str(uuid.uuid4())
 
 
@@ -511,12 +507,10 @@ def iniciar_timers():
 # --- Função Principal ---
 def main():
     """Função principal que inicializa e executa a aplicação."""
-    # Usa a função de logging centralizada
     setup_logging('app.log', log_to_console=True)
     app = None
     try:
-        logging.info("Iniciando a aplicação...")
-
+        logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
         configurar_sinais_excecoes()
 
@@ -535,10 +529,7 @@ def main():
 
         if g.PRINC_FORM:
             g.PRINC_FORM.show()
-
-            # Inicia os timers, que são mantidos em escopo pelo objeto global 'g'.
             iniciar_timers()
-
             logging.info("Aplicativo iniciado. Entrando no loop de eventos.")
             return app.exec()
 

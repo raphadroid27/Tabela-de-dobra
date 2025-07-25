@@ -18,6 +18,7 @@ SESSION_ID = None
 UPDATE_INFO = None
 TIMER_SISTEMA = None
 UPDATE_CHECK_TIMER = None
+UPDATE_ACTION = None
 
 # Flag para controlar quando a interface está sendo recarregada
 INTERFACE_RELOADING = False
