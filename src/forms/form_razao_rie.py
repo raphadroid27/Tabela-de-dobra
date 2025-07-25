@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QGridLayout,
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
-from src.utils.utilitarios import obter_caminho_icone, aplicar_medida_borda_espaco
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.utils.interface import calcular_valores
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
@@ -40,8 +40,7 @@ def _criar_form(root):
     g.RIE_FORM.setWindowTitle("Raio Interno / Espessura")
     g.RIE_FORM.setFixedSize(240, 280)
     g.RIE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
-    icone_path = obter_caminho_icone()
-    g.RIE_FORM.setWindowIcon(QIcon(icone_path))
+    g.RIE_FORM.setWindowIcon(QIcon(ICON_PATH))
     aplicar_no_topo(g.RIE_FORM)
     posicionar_janela(g.RIE_FORM, None)
 

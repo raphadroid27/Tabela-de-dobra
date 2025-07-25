@@ -7,7 +7,7 @@ import darkdetect
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QPoint, QEvent
-from src.utils.utilitarios import obter_caminho_icone
+from src.utils.utilitarios import ICON_PATH
 
 
 class BarraTitulo(QWidget):
@@ -40,11 +40,10 @@ class BarraTitulo(QWidget):
         layout.setContentsMargins(8, 0, 0, 0)
         layout.setSpacing(0)
 
-        icone_path = obter_caminho_icone()
         icone_label = QLabel(self)
         icone_label.setFixedSize(24, 24)
         icone_label.setScaledContents(True)
-        icone_label.setPixmap(QPixmap(icone_path))
+        icone_label.setPixmap(QPixmap(ICON_PATH))
         layout.addWidget(icone_label)
 
         self.titulo = QLabel("Cálculo de Dobra", self)

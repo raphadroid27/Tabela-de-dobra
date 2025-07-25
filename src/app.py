@@ -27,12 +27,13 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout, QMessageBox)
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.utils.utilitarios import (obter_caminho_icone,
-                                   show_info, show_error,
-                                   aplicar_medida_borda_espaco,
-                                   setup_logging,
-                                   CONFIG_FILE
-                                   )
+from src.utils.utilitarios import (
+    show_info, show_error,
+    aplicar_medida_borda_espaco,
+    setup_logging,
+    CONFIG_FILE,
+    ICON_PATH
+)
 from src.utils.usuarios import logout, tem_permissao
 from src.utils.janelas import (
     aplicar_no_topo_app_principal, remover_janelas_orfas)
@@ -206,7 +207,7 @@ def configurar_janela_principal(config):
                 logging.warning("Geometria salva inválida: %s",
                                 config['geometry'])
 
-    icone_path = obter_caminho_icone()
+    icone_path = ICON_PATH
     if icone_path and os.path.exists(icone_path):
         g.PRINC_FORM.setWindowIcon(QIcon(icone_path))
     else:
