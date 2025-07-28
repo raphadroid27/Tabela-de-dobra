@@ -15,8 +15,8 @@ from dataclasses import dataclass
 import pyperclip
 from PySide6.QtWidgets import QTreeWidgetItem
 from PySide6.QtCore import QTimer
-from src.models.models import Espessura, Material, Canal, Deducao
-from src.utils.banco_dados import session, obter_configuracoes
+from src.models.models import Espessura, Material, Canal, Deducao, Usuario
+from src.utils.banco_dados import session
 from src.utils import calculos
 from src.utils.widget import WidgetManager
 from src.config import globals as g
@@ -304,6 +304,108 @@ class FormWidgetUpdater:
             g.DED_CANAL_COMB.clear()
             g.DED_CANAL_COMB.addItems(canais)
             g.DED_CANAL_COMB.setCurrentIndex(-1)
+
+
+# --- OBTER CONFIGURAÇÕES ---
+
+
+def obter_configuracoes():
+    """
+    Retorna um dicionário com as configurações de cada tipo de item.
+    Esta função mapeia os tipos de dados para os widgets da UI correspondentes,
+    sendo essencial para a camada de handlers.
+    """
+    return {
+        'principal': {
+            'form': g.PRINC_FORM,
+        },
+        'dedução': {
+            'form': g.DEDUC_FORM,
+            'lista': g.LIST_DED,
+            'modelo': Deducao,
+            'campos': {
+                'valor': g.DED_VALOR_ENTRY,
+                'observacao': g.DED_OBSER_ENTRY,
+                'forca': g.DED_FORCA_ENTRY
+            },
+            'item_id': Deducao.id,
+            'valores': lambda d: (d.material.nome,
+                                  d.espessura.valor,
+                                  d.canal.valor,
+                                  d.valor,
+                                  d.observacao,
+                                  d.forca),
+            'ordem': Deducao.valor,
+            'entries': {
+                'material_combo': g.DED_MATER_COMB,
+                'espessura_combo': g.DED_ESPES_COMB,
+                'canal_combo': g.DED_CANAL_COMB
+            }
+        },
+        'material': {
+            'form': g.MATER_FORM,
+            'lista': g.LIST_MAT,
+            'modelo': Material,
+            'campos': {
+                'nome': g.MAT_NOME_ENTRY,
+                'densidade': g.MAT_DENS_ENTRY,
+                'escoamento': g.MAT_ESCO_ENTRY,
+                'elasticidade': g.MAT_ELAS_ENTRY
+            },
+            'item_id': Material.id,
+            'valores': lambda m: (m.nome, m.densidade, m.escoamento, m.elasticidade),
+            'ordem': Material.id,
+            'entry': g.MAT_NOME_ENTRY,
+            'busca': g.MAT_BUSCA_ENTRY,
+            'campo_busca': Material.nome
+        },
+        'espessura': {
+            'form': g.ESPES_FORM,
+            'lista': g.LIST_ESP,
+            'modelo': Espessura,
+            'campos': {
+                'valor': g.ESP_VALOR_ENTRY
+            },
+            'item_id': Espessura.id,
+            'valores': lambda e: (e.valor,),
+            'ordem': Espessura.valor,
+            'entry': g.ESP_VALOR_ENTRY,
+            'busca': g.ESP_BUSCA_ENTRY,
+            'campo_busca': Espessura.valor
+        },
+        'canal': {
+            'form': g.CANAL_FORM,
+            'lista': g.LIST_CANAL,
+            'modelo': Canal,
+            'campos': {
+                'valor': g.CANAL_VALOR_ENTRY,
+                'largura': g.CANAL_LARGU_ENTRY,
+                'altura': g.CANAL_ALTUR_ENTRY,
+                'comprimento_total': g.CANAL_COMPR_ENTRY,
+                'observacao': g.CANAL_OBSER_ENTRY
+            },
+            'item_id': Canal.id,
+            'valores': lambda c: (c.valor,
+                                  c.largura,
+                                  c.altura,
+                                  c.comprimento_total,
+                                  c.observacao),
+            'ordem': Canal.valor,
+            'entry': g.CANAL_VALOR_ENTRY,
+            'busca': g.CANAL_BUSCA_ENTRY,
+            'campo_busca': Canal.valor
+        },
+        'usuario': {
+            'form': g.USUAR_FORM,
+            'lista': g.LIST_USUARIO,
+            'modelo': Usuario,
+            'valores': lambda u: (u.id, u.nome, u.role),
+            'ordem': Usuario.nome,
+            'busca': g.USUARIO_BUSCA_ENTRY,
+            'campo_busca': Usuario.nome
+        }
+    }
+
 
 # --- FUNÇÕES DE LIMPEZA ---
 
