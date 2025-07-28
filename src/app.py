@@ -14,27 +14,23 @@ import json
 import logging
 import os
 import signal
-import socket
 import sys
 import traceback
 import uuid
-from datetime import datetime, timezone
 from functools import partial
-
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout, QMessageBox)
+    QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout)
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.utils.utilitarios import (
-    show_info, show_error,
     aplicar_medida_borda_espaco,
     setup_logging,
     CONFIG_FILE,
     ICON_PATH
 )
-from src.utils.usuarios import logout, tem_permissao
+from src.utils.usuarios import logout
 from src.utils.janelas import (
     aplicar_no_topo_app_principal, remover_janelas_orfas)
 from src.utils.interface_manager import carregar_interface
@@ -45,7 +41,9 @@ from src.utils.estilo import (
     registrar_tema_actions,
     obter_tema_atual
 )
-from src.utils import update_manager
+from src.utils.update_manager import (
+    periodic_update_check, handle_update_click
+)
 from src.forms.form_wrappers import (
     FormEspessura,
     FormDeducao,
@@ -62,12 +60,14 @@ from src.forms import (
 from src.components.menu_custom import MenuCustom
 from src.components.barra_titulo import BarraTitulo
 from src.utils.banco_dados import session as db_session
-from src.models.models import Base, engine, SessionLocal, Usuario, SystemControl
+from src.models.models import Usuario
 from src.config import globals as g
-
+from src.utils.banco_dados import inicializar_banco_dados
+from src.utils.session_manager import (
+    registrar_sessao, remover_sessao, atualizar_heartbeat_sessao, obter_comando_sistema)
 
 # --- Variáveis Globais de Configuração e Versão ---
-APP_VERSION = "2.2.0"
+g.APP_VERSION = "2.2.0"
 g.SESSION_ID = str(uuid.uuid4())
 
 
@@ -103,63 +103,10 @@ def salvar_configuracao(config):
         json.dump(config, f, indent=4)
 
 
-def registrar_sessao():
-    """Registra a sessão atual no banco de dados."""
-    try:
-        hostname = socket.gethostname()
-        sessao_existente = db_session.query(
-            SystemControl).filter_by(key=g.SESSION_ID).first()
-        if not sessao_existente:
-            logging.info(
-                "Registrando nova sessão: ID %s para host %s", g.SESSION_ID, hostname)
-            nova_sessao = SystemControl(
-                type='SESSION', key=g.SESSION_ID, value=hostname)
-            db_session.add(nova_sessao)
-            db_session.commit()
-    except SQLAlchemyError as e:
-        logging.error("Erro ao registrar sessão: %s", e)
-        db_session.rollback()
-
-
-def remover_sessao():
-    """Remove a sessão atual do banco de dados ao fechar."""
-    try:
-        logging.info("Removendo sessão: ID %s", g.SESSION_ID)
-        sessao_para_remover = db_session.query(
-            SystemControl).filter_by(key=g.SESSION_ID).first()
-        if sessao_para_remover:
-            db_session.delete(sessao_para_remover)
-            db_session.commit()
-    except SQLAlchemyError as e:
-        logging.error("Erro ao remover sessão: %s", e)
-        db_session.rollback()
-
-
-def verificar_comandos_sistema():
-    """Verifica comandos do sistema (como SHUTDOWN) e atualiza o heartbeat."""
-    try:
-        sessao_atual = db_session.query(
-            SystemControl).filter_by(key=g.SESSION_ID).first()
-        if sessao_atual:
-            sessao_atual.last_updated = datetime.now(timezone.utc)
-            db_session.commit()
-        else:
-            registrar_sessao()
-
-        cmd_entry = db_session.query(
-            SystemControl).filter_by(key='UPDATE_CMD').first()
-        if cmd_entry and cmd_entry.value == 'SHUTDOWN':
-            logging.warning(
-                "Comando de desligamento recebido. Fechando a aplicação...")
-            fechar_aplicativo()
-    except SQLAlchemyError as e:
-        logging.error("Erro ao verificar comandos do sistema: %s", e)
-        db_session.rollback()
-
-
 def fechar_aplicativo():
     """Fecha o aplicativo de forma segura. A remoção da sessão é tratada por 'aboutToQuit'."""
     logging.info("Iniciando o processo de fechamento do aplicativo.")
+
     try:
         if g.PRINC_FORM:
             # Salva a geometria antes de fechar
@@ -190,7 +137,7 @@ def configurar_janela_principal(config):
             pass
 
     g.PRINC_FORM = QMainWindow()
-    g.PRINC_FORM.setWindowTitle(f"Cálculo de Dobra - v{APP_VERSION}")
+    g.PRINC_FORM.setWindowTitle(f"Cálculo de Dobra - v{g.APP_VERSION}")
     g.PRINC_FORM.setFixedSize(360, 500)
     g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
@@ -215,98 +162,6 @@ def configurar_janela_principal(config):
 
     g.PRINC_FORM.setAttribute(Qt.WA_QuitOnClose, True)
     logging.info("Configuração da janela principal concluída.")
-
-
-# --- Funções de Atualização ---
-def _periodic_update_check():
-    """Verifica periodicamente se há atualizações disponíveis."""
-    logging.info("Verificando atualizações em segundo plano...")
-    update_info = update_manager.check_for_updates(APP_VERSION)
-    if update_info:
-        logging.info("Nova versão encontrada: %s",
-                     update_info.get('ultima_versao'))
-        g.UPDATE_INFO = update_info
-        _update_ui_for_status(True)
-    else:
-        logging.info("Nenhuma nova atualização encontrada.")
-        g.UPDATE_INFO = None
-        _update_ui_for_status(False)
-
-
-def _handle_update_click():
-    """Gerencia o clique no botão de atualização."""
-    if g.UPDATE_INFO:
-        if not tem_permissao('usuario', 'admin', show_message=False):
-            msg = (f"Uma nova versão ({g.UPDATE_INFO.get('ultima_versao', 'N/A')}) "
-                   "está disponível.\n\nPor favor, peça a um administrador para "
-                   "fazer o login e aplicar a atualização.")
-            show_info("Permissão Necessária", msg, parent=g.PRINC_FORM)
-            return
-
-        msg_admin = (f"Uma nova versão ({g.UPDATE_INFO.get('ultima_versao', 'N/A')}) "
-                     "está disponível.\n\nDeseja preparar a atualização? O sistema "
-                     "notificará todos os usuários para salvar seu trabalho e "
-                     "fechar o aplicativo.")
-        reply = QMessageBox.question(g.PRINC_FORM, "Confirmar Atualização", msg_admin,
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            _initiate_update_process()
-    else:
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        try:
-            logging.info("Verificação manual de atualização iniciada.")
-            QApplication.processEvents()
-            _periodic_update_check()
-        finally:
-            QApplication.restoreOverrideCursor()
-
-        if g.UPDATE_INFO:
-            msg_found = (f"A versão {g.UPDATE_INFO.get('ultima_versao', 'N/A')} "
-                         "está disponível!")
-            show_info("Atualização Encontrada", msg_found, parent=g.PRINC_FORM)
-        else:
-            show_info("Verificar Atualizações",
-                      "Você já está usando a versão mais recente.", parent=g.PRINC_FORM)
-
-
-def _initiate_update_process():
-    """Baixa, prepara o flag e dispara o comando de shutdown."""
-    QApplication.setOverrideCursor(Qt.WaitCursor)
-    try:
-        logging.info("Iniciando processo de atualização: baixando arquivos...")
-        QApplication.processEvents()
-        update_manager.download_update(g.UPDATE_INFO['nome_arquivo'])
-        update_manager.prepare_update_flag()
-        cmd_entry = db_session.query(
-            SystemControl).filter_by(key='UPDATE_CMD').first()
-        if cmd_entry:
-            cmd_entry.value = 'SHUTDOWN'
-            db_session.commit()
-        logging.info("Comando SHUTDOWN enviado para o banco de dados.")
-        msg_success = ("A atualização foi preparada. Ela será instalada na próxima "
-                       "vez que o programa for iniciado.\nO aplicativo será "
-                       "encerrado em breve.")
-        QMessageBox.information(g.PRINC_FORM, "Sucesso", msg_success)
-    except (FileNotFoundError, IOError, SQLAlchemyError, KeyError) as e:
-        logging.error("Erro ao iniciar o processo de atualização: %s", e)
-        show_error("Erro de Atualização",
-                   f"Não foi possível preparar a atualização: {e}", parent=g.PRINC_FORM)
-    finally:
-        QApplication.restoreOverrideCursor()
-
-
-def _update_ui_for_status(update_available: bool):
-    """Atualiza o texto e o estado do botão de atualização."""
-    if not hasattr(g, 'UPDATE_ACTION') or not g.UPDATE_ACTION:
-        return
-    if update_available:
-        g.UPDATE_ACTION.setText("⬇️ Aplicar Atualização")
-        tooltip_msg = f"Versão {g.UPDATE_INFO.get('ultima_versao', '')} disponível!"
-        g.UPDATE_ACTION.setToolTip(tooltip_msg)
-    else:
-        g.UPDATE_ACTION.setText("🔄 Verificar Atualizações")
-        g.UPDATE_ACTION.setToolTip(
-            "Verificar se há uma nova versão do aplicativo.")
 
 
 # --- REATORAÇÃO: Lógica de Abertura de Formulários ---
@@ -417,12 +272,12 @@ def _criar_menu_opcoes(menu_bar):
 def _criar_menu_ajuda(menu_bar):
     """Cria o menu Ajuda (mantido separado por sua lógica de atualização)."""
     help_menu = menu_bar.addMenu("❓ Ajuda")
-    sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
+    sobre_action = QAction(f"ℹ️ Sobre (v{g.APP_VERSION})", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
     help_menu.addAction(sobre_action)
     help_menu.addSeparator()
     g.UPDATE_ACTION = QAction("🔄 Verificar Atualizações", g.PRINC_FORM)
-    g.UPDATE_ACTION.triggered.connect(_handle_update_click)
+    g.UPDATE_ACTION.triggered.connect(handle_update_click)
     help_menu.addAction(g.UPDATE_ACTION)
 
 
@@ -458,21 +313,6 @@ def configurar_frames():
 
 
 # --- Funções de Inicialização (Refatorado de main) ---
-def inicializar_banco_dados():
-    """Cria as tabelas do banco de dados e registros iniciais, se necessário."""
-    logging.info("Inicializando o banco de dados e criando tabelas.")
-    Base.metadata.create_all(engine)
-    session = SessionLocal()
-    try:
-        if not session.query(SystemControl).filter_by(key='UPDATE_CMD').first():
-            logging.info(
-                "Inicializando o comando de atualização (UPDATE_CMD) no DB.")
-            initial_command = SystemControl(
-                type='COMMAND', key='UPDATE_CMD', value='NONE')
-            session.add(initial_command)
-            session.commit()
-    finally:
-        session.close()
 
 
 def configurar_sinais_excecoes():
@@ -492,16 +332,29 @@ def configurar_sinais_excecoes():
     signal.signal(signal.SIGTERM, signal_handler)
 
 
+def processar_verificacao_sistema():
+    """Função chamada pelo timer para verificar o estado do sistema."""
+    # 1. Avisa que a instância está viva
+    atualizar_heartbeat_sessao()
+
+    # 2. Verifica se há um comando para executar
+    comando = obter_comando_sistema()
+
+    # 3. Age com base no comando
+    if comando == 'SHUTDOWN':
+        fechar_aplicativo()
+
+
 def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g' para mantê-los ativos."""
     g.TIMER_SISTEMA = QTimer()
-    g.TIMER_SISTEMA.timeout.connect(verificar_comandos_sistema)
+    g.TIMER_SISTEMA.timeout.connect(processar_verificacao_sistema)
     g.TIMER_SISTEMA.start(5000)
 
     g.UPDATE_CHECK_TIMER = QTimer()
-    g.UPDATE_CHECK_TIMER.timeout.connect(_periodic_update_check)
+    g.UPDATE_CHECK_TIMER.timeout.connect(periodic_update_check)
     g.UPDATE_CHECK_TIMER.start(300000)
-    QTimer.singleShot(1000, _periodic_update_check)
+    QTimer.singleShot(1000, periodic_update_check)
 
 
 # --- Função Principal ---
@@ -510,7 +363,7 @@ def main():
     setup_logging('app.log', log_to_console=True)
     app = None
     try:
-        logging.info("Iniciando a aplicação v%s...", APP_VERSION)
+        logging.info("Iniciando a aplicação v%s...", g.APP_VERSION)
         inicializar_banco_dados()
         configurar_sinais_excecoes()
 
