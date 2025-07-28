@@ -7,10 +7,9 @@ from src.config import globals as g
 from src.models.models import Usuario
 from src.utils.banco_dados import (session,
                                    tratativa_erro,
-                                   obter_configuracoes
                                    )
 from src.utils.janelas import HABILITAR_JANELAS
-from src.utils.interface import listar
+from src.utils.interface import listar, obter_configuracoes
 from src.utils.utilitarios import (
     ask_string, show_error, show_info, show_warning)
 
