@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (QInputDialog, QLineEdit, QMessageBox)
 # --- 1. LÓGICA CENTRALIZADA DE CAMINHOS ---
 
 
-def get_app_base_dir() -> str:
+def obter_dir_base() -> str:
     """
     Retorna o diretório base da aplicação de forma consistente.
 
@@ -32,10 +32,23 @@ def get_app_base_dir() -> str:
     # então o diretório base está dois níveis acima.
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+
+def obter_dir_icone():
+    """
+    Retorna o caminho correto para o arquivo de ícone,
+    considerando o modo de execução (normal ou empacotado).
+    """
+    if getattr(sys, 'frozen', False):  # Verifica se está empacotado
+        base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    else:
+        base_path = os.path.abspath(".")  # Diretório atual no modo normal
+
+    return os.path.join(base_path, "assets", "icone_2.ico")
+
 # --- Constantes de Caminhos Globais ---
 
 
-BASE_DIR = get_app_base_dir()
+BASE_DIR = obter_dir_base()
 
 # Diretório de banco de dados
 DATABASE_DIR = os.path.join(BASE_DIR, "database")
@@ -43,7 +56,7 @@ DB_PATH = os.path.join(DATABASE_DIR, "tabela_de_dobra.db")
 
 # Diretório de assets (ícones, etc.)
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
-ICON_PATH = os.path.join(ASSETS_DIR, "icone_2.ico")
+ICON_PATH = obter_dir_icone()
 
 # Diretório de logs
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
