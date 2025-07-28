@@ -126,10 +126,10 @@ def get_update_info() -> Optional[Dict[str, Any]]:
 # --- Funções de Atualização ---
 
 
-def checagem_periodica_update():
+def checagem_periodica_update(versao_atual: str):
     """Verifica periodicamente se há atualizações disponíveis."""
     logging.info("Verificando atualizações em segundo plano...")
-    update_info = checar_updates(g.APP_VERSION)
+    update_info = checar_updates(versao_atual)
     if update_info:
         logging.info("Nova versão encontrada: %s",
                      update_info.get('ultima_versao'))
@@ -164,7 +164,7 @@ def manipular_clique_update():
         try:
             logging.info("Verificação manual de atualização iniciada.")
             QApplication.processEvents()
-            checagem_periodica_update()
+            checagem_periodica_update(None)
         finally:
             QApplication.restoreOverrideCursor()
 
