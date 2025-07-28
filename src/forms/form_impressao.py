@@ -227,7 +227,8 @@ def _mostrar_erro_impressao(erro):
 
 def selecionar_diretorio():
     """Abre o diálogo para seleção de diretório."""
-    DESABILITAR_JANELAS()
+    if callable(DESABILITAR_JANELAS):
+        DESABILITAR_JANELAS()
     diretorio = QFileDialog.getExistingDirectory(
         g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs")
     if callable(HABILITAR_JANELAS):
