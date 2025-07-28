@@ -8,31 +8,21 @@ Responsável por:
 """
 
 import os
-import sys
 import json
 import shutil
 import logging
 from typing import Optional, Dict, Any
+from sqlalchemy.exc import SQLAlchemyError
+from PySide6.QtWidgets import QMessageBox, QApplication
+from PySide6.QtCore import Qt
 from semantic_version import Version
-
-# --- Configuração de Caminhos de Forma Robusta ---
-
-
-def get_base_dir() -> str:
-    """Retorna o diretório base da aplicação, seja em modo script ou executável."""
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
-    # No ambiente de desenvolvimento, assume que este arquivo está em 'src/utils',
-    # e o diretório base está dois níveis acima.
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-
-
-# --- Constantes Globais ---
-BASE_DIR = get_base_dir()
-UPDATES_DIR = os.path.join(BASE_DIR, 'updates')
-UPDATE_TEMP_DIR = os.path.join(BASE_DIR, 'update_temp')
-VERSION_FILE_PATH = os.path.join(UPDATES_DIR, 'versao.json')
-UPDATE_FLAG_FILE = os.path.join(BASE_DIR, 'update_pending.flag')
+from src.utils.utilitarios import (
+    VERSION_FILE_PATH, UPDATE_FLAG_FILE,
+    UPDATES_DIR, UPDATE_TEMP_DIR, show_info, show_error)
+from src.utils.usuarios import tem_permissao
+from src.config import globals as g
+from src.utils.banco_dados import session as db_session
+from src.models.models import SystemControl
 
 
 def check_for_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
@@ -132,3 +122,96 @@ def get_update_info() -> Optional[Dict[str, Any]]:
         logging.error(
             "Erro ao ler informações de atualização do versao.json: %s", e)
         return None
+
+# --- Funções de Atualização ---
+
+
+def periodic_update_check():
+    """Verifica periodicamente se há atualizações disponíveis."""
+    logging.info("Verificando atualizações em segundo plano...")
+    update_info = check_for_updates(g.APP_VERSION)
+    if update_info:
+        logging.info("Nova versão encontrada: %s",
+                     update_info.get('ultima_versao'))
+        g.UPDATE_INFO = update_info
+        update_ui_for_status(True)
+    else:
+        logging.info("Nenhuma nova atualização encontrada.")
+        g.UPDATE_INFO = None
+        update_ui_for_status(False)
+
+
+def handle_update_click():
+    """Gerencia o clique no botão de atualização."""
+    if g.UPDATE_INFO:
+        if not tem_permissao('usuario', 'admin', show_message=False):
+            msg = (f"Uma nova versão ({g.UPDATE_INFO.get('ultima_versao', 'N/A')}) "
+                   "está disponível.\n\nPor favor, peça a um administrador para "
+                   "fazer o login e aplicar a atualização.")
+            show_info("Permissão Necessária", msg, parent=g.PRINC_FORM)
+            return
+
+        msg_admin = (f"Uma nova versão ({g.UPDATE_INFO.get('ultima_versao', 'N/A')}) "
+                     "está disponível.\n\nDeseja preparar a atualização? O sistema "
+                     "notificará todos os usuários para salvar seu trabalho e "
+                     "fechar o aplicativo.")
+        reply = QMessageBox.question(g.PRINC_FORM, "Confirmar Atualização", msg_admin,
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            initiate_update_process()
+    else:
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            logging.info("Verificação manual de atualização iniciada.")
+            QApplication.processEvents()
+            periodic_update_check()
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if g.UPDATE_INFO:
+            msg_found = (f"A versão {g.UPDATE_INFO.get('ultima_versao', 'N/A')} "
+                         "está disponível!")
+            show_info("Atualização Encontrada", msg_found, parent=g.PRINC_FORM)
+        else:
+            show_info("Verificar Atualizações",
+                      "Você já está usando a versão mais recente.", parent=g.PRINC_FORM)
+
+
+def initiate_update_process():
+    """Baixa, prepara o flag e dispara o comando de shutdown."""
+    QApplication.setOverrideCursor(Qt.WaitCursor)
+    try:
+        logging.info("Iniciando processo de atualização: baixando arquivos...")
+        QApplication.processEvents()
+        download_update(g.UPDATE_INFO['nome_arquivo'])
+        prepare_update_flag()
+        cmd_entry = db_session.query(
+            SystemControl).filter_by(key='UPDATE_CMD').first()
+        if cmd_entry:
+            cmd_entry.value = 'SHUTDOWN'
+            db_session.commit()
+        logging.info("Comando SHUTDOWN enviado para o banco de dados.")
+        msg_success = ("A atualização foi preparada. Ela será instalada na próxima "
+                       "vez que o programa for iniciado.\nO aplicativo será "
+                       "encerrado em breve.")
+        QMessageBox.information(g.PRINC_FORM, "Sucesso", msg_success)
+    except (FileNotFoundError, IOError, SQLAlchemyError, KeyError) as e:
+        logging.error("Erro ao iniciar o processo de atualização: %s", e)
+        show_error("Erro de Atualização",
+                   f"Não foi possível preparar a atualização: {e}", parent=g.PRINC_FORM)
+    finally:
+        QApplication.restoreOverrideCursor()
+
+
+def update_ui_for_status(update_available: bool):
+    """Atualiza o texto e o estado do botão de atualização."""
+    if not hasattr(g, 'UPDATE_ACTION') or not g.UPDATE_ACTION:
+        return
+    if update_available:
+        g.UPDATE_ACTION.setText("⬇️ Aplicar Atualização")
+        tooltip_msg = f"Versão {g.UPDATE_INFO.get('ultima_versao', '')} disponível!"
+        g.UPDATE_ACTION.setToolTip(tooltip_msg)
+    else:
+        g.UPDATE_ACTION.setText("🔄 Verificar Atualizações")
+        g.UPDATE_ACTION.setToolTip(
+            "Verificar se há uma nova versão do aplicativo.")

@@ -17,55 +17,24 @@ import zipfile
 import time
 import shutil
 import logging
-from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Tuple, Optional, Type, Iterator
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from typing import Type
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from src.models.models import SystemControl as SystemControlModel
-
+from src.utils.banco_dados import session_scope
 
 # Importa os caminhos e funções do módulo utilitário centralizado
 from src.utils.utilitarios import (
     setup_logging,
     BASE_DIR,
     APP_EXECUTABLE_PATH,
-    DB_PATH,
     UPDATE_TEMP_DIR,
     VERSION_FILE_PATH,
     UPDATE_FLAG_FILE
 )
 
 # --- Funções do Launcher ---
-
-
-@contextmanager
-def session_scope() -> Iterator[Tuple[Optional[Session], Optional[Type[SystemControlModel]]]]:
-    """
-    Fornece um escopo transacional para operações de banco de dados.
-    """
-    if not os.path.exists(DB_PATH):
-        logging.error("Banco de dados não encontrado em: %s", DB_PATH)
-        yield None, None
-        return
-
-    session: Optional[Session] = None
-    try:
-        engine = create_engine(f'sqlite:///{DB_PATH}')
-        session_factory = sessionmaker(bind=engine)
-        session = session_factory()
-        yield session, SystemControlModel
-        session.commit()
-    except SQLAlchemyError as e:
-        logging.error("Erro na sessão do banco de dados: %s", e)
-        if session:
-            session.rollback()
-        raise
-    finally:
-        if session:
-            session.close()
 
 
 def force_shutdown_all_instances(session: Session, model: Type[SystemControlModel]) -> bool:
