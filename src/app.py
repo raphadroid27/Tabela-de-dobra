@@ -65,9 +65,10 @@ from src.config import globals as g
 from src.utils.banco_dados import inicializar_banco_dados
 from src.utils.session_manager import (
     registrar_sessao, remover_sessao, atualizar_heartbeat_sessao, obter_comando_sistema)
+from src import __version__
 
 # --- Variáveis Globais de Configuração e Versão ---
-g.APP_VERSION = "2.2.0"
+APP_VERSION = __version__
 g.SESSION_ID = str(uuid.uuid4())
 
 
@@ -137,7 +138,7 @@ def configurar_janela_principal(config):
             pass
 
     g.PRINC_FORM = QMainWindow()
-    g.PRINC_FORM.setWindowTitle(f"Cálculo de Dobra - v{g.APP_VERSION}")
+    g.PRINC_FORM.setWindowTitle(f"Cálculo de Dobra - v{APP_VERSION}")
     g.PRINC_FORM.setFixedSize(360, 500)
     g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
@@ -272,7 +273,7 @@ def _criar_menu_opcoes(menu_bar):
 def _criar_menu_ajuda(menu_bar):
     """Cria o menu Ajuda (mantido separado por sua lógica de atualização)."""
     help_menu = menu_bar.addMenu("❓ Ajuda")
-    sobre_action = QAction(f"ℹ️ Sobre (v{g.APP_VERSION})", g.PRINC_FORM)
+    sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
     help_menu.addAction(sobre_action)
     help_menu.addSeparator()
@@ -352,9 +353,10 @@ def iniciar_timers():
     g.TIMER_SISTEMA.start(5000)
 
     g.UPDATE_CHECK_TIMER = QTimer()
-    g.UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
+    g.UPDATE_CHECK_TIMER.timeout.connect(
+        lambda: checagem_periodica_update(APP_VERSION))
     g.UPDATE_CHECK_TIMER.start(300000)
-    QTimer.singleShot(1000, checagem_periodica_update)
+    QTimer.singleShot(1000, lambda: checagem_periodica_update(APP_VERSION))
 
 
 # --- Função Principal ---
@@ -363,7 +365,7 @@ def main():
     setup_logging('app.log', log_to_console=True)
     app = None
     try:
-        logging.info("Iniciando a aplicação v%s...", g.APP_VERSION)
+        logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
         configurar_sinais_excecoes()
 
