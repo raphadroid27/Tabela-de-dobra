@@ -25,7 +25,7 @@ from src.utils.banco_dados import session as db_session
 from src.models.models import SystemControl
 
 
-def check_for_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
+def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
     """
     Verifica se há uma nova versão comparando com o arquivo versao.json.
 
@@ -126,22 +126,22 @@ def get_update_info() -> Optional[Dict[str, Any]]:
 # --- Funções de Atualização ---
 
 
-def periodic_update_check():
+def checagem_periodica_update():
     """Verifica periodicamente se há atualizações disponíveis."""
     logging.info("Verificando atualizações em segundo plano...")
-    update_info = check_for_updates(g.APP_VERSION)
+    update_info = checar_updates(g.APP_VERSION)
     if update_info:
         logging.info("Nova versão encontrada: %s",
                      update_info.get('ultima_versao'))
         g.UPDATE_INFO = update_info
-        update_ui_for_status(True)
+        _atualizar_ui_conforme_status(True)
     else:
         logging.info("Nenhuma nova atualização encontrada.")
         g.UPDATE_INFO = None
-        update_ui_for_status(False)
+        _atualizar_ui_conforme_status(False)
 
 
-def handle_update_click():
+def manipular_clique_update():
     """Gerencia o clique no botão de atualização."""
     if g.UPDATE_INFO:
         if not tem_permissao('usuario', 'admin', show_message=False):
@@ -158,13 +158,13 @@ def handle_update_click():
         reply = QMessageBox.question(g.PRINC_FORM, "Confirmar Atualização", msg_admin,
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            initiate_update_process()
+            _iniciar_processo_update()
     else:
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             logging.info("Verificação manual de atualização iniciada.")
             QApplication.processEvents()
-            periodic_update_check()
+            checagem_periodica_update()
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -177,7 +177,7 @@ def handle_update_click():
                       "Você já está usando a versão mais recente.", parent=g.PRINC_FORM)
 
 
-def initiate_update_process():
+def _iniciar_processo_update():
     """Baixa, prepara o flag e dispara o comando de shutdown."""
     QApplication.setOverrideCursor(Qt.WaitCursor)
     try:
@@ -203,7 +203,7 @@ def initiate_update_process():
         QApplication.restoreOverrideCursor()
 
 
-def update_ui_for_status(update_available: bool):
+def _atualizar_ui_conforme_status(update_available: bool):
     """Atualiza o texto e o estado do botão de atualização."""
     if not hasattr(g, 'UPDATE_ACTION') or not g.UPDATE_ACTION:
         return

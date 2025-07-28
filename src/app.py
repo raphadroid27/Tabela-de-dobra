@@ -42,7 +42,7 @@ from src.utils.estilo import (
     obter_tema_atual
 )
 from src.utils.update_manager import (
-    periodic_update_check, handle_update_click
+    checagem_periodica_update, manipular_clique_update
 )
 from src.forms.form_wrappers import (
     FormEspessura,
@@ -277,7 +277,7 @@ def _criar_menu_ajuda(menu_bar):
     help_menu.addAction(sobre_action)
     help_menu.addSeparator()
     g.UPDATE_ACTION = QAction("🔄 Verificar Atualizações", g.PRINC_FORM)
-    g.UPDATE_ACTION.triggered.connect(handle_update_click)
+    g.UPDATE_ACTION.triggered.connect(manipular_clique_update)
     help_menu.addAction(g.UPDATE_ACTION)
 
 
@@ -352,9 +352,9 @@ def iniciar_timers():
     g.TIMER_SISTEMA.start(5000)
 
     g.UPDATE_CHECK_TIMER = QTimer()
-    g.UPDATE_CHECK_TIMER.timeout.connect(periodic_update_check)
+    g.UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
     g.UPDATE_CHECK_TIMER.start(300000)
-    QTimer.singleShot(1000, periodic_update_check)
+    QTimer.singleShot(1000, checagem_periodica_update)
 
 
 # --- Função Principal ---
