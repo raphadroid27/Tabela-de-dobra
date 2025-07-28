@@ -177,6 +177,8 @@ def logout():
     g.USUARIO_ID = None
     if g.PRINC_FORM is not None:
         g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
+        if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
+            g.BARRA_TITULO.titulo.setText("Cálculo de Dobra")
     show_info("Logout", "Logout efetuado com sucesso.")
 
 
