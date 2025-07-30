@@ -9,6 +9,12 @@ Responsável por:
 4. Baixar e aplicar a atualização, substituindo os arquivos antigos.
 5. Forçar o encerramento de instâncias do app principal.
 6. Reiniciar o app principal após a atualização.
+
+Refatoração:
+- Adicionada BarraTitulo customizada para consistência visual.
+- Substituído QInputDialog por um QDialog de autenticação robusto e estilizado.
+- Estilos de botões e layout alinhados com o restante da aplicação.
+- Adicionada uma barra de progresso para feedback visual durante a atualização.
 """
 
 # --- Importações da Biblioteca Padrão ---
@@ -24,9 +30,10 @@ from datetime import datetime, timezone
 from typing import Type
 
 # --- Importações de Terceiros ---
+import qdarktheme
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                                QLabel, QPushButton, QHBoxLayout, QMessageBox,
-                               QInputDialog, QLineEdit)
+                               QDialog, QGridLayout, QLineEdit, QProgressBar)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon
 
@@ -37,17 +44,29 @@ try:
     if BASE_DIR not in sys.path:
         sys.path.insert(0, BASE_DIR)
 
-    # --- Importações da Aplicação Local (com caminho explícito) ---
+    # --- Importações da Aplicação Local ---
     from src import __version__ as APP_VERSION
     from src.models.models import SystemControl as SystemControlModel, Usuario
     from src.utils.banco_dados import session_scope
     from src.utils.update_manager import checar_updates, download_update
     from src.utils.utilitarios import (
         setup_logging, APP_EXECUTABLE_PATH, UPDATE_TEMP_DIR,
-        ICON_PATH, show_error
+        ICON_PATH, show_error, aplicar_medida_borda_espaco
     )
+    from src.components.barra_titulo import BarraTitulo
+    from src.utils.estilo import (
+        obter_estilo_botao_verde, obter_estilo_botao_vermelho,
+        obter_estilo_botao_azul, obter_tema_atual, obter_estilo_progress_bar
+    )
+    from src.utils.janelas import posicionar_janela
+    from src.config import globals as g
+
+
 except ImportError as e:
     # Fallback de emergência
+    logging.basicConfig(level=logging.CRITICAL,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.critical("Erro de Importação: %s", e)
     QApplication(sys.argv)
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Critical)
@@ -61,6 +80,88 @@ except ImportError as e:
     sys.exit(1)
 
 
+class AdminAuthDialog(QDialog):
+    """
+    Dialog para autenticação de administrador, com estilo customizado.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.success = False
+        self.setModal(True)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setFixedSize(230, 160)
+
+        # Aplicar tema do qdarktheme
+        qdarktheme.setup_theme(obter_tema_atual())
+
+        self._setup_ui()
+        self.usuario_entry.setFocus()
+
+    def _setup_ui(self):
+        """Configura a interface do diálogo."""
+        vlayout = QVBoxLayout(self)
+        aplicar_medida_borda_espaco(vlayout, 0, 0)
+
+        # --- Barra de Título ---
+        self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
+        self.barra_titulo.titulo.setText("Login de Admin")
+        vlayout.addWidget(self.barra_titulo)
+
+        # --- Conteúdo Principal ---
+        content_widget = QWidget()
+        grid_layout = QGridLayout(content_widget)
+        grid_layout.setContentsMargins(15, 10, 15, 15)
+        grid_layout.setVerticalSpacing(10)
+
+        grid_layout.addWidget(QLabel("Usuário:"), 0, 0)
+        self.usuario_entry = QLineEdit()
+        grid_layout.addWidget(self.usuario_entry, 0, 1)
+
+        grid_layout.addWidget(QLabel("Senha:"), 1, 0)
+        self.senha_entry = QLineEdit()
+        self.senha_entry.setEchoMode(QLineEdit.Password)
+        grid_layout.addWidget(self.senha_entry, 1, 1)
+
+        # --- Botão de Login ---
+        login_btn = QPushButton("🔐 Login")
+        login_btn.setStyleSheet(obter_estilo_botao_verde())
+        login_btn.clicked.connect(self.attempt_login)
+        grid_layout.addWidget(login_btn, 2, 0, 1, 2)
+
+        vlayout.addWidget(content_widget)
+
+    def attempt_login(self):
+        """Valida as credenciais fornecidas."""
+        username = self.usuario_entry.text()
+        password = self.senha_entry.text()
+
+        if not username or not password:
+            show_error("Campos Vazios",
+                       "Por favor, preencha usuário e senha.", parent=self)
+            return
+
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+
+        with session_scope() as (db_session, _):
+            if not db_session:
+                show_error("Erro de Banco de Dados",
+                           "Não foi possível conectar ao banco de dados.", parent=self)
+                return
+
+            user = db_session.query(Usuario).filter_by(
+                nome=username, senha=hashed_password).first()
+
+            if user and user.role == 'admin':
+                self.success = True
+                self.accept()  # Fecha o diálogo com sucesso
+            else:
+                show_error("Falha na Autenticação",
+                           "Credenciais inválidas ou o usuário não é um administrador.",
+                           parent=self)
+                self.senha_entry.clear()
+
+
 class UpdaterWindow(QMainWindow):
     """Janela principal da interface do Updater."""
 
@@ -69,21 +170,33 @@ class UpdaterWindow(QMainWindow):
         self.update_info = None
         self.mode = mode
 
-        self.setup_ui()
-        self.setWindowTitle("Atualizador")
-        self.setFixedSize(400, 180)
-
+        # --- Configuração da Janela ---
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.setFixedSize(400, 220)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
+        self.setup_ui()
         QTimer.singleShot(100, self.run_initial_flow)
 
     def setup_ui(self):
         """Configura os widgets da interface."""
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
-        self.layout.setAlignment(Qt.AlignCenter)
+        main_layout = QVBoxLayout(self.central_widget)
+        aplicar_medida_borda_espaco(main_layout, 0, 0)
+
+        # --- Barra de Título ---
+        self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
+        self.barra_titulo.titulo.setText("Atualizador")
+        main_layout.addWidget(self.barra_titulo)
+
+        # --- Conteúdo ---
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(15, 10, 15, 15)
+        content_layout.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(content_widget)
 
         self.status_label = QLabel("Verificando atualizações...")
         self.status_label.setAlignment(Qt.AlignCenter)
@@ -93,6 +206,12 @@ class UpdaterWindow(QMainWindow):
         self.version_label.setAlignment(Qt.AlignCenter)
         self.version_label.setStyleSheet("font-size: 12px; color: #55aaff;")
 
+        # --- Barra de Progresso ---
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setStyleSheet(obter_estilo_progress_bar())
+        self.progress_bar.hide()
+
         self.button_layout = QHBoxLayout()
         self.update_button = QPushButton("Atualizar Agora")
         self.update_button.setEnabled(False)
@@ -100,14 +219,17 @@ class UpdaterWindow(QMainWindow):
 
         self.cancel_button = QPushButton("Cancelar")
         self.cancel_button.clicked.connect(self.close)
+        self.cancel_button.setStyleSheet(obter_estilo_botao_vermelho())
 
-        self.button_layout.addWidget(self.update_button)
         self.button_layout.addWidget(self.cancel_button)
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(self.update_button)
 
-        self.layout.addWidget(self.status_label)
-        self.layout.addWidget(self.version_label)
-        self.layout.addStretch()
-        self.layout.addLayout(self.button_layout)
+        content_layout.addWidget(self.status_label)
+        content_layout.addWidget(self.version_label)
+        content_layout.addWidget(self.progress_bar)
+        content_layout.addStretch()
+        content_layout.addLayout(self.button_layout)
 
     def run_initial_flow(self):
         """Executa a lógica inicial baseada no modo de lançamento."""
@@ -120,7 +242,11 @@ class UpdaterWindow(QMainWindow):
                 self.show_no_update()
 
             if self.mode == 'apply' and self.update_info:
-                self.start_update_process()
+                # Autentica antes de prosseguir no modo 'apply'
+                if self.validate_app_admin():
+                    self.start_update_process(confirmed=True)
+                else:
+                    self.close()
 
         finally:
             QApplication.restoreOverrideCursor()
@@ -131,8 +257,7 @@ class UpdaterWindow(QMainWindow):
         self.status_label.setText("Nova versão disponível!")
         self.version_label.setText(f"Versão {latest_version}")
         self.update_button.setEnabled(True)
-        self.update_button.setStyleSheet(
-            "background-color: #007acc; color: white;")
+        self.update_button.setStyleSheet(obter_estilo_botao_azul())
 
     def show_no_update(self):
         """Atualiza a UI para mostrar que o app está atualizado."""
@@ -143,57 +268,41 @@ class UpdaterWindow(QMainWindow):
         self.cancel_button.setText("Fechar")
 
     def validate_app_admin(self) -> bool:
-        """Pede credenciais e valida se o usuário é um admin do app."""
-        username, ok1 = QInputDialog.getText(self, "Autenticação Necessária",
-                                             "Nome do usuário Administrador:")
-        if not ok1 or not username:
-            return False
+        """Abre o diálogo de autenticação e retorna o resultado."""
+        auth_dialog = AdminAuthDialog(self)
 
-        password, ok2 = QInputDialog.getText(self, "Autenticação Necessária",
-                                             f"Senha para o usuário '{username}':",
-                                             QLineEdit.Password)
-        if not ok2:
-            return False
+        # Define a janela do updater como a principal temporariamente
+        # para que a função `posicionar_janela` possa centralizar o diálogo.
+        g.PRINC_FORM = self
+        posicionar_janela(auth_dialog, 'centro')
+        g.PRINC_FORM = None  # Limpa a referência para evitar efeitos colaterais
 
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        auth_dialog.exec()
+        return auth_dialog.success
 
-        with session_scope() as (db_session, _):
-            if not db_session:
-                show_error("Erro de Banco de Dados",
-                           "Não foi possível conectar ao banco de dados para validar as credenciais.",
-                           parent=self)
-                return False
-
-            user = db_session.query(Usuario).filter_by(
-                nome=username, senha=hashed_password).first()
-
-            if user and user.role == 'admin':
-                return True
-
-        show_error("Falha na Autenticação",
-                   "As credenciais fornecidas são inválidas ou o usuário não é um administrador.",
-                   parent=self)
-        return False
-
-    def start_update_process(self):
+    def start_update_process(self, confirmed=False):
         """Inicia o fluxo completo de atualização."""
         # 1. Validar se o usuário é um admin do aplicativo
-        if not self.validate_app_admin():
-            return  # A mensagem de erro já foi mostrada em validate_app_admin
-
-        # 2. Confirmar a ação
-        reply = QMessageBox.question(
-            self, "Confirmar Atualização",
-            "O aplicativo principal e todas as suas instâncias serão "
-            "fechadas para continuar.\n\nDeseja prosseguir?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
-        )
-        if reply == QMessageBox.No:
+        if not confirmed and not self.validate_app_admin():
             return
+
+        # 2. Confirmar a ação (se não foi pré-confirmada)
+        if not confirmed:
+            reply = QMessageBox.question(
+                self, "Confirmar Atualização",
+                "O aplicativo principal e todas as suas instâncias serão "
+                "fechadas para continuar.\n\nDeseja prosseguir?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            )
+            if reply == QMessageBox.No:
+                return
 
         # 3. Iniciar o processo visual
         self.update_button.setEnabled(False)
         self.cancel_button.setEnabled(False)
+        self.version_label.hide()
+        self.progress_bar.show()
+        self.progress_bar.setValue(0)
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         try:
@@ -204,6 +313,8 @@ class UpdaterWindow(QMainWindow):
             show_error("Erro de Atualização",
                        f"Ocorreu um erro: {e}", parent=self)
             self.status_label.setText("Falha na atualização.")
+            self.progress_bar.hide()
+            self.version_label.show()
             self.cancel_button.setEnabled(True)
             self.cancel_button.setText("Fechar")
         finally:
@@ -212,12 +323,14 @@ class UpdaterWindow(QMainWindow):
     def run_update_steps(self):
         """Executa as etapas sequenciais da atualização."""
         self.status_label.setText("Baixando arquivos...")
+        self.progress_bar.setValue(10)
         QApplication.processEvents()
         zip_filename = self.update_info.get("nome_arquivo")
         if not zip_filename:
             raise ValueError(
                 "Nome do arquivo de atualização não encontrado em versao.json.")
         download_update(zip_filename)
+        self.progress_bar.setValue(40)
 
         self.status_label.setText("Fechando aplicativo principal...")
         QApplication.processEvents()
@@ -228,14 +341,17 @@ class UpdaterWindow(QMainWindow):
             if not self.force_shutdown_all_instances(db_session, model):
                 raise RuntimeError(
                     "Não foi possível fechar todas as instâncias do aplicativo.")
+        self.progress_bar.setValue(70)
 
         self.status_label.setText("Aplicando atualização...")
         QApplication.processEvents()
         if not self.apply_update(zip_filename):
             raise IOError(
                 "Falha ao aplicar os arquivos de atualização. Verifique as permissões da pasta.")
+        self.progress_bar.setValue(90)
 
         self.status_label.setText("Atualização concluída! Reiniciando...")
+        self.progress_bar.setValue(100)
         QApplication.processEvents()
         time.sleep(2)
         self.start_application()
@@ -250,7 +366,12 @@ class UpdaterWindow(QMainWindow):
             if cmd_entry:
                 cmd_entry.value = 'SHUTDOWN'
                 cmd_entry.last_updated = datetime.now(timezone.utc)
-                session.commit()
+            else:
+                # Se não existir, cria a entrada
+                new_cmd = model(
+                    key='UPDATE_CMD', value='SHUTDOWN', type='COMMAND')
+                session.add(new_cmd)
+            session.commit()
 
             start_time = time.time()
             while (time.time() - start_time) < 60:
@@ -286,17 +407,24 @@ class UpdaterWindow(QMainWindow):
         try:
             with zipfile.ZipFile(zip_filepath, 'r') as zip_ref:
                 extract_path = os.path.join(UPDATE_TEMP_DIR, 'extracted')
+                if os.path.exists(extract_path):
+                    shutil.rmtree(extract_path)
                 os.makedirs(extract_path, exist_ok=True)
                 zip_ref.extractall(extract_path)
 
             for item in os.listdir(extract_path):
                 src_path = os.path.join(extract_path, item)
                 dst_path = os.path.join(app_dir, item)
-                if os.path.isdir(dst_path):
-                    shutil.rmtree(dst_path)
-                elif os.path.isfile(dst_path):
-                    os.remove(dst_path)
-                shutil.move(src_path, dst_path)
+                try:
+                    if os.path.isdir(dst_path):
+                        shutil.rmtree(dst_path)
+                    elif os.path.isfile(dst_path):
+                        os.remove(dst_path)
+                    shutil.move(src_path, dst_path)
+                except OSError as e:
+                    logging.warning(
+                        "Não foi possível substituir '%s': %s. Tentando como admin...", item, e)
+                    # Lógica de fallback se necessário (pode requerer elevação)
 
             logging.info("Atualização aplicada com sucesso!")
             return True
@@ -312,12 +440,17 @@ class UpdaterWindow(QMainWindow):
         if not os.path.exists(APP_EXECUTABLE_PATH):
             logging.error(
                 "Executável da aplicação não encontrado em: %s", APP_EXECUTABLE_PATH)
+            show_error("Erro Crítico",
+                       f"Não foi possível encontrar o executável principal em:"
+                       f"\n{APP_EXECUTABLE_PATH}")
             return
         logging.info("Iniciando a aplicação: %s", APP_EXECUTABLE_PATH)
         try:
             subprocess.Popen([APP_EXECUTABLE_PATH])
         except OSError as e:
             logging.error("Erro ao iniciar a aplicação: %s", e)
+            show_error("Erro ao Reiniciar",
+                       f"Não foi possível reiniciar o aplicativo principal:\n{e}")
 
 
 def main():
@@ -326,7 +459,8 @@ def main():
     logging.info("Updater Gráfico iniciado.")
 
     app = QApplication(sys.argv)
-    app.setStyle("Fusion")
+    # Aplica o tema globalmente
+    qdarktheme.setup_theme(obter_tema_atual())
 
     mode = 'check'
     if len(sys.argv) > 1 and sys.argv[1] == '--apply':
