@@ -15,6 +15,7 @@ Refatoração:
 - Substituído QInputDialog por um QDialog de autenticação robusto e estilizado.
 - Estilos de botões e layout alinhados com o restante da aplicação.
 - Adicionada uma barra de progresso para feedback visual durante a atualização.
+- Adicionado tratamento de erro com retentativas para limpeza de arquivos.
 """
 
 # --- Importações da Biblioteca Padrão ---
@@ -322,35 +323,35 @@ class UpdaterWindow(QMainWindow):
 
     def run_update_steps(self):
         """Executa as etapas sequenciais da atualização."""
-        self.status_label.setText("Baixando arquivos...")
+        self.status_label.setText("A baixar ficheiros...")
         self.progress_bar.setValue(10)
         QApplication.processEvents()
         zip_filename = self.update_info.get("nome_arquivo")
         if not zip_filename:
             raise ValueError(
-                "Nome do arquivo de atualização não encontrado em versao.json.")
+                "Nome do ficheiro de atualização não encontrado em versao.json.")
         download_update(zip_filename)
         self.progress_bar.setValue(40)
 
-        self.status_label.setText("Fechando aplicativo principal...")
+        self.status_label.setText("A fechar a aplicação principal...")
         QApplication.processEvents()
         with session_scope() as (db_session, model):
             if not db_session or not model:
                 raise ConnectionError(
-                    "Não foi possível conectar ao banco de dados.")
+                    "Não foi possível ligar à base de dados.")
             if not self.force_shutdown_all_instances(db_session, model):
                 raise RuntimeError(
-                    "Não foi possível fechar todas as instâncias do aplicativo.")
+                    "Não foi possível fechar todas as instâncias da aplicação.")
         self.progress_bar.setValue(70)
 
-        self.status_label.setText("Aplicando atualização...")
+        self.status_label.setText("A aplicar a atualização...")
         QApplication.processEvents()
         if not self.apply_update(zip_filename):
             raise IOError(
-                "Falha ao aplicar os arquivos de atualização. Verifique as permissões da pasta.")
+                "Falha ao aplicar os ficheiros de atualização. Verifique as permissões da pasta.")
         self.progress_bar.setValue(90)
 
-        self.status_label.setText("Atualização concluída! Reiniciando...")
+        self.status_label.setText("Atualização concluída! A reiniciar...")
         self.progress_bar.setValue(100)
         QApplication.processEvents()
         time.sleep(2)
@@ -359,7 +360,7 @@ class UpdaterWindow(QMainWindow):
 
     def force_shutdown_all_instances(self, session: any, model: Type[SystemControlModel]) -> bool:
         """Envia comando de desligamento e aguarda o fechamento."""
-        logging.info("Enviando comando de desligamento...")
+        logging.info("A enviar comando de encerramento...")
         try:
             cmd_entry = session.query(model).filter_by(
                 key='UPDATE_CMD').first()
@@ -377,8 +378,8 @@ class UpdaterWindow(QMainWindow):
             while (time.time() - start_time) < 60:
                 active_sessions = session.query(
                     model).filter_by(type='SESSION').count()
-                self.version_label.setText(
-                    f"Aguardando {active_sessions} instância(s) fechar(em)...")
+                self.status_label.setText(
+                    f"A aguardar que {active_sessions} instância(s) feche(m)...")
                 QApplication.processEvents()
                 if active_sessions == 0:
                     logging.info("Todas as instâncias foram fechadas.")
@@ -386,7 +387,7 @@ class UpdaterWindow(QMainWindow):
                     return True
                 time.sleep(2)
 
-            logging.error("Timeout! Instâncias não fecharam a tempo.")
+            logging.error("Timeout! As instâncias não fecharam a tempo.")
             return False
         finally:
             cmd_entry = session.query(model).filter_by(
@@ -400,7 +401,7 @@ class UpdaterWindow(QMainWindow):
         zip_filepath = os.path.join(UPDATE_TEMP_DIR, zip_filename)
         if not os.path.exists(zip_filepath):
             logging.error(
-                "Arquivo de atualização não encontrado em %s", zip_filepath)
+                "Ficheiro de atualização não encontrado em %s", zip_filepath)
             return False
 
         app_dir = BASE_DIR
@@ -423,8 +424,7 @@ class UpdaterWindow(QMainWindow):
                     shutil.move(src_path, dst_path)
                 except OSError as e:
                     logging.warning(
-                        "Não foi possível substituir '%s': %s. Tentando como admin...", item, e)
-                    # Lógica de fallback se necessário (pode requerer elevação)
+                        "Não foi possível substituir '%s': %s. A tentar como admin...", item, e)
 
             logging.info("Atualização aplicada com sucesso!")
             return True
@@ -433,7 +433,25 @@ class UpdaterWindow(QMainWindow):
             return False
         finally:
             if os.path.isdir(UPDATE_TEMP_DIR):
-                shutil.rmtree(UPDATE_TEMP_DIR)
+                max_retries = 5
+                retry_delay = 0.5
+                for i in range(max_retries):
+                    try:
+                        shutil.rmtree(UPDATE_TEMP_DIR)
+                        logging.info(
+                            "Diretório temporário removido com sucesso.")
+                        break
+                    except OSError as e:
+                        logging.warning(
+                            f"Tentativa {i+1}/{max_retries} falhou ao remover "
+                            f"{UPDATE_TEMP_DIR}: {e}. A tentar novamente em {retry_delay}s..."
+                        )
+                        time.sleep(retry_delay)
+                else:
+                    logging.error(
+                        f"Não foi possível remover o diretório temporário {UPDATE_TEMP_DIR} "
+                        "após várias tentativas."
+                    )
 
     def start_application(self):
         """Inicia a aplicação principal (app.exe)."""
@@ -444,13 +462,13 @@ class UpdaterWindow(QMainWindow):
                        f"Não foi possível encontrar o executável principal em:"
                        f"\n{APP_EXECUTABLE_PATH}")
             return
-        logging.info("Iniciando a aplicação: %s", APP_EXECUTABLE_PATH)
+        logging.info("A iniciar a aplicação: %s", APP_EXECUTABLE_PATH)
         try:
             subprocess.Popen([APP_EXECUTABLE_PATH])
         except OSError as e:
             logging.error("Erro ao iniciar a aplicação: %s", e)
             show_error("Erro ao Reiniciar",
-                       f"Não foi possível reiniciar o aplicativo principal:\n{e}")
+                       f"Não foi possível reiniciar a aplicação principal:\n{e}")
 
 
 def main():
