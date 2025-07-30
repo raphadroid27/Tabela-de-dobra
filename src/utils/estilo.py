@@ -379,3 +379,19 @@ def obter_estilo_botao_verde():
         background-color: #3d8b40;
     }
     """
+
+
+def obter_estilo_progress_bar():
+    """Retorna o estilo CSS para a barra de progresso."""
+    return """
+        QProgressBar {
+            border: 1px solid #555;
+            border-radius: 5px;
+            text-align: center;
+            height: 10px;
+        }
+        QProgressBar::chunk {
+            background-color: #007acc;
+            border-radius: 4px;
+        }
+    """
