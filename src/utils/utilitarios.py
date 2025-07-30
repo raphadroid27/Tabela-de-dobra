@@ -68,7 +68,7 @@ VERSION_FILE_PATH = os.path.join(UPDATES_DIR, 'versao.json')
 UPDATE_FLAG_FILE = os.path.join(BASE_DIR, 'update_pending.flag')
 
 # Arquivo executável da aplicação principal
-APP_EXECUTABLE_NAME = "app.exe"
+APP_EXECUTABLE_NAME = "Cálculo de Dobra.exe"
 APP_EXECUTABLE_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE_NAME)
 
 # Arquivos de configuração do usuário
