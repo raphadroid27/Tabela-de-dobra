@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Formulário Principal do Aplicativo de Cálculo de Dobra.
 
@@ -18,54 +19,41 @@ import sys
 import traceback
 import uuid
 from functools import partial
+
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QGridLayout, QVBoxLayout)
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
+                               QVBoxLayout, QWidget)
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.utils.utilitarios import (
-    aplicar_medida_borda_espaco,
-    setup_logging,
-    CONFIG_FILE,
-    ICON_PATH
-)
-from src.utils.usuarios import logout
-from src.utils.janelas import (
-    aplicar_no_topo_app_principal, remover_janelas_orfas)
-from src.utils.interface_manager import carregar_interface
-from src.utils.estilo import (
-    aplicar_tema_qdarktheme,
-    aplicar_tema_inicial,
-    obter_temas_disponiveis,
-    registrar_tema_actions,
-    obter_tema_atual
-)
-from src.utils.update_manager import (
-    checagem_periodica_update, manipular_clique_update
-)
-from src.forms.form_wrappers import (
-    FormEspessura,
-    FormDeducao,
-    FormMaterial,
-    FormCanal
-)
-from src.forms import (
-    form_sobre,
-    form_aut,
-    form_usuario,
-    form_razao_rie,
-    form_impressao
-)
-from src.components.menu_custom import MenuCustom
-from src.components.barra_titulo import BarraTitulo
-from src.utils.banco_dados import session as db_session
-from src.models.models import Usuario
-from src.config import globals as g
-from src.utils.banco_dados import inicializar_banco_dados
-from src.utils.session_manager import (
-    registrar_sessao, remover_sessao, atualizar_heartbeat_sessao, obter_comando_sistema)
 from src import __version__
+from src.components.barra_titulo import BarraTitulo
+from src.components.menu_custom import MenuCustom
+from src.config import globals as g
+from src.forms import (form_aut, form_impressao, form_razao_rie, form_sobre,
+                       form_usuario)
+from src.forms.form_wrappers import (FormCanal, FormDeducao, FormEspessura,
+                                     FormMaterial)
+from src.models.models import Usuario
+from src.utils.banco_dados import inicializar_banco_dados
+from src.utils.banco_dados import session as db_session
+from src.utils.estilo import (aplicar_tema_inicial, aplicar_tema_qdarktheme,
+                              obter_tema_atual, obter_temas_disponiveis,
+                              registrar_tema_actions)
+from src.utils.interface_manager import carregar_interface
+from src.utils.janelas import (aplicar_no_topo_app_principal,
+                               remover_janelas_orfas)
+from src.utils.session_manager import (atualizar_heartbeat_sessao,
+                                       obter_comando_sistema, registrar_sessao,
+                                       remover_sessao)
+# --- MODIFICAÇÃO: Importar as funções corretas ---
+from src.utils.update_manager import (checagem_periodica_update,
+                                      manipular_clique_update,
+                                      set_installed_version)
+from src.utils.usuarios import logout
+from src.utils.utilitarios import (CONFIG_FILE, ICON_PATH,
+                                   aplicar_medida_borda_espaco,
+                                   setup_logging)
 
 # --- Variáveis Globais de Configuração e Versão ---
 APP_VERSION = __version__
@@ -314,8 +302,6 @@ def configurar_frames():
 
 
 # --- Funções de Inicialização (Refatorado de main) ---
-
-
 def configurar_sinais_excecoes():
     """Configura handlers para exceções não tratadas e sinais do sistema."""
     def handle_exception(exc_type, exc_value, exc_traceback):
@@ -346,6 +332,7 @@ def processar_verificacao_sistema():
         fechar_aplicativo()
 
 
+# --- FUNÇÃO MODIFICADA ---
 def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g' para mantê-los ativos."""
     g.TIMER_SISTEMA = QTimer()
@@ -353,10 +340,11 @@ def iniciar_timers():
     g.TIMER_SISTEMA.start(5000)
 
     g.UPDATE_CHECK_TIMER = QTimer()
-    g.UPDATE_CHECK_TIMER.timeout.connect(
-        lambda: checagem_periodica_update(APP_VERSION))
-    g.UPDATE_CHECK_TIMER.start(300000)
-    QTimer.singleShot(1000, lambda: checagem_periodica_update(APP_VERSION))
+    # A função não precisa mais do argumento da versão, pois lê do DB
+    g.UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
+    g.UPDATE_CHECK_TIMER.start(300000)  # 5 minutos
+    # A verificação inicial também não precisa do argumento
+    QTimer.singleShot(1000, checagem_periodica_update)
 
 
 # --- Função Principal ---
@@ -367,6 +355,13 @@ def main():
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
+
+        # --- NOVA LINHA ---
+        # Garante que a versão no DB está correta na inicialização.
+        # Esta é a "fonte da verdade" para a versão instalada.
+        set_installed_version(APP_VERSION)
+        # --- FIM DA NOVA LINHA ---
+
         configurar_sinais_excecoes()
 
         app = QApplication(sys.argv)
