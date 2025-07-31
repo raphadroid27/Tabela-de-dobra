@@ -173,7 +173,7 @@ class UpdaterWindow(QMainWindow):
 
         # --- Configuração da Janela ---
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
-        self.setFixedSize(400, 220)
+        self.setFixedSize(330, 160)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
@@ -201,11 +201,12 @@ class UpdaterWindow(QMainWindow):
 
         self.status_label = QLabel("Verificando atualizações...")
         self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet("font-size: 14px;")
+        self.status_label.setStyleSheet("font-size: 16px;")
 
         self.version_label = QLabel("")
         self.version_label.setAlignment(Qt.AlignCenter)
-        self.version_label.setStyleSheet("font-size: 12px; color: #55aaff;")
+        self.version_label.setStyleSheet(
+            "font-size: 16px; font-weight: bold; color: #55aaff;")
 
         # --- Barra de Progresso ---
         self.progress_bar = QProgressBar()
@@ -443,14 +444,14 @@ class UpdaterWindow(QMainWindow):
                         break
                     except OSError as e:
                         logging.warning(
-                            f"Tentativa {i+1}/{max_retries} falhou ao remover "
-                            f"{UPDATE_TEMP_DIR}: {e}. A tentar novamente em {retry_delay}s..."
+                            "Tentativa %d/%d falhou ao remover %s: %s. A tentar novamente em %ss...",  # pylint: disable=line-too-long
+                            i + 1, max_retries, UPDATE_TEMP_DIR, e, retry_delay
                         )
                         time.sleep(retry_delay)
                 else:
                     logging.error(
-                        f"Não foi possível remover o diretório temporário {UPDATE_TEMP_DIR} "
-                        "após várias tentativas."
+                        "Não foi possível remover o diretório temporário %s após várias tentativas.",  # pylint: disable=line-too-long
+                        UPDATE_TEMP_DIR
                     )
 
     def start_application(self):
