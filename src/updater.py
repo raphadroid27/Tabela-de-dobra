@@ -333,11 +333,38 @@ class UpdaterWindow(QMainWindow):
             "O seu aplicativo está atualizado.")
         self.version_label.setText(f"Versão atual: {APP_VERSION}")
         self.update_button.setEnabled(False)
+        self.update_button.setStyleSheet("")  # Reseta o estilo
         self.cancel_button.setText("Fechar")
 
     def request_authentication(self):
-        """Muda para a tela de autenticação."""
-        self.stacked_widget.setCurrentWidget(self.auth_view)
+        """
+        Verifica novamente se há atualizações antes de solicitar a autenticação.
+        Esta função é chamada quando o botão "Atualizar Agora" é clicado.
+        """
+        logging.info(
+            "Botão 'Atualizar Agora' clicado. Verificando novamente o arquivo de versão.")
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            # MODIFICAÇÃO: Re-lê o arquivo JSON para obter o status mais recente
+            self.update_info = checar_updates(APP_VERSION)
+
+            if self.update_info:
+                # Se a atualização ainda estiver disponível, prossiga para a autenticação
+                logging.info(
+                    "Atualização confirmada. Solicitando autenticação.")
+                self.stacked_widget.setCurrentWidget(self.auth_view)
+            else:
+                # Se o arquivo foi modificado e não há mais atualização, informa o usuário
+                logging.warning(
+                    "Nenhuma atualização encontrada após a nova verificação.")
+                self.show_no_update()
+                QMessageBox.information(
+                    self,
+                    "Atualizado",
+                    "O aplicativo já está na versão mais recente. Nenhuma atualização é necessária."
+                )
+        finally:
+            QApplication.restoreOverrideCursor()
 
     def on_login_success(self):
         """Inicia o processo de atualização após o login bem-sucedido."""
