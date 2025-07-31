@@ -29,7 +29,6 @@ def main(root):
 
     g.SOBRE_FORM = QDialog(root)
     g.SOBRE_FORM.setWindowTitle("Sobre")
-    g.SOBRE_FORM.resize(300, 210)
     g.SOBRE_FORM.setFixedSize(300, 210)
     # Remover barra nativa
     g.SOBRE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
