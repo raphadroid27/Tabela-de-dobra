@@ -2,6 +2,14 @@
 
 Histórico de mudanças do aplicativo Cálculo de Dobras
 
+## 2.3.0 (31/07/2025)
+
+- Novo sistema de atualização automática integrado ao aplicativo, permitindo verificar e instalar novas versões diretamente pela interface, com barra de progresso e notificações aprimoradas.
+- Adicionado módulo de gerenciamento de atualizações, facilitando o download e aplicação de updates sem necessidade de reinstalação manual.
+- Implementado sistema de logging para melhor rastreamento de erros e eventos, aumentando a confiabilidade e facilitando o suporte.
+- Melhorias na interface de autenticação, incluindo integração à janela principal, ajustes visuais e novo botão de recarregar na barra de título.
+- Diversas refatorações para maior estabilidade, clareza do código e melhor gerenciamento de sessões.
+
 ## 2.2.0 (21/07/2025)
 
 - Refatoração geral do código para melhorar modularidade, clareza e manutenção, incluindo:
