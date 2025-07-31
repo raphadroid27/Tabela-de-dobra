@@ -171,6 +171,8 @@ class AdminAuthWidget(QWidget):
                            parent=self)
                 self.senha_entry.clear()
 
+# pylint: disable=too-many-instance-attributes
+
 
 class UpdaterWindow(QMainWindow):
     """Janela principal da interface do Updater com múltiplas telas."""
@@ -328,7 +330,7 @@ class UpdaterWindow(QMainWindow):
     def show_no_update(self):
         """Mostra a mensagem de que o aplicativo já está atualizado."""
         self.status_label.setText(
-            "O seu aplicativo já está na versão mais recente.")
+            "O seu aplicativo está atualizado.")
         self.version_label.setText(f"Versão atual: {APP_VERSION}")
         self.update_button.setEnabled(False)
         self.cancel_button.setText("Fechar")
@@ -494,7 +496,9 @@ class UpdaterWindow(QMainWindow):
             return
         logging.info("A iniciar a aplicação: %s", APP_EXECUTABLE_PATH)
         try:
+            # pylint: disable=consider-using-with
             subprocess.Popen([APP_EXECUTABLE_PATH])
+
         except OSError as e:
             logging.error("Erro ao iniciar a aplicação: %s", e)
             show_error("Erro ao Reiniciar",

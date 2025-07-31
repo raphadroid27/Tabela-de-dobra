@@ -111,7 +111,9 @@ def manipular_clique_update():
     try:
         logging.info("Lançando o atualizador: %s %s",
                      UPDATER_EXECUTABLE_PATH, argumento)
+        # pylint: disable=consider-using-with
         subprocess.Popen([UPDATER_EXECUTABLE_PATH, argumento])
+
     except OSError as e:
         logging.error("Falha ao iniciar o updater.exe: %s", e)
         show_error("Erro ao Lançar",
