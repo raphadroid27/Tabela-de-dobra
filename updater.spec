@@ -5,7 +5,7 @@ a = Analysis(
     ['src\\updater.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('assets\\icone_2.ico', 'assets'), ('src\\__init__.py', 'src')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
