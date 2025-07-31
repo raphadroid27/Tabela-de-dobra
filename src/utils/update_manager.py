@@ -5,6 +5,7 @@ Módulo para Gerenciamento de Atualizações da Aplicação.
 Responsável por:
 - Verificar a existência de novas versões.
 - Orquestrar o lançamento do updater.exe para lidar com o processo de atualização.
+- Gerenciar a versão instalada no banco de dados.
 """
 
 import os
@@ -20,11 +21,58 @@ from src.utils.utilitarios import (
     UPDATES_DIR, UPDATE_TEMP_DIR
 )
 from src.config import globals as g
+# Adicionar importações necessárias
+from src.utils.banco_dados import session_scope
+from src.models.models import SystemControl
 
 # --- Constantes ---
 UPDATER_EXECUTABLE_NAME = "updater.exe"
 UPDATER_EXECUTABLE_PATH = os.path.join(
     obter_dir_base(), UPDATER_EXECUTABLE_NAME)
+
+# --- NOVA FUNÇÃO ---
+
+
+def get_installed_version() -> Optional[str]:
+    """Lê a versão atualmente instalada a partir do banco de dados."""
+    with session_scope() as (session, _):
+        if not session:
+            logging.error(
+                "Não foi possível obter uma sessão do banco de dados para ler a versão.")
+            return None
+        version_entry = session.query(SystemControl).filter_by(
+            key='INSTALLED_VERSION').first()
+        if version_entry:
+            logging.info("Versão instalada encontrada no DB: %s",
+                         version_entry.value)
+            return version_entry.value
+        logging.warning(
+            "Nenhuma entrada 'INSTALLED_VERSION' encontrada no banco de dados.")
+        return None
+
+# --- NOVA FUNÇÃO ---
+
+
+def set_installed_version(version: str):
+    """Grava ou atualiza a versão instalada no banco de dados."""
+    with session_scope() as (session, _):
+        if not session:
+            logging.error(
+                "Não foi possível obter uma sessão do banco de dados para gravar a versão.")
+            return
+        version_entry = session.query(SystemControl).filter_by(
+            key='INSTALLED_VERSION').first()
+        if version_entry:
+            if version_entry.value != version:
+                logging.info("Atualizando a versão no DB de %s para %s",
+                             version_entry.value, version)
+                version_entry.value = version
+        else:
+            logging.info("Gravando a versão inicial no DB: %s", version)
+            new_entry = SystemControl(
+                key='INSTALLED_VERSION', value=version, type='CONFIG')
+            session.add(new_entry)
+        session.commit()
 
 
 def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
@@ -37,6 +85,10 @@ def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
     Returns:
         Um dicionário com informações da nova versão se houver uma, caso contrário None.
     """
+    if not current_version_str:
+        logging.error("Versão atual não fornecida para checagem.")
+        return None
+
     if not os.path.exists(VERSION_FILE_PATH):
         logging.warning(
             "Arquivo 'versao.json' não encontrado. Pulando verificação.")
@@ -79,10 +131,16 @@ def download_update(nome_arquivo: str) -> None:
     logging.info("Arquivo '%s' copiado para '%s'.",
                  nome_arquivo, UPDATE_TEMP_DIR)
 
+# --- FUNÇÃO MODIFICADA ---
 
-def checagem_periodica_update(versao_atual: str):
+
+def checagem_periodica_update():
     """Verifica periodicamente se há atualizações e atualiza a UI."""
     logging.info("Verificando atualizações em segundo plano...")
+    versao_atual = get_installed_version()  # Lê do DB
+    if not versao_atual:
+        return  # Não faz nada se não conseguir ler a versão
+
     update_info = checar_updates(versao_atual)
     if update_info:
         logging.info("Nova versão encontrada: %s",

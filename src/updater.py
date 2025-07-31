@@ -1,22 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Updater Gráfico para a Aplicação de Cálculo de Dobra.
-
-Responsável por:
-1. Apresentar uma interface gráfica para o processo de atualização.
-2. Verificar se existem novas versões disponíveis.
-3. Autenticar um usuário 'admin' do aplicativo antes de prosseguir.
-4. Baixar e aplicar a atualização, substituindo os arquivos antigos.
-5. Forçar o encerramento de instâncias do app principal.
-6. Reiniciar o app principal após a atualização.
-
-Refatoração:
-- Adicionada BarraTitulo customizada para consistência visual.
-- Substituído QInputDialog por um QDialog de autenticação robusto e estilizado.
-- Estilos de botões e layout alinhados com o restante da aplicação.
-- Adicionada uma barra de progresso para feedback visual durante a atualização.
-- Adicionado tratamento de erro com retentativas para limpeza de arquivos.
-- Integrado o formulário de login na janela principal usando QStackedWidget.
 """
 
 # --- Importações da Biblioteca Padrão ---
@@ -38,18 +22,33 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                                QStackedWidget, QSizePolicy, QStyle)
 from PySide6.QtCore import Qt, QTimer, Signal, QSize
 from PySide6.QtGui import QIcon
-# --- Adiciona o diretório raiz do projeto ao path ---
-try:
-    BASE_DIR = os.path.dirname(os.path.abspath(
-        sys.argv[0] if getattr(sys, 'frozen', False) else __file__))
-    if BASE_DIR not in sys.path:
-        sys.path.insert(0, BASE_DIR)
 
-    # --- Importações da Aplicação Local ---
-    from src import __version__ as APP_VERSION
+# --- LÓGICA DE BOOTSTRAP: Encontrar o diretório base ANTES de outras importações ---
+
+
+def obter_dir_base_local():
+    """
+    Determina o diretório base. Lógica específica para o updater.py
+    que reside na raiz do projeto.
+    """
+    if getattr(sys, 'frozen', False):
+        # Modo compilado (updater.exe)
+        return os.path.dirname(sys.executable)
+    # Modo de script (python updater.py)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+# Adiciona o diretório ao path para que as importações de 'src' funcionem
+BASE_DIR = obter_dir_base_local()
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+# --- FIM DO BOOTSTRAP ---
+
+try:
+    # --- Importações da Aplicação Local (Agora funcionam) ---
     from src.models.models import SystemControl as SystemControlModel, Usuario
     from src.utils.banco_dados import session_scope
-    from src.utils.update_manager import checar_updates, download_update
+    from src.utils.update_manager import checar_updates, download_update, get_installed_version
     from src.utils.utilitarios import (
         setup_logging, APP_EXECUTABLE_PATH, UPDATE_TEMP_DIR,
         ICON_PATH, show_error, aplicar_medida_borda_espaco
@@ -61,12 +60,11 @@ try:
         aplicar_estilo_widget_auto_ajustavel, aplicar_tema_inicial
     )
 
-
 except ImportError as e:
     # Fallback de emergência
     logging.basicConfig(level=logging.CRITICAL,
                         format='%(asctime)s - %(levelname)s - %(message)s')
-    logging.critical("Erro de Importação: %s", e)
+    logging.critical("Erro de Importação: %s. BASE_DIR: %s", e, BASE_DIR)
     QApplication(sys.argv)
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Critical)
@@ -79,6 +77,9 @@ except ImportError as e:
     msg.exec()
     sys.exit(1)
 
+
+# ... (O resto do seu código do updater.py continua aqui, sem nenhuma alteração) ...
+# (AdminAuthWidget, UpdaterWindow, etc.)
 
 class AdminAuthWidget(QWidget):
     """
@@ -222,7 +223,6 @@ class UpdaterWindow(QMainWindow):
         self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
         self.barra_titulo.titulo.setText("Atualizador")
 
-        # --- MODIFICAÇÃO: Adicionar botão de recarregar na barra de título ---
         refresh_icon = self.style().standardIcon(
             QStyle.StandardPixmap.SP_BrowserReload)
         self.refresh_button = QPushButton(icon=refresh_icon)
@@ -235,15 +235,12 @@ class UpdaterWindow(QMainWindow):
 
         title_layout = self.barra_titulo.layout()
         if title_layout and isinstance(title_layout, QHBoxLayout):
-            # Insere o botão de recarregar antes dos botões de controle da janela
-            # (assumindo que os botões de minimizar/fechar são os últimos 2 widgets)
             insert_position = title_layout.count() - 2
             if insert_position < 0:
                 insert_position = title_layout.count()
             title_layout.insertWidget(insert_position, self.refresh_button)
 
         main_layout.addWidget(self.barra_titulo)
-        # --- FIM DA MODIFICAÇÃO ---
 
         self.stacked_widget = QStackedWidget()
         main_layout.addWidget(self.stacked_widget)
@@ -280,7 +277,7 @@ class UpdaterWindow(QMainWindow):
 
         button_layout = QHBoxLayout()
         aplicar_medida_borda_espaco(
-            button_layout, 0, 10)  # Espaço entre os botões
+            button_layout, 0, 10)
 
         self.cancel_button = QPushButton("Cancelar")
         self.cancel_button.setStyleSheet(obter_estilo_botao_vermelho())
@@ -338,7 +335,7 @@ class UpdaterWindow(QMainWindow):
         self.status_label.setText("Verificando atualizações...")
         self.version_label.setText("")
         self.update_button.setEnabled(False)
-        self.update_button.setStyleSheet("")  # Reseta o estilo
+        self.update_button.setStyleSheet("")
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         QTimer.singleShot(100, self._check_and_update_ui)
@@ -346,11 +343,19 @@ class UpdaterWindow(QMainWindow):
     def _check_and_update_ui(self):
         """Função auxiliar que realmente faz a verificação."""
         try:
-            self.update_info = checar_updates(APP_VERSION)
+            current_version = get_installed_version()
+            if not current_version:
+                self.status_label.setText("Erro ao ler a versão local.")
+                self.version_label.setText("Verifique o banco de dados.")
+                self.update_button.setEnabled(False)
+                return
+
+            self.update_info = checar_updates(current_version)
+
             if self.update_info:
                 self.show_update_available()
             else:
-                self.show_no_update()
+                self.show_no_update(current_version)
 
             if self.mode == 'apply' and self.update_info:
                 self.request_authentication()
@@ -366,11 +371,11 @@ class UpdaterWindow(QMainWindow):
         self.update_button.setEnabled(True)
         self.update_button.setStyleSheet(obter_estilo_botao_azul())
 
-    def show_no_update(self):
+    def show_no_update(self, current_version: str):
         """Mostra a mensagem de que o aplicativo já está atualizado."""
         self.status_label.setText(
             "O seu aplicativo está atualizado.")
-        self.version_label.setText(f"Versão atual: {APP_VERSION}")
+        self.version_label.setText(f"Versão atual: {current_version}")
         self.update_button.setEnabled(False)
         self.update_button.setStyleSheet("")
         self.cancel_button.setText("Fechar")
@@ -383,7 +388,12 @@ class UpdaterWindow(QMainWindow):
             "Botão 'Atualizar Agora' clicado. Verificando novamente o arquivo de versão.")
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            self.update_info = checar_updates(APP_VERSION)
+            current_version = get_installed_version()
+            if not current_version:
+                show_error(
+                    "Erro", "Não foi possível ler a versão instalada do banco de dados.")
+                return
+            self.update_info = checar_updates(current_version)
 
             if self.update_info:
                 logging.info(
@@ -392,7 +402,7 @@ class UpdaterWindow(QMainWindow):
             else:
                 logging.warning(
                     "Nenhuma atualização encontrada após a nova verificação.")
-                self.show_no_update()
+                self.show_no_update(current_version)
                 QMessageBox.information(
                     self,
                     "Atualizado",
@@ -573,7 +583,6 @@ def main():
     logging.info("Updater Gráfico iniciado.")
 
     app = QApplication(sys.argv)
-    # CORREÇÃO: Usa a função do módulo de estilo para aplicar o tema E as personalizações
     aplicar_tema_inicial()
 
     mode = 'check'
