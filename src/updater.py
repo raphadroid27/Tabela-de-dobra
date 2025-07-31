@@ -32,12 +32,11 @@ from datetime import datetime, timezone
 from typing import Type
 
 # --- Importações de Terceiros ---
-import qdarktheme
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                                QLabel, QPushButton, QHBoxLayout, QMessageBox,
                                QGridLayout, QLineEdit, QProgressBar,
-                               QStackedWidget, QSizePolicy)
-from PySide6.QtCore import Qt, QTimer, Signal
+                               QStackedWidget, QSizePolicy, QStyle)
+from PySide6.QtCore import Qt, QTimer, Signal, QSize
 from PySide6.QtGui import QIcon
 # --- Adiciona o diretório raiz do projeto ao path ---
 try:
@@ -58,7 +57,8 @@ try:
     from src.components.barra_titulo import BarraTitulo
     from src.utils.estilo import (
         obter_estilo_botao_verde, obter_estilo_botao_vermelho,
-        obter_estilo_botao_azul, obter_tema_atual, obter_estilo_progress_bar
+        obter_estilo_botao_azul, obter_tema_atual, obter_estilo_progress_bar,
+        aplicar_estilo_widget_auto_ajustavel, aplicar_tema_inicial
     )
 
 
@@ -115,12 +115,16 @@ class AdminAuthWidget(QWidget):
         grid_layout.addWidget(QLabel("Usuário:"), 0, 0)
         self.usuario_entry = QLineEdit()
         self.usuario_entry.setPlaceholderText("Digite o usuário admin")
+        self.usuario_entry.setToolTip("Usuário admin para autenticação")
+        aplicar_estilo_widget_auto_ajustavel(self.usuario_entry, 'lineedit')
         grid_layout.addWidget(self.usuario_entry, 0, 1)
 
         grid_layout.addWidget(QLabel("Senha:"), 1, 0)
         self.senha_entry = QLineEdit()
         self.senha_entry.setPlaceholderText("Digite a senha")
         self.senha_entry.setEchoMode(QLineEdit.Password)
+        self.senha_entry.setToolTip("Senha do usuário admin")
+        aplicar_estilo_widget_auto_ajustavel(self.senha_entry, 'lineedit')
         grid_layout.addWidget(self.senha_entry, 1, 1)
 
         main_layout.addLayout(grid_layout)
@@ -132,10 +136,12 @@ class AdminAuthWidget(QWidget):
 
         cancel_btn = QPushButton("Cancelar")
         cancel_btn.setStyleSheet(obter_estilo_botao_vermelho())
+        cancel_btn.setToolTip("Clique para cancelar o login")
         cancel_btn.clicked.connect(self.login_cancelled.emit)
 
         login_btn = QPushButton("🔐 Login")
         login_btn.setStyleSheet(obter_estilo_botao_verde())
+        login_btn.setToolTip("Clique para fazer login como administrador")
         login_btn.clicked.connect(self.attempt_login)
 
         button_layout.addWidget(cancel_btn)
@@ -193,17 +199,18 @@ class UpdaterWindow(QMainWindow):
         self.version_label = None
         self.update_button = None
         self.cancel_button = None
+        self.refresh_button = None
         self.progress_status_label = None
         self.progress_bar = None
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
-        self.setFixedSize(330, 180)
+        self.setFixedSize(360, 180)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
         self.setup_ui()
         self.connect_signals()
-        QTimer.singleShot(100, self.run_initial_flow)
+        QTimer.singleShot(100, self.force_check_for_updates)
 
     def setup_ui(self):
         """Configura os widgets e o layout com QStackedWidget."""
@@ -214,21 +221,39 @@ class UpdaterWindow(QMainWindow):
 
         self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
         self.barra_titulo.titulo.setText("Atualizador")
-        main_layout.addWidget(self.barra_titulo)
 
-        # --- Stacked Widget para alternar entre as telas ---
+        # --- MODIFICAÇÃO: Adicionar botão de recarregar na barra de título ---
+        refresh_icon = self.style().standardIcon(
+            QStyle.StandardPixmap.SP_BrowserReload)
+        self.refresh_button = QPushButton(icon=refresh_icon)
+        self.refresh_button.setToolTip(
+            "Recarregar e verificar novamente por atualizações")
+        self.refresh_button.setFlat(True)
+        self.refresh_button.setFixedSize(28, 28)
+        self.refresh_button.setIconSize(QSize(16, 16))
+        self.refresh_button.setCursor(Qt.PointingHandCursor)
+
+        title_layout = self.barra_titulo.layout()
+        if title_layout and isinstance(title_layout, QHBoxLayout):
+            # Insere o botão de recarregar antes dos botões de controle da janela
+            # (assumindo que os botões de minimizar/fechar são os últimos 2 widgets)
+            insert_position = title_layout.count() - 2
+            if insert_position < 0:
+                insert_position = title_layout.count()
+            title_layout.insertWidget(insert_position, self.refresh_button)
+
+        main_layout.addWidget(self.barra_titulo)
+        # --- FIM DA MODIFICAÇÃO ---
+
         self.stacked_widget = QStackedWidget()
         main_layout.addWidget(self.stacked_widget)
 
-        # --- Tela 1: Status ---
         self.status_view = self._create_status_view()
         self.stacked_widget.addWidget(self.status_view)
 
-        # --- Tela 2: Autenticação ---
         self.auth_view = AdminAuthWidget()
         self.stacked_widget.addWidget(self.auth_view)
 
-        # --- Tela 3: Progresso ---
         self.progress_view = self._create_progress_view()
         self.stacked_widget.addWidget(self.progress_view)
 
@@ -261,16 +286,18 @@ class UpdaterWindow(QMainWindow):
         self.cancel_button.setStyleSheet(obter_estilo_botao_vermelho())
         self.cancel_button.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.cancel_button.setToolTip("Cancelar a atualização")
 
         self.update_button = QPushButton("Atualizar Agora")
         self.update_button.setEnabled(False)
         self.update_button.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.update_button.setToolTip(
+            "Clique para iniciar o processo de atualização após autenticação")
 
         button_layout.addWidget(self.cancel_button)
         button_layout.addWidget(self.update_button)
-        button_layout.setStretch(0, 1)
-        button_layout.setStretch(1, 1)
+
         layout.addLayout(button_layout)
 
         return widget
@@ -301,12 +328,23 @@ class UpdaterWindow(QMainWindow):
         """Conecta todos os sinais aos seus slots."""
         self.cancel_button.clicked.connect(self.close)
         self.update_button.clicked.connect(self.request_authentication)
+        self.refresh_button.clicked.connect(self.force_check_for_updates)
         self.auth_view.login_successful.connect(self.on_login_success)
         self.auth_view.login_cancelled.connect(self.on_login_cancel)
 
-    def run_initial_flow(self):
-        """Executa a lógica inicial para checar atualizações."""
+    def force_check_for_updates(self):
+        """Executa a lógica para checar atualizações, mostrando feedback visual."""
+        logging.info("Verificação de atualização forçada pelo usuário.")
+        self.status_label.setText("Verificando atualizações...")
+        self.version_label.setText("")
+        self.update_button.setEnabled(False)
+        self.update_button.setStyleSheet("")  # Reseta o estilo
         QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        QTimer.singleShot(100, self._check_and_update_ui)
+
+    def _check_and_update_ui(self):
+        """Função auxiliar que realmente faz a verificação."""
         try:
             self.update_info = checar_updates(APP_VERSION)
             if self.update_info:
@@ -316,6 +354,7 @@ class UpdaterWindow(QMainWindow):
 
             if self.mode == 'apply' and self.update_info:
                 self.request_authentication()
+                self.mode = 'check'
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -333,28 +372,24 @@ class UpdaterWindow(QMainWindow):
             "O seu aplicativo está atualizado.")
         self.version_label.setText(f"Versão atual: {APP_VERSION}")
         self.update_button.setEnabled(False)
-        self.update_button.setStyleSheet("")  # Reseta o estilo
+        self.update_button.setStyleSheet("")
         self.cancel_button.setText("Fechar")
 
     def request_authentication(self):
         """
         Verifica novamente se há atualizações antes de solicitar a autenticação.
-        Esta função é chamada quando o botão "Atualizar Agora" é clicado.
         """
         logging.info(
             "Botão 'Atualizar Agora' clicado. Verificando novamente o arquivo de versão.")
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            # MODIFICAÇÃO: Re-lê o arquivo JSON para obter o status mais recente
             self.update_info = checar_updates(APP_VERSION)
 
             if self.update_info:
-                # Se a atualização ainda estiver disponível, prossiga para a autenticação
                 logging.info(
                     "Atualização confirmada. Solicitando autenticação.")
                 self.stacked_widget.setCurrentWidget(self.auth_view)
             else:
-                # Se o arquivo foi modificado e não há mais atualização, informa o usuário
                 logging.warning(
                     "Nenhuma atualização encontrada após a nova verificação.")
                 self.show_no_update()
@@ -538,7 +573,8 @@ def main():
     logging.info("Updater Gráfico iniciado.")
 
     app = QApplication(sys.argv)
-    qdarktheme.setup_theme(obter_tema_atual())
+    # CORREÇÃO: Usa a função do módulo de estilo para aplicar o tema E as personalizações
+    aplicar_tema_inicial()
 
     mode = 'check'
     if len(sys.argv) > 1 and sys.argv[1] == '--apply':
