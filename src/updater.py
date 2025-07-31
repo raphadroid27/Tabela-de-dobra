@@ -34,7 +34,8 @@ from typing import Type
 import qdarktheme
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                                QLabel, QPushButton, QHBoxLayout, QMessageBox,
-                               QDialog, QGridLayout, QLineEdit, QProgressBar)
+                               QDialog, QGridLayout, QLineEdit, QProgressBar,
+                               QSpacerItem, QSizePolicy)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon
 
@@ -83,15 +84,18 @@ except ImportError as e:
 
 class AdminAuthDialog(QDialog):
     """
-    Dialog para autenticação de administrador, com estilo customizado.
+    Dialog para autenticação de administrador, sem barra de título.
     """
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.success = False
         self.setModal(True)
+        # Janela sem a barra de título padrão do SO ou customizada
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
-        self.setFixedSize(230, 160)
+        self.setFixedSize(230, 130)  # Tamanho ajustado para layout sem título
+
+        self.setStyleSheet("QDialog { border-radius: 10px; }")
 
         # Aplicar tema do qdarktheme
         qdarktheme.setup_theme(obter_tema_atual())
@@ -100,37 +104,48 @@ class AdminAuthDialog(QDialog):
         self.usuario_entry.setFocus()
 
     def _setup_ui(self):
-        """Configura a interface do diálogo."""
-        vlayout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(vlayout, 0, 0)
-
-        # --- Barra de Título ---
-        self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
-        self.barra_titulo.titulo.setText("Login de Admin")
-        vlayout.addWidget(self.barra_titulo)
-
-        # --- Conteúdo Principal ---
-        content_widget = QWidget()
-        grid_layout = QGridLayout(content_widget)
-        grid_layout.setContentsMargins(15, 10, 15, 15)
+        """Configura a interface do diálogo, mantendo o layout original em grid."""
+        grid_layout = QGridLayout(self)
+        grid_layout.setContentsMargins(15, 15, 15, 15)
         grid_layout.setVerticalSpacing(10)
+        grid_layout.setHorizontalSpacing(10)
 
+        # Campos de entrada
         grid_layout.addWidget(QLabel("Usuário:"), 0, 0)
         self.usuario_entry = QLineEdit()
+        self.usuario_entry.setPlaceholderText("Digite o usuário admin")
         grid_layout.addWidget(self.usuario_entry, 0, 1)
 
         grid_layout.addWidget(QLabel("Senha:"), 1, 0)
         self.senha_entry = QLineEdit()
+        self.senha_entry.setPlaceholderText("Digite a senha")
         self.senha_entry.setEchoMode(QLineEdit.Password)
         grid_layout.addWidget(self.senha_entry, 1, 1)
 
-        # --- Botão de Login ---
+        # Adiciona um espaço vertical antes dos botões
+        grid_layout.addItem(QSpacerItem(
+            1, 10, QSizePolicy.Minimum, QSizePolicy.Expanding), 2, 0, 1, 2)
+
+        # Layout para os botões
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+
+        # Botão Cancelar
+        cancel_btn = QPushButton("Cancelar")
+        cancel_btn.setStyleSheet(obter_estilo_botao_vermelho())
+        cancel_btn.clicked.connect(self.reject)  # Fecha o diálogo
+
+        # Botão Login
         login_btn = QPushButton("🔐 Login")
         login_btn.setStyleSheet(obter_estilo_botao_verde())
         login_btn.clicked.connect(self.attempt_login)
-        grid_layout.addWidget(login_btn, 2, 0, 1, 2)
 
-        vlayout.addWidget(content_widget)
+        # Adiciona os botões ao layout de botões
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(login_btn)
+
+        # Adiciona o layout dos botões ao grid principal, ocupando 2 colunas
+        grid_layout.addLayout(button_layout, 3, 0, 1, 2)
 
     def attempt_login(self):
         """Valida as credenciais fornecidas."""
