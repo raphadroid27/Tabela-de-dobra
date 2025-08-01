@@ -32,12 +32,10 @@ from src.components.menu_custom import MenuCustom
 from src.config import globals as g
 from src.forms import (form_aut, form_impressao, form_razao_rie, form_sobre,
                        form_usuario)
-from src.forms.form_universal import (
-    form_canal_main as FormCanal,
-    form_deducao_main as FormDeducao,
-    form_espessura_main as FormEspessura,
-    form_material_main as FormMaterial
-)
+from src.forms.form_universal import (form_canal_main as FormCanal,
+                                      form_deducao_main as FormDeducao,
+                                      form_espessura_main as FormEspessura,
+                                      form_material_main as FormMaterial)
 from src.models.models import Usuario
 from src.utils.banco_dados import inicializar_banco_dados
 from src.utils.banco_dados import session as db_session
@@ -50,7 +48,6 @@ from src.utils.janelas import (aplicar_no_topo_app_principal,
 from src.utils.session_manager import (atualizar_heartbeat_sessao,
                                        obter_comando_sistema, registrar_sessao,
                                        remover_sessao)
-# --- MODIFICAÇÃO: Importar as funções corretas ---
 from src.utils.update_manager import (checagem_periodica_update,
                                       manipular_clique_update,
                                       set_installed_version)
@@ -59,12 +56,10 @@ from src.utils.utilitarios import (CONFIG_FILE, ICON_PATH,
                                    aplicar_medida_borda_espaco,
                                    setup_logging)
 
-# --- Variáveis Globais de Configuração e Versão ---
 APP_VERSION = __version__
 g.SESSION_ID = str(uuid.uuid4())
 
 
-# --- Funções de Gerenciamento da Aplicação ---
 def verificar_admin_existente():
     """Verifica se existe um administrador cadastrado."""
     logging.info("Verificando se existe um administrador.")
@@ -97,12 +92,11 @@ def salvar_configuracao(config):
 
 
 def fechar_aplicativo():
-    """Fecha o aplicativo de forma segura. A remoção da sessão é tratada por 'aboutToQuit'."""
+    """Fecha o aplicativo de forma segura."""
     logging.info("Iniciando o processo de fechamento do aplicativo.")
 
     try:
         if g.PRINC_FORM:
-            # Salva a geometria antes de fechar
             pos = g.PRINC_FORM.pos()
             config = carregar_configuracao()
             config['geometry'] = f"+{pos.x()}+{pos.y()}"
@@ -147,17 +141,15 @@ def configurar_janela_principal(config):
                 logging.warning("Geometria salva inválida: %s",
                                 config['geometry'])
 
-    icone_path = ICON_PATH
-    if icone_path and os.path.exists(icone_path):
-        g.PRINC_FORM.setWindowIcon(QIcon(icone_path))
+    if ICON_PATH and os.path.exists(ICON_PATH):
+        g.PRINC_FORM.setWindowIcon(QIcon(ICON_PATH))
     else:
-        logging.error("Arquivo de ícone não encontrado em: %s", icone_path)
+        logging.error("Arquivo de ícone não encontrado em: %s", ICON_PATH)
 
     g.PRINC_FORM.setAttribute(Qt.WA_QuitOnClose, True)
     logging.info("Configuração da janela principal concluída.")
 
 
-# --- REATORAÇÃO: Lógica de Abertura de Formulários ---
 def abrir_formulario(form_function, edit_flag_name, is_edit_mode):
     """
     Abre um formulário genérico, configurando a flag de edição correspondente.
@@ -177,14 +169,12 @@ def _toggle_no_topo():
     aplicar_no_topo_app_principal()
 
 
-# --- REATORAÇÃO: Configuração de Menus e Interface ---
 def configurar_menu():
     """Configura o menu superior da janela principal de forma centralizada."""
     if not hasattr(g, 'MENU_CUSTOM') or g.MENU_CUSTOM is None:
         return
     menu_bar = g.MENU_CUSTOM.get_menu_bar()
 
-    # Estrutura de dados que define todos os menus e suas ações
     estrutura_menu = {
         "📁 Arquivo": [
             ("➕ Nova Dedução", partial(abrir_formulario, FormDeducao, 'EDIT_DED', False)),
@@ -222,11 +212,8 @@ def configurar_menu():
         menu = menu_bar.addMenu(nome_menu)
         _adicionar_acoes_ao_menu(menu, acoes)
 
-    # Menus com lógica especial são criados separadamente
     _criar_menu_opcoes(menu_bar)
     _criar_menu_ajuda(menu_bar)
-
-
 def _adicionar_acoes_ao_menu(menu, acoes):
     """Adiciona uma lista de ações a um menu."""
     for nome, funcao in acoes:
@@ -239,7 +226,7 @@ def _adicionar_acoes_ao_menu(menu, acoes):
 
 
 def _criar_menu_opcoes(menu_bar):
-    """Cria o menu Opções (mantido separado por sua lógica complexa)."""
+    """Cria o menu Opções."""
     opcoes_menu = menu_bar.addMenu("⚙️ Opções")
     if not hasattr(g, 'NO_TOPO_VAR') or g.NO_TOPO_VAR is None:
         g.NO_TOPO_VAR = False
@@ -263,7 +250,7 @@ def _criar_menu_opcoes(menu_bar):
 
 
 def _criar_menu_ajuda(menu_bar):
-    """Cria o menu Ajuda (mantido separado por sua lógica de atualização)."""
+    """Cria o menu Ajuda."""
     help_menu = menu_bar.addMenu("❓ Ajuda")
     sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
@@ -305,7 +292,6 @@ def configurar_frames():
     logging.info("Configuração dos frames concluída.")
 
 
-# --- Funções de Inicialização (Refatorado de main) ---
 def configurar_sinais_excecoes():
     """Configura handlers para exceções não tratadas e sinais do sistema."""
     def handle_exception(exc_type, exc_value, exc_traceback):
@@ -325,18 +311,14 @@ def configurar_sinais_excecoes():
 
 def processar_verificacao_sistema():
     """Função chamada pelo timer para verificar o estado do sistema."""
-    # 1. Avisa que a instância está viva
     atualizar_heartbeat_sessao()
 
-    # 2. Verifica se há um comando para executar
     comando = obter_comando_sistema()
 
-    # 3. Age com base no comando
     if comando == 'SHUTDOWN':
         fechar_aplicativo()
 
 
-# --- FUNÇÃO MODIFICADA ---
 def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g' para mantê-los ativos."""
     g.TIMER_SISTEMA = QTimer()
@@ -344,14 +326,11 @@ def iniciar_timers():
     g.TIMER_SISTEMA.start(5000)
 
     g.UPDATE_CHECK_TIMER = QTimer()
-    # A função não precisa mais do argumento da versão, pois lê do DB
     g.UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
-    g.UPDATE_CHECK_TIMER.start(300000)  # 5 minutos
-    # A verificação inicial também não precisa do argumento
+    g.UPDATE_CHECK_TIMER.start(300000)
     QTimer.singleShot(1000, checagem_periodica_update)
 
 
-# --- Função Principal ---
 def main():
     """Função principal que inicializa e executa a aplicação."""
     setup_logging('app.log', log_to_console=True)
@@ -360,11 +339,7 @@ def main():
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
 
-        # --- NOVA LINHA ---
-        # Garante que a versão no DB está correta na inicialização.
-        # Esta é a "fonte da verdade" para a versão instalada.
         set_installed_version(APP_VERSION)
-        # --- FIM DA NOVA LINHA ---
 
         configurar_sinais_excecoes()
 
