@@ -187,7 +187,7 @@ def obter_css_widgets_auto_ajustaveis():
         "combobox": f"""
             QComboBox {{
                 min-width: {LARGURA_MINIMA_COMPONENTE}px;
-                min-height: 1em; 
+                min-height: 1em;
                 max-height: {ALTURA_PADRAO_COMPONENTE}px;
                 padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
@@ -196,7 +196,7 @@ def obter_css_widgets_auto_ajustaveis():
         "lineedit": f"""
             QLineEdit {{
                 min-width: {LARGURA_MINIMA_COMPONENTE}px;
-                min-height: 1em; 
+                min-height: 1em;
                 max-height: {ALTURA_PADRAO_COMPONENTE}px;
                 padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;

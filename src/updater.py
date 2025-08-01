@@ -444,7 +444,8 @@ class UpdaterWindow(QMainWindow):
                 QMessageBox.information(
                     self,
                     "Atualizado",
-                    "O aplicativo já está na versão mais recente. Nenhuma atualização é necessária.",
+                    "O aplicativo já está na versão mais recente. "
+                    "Nenhuma atualização é necessária.",
                 )
         finally:
             QApplication.restoreOverrideCursor()

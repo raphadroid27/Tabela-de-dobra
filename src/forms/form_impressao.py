@@ -49,7 +49,7 @@ ALTURA_MAXIMA_LISTA_WIDGET = 120
 # Strings de interface
 STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
 PLACEHOLDER_LISTA_ARQUIVOS = (
-    "Digite os nomes dos arquivos, um por linha.\n" "Exemplo:\n010464516\n010464519"
+    "Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519"
 )
 
 # Caminhos dos programas PDF
