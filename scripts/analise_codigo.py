@@ -13,54 +13,52 @@ def run_command(cmd, description):
     print(f"\n{'='*60}")
     print(f"🔍 {description}")
     print(f"{'='*60}")
-    
+
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
         if result.stdout:
             print(result.stdout)
-        if result.stderr:
+        if result.stderr and result.returncode != 0:
             print(f"❌ Erros:\n{result.stderr}")
         return result.returncode == 0
-    except Exception as e:
+    except (subprocess.SubprocessError, OSError) as e:
         print(f"❌ Erro ao executar: {e}")
         return False
 
 def main():
     """Executa análise completa do código."""
     src_path = "src"
-    
+
     if not Path(src_path).exists():
         print(f"❌ Diretório {src_path} não encontrado!")
         sys.exit(1)
-    
+
     print("🚀 Iniciando análise completa de qualidade de código...")
-    
-    # 1. Formatação automática
-    run_command("python -m black src/", "Formatação com Black")
-    run_command("python -m isort src/ --profile black", "Organização de imports com isort")
-    
-    # 2. Análise de qualidade
-    run_command("python -m pylint src --disable=C0114,C0115,C0116 --reports=n --score=y", 
-                "Análise com Pylint")
-    run_command("python -m flake8 src/", "Análise com Flake8")
+
+    # 1. Formatação automática (se disponível)
+    print("\n🎨 FORMATAÇÃO AUTOMÁTICA")
+    run_command("python -m isort src/ --profile black --check-only",
+                "Verificação de imports com isort")
+
+    # 2. Análise de qualidade core
+    print("\n🔍 ANÁLISE DE QUALIDADE")
+    run_command("python -m pylint src --disable=C0114,C0115,C0116 --reports=n --score=y",
+                "Análise completa com Pylint")
+    run_command("python -m flake8 src/", "Análise de estilo com Flake8")
     run_command("python -m vulture src/", "Detecção de código morto com Vulture")
-    
-    # 3. Análise de segurança
-    run_command("python -m bandit -r src/", "Análise de segurança com Bandit")
-    
-    # 4. Análise de complexidade
-    run_command("python -m radon cc src/ -a", "Complexidade ciclomática com Radon")
-    run_command("python -m radon mi src/", "Índice de manutenibilidade com Radon")
-    
-    # 5. Verificação de tipos
-    run_command("python -m mypy src/ --ignore-missing-imports", "Verificação de tipos com MyPy")
-    
-    # 6. Imports não utilizados
-    run_command("python -m unimport --check src/", "Verificação de imports com Unimport")
-    
+
+    # 3. Análise avançada (se disponível)
+    print("\n⚡ ANÁLISE AVANÇADA")
+    run_command("python -m mypy src/ --ignore-missing-imports", "Verificação de tipos")
+    run_command("python -m bandit -r src/ --format screen", "Análise de segurança")
+    run_command("python -m radon cc src/ -a", "Complexidade ciclomática")
+    run_command("python -m autoflake --check --remove-all-unused-imports --recursive src/",
+                "Verificação de imports não utilizados")
+
     print(f"\n{'='*60}")
     print("✅ Análise completa finalizada!")
     print("📊 Revise os resultados acima para identificar melhorias.")
+    print("💡 Para instalar ferramentas faltantes: pip install -r requirements-dev.txt")
     print(f"{'='*60}")
 
 if __name__ == "__main__":
