@@ -20,10 +20,10 @@ from src.utils.interface import (
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.utils.controlador import buscar, preencher_campos, excluir, editar, adicionar
 from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
-                              obter_estilo_botao_azul, obter_estilo_botao_vermelho)
+                              obter_estilo_botao_azul, obter_estilo_botao_vermelho,
+                              obter_tema_atual)
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
-from src.utils.estilo import obter_tema_atual
 
 # Configurações para cada tipo de formulário
 FORM_CONFIGS = {

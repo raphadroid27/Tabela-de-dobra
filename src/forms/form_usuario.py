@@ -22,10 +22,10 @@ from src.utils.usuarios import (
 from src.utils.estilo import (
     obter_estilo_botao_vermelho,
     obter_estilo_botao_amarelo,
-    obter_estilo_botao_verde)
+    obter_estilo_botao_verde,
+    obter_tema_atual)
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
-from src.utils.estilo import obter_tema_atual
 
 
 def _verificar_permissao():
