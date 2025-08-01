@@ -24,6 +24,11 @@ from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
+# Constantes para configuração da interface
+JANELA_LARGURA = 200
+JANELA_ALTURA_LOGIN = 160
+JANELA_ALTURA_CADASTRO = 180
+
 
 def _configurar_janela_base(root):
     """Configura a janela base do formulário de autenticação."""
@@ -32,7 +37,7 @@ def _configurar_janela_base(root):
         g.AUTEN_FORM = None
 
     g.AUTEN_FORM = QDialog(root)
-    g.AUTEN_FORM.setFixedSize(200, 160)
+    g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
     g.AUTEN_FORM.setModal(True)
     g.AUTEN_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
@@ -92,7 +97,7 @@ def _configurar_modo_login(main_layout):
 
 def _configurar_checkbox_admin(main_layout):
     """Configura o checkbox de administrador."""
-    g.AUTEN_FORM.setFixedSize(200, 180)
+    g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_CADASTRO)
     main_layout.addWidget(QLabel("Admin:"), 2, 0)
     admin_checkbox = QCheckBox()
 

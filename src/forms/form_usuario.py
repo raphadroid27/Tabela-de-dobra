@@ -27,6 +27,12 @@ from src.utils.estilo import (
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 
+# Constantes para configuração da interface
+JANELA_LARGURA = 330
+JANELA_ALTURA = 280
+COLUNA_NOME_LARGURA = 150
+COLUNA_PERMISSOES_LARGURA = 100
+
 
 def _verificar_permissao():
     """Verifica se o usuário tem permissão para gerenciar usuários."""
@@ -40,7 +46,7 @@ def _configurar_janela_base(root):
 
     g.USUAR_FORM = QDialog(root)
     g.USUAR_FORM.setWindowTitle("Editar/Excluir Usuário")
-    g.USUAR_FORM.setFixedSize(330, 280)
+    g.USUAR_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
     g.USUAR_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     g.USUAR_FORM.setWindowIcon(QIcon(ICON_PATH))
@@ -101,8 +107,8 @@ def _criar_tree_widget(main_layout):
     g.LIST_USUARIO = QTreeWidget()
     g.LIST_USUARIO.setHeaderLabels(["Id", "Nome", "Permissões"])
     g.LIST_USUARIO.setColumnHidden(0, True)  # Esconde a coluna Id
-    g.LIST_USUARIO.setColumnWidth(1, 150)
-    g.LIST_USUARIO.setColumnWidth(2, 100)
+    g.LIST_USUARIO.setColumnWidth(1, COLUNA_NOME_LARGURA)
+    g.LIST_USUARIO.setColumnWidth(2, COLUNA_PERMISSOES_LARGURA)
     main_layout.addWidget(g.LIST_USUARIO, 1, 0, 1, 3)
 
 
