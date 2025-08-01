@@ -40,17 +40,11 @@ ABA_EXT_LBL = None
 Z_EXT_LBL = None
 FORCA_LBL = None
 
-# aba1.py widgets
 N = 6
-# Widgets de dobra são criados dinamicamente:
-# aba{i}_entry_{w}, medidadobra{i}_label_{w}, metadedobra{i}_label_{w}
 DED_ESPEC_ENTRY = None
 FRAME_DOBRA = None
-
-# aba3.py widgets
 RAZAO_RIE_LBL = None
 
-# Dicionário de valores de raio interno
 RAIO_K = {
     0.1: 0.23,
     0.2: 0.29,
@@ -118,7 +112,6 @@ LIST_USUARIO = None
 # form_impressao.py widgets
 IMPRESSAO_FORM = None
 IMPRESSAO_DIRETORIO_ENTRY = None
-IMPRESSAO_ARQUIVO_ENTRY = None
 IMPRESSAO_LISTA_ARQUIVOS = None
 IMPRESSAO_LISTA_TEXT = None
 IMPRESSAO_RESULTADO_TEXT = None

@@ -12,7 +12,6 @@ Funcionalidades:
 import logging
 from src.config import globals as g
 
-# Imports no topo para evitar imports dentro de funções
 try:
     import qdarktheme
     QDARKTHEME_DISPONIVEL = True
@@ -24,15 +23,12 @@ logger = logging.getLogger(__name__)
 
 TEMA_ATUAL_PADRAO = "dark"
 
-# Constantes para dimensões padrão de componentes da interface
-# Altura padrão para widgets (botões, inputs, etc.)
 ALTURA_PADRAO_COMPONENTE = 20
-LARGURA_MINIMA_COMPONENTE = 60  # Largura mínima para garantir usabilidade
-PADDING_INTERNO_COMPONENTE = "2px 4px"  # Padding interno uniforme
+LARGURA_MINIMA_COMPONENTE = 60
+PADDING_INTERNO_COMPONENTE = "2px 4px"
 
-# Constantes para botões específicas
-ALTURA_PADRAO_BOTAO = 25  # Altura padrão para botões
-LARGURA_MINIMA_BOTAO = 20  # Largura mínima para botões
+ALTURA_PADRAO_BOTAO = 25
+LARGURA_MINIMA_BOTAO = 20
 
 
 class GerenciadorTemas:

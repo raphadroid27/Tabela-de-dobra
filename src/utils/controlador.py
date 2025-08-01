@@ -222,7 +222,7 @@ def _item_selecionado(tipo):
 
     except (AttributeError, ValueError, TypeError, IndexError) as e:
         show_error("Erro", f"Erro ao buscar item selecionado: {str(e)}")
-        return None  # Retorna None em caso de erro
+        return None
 
     return obj
 

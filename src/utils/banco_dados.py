@@ -12,7 +12,6 @@ from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from src.models.models import (Log, SystemControl, Base)
 from src.utils.utilitarios import DB_PATH
 
-# Configuração do banco de dados
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
 engine = create_engine(

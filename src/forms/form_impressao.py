@@ -28,12 +28,12 @@ from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 
 # Constantes para configuração
-TIMEOUT_IMPRESSAO = 30  # segundos para timeout de processos de impressão
-ALTURA_FORM_IMPRESSAO = 500  # altura da janela
-LARGURA_FORM_IMPRESSAO = 500  # largura da janela
-MARGEM_LAYOUT_PRINCIPAL = 10  # margem do layout principal
-ALTURA_MAXIMA_LISTA = 100  # altura máxima da lista de arquivos
-ALTURA_MAXIMA_LISTA_WIDGET = 120  # altura máxima do widget de lista
+TIMEOUT_IMPRESSAO = 30
+ALTURA_FORM_IMPRESSAO = 500
+LARGURA_FORM_IMPRESSAO = 500
+MARGEM_LAYOUT_PRINCIPAL = 10
+ALTURA_MAXIMA_LISTA = 100
+ALTURA_MAXIMA_LISTA_WIDGET = 120
 
 # Strings de interface
 STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
@@ -117,15 +117,12 @@ class PrintManager:
         """Imprime um arquivo individual usando diferentes métodos."""
         sucesso = False
 
-        # Método 1: Foxit PDF Reader
         sucesso = self._tentar_foxit(nome_arquivo, caminho_completo)
 
-        # Método 2: Impressora padrão do Windows
         if not sucesso:
             sucesso = self._tentar_impressora_padrao(
                 nome_arquivo, caminho_completo)
 
-        # Método 3: Adobe Reader
         if not sucesso:
             sucesso = self._tentar_adobe(nome_arquivo, caminho_completo)
 

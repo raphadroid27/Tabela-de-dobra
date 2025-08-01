@@ -203,153 +203,6 @@ class WidgetUsageAnalyzer:
         return '\n'.join(report)
 
 
-class WidgetValidator:
-    """Classe para validação de widgets e verificação de estados."""
-
-    @staticmethod
-    def validate_required_widgets(widget_names: List[str]) -> Tuple[bool, List[str]]:
-        """Valida se todos os widgets obrigatórios existem e estão inicializados."""
-        validation_results = WidgetManager.validate_widgets_exist(widget_names)
-        missing_widgets = [name for name,
-                           exists in validation_results.items() if not exists]
-        return not bool(missing_widgets), missing_widgets
-
-    @staticmethod
-    def validate_combobox_selections(combobox_names: List[str]) -> Tuple[bool, List[str]]:
-        """Valida se todos os comboboxes possuem seleção."""
-        empty_comboboxes = []
-
-        for name in combobox_names:
-            widget = WidgetManager.safe_get_widget(name)
-            if not (widget and isinstance(widget, QComboBox) and widget.currentIndex() != -1):
-                empty_comboboxes.append(name)
-
-        return not bool(empty_comboboxes), empty_comboboxes
-
-    @staticmethod
-    def validate_entry_fields(entry_names: List[str]) -> Tuple[bool, List[str]]:
-        """Valida se todos os campos de entrada estão preenchidos."""
-        empty_entries = []
-
-        for name in entry_names:
-            widget = WidgetManager.safe_get_widget(name)
-            if not (widget and isinstance(widget, QLineEdit) and widget.text().strip()):
-                empty_entries.append(name)
-
-        return not bool(empty_entries), empty_entries
-
-    @staticmethod
-    def get_widget_values(widget_names: List[str]) -> Dict[str, str]:
-        """Obtém valores de widgets."""
-        values = {}
-        for name in widget_names:
-            widget = WidgetManager.safe_get_widget(name)
-            values[name] = WidgetManager.get_widget_value(widget)
-        return values
-
-
-class OperationHelper:
-    """Classe auxiliar para operações comuns com widgets."""
-
-    @staticmethod
-    def validate_deducao_operation() -> Tuple[bool, Dict[str, str]]:
-        """Valida e obtém valores para operações de dedução."""
-        required_widgets = ['DED_ESPES_COMB', 'DED_CANAL_COMB',
-                            'DED_MATER_COMB', 'DED_VALOR_ENTRY']
-
-        is_valid, _ = WidgetValidator.validate_required_widgets(
-            required_widgets)
-        if not is_valid:
-            return False, {}
-
-        combobox_names = ['DED_ESPES_COMB', 'DED_CANAL_COMB', 'DED_MATER_COMB']
-        is_valid, _ = WidgetValidator.validate_combobox_selections(
-            combobox_names)
-        if not is_valid:
-            return False, {}
-
-        is_valid, _ = WidgetValidator.validate_entry_fields(
-            ['DED_VALOR_ENTRY'])
-        if not is_valid:
-            return False, {}
-
-        combobox_values = WidgetValidator.get_widget_values(
-            combobox_names)
-        entry_values = WidgetValidator.get_widget_values(
-            ['DED_VALOR_ENTRY', 'DED_OBSER_ENTRY', 'DED_FORCA_ENTRY'])
-
-        return True, {**combobox_values, **entry_values}
-
-    @staticmethod
-    def validate_material_operation() -> Tuple[bool, Dict[str, str]]:
-        """Valida e obtém valores para operações de material."""
-        required_widgets = ['MAT_NOME_ENTRY',
-                            'MAT_DENS_ENTRY', 'MAT_ESCO_ENTRY', 'MAT_ELAS_ENTRY']
-
-        is_valid, _ = WidgetValidator.validate_required_widgets(
-            required_widgets)
-        if not is_valid:
-            return False, {}
-
-        values = WidgetValidator.get_widget_values(required_widgets)
-        if not values.get('MAT_NOME_ENTRY', '').strip():
-            return False, {}
-
-        return True, values
-
-    @staticmethod
-    def validate_espessura_operation() -> Tuple[bool, Dict[str, str]]:
-        """Valida e obtém valores para operações de espessura."""
-        required_widgets = ['ESP_VALOR_ENTRY']
-
-        is_valid, _ = WidgetValidator.validate_required_widgets(
-            required_widgets)
-        if not is_valid:
-            return False, {}
-
-        is_valid, _ = WidgetValidator.validate_entry_fields(
-            required_widgets)
-        if not is_valid:
-            return False, {}
-
-        return True, WidgetValidator.get_widget_values(required_widgets)
-
-    @staticmethod
-    def validate_canal_operation() -> Tuple[bool, Dict[str, str]]:
-        """Valida e obtém valores para operações de canal."""
-        required_widgets = ['CANAL_VALOR_ENTRY']
-        optional_widgets = ['CANAL_LARGU_ENTRY', 'CANAL_ALTUR_ENTRY',
-                            'CANAL_COMPR_ENTRY', 'CANAL_OBSER_ENTRY']
-
-        is_valid, _ = WidgetValidator.validate_required_widgets(
-            required_widgets)
-        if not is_valid:
-            return False, {}
-
-        is_valid, _ = WidgetValidator.validate_entry_fields(
-            required_widgets)
-        if not is_valid:
-            return False, {}
-
-        all_widgets = required_widgets + optional_widgets
-        return True, WidgetValidator.get_widget_values(all_widgets)
-
-    @staticmethod
-    def validate_usuario_operation() -> Tuple[bool, Dict[str, str]]:
-        """Valida e obtém valores para operações de usuário."""
-        required_widgets = ['USUARIO_ENTRY', 'SENHA_ENTRY']
-
-        is_valid, _ = WidgetValidator.validate_required_widgets(
-            required_widgets)
-        if not is_valid:
-            return False, {}
-
-        # Obter valores
-        values = WidgetValidator.get_widget_values(required_widgets)
-
-        return True, values
-
-
 class WidgetFactory:
     """Factory para criação de widgets sob demanda."""
 
@@ -360,33 +213,6 @@ class WidgetFactory:
     def register_creator(cls, widget_name: str, creator_func: Callable):
         """Registra uma função criadora para um widget."""
         cls._widget_creators[widget_name] = creator_func
-
-    @classmethod
-    def get_widget(cls, widget_name: str, force_recreate: bool = False) -> Any:
-        """Obtém ou cria um widget sob demanda, usando cache e criadores registrados."""
-        if not force_recreate and widget_name in cls._widget_cache:
-            widget = cls._widget_cache[widget_name]
-            if WidgetManager.is_widget_valid(widget):
-                return widget
-            del cls._widget_cache[widget_name]
-
-        existing_widget = WidgetManager.safe_get_widget(widget_name)
-        if existing_widget is not None and not force_recreate:
-            cls._widget_cache[widget_name] = existing_widget
-            return existing_widget
-
-        if widget_name not in cls._widget_creators:
-            return None
-
-        try:
-            widget = cls._widget_creators[widget_name]()
-            if widget is not None:
-                cls._widget_cache[widget_name] = widget
-                WidgetManager.safe_set_widget(widget_name, widget)
-                return widget
-            return None
-        except RuntimeError:
-            return None
 
     # Métodos de cache e otimização removidos - não utilizados no projeto
 
@@ -410,11 +236,6 @@ class WidgetManager:
         """Obtém um widget seguro das variáveis globais."""
         widget = getattr(g, name, default)
         return widget if WidgetManager.is_widget_valid(widget) else default
-
-    @staticmethod
-    def safe_set_widget(name: str, widget: Any) -> None:
-        """Define um widget de forma segura nas variáveis globais."""
-        setattr(g, name, widget)
 
     @staticmethod
     def get_widget_value(widget: QWidget, default: str = '') -> str:
@@ -467,40 +288,7 @@ class WidgetManager:
 
     # Método restore_combobox_selection() removido - não utilizado
 
-    @classmethod
-    def get_dobra_widgets(cls, valor_w: int) -> Dict[str, List[QWidget]]:
-        """Retorna widgets de dobras para um valor W."""
-        if not tem_configuracao_dobras_valida():
-            return {}
-
-        widgets = {
-            'entries': [],
-            'medida_dobra_labels': [],
-            'metade_dobra_labels': [],
-            'medida_blank_label': None,
-            'metade_blank_label': None
-        }
-
-        for i in range(1, g.N):
-            entry = cls.safe_get_widget(f'aba{i}_entry_{valor_w}')
-            medida_label = cls.safe_get_widget(
-                f'medidadobra{i}_label_{valor_w}')
-            metade_label = cls.safe_get_widget(
-                f'metadedobra{i}_label_{valor_w}')
-
-            if entry:
-                widgets['entries'].append(entry)
-            if medida_label:
-                widgets['medida_dobra_labels'].append(medida_label)
-            if metade_label:
-                widgets['metade_dobra_labels'].append(metade_label)
-
-        widgets['medida_blank_label'] = cls.safe_get_widget(
-            f'medida_blank_label_{valor_w}')
-        widgets['metade_blank_label'] = cls.safe_get_widget(
-            f'metade_blank_label_{valor_w}')
-
-        return widgets
+    # Método removido - não utilizado
 
     # Métodos não utilizados removidos:
     # - clear_dobra_widgets()
@@ -690,9 +478,7 @@ class WidgetStateManager:
 
         return self.safe_restore_entry(widget, value)
 
-    def clear_cache(self):
-        """Limpa o cache de widgets."""
-        self.widget_cache.clear()
+    # Método removido - não utilizado
 
     def get_cache_info(self):
         """Retorna informações sobre o cache atual."""

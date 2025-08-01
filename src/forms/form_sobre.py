@@ -30,10 +30,8 @@ def main(root):
     g.SOBRE_FORM = QDialog(root)
     g.SOBRE_FORM.setWindowTitle("Sobre")
     g.SOBRE_FORM.setFixedSize(300, 210)
-    # Remover barra nativa
     g.SOBRE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
-    # Define o ícone
     g.SOBRE_FORM.setWindowIcon(QIcon(ICON_PATH))
 
     aplicar_no_topo(g.SOBRE_FORM)
