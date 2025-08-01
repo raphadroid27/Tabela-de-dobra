@@ -19,9 +19,7 @@ from src.utils.interface import (
     atualizar_comboboxes_formulario)  # <--- IMPORTA A NOVA FUNÇÃO
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.utils.controlador import buscar, preencher_campos, excluir, editar, adicionar
-from src.utils.estilo import (obter_estilo_botao_amarelo, obter_estilo_botao_verde,
-                              obter_estilo_botao_azul, obter_estilo_botao_vermelho,
-                              obter_tema_atual)
+from src.utils.estilo import (obter_tema_atual, ALTURA_PADRAO_COMPONENTE, aplicar_estilo_botao)
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 
@@ -185,17 +183,13 @@ class ButtonConfigManager:
         if self.is_edit:
             # Botão Atualizar
             atualizar_btn = QPushButton("✏️ Atualizar")
-            atualizar_btn.setStyleSheet(obter_estilo_botao_verde())
-            atualizar_btn.setFixedHeight(25)
-            atualizar_btn.setMinimumWidth(20)
+            aplicar_estilo_botao(atualizar_btn, 'verde')
             atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
             botao_layout.addWidget(atualizar_btn)
         else:
             # Botão Adicionar
             adicionar_btn = QPushButton("➕ Adicionar")
-            adicionar_btn.setStyleSheet(obter_estilo_botao_azul())
-            adicionar_btn.setFixedHeight(25)
-            adicionar_btn.setMinimumWidth(20)
+            aplicar_estilo_botao(adicionar_btn, 'azul')
             adicionar_btn.clicked.connect(
                 lambda: adicionar(self.tipo_operacao))
             botao_layout.addWidget(adicionar_btn)
@@ -324,9 +318,7 @@ class FormManager:
         aplicar_medida_borda_espaco(excluir_layout, 0)
 
         excluir_btn = QPushButton("🗑️ Excluir")
-        excluir_btn.setStyleSheet(obter_estilo_botao_vermelho())
-        excluir_btn.setFixedHeight(25)
-        excluir_btn.setMinimumWidth(20)
+        aplicar_estilo_botao(excluir_btn, 'vermelho')
 
         tipo_operacao = self.config.get('tipo_busca', self.tipo)
         excluir_btn.clicked.connect(lambda: excluir(tipo_operacao))
@@ -357,10 +349,10 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
     """Cria e configura um widget, o adiciona ao layout e o armazena em g."""
     if tipo == 'entry':
         widget = QLineEdit()
-        widget.setFixedHeight(20)
+        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     elif tipo == 'combobox':
         widget = QComboBox()
-        widget.setFixedHeight(20)
+        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     else:
         return None
 
@@ -407,7 +399,7 @@ def _criar_campo_busca(layout, campo, col, tipo_busca):
 def _criar_botao_limpar_busca(layout, col, tipo_busca):
     """Cria o botão de limpar busca."""
     limpar_btn = QPushButton("🧹 Limpar")
-    limpar_btn.setStyleSheet(obter_estilo_botao_amarelo())
+    aplicar_estilo_botao(limpar_btn, 'amarelo')
     limpar_btn.clicked.connect(lambda: limpar_busca(tipo_busca))
     layout.addWidget(limpar_btn, 1, col)
 

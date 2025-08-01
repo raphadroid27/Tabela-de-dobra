@@ -55,9 +55,8 @@ try:
     )
     from src.components.barra_titulo import BarraTitulo
     from src.utils.estilo import (
-        obter_estilo_botao_verde, obter_estilo_botao_vermelho,
-        obter_estilo_botao_azul, obter_tema_atual, obter_estilo_progress_bar,
-        aplicar_estilo_widget_auto_ajustavel, aplicar_tema_inicial
+        obter_tema_atual, obter_estilo_progress_bar,
+        aplicar_estilo_widget_auto_ajustavel, aplicar_tema_inicial, aplicar_estilo_botao
     )
 
 except ImportError as e:
@@ -136,12 +135,12 @@ class AdminAuthWidget(QWidget):
         aplicar_medida_borda_espaco(button_layout, 0, 10)
 
         cancel_btn = QPushButton("Cancelar")
-        cancel_btn.setStyleSheet(obter_estilo_botao_vermelho())
+        aplicar_estilo_botao(cancel_btn, 'vermelho')
         cancel_btn.setToolTip("Clique para cancelar o login")
         cancel_btn.clicked.connect(self.login_cancelled.emit)
 
         login_btn = QPushButton("🔐 Login")
-        login_btn.setStyleSheet(obter_estilo_botao_verde())
+        aplicar_estilo_botao(login_btn, 'verde')
         login_btn.setToolTip("Clique para fazer login como administrador")
         login_btn.clicked.connect(self.attempt_login)
 
@@ -280,7 +279,7 @@ class UpdaterWindow(QMainWindow):
             button_layout, 0, 10)
 
         self.cancel_button = QPushButton("Cancelar")
-        self.cancel_button.setStyleSheet(obter_estilo_botao_vermelho())
+        aplicar_estilo_botao(self.cancel_button, 'vermelho')
         self.cancel_button.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.cancel_button.setToolTip("Cancelar a atualização")
@@ -369,7 +368,7 @@ class UpdaterWindow(QMainWindow):
         self.status_label.setText("Nova versão disponível!")
         self.version_label.setText(f"Versão {latest_version}")
         self.update_button.setEnabled(True)
-        self.update_button.setStyleSheet(obter_estilo_botao_azul())
+        aplicar_estilo_botao(self.update_button, 'azul')
 
     def show_no_update(self, current_version: str):
         """Mostra a mensagem de que o aplicativo já está atualizado."""

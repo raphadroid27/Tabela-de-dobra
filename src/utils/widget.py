@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QLabel
 from src.models.models import Espessura, Material, Canal
 from src.utils.banco_dados import session
 from src.utils.utilitarios import tem_configuracao_dobras_valida
+from src.utils.estilo import ALTURA_PADRAO_COMPONENTE
 import src.config.globals as g
 
 # Configurar logger
@@ -818,14 +819,14 @@ class WidgetStateManager:
         return f"Cache: {cabecalho_count} widgets de cabeçalho, {dobras_count} widgets de dobras"
 
 
-def _create_combo_base(height: int = 20) -> QComboBox:
+def _create_combo_base(height: int = ALTURA_PADRAO_COMPONENTE) -> QComboBox:
     """Cria um combobox base com configurações padrão."""
     combo = QComboBox()
     combo.setFixedHeight(height)
     return combo
 
 
-def _create_entry_base(height: int = 20, placeholder: str = "") -> QLineEdit:
+def _create_entry_base(height: int = ALTURA_PADRAO_COMPONENTE, placeholder: str = "") -> QLineEdit:
     """Cria um entry base com configurações padrão."""
     entry = QLineEdit()
     entry.setFixedHeight(height)
@@ -915,15 +916,6 @@ WidgetFactory.register_creator(
     'DED_OBSER_ENTRY', create_deducao_observacao_entry)
 WidgetFactory.register_creator('DED_FORCA_ENTRY', create_deducao_forca_entry)
 
-# DEPRECATED: OptimizedWidgetManager é redundante com WidgetManager
-# Considere usar WidgetManager diretamente no futuro
-optimized_widget_manager = OptimizedWidgetManager()
-
-
-def get_widget_on_demand(widget_name: str) -> Any:
-    """Obtém widget sob demanda pelo nome."""
-    return optimized_widget_manager.get_widget(widget_name)
-
 
 def validate_widgets_for_operation(operation_type: str) -> Tuple[bool, Dict[str, str]]:
     """Valida widgets conforme o tipo de operação."""
@@ -941,28 +933,6 @@ def validate_widgets_for_operation(operation_type: str) -> Tuple[bool, Dict[str,
         return False, {}
 
     return validator()
-
-
-# DEPRECATED: Funções wrapper redundantes - use WidgetManager diretamente
-def safe_get_widget_value(widget_name: str, default: str = '') -> str:
-    """Função global para obter valor de widget de forma segura.
-    DEPRECATED: Use WidgetManager.get_widget_value() diretamente."""
-    widget = WidgetManager.safe_get_widget(widget_name)
-    return WidgetManager.get_widget_value(widget, default)
-
-
-def safe_set_widget_value(widget_name: str, value: str) -> bool:
-    """Função global para definir valor de widget de forma segura.
-    DEPRECATED: Use WidgetManager.set_widget_value() diretamente."""
-    widget = WidgetManager.safe_get_widget(widget_name)
-    return WidgetManager.set_widget_value(widget, value)
-
-
-def safe_clear_widget(widget_name: str) -> bool:
-    """Função global para limpar widget de forma segura.
-    DEPRECATED: Use WidgetManager.clear_widget() diretamente."""
-    widget = WidgetManager.safe_get_widget(widget_name)
-    return WidgetManager.clear_widget(widget)
 
 
 def analyze_project_widgets(root_path: str = None) -> str:

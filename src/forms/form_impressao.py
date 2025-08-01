@@ -21,12 +21,8 @@ from src.utils.janelas import (aplicar_no_topo,
                                HABILITAR_JANELAS,
                                DESABILITAR_JANELAS)
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
-from src.utils.estilo import (obter_estilo_botao_cinza,
-                              obter_estilo_botao_azul,
-                              obter_estilo_botao_amarelo,
-                              obter_estilo_botao_verde,
-                              obter_estilo_botao_vermelho,
-                              obter_tema_atual)
+from src.utils.estilo import (obter_tema_atual,
+                              aplicar_estilo_botao)
 
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
@@ -37,6 +33,12 @@ ALTURA_FORM_IMPRESSAO = 500  # altura da janela
 LARGURA_FORM_IMPRESSAO = 500  # largura da janela
 MARGEM_LAYOUT_PRINCIPAL = 10  # margem do layout principal
 ALTURA_MAXIMA_LISTA = 100  # altura máxima da lista de arquivos
+ALTURA_MAXIMA_LISTA_WIDGET = 120  # altura máxima do widget de lista
+
+# Strings de interface
+STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
+PLACEHOLDER_LISTA_ARQUIVOS = ("Digite os nomes dos arquivos, um por linha.\n"
+                              "Exemplo:\n010464516\n010464519")
 
 # Caminhos dos programas PDF
 FOXIT_PATH = "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe"
@@ -454,7 +456,7 @@ def _criar_secao_diretorio_grid():
     dir_layout.addWidget(g.IMPRESSAO_DIRETORIO_ENTRY, 0, 0)
 
     procurar_btn = QPushButton("📁 Procurar")
-    procurar_btn.setStyleSheet(obter_estilo_botao_cinza())
+    aplicar_estilo_botao(procurar_btn, 'cinza')
     procurar_btn.clicked.connect(selecionar_diretorio)
     dir_layout.addWidget(procurar_btn, 0, 1)
 
@@ -473,53 +475,52 @@ def _criar_secao_arquivos_grid():
     # === SUBSECÇÃO: CAMPO DE TEXTO MÚLTIPLO ===
     # Linha 0: Label
     lista_label = QLabel("Lista de arquivos (um por linha):")
-    lista_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
+    lista_label.setStyleSheet(STYLE_LABEL_BOLD)
     arquivos_layout.addWidget(lista_label, 0, 0, 1, 3)  # colspan=3
 
     # Linha 1-2: Campo de texto (coluna 0-1) + Botões (coluna 2)
     g.IMPRESSAO_LISTA_TEXT = QTextEdit()
     g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(ALTURA_MAXIMA_LISTA)
-    g.IMPRESSAO_LISTA_TEXT.setPlaceholderText(
-        "Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519")
+    g.IMPRESSAO_LISTA_TEXT.setPlaceholderText(PLACEHOLDER_LISTA_ARQUIVOS)
     arquivos_layout.addWidget(g.IMPRESSAO_LISTA_TEXT,
                               1, 0, 2, 2)  # rowspan=2, colspan=2
 
     # Botões do campo de texto (coluna 2)
     adicionar_btn = QPushButton("➕ Adicionar")
-    adicionar_btn.setStyleSheet(obter_estilo_botao_azul())
+    aplicar_estilo_botao(adicionar_btn, 'azul')
     adicionar_btn.clicked.connect(adicionar_lista_arquivos)
     arquivos_layout.addWidget(adicionar_btn, 1, 2)
 
     limpar_text_btn = QPushButton("🧹 Limpar")
-    limpar_text_btn.setStyleSheet(obter_estilo_botao_amarelo())
+    aplicar_estilo_botao(limpar_text_btn, 'amarelo')
     limpar_text_btn.clicked.connect(limpar_texto_placeholder)
     arquivos_layout.addWidget(limpar_text_btn, 2, 2)
 
     # === SUBSECÇÃO: LISTA DE ARQUIVOS ===
     # Linha 3: Label
     lista_arquivos_label = QLabel("Arquivos na lista:")
-    lista_arquivos_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
+    lista_arquivos_label.setStyleSheet(STYLE_LABEL_BOLD)
     arquivos_layout.addWidget(lista_arquivos_label, 3, 0, 1, 3)  # colspan=3
 
     # Linha 4-6: Lista de arquivos (coluna 0-1) + Botões (coluna 2)
     g.IMPRESSAO_LISTA_ARQUIVOS = QListWidget()
-    g.IMPRESSAO_LISTA_ARQUIVOS.setMaximumHeight(120)
+    g.IMPRESSAO_LISTA_ARQUIVOS.setMaximumHeight(ALTURA_MAXIMA_LISTA_WIDGET)
     arquivos_layout.addWidget(
         g.IMPRESSAO_LISTA_ARQUIVOS, 4, 0, 3, 2)  # rowspan=3, colspan=2
 
     # Botões da lista (coluna 2)
     remover_btn = QPushButton("🗑️ Remover")
-    remover_btn.setStyleSheet(obter_estilo_botao_vermelho())
+    aplicar_estilo_botao(remover_btn, 'vermelho')
     remover_btn.clicked.connect(remover_arquivo)
     arquivos_layout.addWidget(remover_btn, 4, 2)
 
     limpar_lista_btn = QPushButton("🧹 Limpar")
-    limpar_lista_btn.setStyleSheet(obter_estilo_botao_amarelo())
+    aplicar_estilo_botao(limpar_lista_btn, 'amarelo')
     limpar_lista_btn.clicked.connect(limpar_lista)
     arquivos_layout.addWidget(limpar_lista_btn, 5, 2)
 
     imprimir_btn = QPushButton("🖨️ Imprimir")
-    imprimir_btn.setStyleSheet(obter_estilo_botao_verde())
+    aplicar_estilo_botao(imprimir_btn, 'verde')
     imprimir_btn.clicked.connect(executar_impressao)
     arquivos_layout.addWidget(imprimir_btn, 6, 2)
 

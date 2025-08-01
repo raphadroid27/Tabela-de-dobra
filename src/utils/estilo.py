@@ -26,14 +26,23 @@ logger = logging.getLogger(__name__)
 # Constantes seguindo convenção UPPER_CASE
 TEMA_ATUAL_PADRAO = "dark"
 
-# Constantes para widgets auto-ajustáveis
-WIDGET_HEIGHT_PADRAO = 20  # Altura fixa para consistência
-WIDGET_MIN_WIDTH_PADRAO = 60  # Largura mínima para garantir usabilidade
-WIDGET_PADDING = "2px 4px"  # Padding interno uniforme
+# Constantes para dimensões padrão de componentes da interface
+ALTURA_PADRAO_COMPONENTE = 20  # Altura padrão para widgets (botões, inputs, etc.)
+LARGURA_MINIMA_COMPONENTE = 60  # Largura mínima para garantir usabilidade
+PADDING_INTERNO_COMPONENTE = "2px 4px"  # Padding interno uniforme
 
-# Definir constantes globais
-g.WIDGET_MAX_HEIGHT = WIDGET_HEIGHT_PADRAO
-g.WIDGET_MIN_WIDTH = WIDGET_MIN_WIDTH_PADRAO
+# Constantes para botões específicas
+ALTURA_PADRAO_BOTAO = 25  # Altura padrão para botões
+LARGURA_MINIMA_BOTAO = 20  # Largura mínima para botões
+
+# Definir constantes globais (compatibilidade)
+g.WIDGET_MAX_HEIGHT = ALTURA_PADRAO_COMPONENTE
+g.WIDGET_MIN_WIDTH = LARGURA_MINIMA_COMPONENTE
+
+# Aliases para compatibilidade com código existente (DEPRECATED)
+WIDGET_HEIGHT_PADRAO = ALTURA_PADRAO_COMPONENTE  # Use ALTURA_PADRAO_COMPONENTE
+BOTAO_ALTURA_PADRAO = ALTURA_PADRAO_BOTAO  # Use ALTURA_PADRAO_BOTAO
+BOTAO_LARGURA_MINIMA = LARGURA_MINIMA_BOTAO  # Use LARGURA_MINIMA_BOTAO
 
 
 class GerenciadorTemas:
@@ -190,7 +199,7 @@ def obter_css_widgets_auto_ajustaveis():
                 min-width: {g.WIDGET_MIN_WIDTH}px;
                 min-height: 1em; 
                 max-height: {g.WIDGET_MAX_HEIGHT}px;
-                padding: {WIDGET_PADDING};
+                padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
             }}
         """,
@@ -199,7 +208,7 @@ def obter_css_widgets_auto_ajustaveis():
                 min-width: {g.WIDGET_MIN_WIDTH}px;
                 min-height: 1em; 
                 max-height: {g.WIDGET_MAX_HEIGHT}px;
-                padding: {WIDGET_PADDING};
+                padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
             }}
         """
@@ -401,12 +410,73 @@ def obter_estilo_progress_bar():
     """
 
 
-def aplicar_estilo_botao(botao, cor: str):
-    """Aplica estilo de botão de forma conveniente.
+def aplicar_estilo_botao(botao, cor: str, altura: int = None, largura_min: int = None):
+    """Aplica estilo completo de botão de forma conveniente.
     
     Args:
         botao: O botão QPushButton a ser estilizado
         cor: Cor do botão ('cinza', 'azul', 'amarelo', 'vermelho', 'verde')
+        altura: Altura do botão (padrão: ALTURA_PADRAO_BOTAO)
+        largura_min: Largura mínima do botão (padrão: LARGURA_MINIMA_BOTAO)
     """
-    if hasattr(botao, 'setStyleSheet'):
-        botao.setStyleSheet(obter_estilo_botao(cor))
+    if not hasattr(botao, 'setStyleSheet'):
+        return
+
+    # Aplicar estilo CSS
+    botao.setStyleSheet(obter_estilo_botao(cor))
+
+    # Configurar dimensões
+    altura_final = altura if altura is not None else ALTURA_PADRAO_BOTAO
+    largura_final = largura_min if largura_min is not None else LARGURA_MINIMA_BOTAO
+
+    if hasattr(botao, 'setFixedHeight'):
+        botao.setFixedHeight(altura_final)
+
+    if hasattr(botao, 'setMinimumWidth'):
+        botao.setMinimumWidth(largura_final)
+
+
+def aplicar_estilo_componente(componente, tipo: str, altura: int = None, largura_min: int = None):
+    """Aplica configurações padrão a qualquer componente da interface.
+    
+    Args:
+        componente: O componente QWidget a ser configurado
+        tipo: Tipo do componente ('entry', 'combobox', 'label', 'botao')
+        altura: Altura do componente (padrão: ALTURA_PADRAO_COMPONENTE)
+        largura_min: Largura mínima do componente (padrão: LARGURA_MINIMA_COMPONENTE)
+    """
+    if not hasattr(componente, 'setFixedHeight'):
+        return
+
+    # Definir alturas específicas por tipo
+    alturas_padrao = {
+        'botao': ALTURA_PADRAO_BOTAO,
+        'entry': ALTURA_PADRAO_COMPONENTE,
+        'combobox': ALTURA_PADRAO_COMPONENTE,
+        'label': ALTURA_PADRAO_COMPONENTE,
+    }
+
+    # Configurar dimensões
+    altura_final = (altura if altura is not None
+                   else alturas_padrao.get(tipo, ALTURA_PADRAO_COMPONENTE))
+    largura_final = (largura_min if largura_min is not None
+                    else LARGURA_MINIMA_COMPONENTE)
+
+    componente.setFixedHeight(altura_final)
+
+    if hasattr(componente, 'setMinimumWidth'):
+        componente.setMinimumWidth(largura_final)
+
+
+def aplicar_estilo_checkbox(checkbox, altura: int = None):
+    """Aplica estilo padronizado para checkboxes.
+
+    Args:
+        checkbox: O checkbox QCheckBox a ser configurado
+        altura: Altura do checkbox (padrão: CHECKBOX_ALTURA_PADRAO)
+    """
+    if not hasattr(checkbox, 'setFixedHeight'):
+        return
+
+    altura_final = altura if altura is not None else ALTURA_PADRAO_COMPONENTE
+    checkbox.setFixedHeight(altura_final)

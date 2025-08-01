@@ -13,8 +13,8 @@ from PySide6.QtCore import Qt
 from src.utils.interface import limpar_dobras, limpar_tudo
 from src.utils.janelas import remover_janelas_orfas
 from src.utils.estilo import (
-    obter_estilo_botao_vermelho,
-    obter_estilo_botao_amarelo
+    aplicar_estilo_botao,
+    aplicar_estilo_checkbox
 )
 import src.config.globals as g
 
@@ -141,7 +141,7 @@ def _criar_checkbox_vertical(expansion_manager):
     """Cria o checkbox de expansão vertical."""
     exp_v_check = QCheckBox("Expandir Vertical")
     exp_v_check.setChecked(g.EXP_V)
-    exp_v_check.setFixedHeight(20)
+    aplicar_estilo_checkbox(exp_v_check)
 
     def on_expandir_v(checked):
         """Callback para expansão vertical"""
@@ -156,7 +156,7 @@ def _criar_checkbox_horizontal(expansion_manager):
     """Cria o checkbox de expansão horizontal."""
     exp_h_check = QCheckBox("Expandir Horizontal")
     exp_h_check.setChecked(g.EXP_H)
-    exp_h_check.setFixedHeight(20)
+    aplicar_estilo_checkbox(exp_h_check)
 
     def on_expandir_h(checked):
         """Callback para expansão horizontal"""
@@ -170,16 +170,16 @@ def _criar_checkbox_horizontal(expansion_manager):
 def _criar_botao_limpar_dobras():
     """Cria o botão para limpar dobras."""
     limpar_dobras_btn = QPushButton("🧹 Limpar Dobras")
+    aplicar_estilo_botao(limpar_dobras_btn, 'amarelo')
     limpar_dobras_btn.clicked.connect(limpar_dobras)
-    limpar_dobras_btn.setFixedHeight(25)
     return limpar_dobras_btn
 
 
 def _criar_botao_limpar_tudo():
     """Cria o botão para limpar tudo."""
     limpar_tudo_btn = QPushButton("🗑️ Limpar Tudo")
+    aplicar_estilo_botao(limpar_tudo_btn, 'vermelho')
     limpar_tudo_btn.clicked.connect(limpar_tudo)
-    limpar_tudo_btn.setFixedHeight(25)
     return limpar_tudo_btn
 
 
@@ -195,8 +195,8 @@ def _adicionar_widgets_ao_layout(layout, widgets):
 
 def _configurar_estilos_botoes(widgets):
     """Configura os estilos dos botões."""
-    widgets['limpar_dobras_btn'].setStyleSheet(obter_estilo_botao_amarelo())
-    widgets['limpar_tudo_btn'].setStyleSheet(obter_estilo_botao_vermelho())
+    aplicar_estilo_botao(widgets['limpar_dobras_btn'], 'amarelo')
+    aplicar_estilo_botao(widgets['limpar_tudo_btn'], 'vermelho')
 
 
 def _configurar_tooltips(widgets):
