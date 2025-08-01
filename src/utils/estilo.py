@@ -399,3 +399,14 @@ def obter_estilo_progress_bar():
             border-radius: 4px;
         }
     """
+
+
+def aplicar_estilo_botao(botao, cor: str):
+    """Aplica estilo de botão de forma conveniente.
+    
+    Args:
+        botao: O botão QPushButton a ser estilizado
+        cor: Cor do botão ('cinza', 'azul', 'amarelo', 'vermelho', 'verde')
+    """
+    if hasattr(botao, 'setStyleSheet'):
+        botao.setStyleSheet(obter_estilo_botao(cor))
