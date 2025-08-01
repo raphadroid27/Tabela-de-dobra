@@ -115,7 +115,7 @@ def _create_table(parent_layout, data):
                 tree.addTopLevelItem(item)
         elif (
             hasattr(data, '__getitem__')
-            and len(data) > 0
+            and data  # Pylint: usar truthiness ao invés de len() > 0
             and isinstance(data[0], (list, tuple))
             and len(data[0]) == 2
         ):
