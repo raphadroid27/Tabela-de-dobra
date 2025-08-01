@@ -18,10 +18,10 @@ from src.utils.usuarios import login, novo_usuario
 from src.utils.janelas import (HABILITAR_JANELAS, posicionar_janela)
 from src.utils.estilo import (
     obter_estilo_botao_azul,
-    obter_estilo_botao_verde)
+    obter_estilo_botao_verde,
+    obter_tema_atual)
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
-from src.utils.estilo import obter_tema_atual
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 
