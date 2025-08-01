@@ -388,57 +388,7 @@ class WidgetFactory:
         except RuntimeError:
             return None
 
-    @classmethod
-    def clear_cache(cls):
-        """Limpa o cache de widgets."""
-        cls._widget_cache.clear()
-
-    @classmethod
-    def get_cache_stats(cls) -> Dict[str, int]:
-        """Retorna estatísticas do cache."""
-        invalid_widgets = []
-        for name, widget in cls._widget_cache.items():
-            if not WidgetManager.is_widget_valid(widget):
-                invalid_widgets.append(name)
-
-        for name in invalid_widgets:
-            del cls._widget_cache[name]
-
-        return {
-            'cached_widgets': len(cls._widget_cache),
-            'registered_creators': len(cls._widget_creators)
-        }
-
-
-class OptimizedWidgetManager:
-    """Gerenciador otimizado que combina criação sob demanda com cache inteligente."""
-
-    def __init__(self):
-        self.access_count = {}
-        self.creation_count = {}
-
-    def get_widget(self, widget_name: str, create_if_missing: bool = True) -> Any:
-        """Obtém widget e atualiza estatísticas de acesso/criação."""
-        self.access_count[widget_name] = self.access_count.get(
-            widget_name, 0) + 1
-
-        widget = WidgetManager.safe_get_widget(widget_name)
-
-        if widget is None and create_if_missing:
-            widget = WidgetFactory.get_widget(widget_name)
-            if widget is not None:
-                self.creation_count[widget_name] = self.creation_count.get(
-                    widget_name, 0) + 1
-
-        return widget
-
-    def get_stats(self) -> Dict[str, Dict]:
-        """Retorna estatísticas de uso."""
-        return {
-            'access_count': self.access_count,
-            'creation_count': self.creation_count,
-            'factory_stats': WidgetFactory.get_cache_stats()
-        }
+    # Métodos de cache e otimização removidos - não utilizados no projeto
 
 
 class WidgetManager:
@@ -515,31 +465,7 @@ class WidgetManager:
         except (AttributeError, RuntimeError):
             return False if safe else None
 
-    @staticmethod
-    def restore_combobox_selection(combobox: QComboBox, value: str,
-                                   add_if_missing: bool = False) -> bool:
-        """Restaura a seleção de um combobox de forma robusta."""
-        if not WidgetManager.is_widget_valid(combobox) or not value:
-            return False
-
-        try:
-            combobox.setCurrentText(value)
-            if combobox.currentText() == value:
-                return True
-
-            index = combobox.findText(value)
-            if index >= 0:
-                combobox.setCurrentIndex(index)
-                return True
-
-            if add_if_missing and combobox.isEditable():
-                combobox.addItem(value)
-                combobox.setCurrentText(value)
-                return True
-
-            return False
-        except (AttributeError, RuntimeError):
-            return False
+    # Método restore_combobox_selection() removido - não utilizado
 
     @classmethod
     def get_dobra_widgets(cls, valor_w: int) -> Dict[str, List[QWidget]]:
@@ -576,58 +502,16 @@ class WidgetManager:
 
         return widgets
 
-    @classmethod
-    def clear_dobra_widgets(cls, valor_w: int) -> None:
-        """Limpa widgets de dobra para um valor W."""
-        widgets = cls.get_dobra_widgets(valor_w)
-
-        for entry in widgets['entries']:
-            cls.clear_widget(entry)
-            if hasattr(entry, 'setStyleSheet'):
-                try:
-                    entry.setStyleSheet("")
-                except RuntimeError:
-                    pass
-
-        for label_list in [widgets['medida_dobra_labels'], widgets['metade_dobra_labels']]:
-            for label in label_list:
-                cls.clear_widget(label)
-
-        for blank_widget in [widgets['medida_blank_label'], widgets['metade_blank_label']]:
-            cls.clear_widget(blank_widget)
-
-    @classmethod
-    def get_cabecalho_widgets(cls) -> Dict[str, QWidget]:
-        """Retorna dicionário com widgets do cabeçalho principal."""
-        widget_names = [
-            'MAT_COMB', 'ESP_COMB', 'CANAL_COMB', 'DED_LBL', 'RI_ENTRY',
-            'K_LBL', 'OFFSET_LBL', 'OBS_LBL', 'FORCA_LBL', 'COMPR_ENTRY',
-            'ABA_EXT_LBL', 'Z_EXT_LBL', 'DED_ESPEC_ENTRY'
-        ]
-        return {name: cls.safe_get_widget(name) for name in widget_names}
+    # Métodos não utilizados removidos:
+    # - clear_dobra_widgets()
+    # - get_cabecalho_widgets()
+    # - batch_clear_widgets()
+    # - batch_set_widgets()
 
     @classmethod
     def validate_widgets_exist(cls, widget_names: List[str]) -> Dict[str, bool]:
         """Verifica se cada widget da lista existe e é válido."""
         return {name: cls.is_widget_valid(cls.safe_get_widget(name)) for name in widget_names}
-
-    @classmethod
-    def batch_clear_widgets(cls, widget_names: List[str]) -> Dict[str, bool]:
-        """Limpa múltiplos widgets em lote."""
-        results = {}
-        for name in widget_names:
-            widget = cls.safe_get_widget(name)
-            results[name] = cls.clear_widget(widget)
-        return results
-
-    @classmethod
-    def batch_set_widgets(cls, widget_values: Dict[str, str]) -> Dict[str, bool]:
-        """Define valores em múltiplos widgets em lote."""
-        results = {}
-        for name, value in widget_values.items():
-            widget = cls.safe_get_widget(name)
-            results[name] = cls.set_widget_value(widget, value)
-        return results
 
 
 class WidgetStateManager:
@@ -915,23 +799,8 @@ WidgetFactory.register_creator(
 WidgetFactory.register_creator('DED_FORCA_ENTRY', create_deducao_forca_entry)
 
 
-def validate_widgets_for_operation(operation_type: str) -> Tuple[bool, Dict[str, str]]:
-    """Valida widgets conforme o tipo de operação."""
-    operations = {
-        'deducao': OperationHelper.validate_deducao_operation,
-        'material': OperationHelper.validate_material_operation,
-        'espessura': OperationHelper.validate_espessura_operation,
-        'canal': OperationHelper.validate_canal_operation,
-        'usuario': OperationHelper.validate_usuario_operation,
-    }
-
-    validator = operations.get(operation_type)
-    if not validator:
-        logger.warning("Tipo de operação '%s' não suportado", operation_type)
-        return False, {}
-
-    return validator()
-
+# Funções não utilizadas removidas:
+# - validate_widgets_for_operation()
 
 def analyze_project_widgets(root_path: str = None) -> str:
     """Analisa o uso de widgets no projeto e retorna um relatório.
