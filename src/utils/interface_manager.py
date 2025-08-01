@@ -4,7 +4,7 @@ Sistema robusto com gerenciamento seguro de widgets.
 """
 
 import traceback
-from PySide6.QtWidgets import QApplication, QGridLayout
+from PySide6.QtWidgets import QApplication
 from src.components.cabecalho import cabecalho
 from src.components.avisos import avisos
 from src.components.dobra_90 import dobras
@@ -12,7 +12,6 @@ from src.components import botoes
 from src.config import globals as g
 from src.utils.interface import todas_funcoes, calcular_valores
 from src.utils.widget import widget_state_manager
-from src.utils import utilitarios
 from src.utils.utilitarios import tem_configuracao_dobras_valida
 
 
@@ -211,30 +210,6 @@ def _tratar_erro_interface_reload(e):
     # raise e
 
 
-def reload_interface_safely():
-    """Recarrega a interface de forma segura com tratamento de erros."""
-    try:
-        if hasattr(g, 'MAIN_LAYOUT') and g.MAIN_LAYOUT:
-            var = 2 if g.EXP_H else 1
-            carregar_interface(var, g.MAIN_LAYOUT)
-        else:
-            print("Layout principal não encontrado")
-    except RuntimeError as e:
-        print(f"Erro ao recarregar interface: {e}")
-        traceback.print_exc()
-
-
-def configurar_frame_principal(parent):
-    """Configura o frame principal com colunas e linhas padrão."""
-    # Esta função parece não ser mais usada, mas mantida por segurança.
-    frame_principal = parent
-    layout = QGridLayout(frame_principal)
-    frame_principal.setLayout(layout)
-    utilitarios.aplicar_medida_borda_espaco(layout)
-
-    if not parent.layout():
-        parent_layout = QGridLayout(parent)
-        parent.setLayout(parent_layout)
-
-    parent.layout().addWidget(frame_principal)
-    return frame_principal
+# Funções não utilizadas removidas:
+# - reload_interface_safely()
+# - configurar_frame_principal()
