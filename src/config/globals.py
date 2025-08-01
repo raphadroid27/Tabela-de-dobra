@@ -106,6 +106,7 @@ CANAL_BUSCA_ENTRY = None
 USUARIO_ENTRY = None
 SENHA_ENTRY = None
 ADMIN_VAR = None
+LOGIN = None
 
 # form_usuario.py widgets
 USUARIO_BUSCA_ENTRY = None
