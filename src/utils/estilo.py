@@ -280,105 +280,97 @@ def obter_tema_atual():
     return gerenciador_temas.obter_tema_atual()
 
 
-# Funções para estilos de botões coloridos
-def obter_estilo_botao_cinza():
-    """Retorna o estilo CSS para botões cinza."""
-    return """
-    QPushButton {
-        background-color: #9e9e9e;
-        color: white;
+# Configurações de cores para botões
+BUTTON_COLORS = {
+    'cinza': {
+        'normal': '#9e9e9e',
+        'hover': '#757575',
+        'pressed': '#616161',
+        'text': 'white'
+    },
+    'azul': {
+        'normal': '#2196f3',
+        'hover': '#1976d2',
+        'pressed': '#1565c0',
+        'text': 'white'
+    },
+    'amarelo': {
+        'normal': '#ffd93d',
+        'hover': '#ffcc02',
+        'pressed': '#e6b800',
+        'text': '#333'
+    },
+    'vermelho': {
+        'normal': '#ff6b6b',
+        'hover': '#ff5252',
+        'pressed': '#e53935',
+        'text': 'white'
+    },
+    'verde': {
+        'normal': '#4caf50',
+        'hover': '#45a049',
+        'pressed': '#3d8b40',
+        'text': 'white'
+    }
+}
+
+
+def obter_estilo_botao(cor: str) -> str:
+    """
+    Retorna o estilo CSS para botões com a cor especificada.
+
+    Args:
+        cor: Uma das cores disponíveis: 'cinza', 'azul', 'amarelo', 'vermelho', 'verde'
+
+    Returns:
+        String CSS para aplicar ao botão
+    """
+    if cor not in BUTTON_COLORS:
+        cor = 'cinza'  # fallback para cor padrão
+
+    colors = BUTTON_COLORS[cor]
+    return f"""
+    QPushButton {{
+        background-color: {colors['normal']};
+        color: {colors['text']};
         border: none;
         padding: 4px 8px;
         font-weight: bold;
         border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #757575;
-    }
-    QPushButton:pressed {
-        background-color: #616161;
-    }
+    }}
+    QPushButton:hover {{
+        background-color: {colors['hover']};
+    }}
+    QPushButton:pressed {{
+        background-color: {colors['pressed']};
+    }}
     """
+
+
+# Funções de compatibilidade (mantidas para não quebrar código existente)
+def obter_estilo_botao_cinza():
+    """Retorna o estilo CSS para botões cinza."""
+    return obter_estilo_botao('cinza')
 
 
 def obter_estilo_botao_azul():
     """Retorna o estilo CSS para botões azuis."""
-    return """
-    QPushButton {
-        background-color: #2196f3;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #1976d2;
-    }
-    QPushButton:pressed {
-        background-color: #1565c0;
-    }
-    """
+    return obter_estilo_botao('azul')
 
 
 def obter_estilo_botao_amarelo():
     """Retorna o estilo CSS para botões amarelos."""
-    return """
-    QPushButton {
-        background-color: #ffd93d;
-        color: #333;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #ffcc02;
-    }
-    QPushButton:pressed {
-        background-color: #e6b800;
-    }
-    """
+    return obter_estilo_botao('amarelo')
 
 
 def obter_estilo_botao_vermelho():
     """Retorna o estilo CSS para botões vermelhos."""
-    return """
-    QPushButton {
-        background-color: #ff6b6b;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #ff5252;
-    }
-    QPushButton:pressed {
-        background-color: #e53935;
-    }
-    """
+    return obter_estilo_botao('vermelho')
 
 
 def obter_estilo_botao_verde():
     """Retorna o estilo CSS para botões verdes."""
-    return """
-    QPushButton {
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #45a049;
-    }
-    QPushButton:pressed {
-        background-color: #3d8b40;
-    }
-    """
+    return obter_estilo_botao('verde')
 
 
 def obter_estilo_progress_bar():
