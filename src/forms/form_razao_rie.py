@@ -153,7 +153,7 @@ def _criar_aviso(main_layout):
     aviso_browser.setHtml(
         """
         <p style="text-align: justify; font-weight: bold; color: red; padding: 5px;">
-            <strong>Atenção:</strong> Os valores apresentados na tabela são teóricos. 
+            <strong>Atenção:</strong> Os valores apresentados na tabela são teóricos.
             Utilize-os apenas na ausência de dados mais precisos.
         </p>
     """
