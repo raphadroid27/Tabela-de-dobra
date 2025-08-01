@@ -36,6 +36,12 @@ CANAL_COMB = None
 OFFSET_LBL = None
 OBS_LBL = None
 COMPR_ENTRY = None
+RI_ENTRY = None
+K_LBL = None
+DED_LBL = None
+ABA_EXT_LBL = None
+Z_EXT_LBL = None
+FORCA_LBL = None
 
 # aba1.py widgets
 N = 6
