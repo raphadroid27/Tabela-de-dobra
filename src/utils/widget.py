@@ -5,6 +5,7 @@ gerenciamento de estado de widgets. Também oferece funções para criar, regist
 validar e manipular widgets usados em formulários e operações.
 """
 
+import logging
 import os
 import sys
 from typing import Set, Dict, List, Tuple, Any, Callable
@@ -12,6 +13,9 @@ from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QLabel
 from src.models.models import Espessura, Material, Canal
 from src.utils.banco_dados import session
 import src.config.globals as g
+
+# Configurar logger
+logger = logging.getLogger(__name__)
 
 # Adicionar o diretório raiz ao path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -703,8 +707,7 @@ class WidgetStateManager:
 
         try:
             value = self.safe_get_widget_value(widget)
-            if value:  # Usar o widget_name para logging
-                print(f"[STATE] Capturado {widget_name}: '{value}'")
+            # Debug removido para produção - logging seria aqui se necessário
             return value
         except (AttributeError, TypeError, RuntimeError):
             return ''
@@ -840,7 +843,7 @@ def create_deducao_material_combo():
         combo.addItems(materiais)
         return combo
     except RuntimeError as e:
-        print(f"Erro ao criar combobox de material: {e}")
+        logger.error("Erro ao criar combobox de material: %s", e)
         return None
 
 
@@ -855,7 +858,7 @@ def create_deducao_espessura_combo():
         combo.addItems([str(valor) for valor in sorted(valores_limpos)])
         return combo
     except RuntimeError as e:
-        print(f"Erro ao criar combobox de espessura: {e}")
+        logger.error("Erro ao criar combobox de espessura: %s", e)
         return None
 
 
@@ -870,7 +873,7 @@ def create_deducao_canal_combo():
         combo.addItems(sorted(valores_canal_limpos))
         return combo
     except RuntimeError as e:
-        print(f"Erro ao criar combobox de canal: {e}")
+        logger.error("Erro ao criar combobox de canal: %s", e)
         return None
 
 
@@ -879,7 +882,7 @@ def create_deducao_valor_entry():
     try:
         return _create_entry_base(placeholder="Digite o valor da dedução")
     except RuntimeError as e:
-        print(f"Erro ao criar entry de valor: {e}")
+        logger.error("Erro ao criar entry de valor: %s", e)
         return None
 
 
@@ -888,7 +891,7 @@ def create_deducao_observacao_entry():
     try:
         return _create_entry_base(placeholder="Observação (opcional)")
     except RuntimeError as e:
-        print(f"Erro ao criar entry de observação: {e}")
+        logger.error("Erro ao criar entry de observação: %s", e)
         return None
 
 
@@ -897,7 +900,7 @@ def create_deducao_forca_entry():
     try:
         return _create_entry_base(placeholder="Força (opcional)")
     except RuntimeError as e:
-        print(f"Erro ao criar entry de força: {e}")
+        logger.error("Erro ao criar entry de força: %s", e)
         return None
 
 
@@ -933,7 +936,7 @@ def validate_widgets_for_operation(operation_type: str) -> Tuple[bool, Dict[str,
 
     validator = operations.get(operation_type)
     if not validator:
-        print(f"Tipo de operação '{operation_type}' não suportado")
+        logger.warning("Tipo de operação '%s' não suportado", operation_type)
         return False, {}
 
     return validator()
