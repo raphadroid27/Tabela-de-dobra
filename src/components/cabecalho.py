@@ -238,16 +238,13 @@ def cabecalho():
     layout.setContentsMargins(10, 0, 10, 0)
     layout.setSpacing(5)
 
-    # Configurar layout flexível
     configurar_layout_flexivel(layout)
 
-    # Criar todas as linhas
     mat_comb, esp_comb, canal_comb, compr_entry = _criar_linha_1(layout)
     _criar_linha_2(layout)
     _criar_linha_3(layout)
-    _criar_observacoes(layout)  # Mantida intacta
+    _criar_observacoes(layout)
 
-    # Conectar eventos
     _conectar_eventos(mat_comb, esp_comb, canal_comb, compr_entry)
 
     return frame_cabecalho

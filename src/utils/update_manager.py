@@ -21,11 +21,9 @@ from src.utils.utilitarios import (
     UPDATES_DIR, UPDATE_TEMP_DIR
 )
 from src.config import globals as g
-# Adicionar importações necessárias
 from src.utils.banco_dados import session_scope
 from src.models.models import SystemControl
 
-# --- Constantes ---
 UPDATER_EXECUTABLE_NAME = "updater.exe"
 UPDATER_EXECUTABLE_PATH = os.path.join(
     obter_dir_base(), UPDATER_EXECUTABLE_NAME)

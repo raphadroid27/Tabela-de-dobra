@@ -20,10 +20,8 @@ except ImportError:
     qdarktheme = None
     QDARKTHEME_DISPONIVEL = False
 
-# Configurar logger
 logger = logging.getLogger(__name__)
 
-# Constantes seguindo convenção UPPER_CASE
 TEMA_ATUAL_PADRAO = "dark"
 
 # Constantes para dimensões padrão de componentes da interface
@@ -244,11 +242,9 @@ def configurar_layout_flexivel(layout):
     """
     config = obter_configuracao_layout_flexivel()
 
-    # Configurar colunas com expansão proporcional
     for col in range(4):
-        layout.setColumnStretch(col, 1)  # Permitir expansão igual
+        layout.setColumnStretch(col, 1)
 
-    # Configurar espaçamento
     layout.setHorizontalSpacing(config['horizontal_spacing'])
     layout.setVerticalSpacing(config['vertical_spacing'])
 
@@ -413,10 +409,8 @@ def aplicar_estilo_botao(botao, cor: str, altura: int = None, largura_min: int =
     if not hasattr(botao, 'setStyleSheet'):
         return
 
-    # Aplicar estilo CSS
     botao.setStyleSheet(obter_estilo_botao(cor))
 
-    # Configurar dimensões
     altura_final = altura if altura is not None else ALTURA_PADRAO_BOTAO
     largura_final = largura_min if largura_min is not None else LARGURA_MINIMA_BOTAO
 
@@ -439,7 +433,6 @@ def aplicar_estilo_componente(componente, tipo: str, altura: int = None, largura
     if not hasattr(componente, 'setFixedHeight'):
         return
 
-    # Definir alturas específicas por tipo
     alturas_padrao = {
         'botao': ALTURA_PADRAO_BOTAO,
         'entry': ALTURA_PADRAO_COMPONENTE,
@@ -447,7 +440,6 @@ def aplicar_estilo_componente(componente, tipo: str, altura: int = None, largura
         'label': ALTURA_PADRAO_COMPONENTE,
     }
 
-    # Configurar dimensões
     altura_final = (altura if altura is not None
                    else alturas_padrao.get(tipo, ALTURA_PADRAO_COMPONENTE))
     largura_final = (largura_min if largura_min is not None

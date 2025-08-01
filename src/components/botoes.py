@@ -55,18 +55,11 @@ class ExpansionManager:
             print(
                 f"Atualizando interface para: {largura}x{altura}, {colunas} colunas")
 
-            # Aplicar setFixedSize para o tamanho atual
             g.PRINC_FORM.setFixedSize(largura, altura)
 
-            # Recarregar interface se necessário
             if hasattr(g, 'CARREGAR_INTERFACE_FUNC') and callable(g.CARREGAR_INTERFACE_FUNC):
                 g.CARREGAR_INTERFACE_FUNC(colunas, g.MAIN_LAYOUT)
 
-            # OTIMIZAÇÃO: Removidos QTimers para _basic_layout_fix e _restore_limits.
-            # A nova abordagem com setUpdatesEnabled torna esses ajustes desnecessários,
-            # pois o layout é calculado e pintado de uma só vez no final.
-
-            # Processar eventos para garantir atualização visual
             app = QApplication.instance()
             if app:
                 app.processEvents()
@@ -89,22 +82,16 @@ def criar_botoes():
     layout.setContentsMargins(10, 0, 10, 10)
     layout.setSpacing(5)
 
-    # Inicializar valores globais
     _inicializar_valores_globais()
 
-    # Criar gerenciador de expansão
     expansion_manager = ExpansionManager()
 
-    # Criar widgets
     widgets = _criar_widgets_botoes(expansion_manager)
 
-    # Adicionar widgets ao layout
     _adicionar_widgets_ao_layout(layout, widgets)
 
-    # Configurar estilos
     _configurar_estilos_botoes(widgets)
 
-    # Configurar tooltips
     _configurar_tooltips(widgets)
 
     return frame_botoes

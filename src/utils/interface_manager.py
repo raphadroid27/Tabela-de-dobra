@@ -99,13 +99,10 @@ def carregar_interface(var, layout):
         # 1. Capturar e limpar estado anterior
         _preparar_interface_reload(layout)
 
-        # 2. Criar novos widgets
         _criar_widgets_interface(var, layout)
 
-        # 3. Configurar layout
         _configurar_layout_interface(layout)
 
-        # 4. Executar funções e restaurar estado
         _finalizar_interface_reload()
 
     except RuntimeError as e:
@@ -154,16 +151,13 @@ def _criar_widgets_interface(var, layout):
         avisos_widget = avisos()
         layout.addWidget(avisos_widget, 0, 1)
 
-    # Configurar número de abas (expandido verticalmente)
     num_abas = 10 if g.EXP_V else 5
     g.N = num_abas + 1
 
-    # Dobras
     for i, w_val in enumerate(g.VALORES_W):
         dobras_widget = dobras(w_val)
         layout.addWidget(dobras_widget, 1, i)
 
-    # Botões
     botoes_widget = botoes.criar_botoes()
     layout.addWidget(botoes_widget, 2, 0, 1, len(g.VALORES_W))
 

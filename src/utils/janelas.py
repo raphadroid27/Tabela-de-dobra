@@ -22,7 +22,6 @@ class Janela:
 
         g.NO_TOPO_VAR = not g.NO_TOPO_VAR
 
-        # Aplicar a configuração a todas as janelas abertas
         Janela.aplicar_no_topo_todas_janelas()
 
         print(f"No topo {'ativado' if g.NO_TOPO_VAR else 'desativado'}")
@@ -94,11 +93,9 @@ class Janela:
                 window.setWindowFlags(new_flags)
                 window.show()
 
-        # Inicializar se necessário
         if g.NO_TOPO_VAR is None:
             g.NO_TOPO_VAR = False
 
-        # Aplicar o estado atual (sem alternar)
         if form:
             set_topmost(form, g.NO_TOPO_VAR)
             print(
