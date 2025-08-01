@@ -17,9 +17,8 @@ from src.models import Usuario
 from src.utils.usuarios import login, novo_usuario
 from src.utils.janelas import (HABILITAR_JANELAS, posicionar_janela)
 from src.utils.estilo import (
-    obter_estilo_botao_azul,
-    obter_estilo_botao_verde,
-    obter_tema_atual)
+    obter_tema_atual,
+    aplicar_estilo_botao)
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 from src.utils.utilitarios import aplicar_medida_borda_espaco
@@ -90,7 +89,7 @@ def _configurar_modo_login(main_layout):
     """Configura o formulário para modo login."""
     g.AUTEN_FORM.setWindowTitle("Login")
     login_btn = QPushButton("🔐 Login")
-    login_btn.setStyleSheet(obter_estilo_botao_verde())
+    aplicar_estilo_botao(login_btn, 'verde')
     login_btn.clicked.connect(login)
     main_layout.addWidget(login_btn, 3, 0, 1, 2)
 
@@ -119,7 +118,7 @@ def _configurar_modo_novo_usuario(main_layout):
 
     g.AUTEN_FORM.setWindowTitle("Novo Usuário")
     save_btn = QPushButton("💾 Salvar")
-    save_btn.setStyleSheet(obter_estilo_botao_azul())
+    aplicar_estilo_botao(save_btn, 'azul')
     save_btn.clicked.connect(novo_usuario)
     main_layout.addWidget(save_btn, 3, 0, 1, 2)
 

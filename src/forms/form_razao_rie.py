@@ -98,7 +98,7 @@ def _criar_label_razao(main_layout):
 
 def _criar_label_resultado(main_layout):
     g.RAZAO_RIE_LBL = QLabel("")
-    g.RAZAO_RIE_LBL.setMinimumWidth(100)
+    g.RAZAO_RIE_LBL.setMinimumWidth(COLUNA_RAZAO_LARGURA)
     g.RAZAO_RIE_LBL.setFrameShape(QLabel.Shape.Panel)
     g.RAZAO_RIE_LBL.setFrameShadow(QLabel.Shadow.Sunken)
     g.RAZAO_RIE_LBL.setFixedHeight(LABEL_ALTURA)
