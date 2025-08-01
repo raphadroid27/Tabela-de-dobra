@@ -20,9 +20,6 @@ UPDATE_ACTION = None
 # Flag para controlar quando a interface está sendo recarregada
 INTERFACE_RELOADING = False
 
-# Flag para controlar quando os comboboxes de dedução estão sendo atualizados automaticamente
-UPDATING_DEDUCAO_COMBOS = False
-
 # Função para carregar interface (definida dinamicamente para evitar importação cíclica)
 CARREGAR_INTERFACE_FUNC = None
 
