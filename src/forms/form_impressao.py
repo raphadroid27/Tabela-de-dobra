@@ -248,15 +248,7 @@ def selecionar_diretorio():
         g.IMPRESSAO_DIRETORIO_ENTRY.setText(diretorio)
 
 
-def adicionar_arquivo():
-    """Adiciona um arquivo à lista de arquivos para impressão."""
-    if not (hasattr(g, 'IMPRESSAO_ARQUIVO_ENTRY') and g.IMPRESSAO_ARQUIVO_ENTRY):
-        return
-
-    arquivo = g.IMPRESSAO_ARQUIVO_ENTRY.text().strip()
-    if arquivo and hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
-        g.IMPRESSAO_LISTA_ARQUIVOS.addItem(arquivo)
-        g.IMPRESSAO_ARQUIVO_ENTRY.clear()
+# Função adicionar_arquivo() removida - não utilizada no projeto
 
 
 def adicionar_lista_arquivos():
@@ -392,7 +384,8 @@ def _inicializar_formulario(root):
 
     g.IMPRESSAO_FORM = QDialog(root)
     g.IMPRESSAO_FORM.setWindowTitle("Impressão em Lote de PDFs")
-    g.IMPRESSAO_FORM.setFixedSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
+    g.IMPRESSAO_FORM.setFixedSize(
+        LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
     # Remover barra nativa
     g.IMPRESSAO_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
