@@ -19,7 +19,8 @@ from src.utils.interface import (
     atualizar_comboboxes_formulario)  # <--- IMPORTA A NOVA FUNÇÃO
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.utils.controlador import buscar, preencher_campos, excluir, editar, adicionar
-from src.utils.estilo import (obter_tema_atual, ALTURA_PADRAO_COMPONENTE, aplicar_estilo_botao)
+from src.utils.estilo import (
+    obter_tema_atual, ALTURA_PADRAO_COMPONENTE, aplicar_estilo_botao)
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 
@@ -370,11 +371,9 @@ def criar_frame_busca(config, tipo):
 
     tipo_busca = config.get('tipo_busca', tipo)
 
-    # Criar campos
     for col, campo in enumerate(config['busca']['campos']):
         _criar_campo_busca(layout, campo, col, tipo_busca)
 
-    # Botão Limpar
     _criar_botao_limpar_busca(layout, len(
         config['busca']['campos']), tipo_busca)
 
@@ -383,10 +382,7 @@ def criar_frame_busca(config, tipo):
 
 def _criar_campo_busca(layout, campo, col, tipo_busca):
     """Cria um campo individual de busca."""
-    # Criar label
     criar_label(layout, campo['label'], (0, col))
-
-    # Criar widget
     widget = criar_widget(layout, campo['widget'], campo['global'], (1, col))
 
     # Configurar conexões
@@ -440,7 +436,6 @@ def criar_frame_edicoes(config):
     layout = QGridLayout(frame_edicoes)
     aplicar_medida_borda_espaco(layout)
 
-    # Criar apenas os campos, sem botões
     for campo in config['edicao']['campos']:
         _criar_campo_edicao(layout, campo)
 
@@ -452,10 +447,8 @@ def _criar_campo_edicao(layout, campo):
     pos_label = campo['pos']
     pos_widget = (pos_label[0] + 1, pos_label[1])
 
-    # Label
     criar_label(layout, campo['label'], pos_label)
 
-    # Widget
     colspan = campo.get('colspan', 1)
     criar_widget(layout, campo['widget'],
                  campo['global'], pos_widget, colspan=colspan)
@@ -465,14 +458,11 @@ def configurar_botoes(config, tipo):
     """Configura os botões baseado na configuração."""
     button_manager = ButtonConfigManager(config, tipo)
 
-    # Criar container de botões
     botao_container = button_manager.create_button_container()
 
-    # Atualizar elementos do formulário
     form_widget = getattr(g, button_manager.config['global_form'])
     button_manager.update_form_titles(form_widget, None)
 
-    # Configurar conexão da lista
     button_manager.setup_list_connection()
 
     return botao_container
@@ -490,10 +480,8 @@ def main(tipo, root):
     novo_form = gerenciador_form.setup_window()
     layout_principal = gerenciador_form.config_layout_main(novo_form)
 
-    # Criar e adicionar componentes
     _config_componentes_form(gerenciador_form, layout_principal)
 
-    # Executar pós-inicialização
     _executar_pos_inicio(config, tipo)
 
     novo_form.show()
@@ -503,11 +491,9 @@ def _config_componentes_form(gerenciador_form, layout):
     """Configura os componentes do formulário."""
     aplicar_medida_borda_espaco(layout, 10)
 
-    # Frame de busca
     frame_busca = gerenciador_form.criar_frame_busca()
     layout.addWidget(frame_busca, 0, 0)
 
-    # Lista
     lista_widget = gerenciador_form.criar_widget_lista()
     layout.addWidget(lista_widget, 1, 0)
 

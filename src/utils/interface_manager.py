@@ -113,8 +113,7 @@ def carregar_interface(var, layout):
             g.PRINC_FORM.repaint()  # Força a repintura imediata dos widgets
             app = QApplication.instance()
             if app:
-                app.processEvents()  # Garante que a repintura seja processada
-        # Define a flag como falsa de forma síncrona
+                app.processEvents()
         g.INTERFACE_RELOADING = False
 
 

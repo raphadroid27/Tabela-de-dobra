@@ -13,7 +13,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, declarative_base
 
-# Importa o caminho do banco de dados do módulo utilitário centralizado
 from src.utils.utilitarios import DB_PATH
 
 # --- Modelos ORM ---
@@ -102,5 +101,4 @@ class SystemControl(Base):
                           onupdate=lambda: datetime.now(timezone.utc))
 
 
-# Configuração do Banco de Dados
 engine = create_engine(f'sqlite:///{DB_PATH}')

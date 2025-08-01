@@ -13,8 +13,6 @@ from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
 
-# Configuração do banco de dados
-
 
 def create_spring_back_form(root=None):
     """Cria o formulário de Spring Back usando QDialog com barra customizada"""
