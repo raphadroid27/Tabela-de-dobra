@@ -9,7 +9,9 @@ Funcionalidades:
 - Widgets auto-ajustáveis para interface
 - Correções de CSS para compatibilidade com temas
 """
+import logging
 from src.config import globals as g
+
 # Imports no topo para evitar imports dentro de funções
 try:
     import qdarktheme
@@ -18,13 +20,20 @@ except ImportError:
     qdarktheme = None
     QDARKTHEME_DISPONIVEL = False
 
+# Configurar logger
+logger = logging.getLogger(__name__)
+
 # Constantes seguindo convenção UPPER_CASE
 TEMA_ATUAL_PADRAO = "dark"
 
 # Constantes para widgets auto-ajustáveis
-g.WIDGET_MAX_HEIGHT = 20  # Manter altura fixa para consistência
-g.WIDGET_MIN_WIDTH = 60  # Largura mínima para garantir usabilidade
+WIDGET_HEIGHT_PADRAO = 20  # Altura fixa para consistência
+WIDGET_MIN_WIDTH_PADRAO = 60  # Largura mínima para garantir usabilidade
 WIDGET_PADDING = "2px 4px"  # Padding interno uniforme
+
+# Definir constantes globais
+g.WIDGET_MAX_HEIGHT = WIDGET_HEIGHT_PADRAO
+g.WIDGET_MIN_WIDTH = WIDGET_MIN_WIDTH_PADRAO
 
 
 class GerenciadorTemas:
@@ -61,7 +70,7 @@ class GerenciadorTemas:
             nome_tema: Nome do tema a ser aplicado ("dark", "light", "auto")
         """
         if not QDARKTHEME_DISPONIVEL:
-            print("qdarktheme não está disponível.")
+            logger.warning("qdarktheme não está disponível.")
             return
 
         css_correcao = obter_css_correcao_widgets()
@@ -72,7 +81,8 @@ class GerenciadorTemas:
             elif hasattr(qdarktheme, "setup_theme"):
                 qdarktheme.setup_theme(nome_tema, additional_qss=css_correcao)
             else:
-                print("qdarktheme não possui métodos conhecidos para aplicar tema.")
+                logger.error(
+                    "qdarktheme não possui métodos conhecidos para aplicar tema.")
                 return
 
             self.tema_atual = nome_tema
@@ -83,12 +93,12 @@ class GerenciadorTemas:
                     if hasattr(action, 'setChecked'):
                         action.setChecked(tema == nome_tema)
 
-            print(f"Tema '{nome_tema}' aplicado com sucesso.")
+            logger.info("Tema '%s' aplicado com sucesso.", nome_tema)
 
         except ImportError as e:
-            print(f"Erro ao importar qdarktheme: {e}")
+            logger.error("Erro ao importar qdarktheme: %s", e)
         except (AttributeError, TypeError, ValueError) as e:
-            print(f"Erro ao aplicar tema: {e}")
+            logger.error("Erro ao aplicar tema: %s", e)
 
     def aplicar_tema_inicial(self, tema=None):
         """
@@ -101,7 +111,8 @@ class GerenciadorTemas:
             tema = TEMA_ATUAL_PADRAO
 
         if not QDARKTHEME_DISPONIVEL:
-            print("qdarktheme não encontrado. O tema escuro não será aplicado.")
+            logger.warning(
+                "qdarktheme não encontrado. O tema escuro não será aplicado.")
             return
 
         try:
@@ -113,10 +124,11 @@ class GerenciadorTemas:
                 qdarktheme.enable(theme=tema, additional_qss=css_correcao)
 
             self.tema_atual = tema
-            print(f"Tema inicial '{tema}' aplicado com correções de CSS.")
+            logger.info(
+                "Tema inicial '%s' aplicado com correções de CSS.", tema)
 
         except (AttributeError, TypeError, ValueError) as e:
-            print(f"Erro ao aplicar tema inicial: {e}")
+            logger.error("Erro ao aplicar tema inicial: %s", e)
 
 
 # Instância global do gerenciador
