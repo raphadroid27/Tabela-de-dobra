@@ -11,7 +11,7 @@ from sqlalchemy import (
     Column, Integer, String, Float, ForeignKey, DateTime, create_engine,
     UniqueConstraint
 )
-from sqlalchemy.orm import relationship, sessionmaker, declarative_base
+from sqlalchemy.orm import relationship, declarative_base
 
 # Importa o caminho do banco de dados do módulo utilitário centralizado
 from src.utils.utilitarios import DB_PATH
@@ -92,9 +92,7 @@ class Log(Base):
 
 
 class SystemControl(Base):
-    """
-    Tabela de controle do sistema para atualizações e sessões ativas.
-    """
+    """Tabela de controle do sistema para atualizações e sessões ativas."""
     __tablename__ = 'system_control'
     id = Column(Integer, primary_key=True)
     type = Column(String, nullable=False)  # pylint: disable=redefined-builtin
@@ -104,7 +102,5 @@ class SystemControl(Base):
                           onupdate=lambda: datetime.now(timezone.utc))
 
 
-# --- Configuração do Banco de Dados e Sessão ---
-# Usa o caminho centralizado para criar a engine do banco de dados.
+# Configuração do Banco de Dados
 engine = create_engine(f'sqlite:///{DB_PATH}')
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
