@@ -31,6 +31,21 @@ from src.utils.estilo import (obter_estilo_botao_cinza,
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 
+# Constantes para configuração
+TIMEOUT_IMPRESSAO = 30  # segundos para timeout de processos de impressão
+ALTURA_FORM_IMPRESSAO = 500  # altura da janela
+LARGURA_FORM_IMPRESSAO = 500  # largura da janela
+MARGEM_LAYOUT_PRINCIPAL = 10  # margem do layout principal
+ALTURA_MAXIMA_LISTA = 100  # altura máxima da lista de arquivos
+
+# Caminhos dos programas PDF
+FOXIT_PATH = "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe"
+ADOBE_PATHS = [
+    "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe",
+    "C:\\Program Files (x86)\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
+    "C:\\Program Files\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe"
+]
+
 
 class PrintManager:
     """Gerencia as operações de impressão de PDFs."""
@@ -117,15 +132,13 @@ class PrintManager:
 
     def _tentar_foxit(self, nome_arquivo, caminho_completo):
         """Tenta imprimir usando Foxit PDF Reader."""
-        foxit_path = "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe"
-
-        if not os.path.exists(foxit_path):
+        if not os.path.exists(FOXIT_PATH):
             return False
 
         try:
             self.resultado_impressao += f"Imprimindo {nome_arquivo} com Foxit...\n"
-            subprocess.run([foxit_path, "/p", caminho_completo],
-                           check=True, timeout=30)
+            subprocess.run([FOXIT_PATH, "/p", caminho_completo],
+                           check=True, timeout=TIMEOUT_IMPRESSAO)
             self.resultado_impressao += " ✓ Sucesso com Foxit\n"
             return True
         except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError) as e:
@@ -151,18 +164,12 @@ class PrintManager:
 
     def _tentar_adobe(self, nome_arquivo, caminho_completo):
         """Tenta imprimir usando Adobe Reader."""
-        adobe_paths = [
-            "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe",
-            "C:\\Program Files (x86)\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
-            "C:\\Program Files\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe"
-        ]
-
-        for adobe_path in adobe_paths:
+        for adobe_path in ADOBE_PATHS:
             if os.path.exists(adobe_path):
                 try:
                     self.resultado_impressao += f"Imprimindo {nome_arquivo} com Adobe...\n"
                     subprocess.run(
-                        [adobe_path, "/p", caminho_completo], check=True, timeout=30)
+                        [adobe_path, "/p", caminho_completo], check=True, timeout=TIMEOUT_IMPRESSAO)
                     self.resultado_impressao += " ✓ Sucesso com Adobe\n"
                     return True
                 except (subprocess.TimeoutExpired,
@@ -383,7 +390,7 @@ def _inicializar_formulario(root):
 
     g.IMPRESSAO_FORM = QDialog(root)
     g.IMPRESSAO_FORM.setWindowTitle("Impressão em Lote de PDFs")
-    g.IMPRESSAO_FORM.setFixedSize(500, 500)
+    g.IMPRESSAO_FORM.setFixedSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
     # Remover barra nativa
     g.IMPRESSAO_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
@@ -408,7 +415,7 @@ def _configurar_layout_grid():
     # Widget de conteúdo principal
     conteudo = QWidget()
     layout_principal = QGridLayout(conteudo)
-    aplicar_medida_borda_espaco(layout_principal, 10)
+    aplicar_medida_borda_espaco(layout_principal, MARGEM_LAYOUT_PRINCIPAL)
 
     layout_principal.setRowStretch(0, 0)
     layout_principal.setRowStretch(1, 1)
@@ -471,7 +478,7 @@ def _criar_secao_arquivos_grid():
 
     # Linha 1-2: Campo de texto (coluna 0-1) + Botões (coluna 2)
     g.IMPRESSAO_LISTA_TEXT = QTextEdit()
-    g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(100)
+    g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(ALTURA_MAXIMA_LISTA)
     g.IMPRESSAO_LISTA_TEXT.setPlaceholderText(
         "Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519")
     arquivos_layout.addWidget(g.IMPRESSAO_LISTA_TEXT,
@@ -530,7 +537,7 @@ def _criar_secao_resultado_grid():
 
     # Linha 0: Campo de resultado (ocupa toda a largura)
     g.IMPRESSAO_RESULTADO_TEXT = QTextBrowser()
-    g.IMPRESSAO_RESULTADO_TEXT.setMaximumHeight(100)
+    g.IMPRESSAO_RESULTADO_TEXT.setMaximumHeight(ALTURA_MAXIMA_LISTA)
     resultado_layout.addWidget(g.IMPRESSAO_RESULTADO_TEXT, 0, 0)
 
     return frame_resultado
