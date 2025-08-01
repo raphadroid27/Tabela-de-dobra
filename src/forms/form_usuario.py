@@ -20,10 +20,8 @@ from src.utils.controlador import buscar
 from src.utils.usuarios import (
     tem_permissao, tornar_editor, resetar_senha, excluir_usuario)
 from src.utils.estilo import (
-    obter_estilo_botao_vermelho,
-    obter_estilo_botao_amarelo,
-    obter_estilo_botao_verde,
-    obter_tema_atual)
+    obter_tema_atual,
+    aplicar_estilo_botao)
 from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 
@@ -32,6 +30,7 @@ JANELA_LARGURA = 330
 JANELA_ALTURA = 280
 COLUNA_NOME_LARGURA = 150
 COLUNA_PERMISSOES_LARGURA = 100
+TITULO_FORMULARIO = "Editar/Excluir Usuário"
 
 
 def _verificar_permissao():
@@ -45,7 +44,7 @@ def _configurar_janela_base(root):
         g.USUAR_FORM.close()
 
     g.USUAR_FORM = QDialog(root)
-    g.USUAR_FORM.setWindowTitle("Editar/Excluir Usuário")
+    g.USUAR_FORM.setWindowTitle(TITULO_FORMULARIO)
     g.USUAR_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
     g.USUAR_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
@@ -66,7 +65,7 @@ def _criar_layout_principal():
 def _criar_barra_titulo(vlayout):
     """Cria e configura a barra de título."""
     barra = BarraTitulo(g.USUAR_FORM, tema=obter_tema_atual())
-    barra.titulo.setText("Editar/Excluir Usuário")
+    barra.titulo.setText(TITULO_FORMULARIO)
     vlayout.addWidget(barra)
     return barra
 
@@ -95,7 +94,7 @@ def _criar_frame_busca(main_layout):
     g.USUARIO_BUSCA_ENTRY.textChanged.connect(on_text_changed)
 
     limpar_btn = QPushButton("🧹 Limpar")
-    limpar_btn.setStyleSheet(obter_estilo_botao_amarelo())
+    aplicar_estilo_botao(limpar_btn, 'amarelo')
     limpar_btn.clicked.connect(lambda: limpar_busca('usuario'))
     busca_layout.addWidget(limpar_btn, 0, 2)
 
@@ -115,17 +114,17 @@ def _criar_tree_widget(main_layout):
 def _criar_botoes_acao(main_layout):
     """Cria os botões de ação."""
     tornar_editor_btn = QPushButton("👤 Tornar Editor")
-    tornar_editor_btn.setStyleSheet(obter_estilo_botao_verde())
+    aplicar_estilo_botao(tornar_editor_btn, 'verde')
     tornar_editor_btn.clicked.connect(tornar_editor)
     main_layout.addWidget(tornar_editor_btn, 2, 0)
 
     resetar_senha_btn = QPushButton("🔄 Resetar Senha")
-    resetar_senha_btn.setStyleSheet(obter_estilo_botao_amarelo())
+    aplicar_estilo_botao(resetar_senha_btn, 'amarelo')
     resetar_senha_btn.clicked.connect(resetar_senha)
     main_layout.addWidget(resetar_senha_btn, 2, 1)
 
     excluir_btn = QPushButton("🗑️ Excluir")
-    excluir_btn.setStyleSheet(obter_estilo_botao_vermelho())
+    aplicar_estilo_botao(excluir_btn, 'vermelho')
     excluir_btn.clicked.connect(excluir_usuario)
     main_layout.addWidget(excluir_btn, 2, 2)
 
