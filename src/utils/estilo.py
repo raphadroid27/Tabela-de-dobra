@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 TEMA_ATUAL_PADRAO = "dark"
 
 # Constantes para dimensões padrão de componentes da interface
-ALTURA_PADRAO_COMPONENTE = 20  # Altura padrão para widgets (botões, inputs, etc.)
+# Altura padrão para widgets (botões, inputs, etc.)
+ALTURA_PADRAO_COMPONENTE = 20
 LARGURA_MINIMA_COMPONENTE = 60  # Largura mínima para garantir usabilidade
 PADDING_INTERNO_COMPONENTE = "2px 4px"  # Padding interno uniforme
 
@@ -355,30 +356,7 @@ def obter_estilo_botao(cor: str) -> str:
     """
 
 
-# Funções de compatibilidade (mantidas para não quebrar código existente)
-def obter_estilo_botao_cinza():
-    """Retorna o estilo CSS para botões cinza."""
-    return obter_estilo_botao('cinza')
-
-
-def obter_estilo_botao_azul():
-    """Retorna o estilo CSS para botões azuis."""
-    return obter_estilo_botao('azul')
-
-
-def obter_estilo_botao_amarelo():
-    """Retorna o estilo CSS para botões amarelos."""
-    return obter_estilo_botao('amarelo')
-
-
-def obter_estilo_botao_vermelho():
-    """Retorna o estilo CSS para botões vermelhos."""
-    return obter_estilo_botao('vermelho')
-
-
-def obter_estilo_botao_verde():
-    """Retorna o estilo CSS para botões verdes."""
-    return obter_estilo_botao('verde')
+# Funções de compatibilidade removidas - usar aplicar_estilo_botao() diretamente
 
 
 def obter_estilo_progress_bar():
@@ -399,7 +377,7 @@ def obter_estilo_progress_bar():
 
 def aplicar_estilo_botao(botao, cor: str, altura: int = None, largura_min: int = None):
     """Aplica estilo completo de botão de forma conveniente.
-    
+
     Args:
         botao: O botão QPushButton a ser estilizado
         cor: Cor do botão ('cinza', 'azul', 'amarelo', 'vermelho', 'verde')
@@ -421,34 +399,7 @@ def aplicar_estilo_botao(botao, cor: str, altura: int = None, largura_min: int =
         botao.setMinimumWidth(largura_final)
 
 
-def aplicar_estilo_componente(componente, tipo: str, altura: int = None, largura_min: int = None):
-    """Aplica configurações padrão a qualquer componente da interface.
-    
-    Args:
-        componente: O componente QWidget a ser configurado
-        tipo: Tipo do componente ('entry', 'combobox', 'label', 'botao')
-        altura: Altura do componente (padrão: ALTURA_PADRAO_COMPONENTE)
-        largura_min: Largura mínima do componente (padrão: LARGURA_MINIMA_COMPONENTE)
-    """
-    if not hasattr(componente, 'setFixedHeight'):
-        return
-
-    alturas_padrao = {
-        'botao': ALTURA_PADRAO_BOTAO,
-        'entry': ALTURA_PADRAO_COMPONENTE,
-        'combobox': ALTURA_PADRAO_COMPONENTE,
-        'label': ALTURA_PADRAO_COMPONENTE,
-    }
-
-    altura_final = (altura if altura is not None
-                   else alturas_padrao.get(tipo, ALTURA_PADRAO_COMPONENTE))
-    largura_final = (largura_min if largura_min is not None
-                    else LARGURA_MINIMA_COMPONENTE)
-
-    componente.setFixedHeight(altura_final)
-
-    if hasattr(componente, 'setMinimumWidth'):
-        componente.setMinimumWidth(largura_final)
+# Função aplicar_estilo_componente removida - não utilizada no projeto
 
 
 def aplicar_estilo_checkbox(checkbox, altura: int = None):
