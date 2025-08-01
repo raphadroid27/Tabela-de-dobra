@@ -9,12 +9,15 @@ para os modelos da aplicação.
 As funções retornam uma tupla padronizada:
 (sucesso: bool, mensagem: str, objeto: object | None)
 """
+
 import re
-from typing import Tuple, Dict, Any, Optional
+from typing import Any, Dict, Optional, Tuple
+
 from sqlalchemy.exc import SQLAlchemyError
-from src.models.models import Espessura, Material, Canal, Deducao
-from src.utils.banco_dados import session, tratativa_erro, registrar_log
+
 from src.config import globals as g
+from src.models.models import Canal, Deducao, Espessura, Material
+from src.utils.banco_dados import registrar_log, session, tratativa_erro
 
 
 def _converter_para_float(valor_str: Optional[str]) -> Optional[float]:
@@ -22,12 +25,13 @@ def _converter_para_float(valor_str: Optional[str]) -> Optional[float]:
     if not valor_str or not valor_str.strip():
         return None
     try:
-        return float(valor_str.replace(',', '.'))
+        return float(valor_str.replace(",", "."))
     except (ValueError, TypeError):
         return None
 
 
 # --- Operações de Material ---
+
 
 def criar_material(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Material]]:
     """
@@ -39,7 +43,7 @@ def criar_material(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Material]
     Returns:
         Tupla (sucesso, mensagem, objeto_criado).
     """
-    nome_material = dados.get('nome')
+    nome_material = dados.get("nome")
     if not nome_material:
         return False, "O nome do material é obrigatório.", None
 
@@ -49,14 +53,19 @@ def criar_material(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Material]
     try:
         novo_material = Material(
             nome=nome_material,
-            densidade=_converter_para_float(dados.get('densidade')),
-            escoamento=_converter_para_float(dados.get('escoamento')),
-            elasticidade=_converter_para_float(dados.get('elasticidade'))
+            densidade=_converter_para_float(dados.get("densidade")),
+            escoamento=_converter_para_float(dados.get("escoamento")),
+            elasticidade=_converter_para_float(dados.get("elasticidade")),
         )
         session.add(novo_material)
         tratativa_erro()
-        registrar_log(g.USUARIO_NOME, 'adicionar', 'material',
-                      novo_material.id, f'Material: {nome_material}')
+        registrar_log(
+            g.USUARIO_NOME,
+            "adicionar",
+            "material",
+            novo_material.id,
+            f"Material: {nome_material}",
+        )
         return True, "Material adicionado com sucesso!", novo_material
     except SQLAlchemyError as e:
         session.rollback()
@@ -64,6 +73,7 @@ def criar_material(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Material]
 
 
 # --- Operações de Espessura ---
+
 
 def criar_espessura(valor: str) -> Tuple[bool, str, Optional[Espessura]]:
     """
@@ -75,7 +85,7 @@ def criar_espessura(valor: str) -> Tuple[bool, str, Optional[Espessura]]:
     Returns:
         Tupla (sucesso, mensagem, objeto_criado).
     """
-    if not re.match(r'^\d+(\.\d+)?$', valor.replace(',', '.')):
+    if not re.match(r"^\d+(\.\d+)?$", valor.replace(",", ".")):
         return False, "A espessura deve conter apenas números.", None
 
     espessura_float = _converter_para_float(valor)
@@ -89,8 +99,13 @@ def criar_espessura(valor: str) -> Tuple[bool, str, Optional[Espessura]]:
         nova_espessura = Espessura(valor=espessura_float)
         session.add(nova_espessura)
         tratativa_erro()
-        registrar_log(g.USUARIO_NOME, 'adicionar', 'espessura',
-                      nova_espessura.id, f'Valor: {espessura_float}')
+        registrar_log(
+            g.USUARIO_NOME,
+            "adicionar",
+            "espessura",
+            nova_espessura.id,
+            f"Valor: {espessura_float}",
+        )
         return True, "Espessura adicionada com sucesso!", nova_espessura
     except SQLAlchemyError as e:
         session.rollback()
@@ -98,6 +113,7 @@ def criar_espessura(valor: str) -> Tuple[bool, str, Optional[Espessura]]:
 
 
 # --- Operações de Canal ---
+
 
 def criar_canal(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Canal]]:
     """
@@ -109,7 +125,7 @@ def criar_canal(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Canal]]:
     Returns:
         Tupla (sucesso, mensagem, objeto_criado).
     """
-    valor_canal = dados.get('valor')
+    valor_canal = dados.get("valor")
     if not valor_canal:
         return False, "O campo Canal é obrigatório.", None
 
@@ -119,16 +135,16 @@ def criar_canal(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Canal]]:
     try:
         novo_canal = Canal(
             valor=valor_canal,
-            largura=_converter_para_float(dados.get('largura')),
-            altura=_converter_para_float(dados.get('altura')),
-            comprimento_total=_converter_para_float(
-                dados.get('comprimento_total')),
-            observacao=dados.get('observacao')
+            largura=_converter_para_float(dados.get("largura")),
+            altura=_converter_para_float(dados.get("altura")),
+            comprimento_total=_converter_para_float(dados.get("comprimento_total")),
+            observacao=dados.get("observacao"),
         )
         session.add(novo_canal)
         tratativa_erro()
-        registrar_log(g.USUARIO_NOME, 'adicionar', 'canal',
-                      novo_canal.id, f'Valor: {valor_canal}')
+        registrar_log(
+            g.USUARIO_NOME, "adicionar", "canal", novo_canal.id, f"Valor: {valor_canal}"
+        )
         return True, "Canal adicionado com sucesso!", novo_canal
     except SQLAlchemyError as e:
         session.rollback()
@@ -136,6 +152,7 @@ def criar_canal(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Canal]]:
 
 
 # --- Operações de Dedução ---
+
 
 def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
     """
@@ -148,21 +165,30 @@ def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
         Tupla (sucesso, mensagem, objeto_criado).
     """
     try:
-        material_obj = session.query(Material).filter_by(
-            nome=dados.get('material_nome')).first()
-        espessura_obj = session.query(Espessura).filter_by(
-            valor=_converter_para_float(dados.get('espessura_valor'))).first()
-        canal_obj = session.query(Canal).filter_by(
-            valor=dados.get('canal_valor')).first()
+        material_obj = (
+            session.query(Material).filter_by(nome=dados.get("material_nome")).first()
+        )
+        espessura_obj = (
+            session.query(Espessura)
+            .filter_by(valor=_converter_para_float(dados.get("espessura_valor")))
+            .first()
+        )
+        canal_obj = (
+            session.query(Canal).filter_by(valor=dados.get("canal_valor")).first()
+        )
 
         if not all([material_obj, espessura_obj, canal_obj]):
             return False, "Material, espessura ou canal não encontrado.", None
 
-        deducao_existente = session.query(Deducao).filter_by(
-            material_id=material_obj.id,
-            espessura_id=espessura_obj.id,
-            canal_id=canal_obj.id
-        ).first()
+        deducao_existente = (
+            session.query(Deducao)
+            .filter_by(
+                material_id=material_obj.id,
+                espessura_id=espessura_obj.id,
+                canal_id=canal_obj.id,
+            )
+            .first()
+        )
 
         if deducao_existente:
             return False, "Dedução já existe para esta combinação.", None
@@ -171,16 +197,17 @@ def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
             material_id=material_obj.id,
             espessura_id=espessura_obj.id,
             canal_id=canal_obj.id,
-            valor=_converter_para_float(dados.get('valor')),
-            observacao=dados.get('observacao'),
-            forca=_converter_para_float(dados.get('forca'))
+            valor=_converter_para_float(dados.get("valor")),
+            observacao=dados.get("observacao"),
+            forca=_converter_para_float(dados.get("forca")),
         )
         session.add(nova_deducao)
         tratativa_erro()
-        detalhes = (f'Mat: {material_obj.nome}, Esp: {espessura_obj.valor}, '
-                    f'Canal: {canal_obj.valor}, Valor: {nova_deducao.valor}')
-        registrar_log(g.USUARIO_NOME, 'adicionar',
-                      'dedução', nova_deducao.id, detalhes)
+        detalhes = (
+            f"Mat: {material_obj.nome}, Esp: {espessura_obj.valor}, "
+            f"Canal: {canal_obj.valor}, Valor: {nova_deducao.valor}"
+        )
+        registrar_log(g.USUARIO_NOME, "adicionar", "dedução", nova_deducao.id, detalhes)
         return True, "Dedução adicionada com sucesso!", nova_deducao
     except (SQLAlchemyError, ValueError) as e:
         session.rollback()
@@ -188,6 +215,7 @@ def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
 
 
 # --- Operações Genéricas de Exclusão ---
+
 
 def excluir_objeto(obj: Any) -> Tuple[bool, str]:
     """
@@ -204,8 +232,7 @@ def excluir_objeto(obj: Any) -> Tuple[bool, str]:
 
     obj_id = obj.id
     obj_type = type(obj).__name__.lower()
-    obj_identifier = getattr(
-        obj, 'nome', None) or getattr(obj, 'valor', 'N/A')
+    obj_identifier = getattr(obj, "nome", None) or getattr(obj, "valor", "N/A")
     log_details = f"Excluído(a) {obj_type} {obj_identifier}"
 
     try:
@@ -219,8 +246,7 @@ def excluir_objeto(obj: Any) -> Tuple[bool, str]:
 
         session.delete(obj)
         tratativa_erro()
-        registrar_log(g.USUARIO_NOME, "excluir",
-                      obj_type, obj_id, log_details)
+        registrar_log(g.USUARIO_NOME, "excluir", obj_type, obj_id, log_details)
         return True, f"{obj_type.capitalize()} excluído(a) com sucesso!"
     except SQLAlchemyError as e:
         session.rollback()
@@ -244,8 +270,14 @@ def editar_objeto(obj: Any, dados: Dict[str, Any]) -> Tuple[bool, str, list]:
 
     alteracoes = []
     campos_numericos = [
-        "largura", "altura", "comprimento_total", "valor",
-        "densidade", "escoamento", "elasticidade", "forca"
+        "largura",
+        "altura",
+        "comprimento_total",
+        "valor",
+        "densidade",
+        "escoamento",
+        "elasticidade",
+        "forca",
     ]
 
     try:
@@ -255,22 +287,30 @@ def editar_objeto(obj: Any, dados: Dict[str, Any]) -> Tuple[bool, str, list]:
             if campo in campos_numericos:
                 valor_novo = _converter_para_float(valor_novo_str)
             else:
-                valor_novo = valor_novo_str if valor_novo_str and valor_novo_str.strip() else None
+                valor_novo = (
+                    valor_novo_str
+                    if valor_novo_str and valor_novo_str.strip()
+                    else None
+                )
 
             if str(valor_antigo) != str(valor_novo):
                 setattr(obj, campo, valor_novo)
-                alteracoes.append(
-                    f"{campo}: '{valor_antigo}' -> '{valor_novo}'")
+                alteracoes.append(f"{campo}: '{valor_antigo}' -> '{valor_novo}'")
 
         if not alteracoes:
             return True, "Nenhuma alteração detectada.", []
 
         tratativa_erro()
         detalhes_log = "; ".join(alteracoes)
-        registrar_log(g.USUARIO_NOME, "editar", type(
-            obj).__name__.lower(), obj.id, detalhes_log)
+        registrar_log(
+            g.USUARIO_NOME, "editar", type(obj).__name__.lower(), obj.id, detalhes_log
+        )
 
-        return True, f"{type(obj).__name__.capitalize()} editado com sucesso!", alteracoes
+        return (
+            True,
+            f"{type(obj).__name__.capitalize()} editado com sucesso!",
+            alteracoes,
+        )
 
     except (SQLAlchemyError, ValueError) as e:
         session.rollback()

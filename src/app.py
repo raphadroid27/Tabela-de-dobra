@@ -22,39 +22,54 @@ from functools import partial
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+)
 from sqlalchemy.exc import SQLAlchemyError
 
 from src import __version__
 from src.components.barra_titulo import BarraTitulo
 from src.components.menu_custom import MenuCustom
 from src.config import globals as g
-from src.forms import (form_aut, form_impressao, form_razao_rie, form_sobre,
-                       form_usuario)
-from src.forms.form_universal import (form_canal_main as FormCanal,
-                                      form_deducao_main as FormDeducao,
-                                      form_espessura_main as FormEspessura,
-                                      form_material_main as FormMaterial)
+from src.forms import form_aut, form_impressao, form_razao_rie, form_sobre, form_usuario
+from src.forms.form_universal import form_canal_main as FormCanal
+from src.forms.form_universal import form_deducao_main as FormDeducao
+from src.forms.form_universal import form_espessura_main as FormEspessura
+from src.forms.form_universal import form_material_main as FormMaterial
 from src.models.models import Usuario
 from src.utils.banco_dados import inicializar_banco_dados
 from src.utils.banco_dados import session as db_session
-from src.utils.estilo import (aplicar_tema_inicial, aplicar_tema_qdarktheme,
-                              obter_tema_atual, obter_temas_disponiveis,
-                              registrar_tema_actions)
+from src.utils.estilo import (
+    aplicar_tema_inicial,
+    aplicar_tema_qdarktheme,
+    obter_tema_atual,
+    obter_temas_disponiveis,
+    registrar_tema_actions,
+)
 from src.utils.interface_manager import carregar_interface
-from src.utils.janelas import (aplicar_no_topo_app_principal,
-                               remover_janelas_orfas)
-from src.utils.session_manager import (atualizar_heartbeat_sessao,
-                                       obter_comando_sistema, registrar_sessao,
-                                       remover_sessao)
-from src.utils.update_manager import (checagem_periodica_update,
-                                      manipular_clique_update,
-                                      set_installed_version)
+from src.utils.janelas import aplicar_no_topo_app_principal, remover_janelas_orfas
+from src.utils.session_manager import (
+    atualizar_heartbeat_sessao,
+    obter_comando_sistema,
+    registrar_sessao,
+    remover_sessao,
+)
+from src.utils.update_manager import (
+    checagem_periodica_update,
+    manipular_clique_update,
+    set_installed_version,
+)
 from src.utils.usuarios import logout
-from src.utils.utilitarios import (CONFIG_FILE, ICON_PATH,
-                                   aplicar_medida_borda_espaco,
-                                   setup_logging)
+from src.utils.utilitarios import (
+    CONFIG_FILE,
+    ICON_PATH,
+    aplicar_medida_borda_espaco,
+    setup_logging,
+)
 
 APP_VERSION = __version__
 g.SESSION_ID = str(uuid.uuid4())
@@ -63,11 +78,11 @@ g.SESSION_ID = str(uuid.uuid4())
 def verificar_admin_existente():
     """Verifica se existe um administrador cadastrado."""
     logging.info("Verificando se existe um administrador.")
-    admin_existente = db_session.query(Usuario).filter(
-        Usuario.role == "admin").first()
+    admin_existente = db_session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
         logging.warning(
-            "Nenhum administrador encontrado. Abrindo formulário de autorização.")
+            "Nenhum administrador encontrado. Abrindo formulário de autorização."
+        )
         form_aut.main(g.PRINC_FORM)
     else:
         logging.info("Administrador encontrado.")
@@ -77,17 +92,18 @@ def carregar_configuracao():
     """Carrega a configuração do aplicativo."""
     logging.info("Carregando configurações de %s", CONFIG_FILE)
     if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     logging.warning(
-        "Arquivo de configuração não encontrado. Usando configuração padrão.")
+        "Arquivo de configuração não encontrado. Usando configuração padrão."
+    )
     return {}
 
 
 def salvar_configuracao(config):
     """Salva a configuração do aplicativo."""
     logging.info("Salvando configurações em %s", CONFIG_FILE)
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4)
 
 
@@ -99,7 +115,7 @@ def fechar_aplicativo():
         if g.PRINC_FORM:
             pos = g.PRINC_FORM.pos()
             config = carregar_configuracao()
-            config['geometry'] = f"+{pos.x()}+{pos.y()}"
+            config["geometry"] = f"+{pos.x()}+{pos.y()}"
             salvar_configuracao(config)
             g.PRINC_FORM.close()
 
@@ -129,17 +145,15 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
-    if 'geometry' in config and isinstance(config['geometry'], str):
-        parts = config['geometry'].split('+')
+    if "geometry" in config and isinstance(config["geometry"], str):
+        parts = config["geometry"].split("+")
         if len(parts) >= 3:
             try:
                 x, y = int(parts[1]), int(parts[2])
                 g.PRINC_FORM.move(x, y)
-                logging.info(
-                    "Janela movida para a posição salva: %d, %d", x, y)
+                logging.info("Janela movida para a posição salva: %d, %d", x, y)
             except (ValueError, IndexError):
-                logging.warning("Geometria salva inválida: %s",
-                                config['geometry'])
+                logging.warning("Geometria salva inválida: %s", config["geometry"])
 
     if ICON_PATH and os.path.exists(ICON_PATH):
         g.PRINC_FORM.setWindowIcon(QIcon(ICON_PATH))
@@ -171,41 +185,60 @@ def _toggle_no_topo():
 
 def configurar_menu():
     """Configura o menu superior da janela principal de forma centralizada."""
-    if not hasattr(g, 'MENU_CUSTOM') or g.MENU_CUSTOM is None:
+    if not hasattr(g, "MENU_CUSTOM") or g.MENU_CUSTOM is None:
         return
     menu_bar = g.MENU_CUSTOM.get_menu_bar()
 
     estrutura_menu = {
         "📁 Arquivo": [
-            ("➕ Nova Dedução", partial(abrir_formulario, FormDeducao, 'EDIT_DED', False)),
-            ("➕ Novo Material", partial(
-                abrir_formulario, FormMaterial, 'EDIT_MAT', False)),
-            ("➕ Nova Espessura", partial(
-                abrir_formulario, FormEspessura, 'EDIT_ESP', False)),
-            ("➕ Novo Canal", partial(abrir_formulario, FormCanal, 'EDIT_CANAL', False)),
+            (
+                "➕ Nova Dedução",
+                partial(abrir_formulario, FormDeducao, "EDIT_DED", False),
+            ),
+            (
+                "➕ Novo Material",
+                partial(abrir_formulario, FormMaterial, "EDIT_MAT", False),
+            ),
+            (
+                "➕ Nova Espessura",
+                partial(abrir_formulario, FormEspessura, "EDIT_ESP", False),
+            ),
+            (
+                "➕ Novo Canal",
+                partial(abrir_formulario, FormCanal, "EDIT_CANAL", False),
+            ),
             ("separator", None),
-            ("🚪 Sair", fechar_aplicativo)
+            ("🚪 Sair", fechar_aplicativo),
         ],
         "✏️ Editar": [
-            ("📝 Editar Dedução", partial(
-                abrir_formulario, FormDeducao, 'EDIT_DED', True)),
-            ("📝 Editar Material", partial(
-                abrir_formulario, FormMaterial, 'EDIT_MAT', True)),
-            ("📝 Editar Espessura", partial(
-                abrir_formulario, FormEspessura, 'EDIT_ESP', True)),
-            ("📝 Editar Canal", partial(abrir_formulario, FormCanal, 'EDIT_CANAL', True))
+            (
+                "📝 Editar Dedução",
+                partial(abrir_formulario, FormDeducao, "EDIT_DED", True),
+            ),
+            (
+                "📝 Editar Material",
+                partial(abrir_formulario, FormMaterial, "EDIT_MAT", True),
+            ),
+            (
+                "📝 Editar Espessura",
+                partial(abrir_formulario, FormEspessura, "EDIT_ESP", True),
+            ),
+            (
+                "📝 Editar Canal",
+                partial(abrir_formulario, FormCanal, "EDIT_CANAL", True),
+            ),
         ],
         "🔧 Utilidades": [
             ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
-            ("🖨️ Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM))
+            ("🖨️ Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM)),
         ],
         "👤 Usuário": [
             ("🔐 Login", partial(_executar_autenticacao, True)),
             ("👥 Novo Usuário", partial(_executar_autenticacao, False)),
             ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
             ("separator", None),
-            ("🚪 Sair", logout)
-        ]
+            ("🚪 Sair", logout),
+        ],
     }
 
     for nome_menu, acoes in estrutura_menu.items():
@@ -214,6 +247,8 @@ def configurar_menu():
 
     _criar_menu_opcoes(menu_bar)
     _criar_menu_ajuda(menu_bar)
+
+
 def _adicionar_acoes_ao_menu(menu, acoes):
     """Adiciona uma lista de ações a um menu."""
     for nome, funcao in acoes:
@@ -228,7 +263,7 @@ def _adicionar_acoes_ao_menu(menu, acoes):
 def _criar_menu_opcoes(menu_bar):
     """Cria o menu Opções."""
     opcoes_menu = menu_bar.addMenu("⚙️ Opções")
-    if not hasattr(g, 'NO_TOPO_VAR') or g.NO_TOPO_VAR is None:
+    if not hasattr(g, "NO_TOPO_VAR") or g.NO_TOPO_VAR is None:
         g.NO_TOPO_VAR = False
     no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
@@ -241,9 +276,8 @@ def _criar_menu_opcoes(menu_bar):
     for tema in obter_temas_disponiveis():
         action = QAction(tema.capitalize(), g.PRINC_FORM)
         action.setCheckable(True)
-        action.setChecked(tema == getattr(g, 'TEMA_ATUAL', 'dark'))
-        action.triggered.connect(
-            lambda checked, t=tema: aplicar_tema_qdarktheme(t))
+        action.setChecked(tema == getattr(g, "TEMA_ATUAL", "dark"))
+        action.triggered.connect(lambda checked, t=tema: aplicar_tema_qdarktheme(t))
         temas_menu.addAction(action)
         temas_actions[tema] = action
     registrar_tema_actions(temas_actions)
@@ -269,11 +303,11 @@ def configurar_frames():
     vlayout = QVBoxLayout(central_widget)
     aplicar_medida_borda_espaco(vlayout, 0, 0)
 
-    tema_atual = getattr(g, 'TEMA_ATUAL', 'dark')
+    tema_atual = getattr(g, "TEMA_ATUAL", "dark")
     g.BARRA_TITULO = BarraTitulo(g.PRINC_FORM, tema=tema_atual)
     vlayout.addWidget(g.BARRA_TITULO)
 
-    if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
+    if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
         g.BARRA_TITULO.set_tema(obter_tema_atual())
 
     g.MENU_CUSTOM = MenuCustom(g.PRINC_FORM)
@@ -294,10 +328,12 @@ def configurar_frames():
 
 def configurar_sinais_excecoes():
     """Configura handlers para exceções não tratadas e sinais do sistema."""
+
     def handle_exception(exc_type, exc_value, exc_traceback):
         if exc_type != KeyboardInterrupt:
-            error_msg = "".join(traceback.format_exception(
-                exc_type, exc_value, exc_traceback))
+            error_msg = "".join(
+                traceback.format_exception(exc_type, exc_value, exc_traceback)
+            )
             logging.critical("ERRO NÃO TRATADO:\n%s", error_msg)
 
     def signal_handler(signum, _):
@@ -315,7 +351,7 @@ def processar_verificacao_sistema():
 
     comando = obter_comando_sistema()
 
-    if comando == 'SHUTDOWN':
+    if comando == "SHUTDOWN":
         fechar_aplicativo()
 
 
@@ -333,7 +369,7 @@ def iniciar_timers():
 
 def main():
     """Função principal que inicializa e executa a aplicação."""
-    setup_logging('app.log', log_to_console=True)
+    setup_logging("app.log", log_to_console=True)
     app = None
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
@@ -365,7 +401,13 @@ def main():
         logging.critical("ERRO FATAL: A janela principal não foi criada!")
         return 1
 
-    except (RuntimeError, SQLAlchemyError, ImportError, FileNotFoundError, OSError) as e:
+    except (
+        RuntimeError,
+        SQLAlchemyError,
+        ImportError,
+        FileNotFoundError,
+        OSError,
+    ) as e:
         logging.critical("ERRO CRÍTICO na inicialização: %s", e, exc_info=True)
         if app:
             app.quit()

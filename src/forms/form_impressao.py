@@ -9,23 +9,34 @@ O formulário é construído usando QGridLayout para melhor organização e cont
 import os
 import subprocess
 
-from PySide6.QtWidgets import (QDialog, QGridLayout, QLabel,
-                               QLineEdit, QPushButton, QTextEdit, QTextBrowser,
-                               QListWidget, QGroupBox, QFileDialog, QMessageBox,
-                               QVBoxLayout, QWidget)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QGridLayout,
+    QGroupBox,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMessageBox,
+    QPushButton,
+    QTextBrowser,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
-from src.utils.janelas import (aplicar_no_topo,
-                               posicionar_janela,
-                               HABILITAR_JANELAS,
-                               DESABILITAR_JANELAS)
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
-from src.utils.estilo import (obter_tema_atual,
-                              aplicar_estilo_botao)
-
-from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
+from src.config import globals as g
+from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
+from src.utils.janelas import (
+    DESABILITAR_JANELAS,
+    HABILITAR_JANELAS,
+    aplicar_no_topo,
+    posicionar_janela,
+)
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 # Constantes para configuração
 TIMEOUT_IMPRESSAO = 30
@@ -37,15 +48,18 @@ ALTURA_MAXIMA_LISTA_WIDGET = 120
 
 # Strings de interface
 STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
-PLACEHOLDER_LISTA_ARQUIVOS = ("Digite os nomes dos arquivos, um por linha.\n"
-                              "Exemplo:\n010464516\n010464519")
+PLACEHOLDER_LISTA_ARQUIVOS = (
+    "Digite os nomes dos arquivos, um por linha.\n" "Exemplo:\n010464516\n010464519"
+)
 
 # Caminhos dos programas PDF
-FOXIT_PATH = "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe"
+FOXIT_PATH = (
+    "C:\\Program Files (x86)\\Foxit Software\\Foxit PDF Reader\\FoxitPDFReader.exe"
+)
 ADOBE_PATHS = [
     "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe",
     "C:\\Program Files (x86)\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
-    "C:\\Program Files\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe"
+    "C:\\Program Files\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
 ]
 
 
@@ -73,13 +87,16 @@ class PrintManager:
 
     def _extrair_nome_base(self, arquivo):
         """Extrai a parte principal do nome do arquivo."""
-        return arquivo.split(' - ')[0].strip() if ' - ' in arquivo else arquivo
+        return arquivo.split(" - ")[0].strip() if " - " in arquivo else arquivo
 
     def _procurar_arquivo(self, diretorio, nome_base):
         """Procura um arquivo específico no diretório."""
         try:
-            arquivos_pdf = [f for f in os.listdir(diretorio)
-                            if nome_base.lower() in f.lower() and f.endswith('.pdf')]
+            arquivos_pdf = [
+                f
+                for f in os.listdir(diretorio)
+                if nome_base.lower() in f.lower() and f.endswith(".pdf")
+            ]
             return arquivos_pdf[0] if arquivos_pdf else None
         except (OSError, PermissionError):
             return None
@@ -94,7 +111,9 @@ class PrintManager:
                 resultado += f" • {arquivo}\n"
 
         if self.arquivos_nao_encontrados:
-            resultado += f"\nArquivos não encontrados ({len(self.arquivos_nao_encontrados)}):\n"
+            resultado += (
+                f"\nArquivos não encontrados ({len(self.arquivos_nao_encontrados)}):\n"
+            )
             for arquivo in self.arquivos_nao_encontrados:
                 resultado += f" • {arquivo}\n"
 
@@ -120,8 +139,7 @@ class PrintManager:
         sucesso = self._tentar_foxit(nome_arquivo, caminho_completo)
 
         if not sucesso:
-            sucesso = self._tentar_impressora_padrao(
-                nome_arquivo, caminho_completo)
+            sucesso = self._tentar_impressora_padrao(nome_arquivo, caminho_completo)
 
         if not sucesso:
             sucesso = self._tentar_adobe(nome_arquivo, caminho_completo)
@@ -136,21 +154,30 @@ class PrintManager:
 
         try:
             self.resultado_impressao += f"Imprimindo {nome_arquivo} com Foxit...\n"
-            subprocess.run([FOXIT_PATH, "/p", caminho_completo],
-                           check=True, timeout=TIMEOUT_IMPRESSAO)
+            subprocess.run(
+                [FOXIT_PATH, "/p", caminho_completo],
+                check=True,
+                timeout=TIMEOUT_IMPRESSAO,
+            )
             self.resultado_impressao += " ✓ Sucesso com Foxit\n"
             return True
-        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError) as e:
+        except (
+            subprocess.TimeoutExpired,
+            subprocess.CalledProcessError,
+            FileNotFoundError,
+        ) as e:
             self.resultado_impressao += f" ✗ Erro com Foxit: {str(e)}\n"
             return False
 
     def _tentar_impressora_padrao(self, nome_arquivo, caminho_completo):
         """Tenta imprimir usando a impressora padrão do Windows."""
         try:
-            self.resultado_impressao += f"Imprimindo {nome_arquivo} com impressora padrão...\n"
+            self.resultado_impressao += (
+                f"Imprimindo {nome_arquivo} com impressora padrão...\n"
+            )
 
             # Verificar se startfile está disponível (Windows)
-            if hasattr(os, 'startfile'):
+            if hasattr(os, "startfile"):
                 os.startfile(caminho_completo, "print")
                 self.resultado_impressao += " ✓ Sucesso com impressora padrão\n"
                 return True
@@ -166,15 +193,21 @@ class PrintManager:
         for adobe_path in ADOBE_PATHS:
             if os.path.exists(adobe_path):
                 try:
-                    self.resultado_impressao += f"Imprimindo {nome_arquivo} com Adobe...\n"
+                    self.resultado_impressao += (
+                        f"Imprimindo {nome_arquivo} com Adobe...\n"
+                    )
                     subprocess.run(
-                        [adobe_path, "/p", caminho_completo], check=True, timeout=TIMEOUT_IMPRESSAO)
+                        [adobe_path, "/p", caminho_completo],
+                        check=True,
+                        timeout=TIMEOUT_IMPRESSAO,
+                    )
                     self.resultado_impressao += " ✓ Sucesso com Adobe\n"
                     return True
-                except (subprocess.TimeoutExpired,
-                        subprocess.CalledProcessError,
-                        FileNotFoundError
-                        ) as e:
+                except (
+                    subprocess.TimeoutExpired,
+                    subprocess.CalledProcessError,
+                    FileNotFoundError,
+                ) as e:
                     self.resultado_impressao += f" ✗ Erro com Adobe: {str(e)}\n"
 
         return False
@@ -192,8 +225,7 @@ def imprimir_pdf(diretorio, lista_arquivos):
 
         if print_manager.arquivos_encontrados:
             resultado_impressao = print_manager.executar_impressao(diretorio)
-            _atualizar_resultado_interface(
-                resultado_busca + resultado_impressao)
+            _atualizar_resultado_interface(resultado_busca + resultado_impressao)
             _mostrar_sucesso_impressao(len(print_manager.arquivos_encontrados))
         else:
             _mostrar_aviso_sem_arquivos()
@@ -204,7 +236,7 @@ def imprimir_pdf(diretorio, lista_arquivos):
 
 def _atualizar_resultado_interface(texto):
     """Atualiza o campo de resultado na interface."""
-    if hasattr(g, 'IMPRESSAO_RESULTADO_TEXT') and g.IMPRESSAO_RESULTADO_TEXT:
+    if hasattr(g, "IMPRESSAO_RESULTADO_TEXT") and g.IMPRESSAO_RESULTADO_TEXT:
         g.IMPRESSAO_RESULTADO_TEXT.clear()
         g.IMPRESSAO_RESULTADO_TEXT.setText(texto)
 
@@ -215,20 +247,22 @@ def _mostrar_sucesso_impressao(num_arquivos):
         g.IMPRESSAO_FORM,
         "Impressão",
         f"Processo de impressão iniciado para {num_arquivos} arquivo(s)!\n"
-        "Verifique os detalhes no campo 'Resultado da Impressão'."
+        "Verifique os detalhes no campo 'Resultado da Impressão'.",
     )
 
 
 def _mostrar_aviso_sem_arquivos():
     """Mostra aviso quando nenhum arquivo é encontrado."""
-    QMessageBox.warning(g.IMPRESSAO_FORM, "Aviso",
-                        "Nenhum arquivo foi encontrado para impressão.")
+    QMessageBox.warning(
+        g.IMPRESSAO_FORM, "Aviso", "Nenhum arquivo foi encontrado para impressão."
+    )
 
 
 def _mostrar_erro_impressao(erro):
     """Mostra erro durante a impressão."""
-    QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
-                         f"Erro ao processar impressão: {erro}")
+    QMessageBox.critical(
+        g.IMPRESSAO_FORM, "Erro", f"Erro ao processar impressão: {erro}"
+    )
 
 
 def selecionar_diretorio():
@@ -236,11 +270,16 @@ def selecionar_diretorio():
     if callable(DESABILITAR_JANELAS):
         DESABILITAR_JANELAS()
     diretorio = QFileDialog.getExistingDirectory(
-        g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs")
+        g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs"
+    )
     if callable(HABILITAR_JANELAS):
         HABILITAR_JANELAS()
 
-    if diretorio and hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY:
+    if (
+        diretorio
+        and hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY")
+        and g.IMPRESSAO_DIRETORIO_ENTRY
+    ):
         g.IMPRESSAO_DIRETORIO_ENTRY.clear()
         g.IMPRESSAO_DIRETORIO_ENTRY.setText(diretorio)
 
@@ -250,7 +289,7 @@ def selecionar_diretorio():
 
 def adicionar_lista_arquivos():
     """Adiciona múltiplos arquivos à lista a partir do campo de texto."""
-    if not (hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT):
+    if not (hasattr(g, "IMPRESSAO_LISTA_TEXT") and g.IMPRESSAO_LISTA_TEXT):
         return
 
     texto = g.IMPRESSAO_LISTA_TEXT.toPlainText().strip()
@@ -266,28 +305,35 @@ def _processar_texto_arquivos(texto):
     if not texto or not isinstance(texto, str):
         return []
 
-    linhas = texto.split('\n')
+    linhas = texto.split("\n")
     return [linha.strip() for linha in linhas if linha.strip()]
 
 
 def _adicionar_arquivos_a_lista(arquivos):
     """Adiciona arquivos à lista da interface."""
-    if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS and arquivos):
+    if not (
+        hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS")
+        and g.IMPRESSAO_LISTA_ARQUIVOS
+        and arquivos
+    ):
         return
 
     for arquivo in arquivos:
         g.IMPRESSAO_LISTA_ARQUIVOS.addItem(arquivo)
 
-    if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
+    if hasattr(g, "IMPRESSAO_LISTA_TEXT") and g.IMPRESSAO_LISTA_TEXT:
         g.IMPRESSAO_LISTA_TEXT.clear()
 
     QMessageBox.information(
-        g.IMPRESSAO_FORM, "Sucesso", f"{len(arquivos)} arquivo(s) adicionado(s) à lista!")
+        g.IMPRESSAO_FORM,
+        "Sucesso",
+        f"{len(arquivos)} arquivo(s) adicionado(s) à lista!",
+    )
 
 
 def remover_arquivo():
     """Remove o arquivo selecionado da lista."""
-    if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS):
+    if not (hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS") and g.IMPRESSAO_LISTA_ARQUIVOS):
         return
 
     current_row = g.IMPRESSAO_LISTA_ARQUIVOS.currentRow()
@@ -297,13 +343,13 @@ def remover_arquivo():
 
 def limpar_lista():
     """Limpa toda a lista de arquivos."""
-    if hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS:
+    if hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS") and g.IMPRESSAO_LISTA_ARQUIVOS:
         g.IMPRESSAO_LISTA_ARQUIVOS.clear()
 
 
 def limpar_texto_placeholder():
     """Limpa o campo de texto."""
-    if hasattr(g, 'IMPRESSAO_LISTA_TEXT') and g.IMPRESSAO_LISTA_TEXT:
+    if hasattr(g, "IMPRESSAO_LISTA_TEXT") and g.IMPRESSAO_LISTA_TEXT:
         g.IMPRESSAO_LISTA_TEXT.clear()
 
 
@@ -321,8 +367,11 @@ def executar_impressao():
     # Obter lista de arquivos
     lista_arquivos = _obter_lista_arquivos()
     if not lista_arquivos:
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
-                             "Por favor, adicione pelo menos um arquivo à lista.")
+        QMessageBox.critical(
+            g.IMPRESSAO_FORM,
+            "Erro",
+            "Por favor, adicione pelo menos um arquivo à lista.",
+        )
         return
 
     imprimir_pdf(diretorio, lista_arquivos)
@@ -330,9 +379,10 @@ def executar_impressao():
 
 def _validar_interface_inicializada():
     """Valida se a interface foi inicializada corretamente."""
-    if not (hasattr(g, 'IMPRESSAO_DIRETORIO_ENTRY') and g.IMPRESSAO_DIRETORIO_ENTRY):
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
-                             "Interface não inicializada corretamente.")
+    if not (hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY") and g.IMPRESSAO_DIRETORIO_ENTRY):
+        QMessageBox.critical(
+            g.IMPRESSAO_FORM, "Erro", "Interface não inicializada corretamente."
+        )
         return False
     return True
 
@@ -340,13 +390,15 @@ def _validar_interface_inicializada():
 def _validar_diretorio(diretorio):
     """Valida o diretório selecionado."""
     if not diretorio:
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
-                             "Por favor, selecione um diretório.")
+        QMessageBox.critical(
+            g.IMPRESSAO_FORM, "Erro", "Por favor, selecione um diretório."
+        )
         return False
 
     if not os.path.exists(diretorio):
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
-                             "O diretório selecionado não existe.")
+        QMessageBox.critical(
+            g.IMPRESSAO_FORM, "Erro", "O diretório selecionado não existe."
+        )
         return False
 
     return True
@@ -354,9 +406,10 @@ def _validar_diretorio(diretorio):
 
 def _obter_lista_arquivos():
     """Obtém a lista de arquivos da interface."""
-    if not (hasattr(g, 'IMPRESSAO_LISTA_ARQUIVOS') and g.IMPRESSAO_LISTA_ARQUIVOS):
-        QMessageBox.critical(g.IMPRESSAO_FORM, "Erro",
-                             "Interface não inicializada corretamente.")
+    if not (hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS") and g.IMPRESSAO_LISTA_ARQUIVOS):
+        QMessageBox.critical(
+            g.IMPRESSAO_FORM, "Erro", "Interface não inicializada corretamente."
+        )
         return []
 
     lista_arquivos = []
@@ -368,6 +421,7 @@ def _obter_lista_arquivos():
 
 # === SEÇÃO DE LAYOUT COM QGridLayout ===
 
+
 def main(root):
     """Inicializa e exibe o formulário de impressão em lote."""
     _inicializar_formulario(root)
@@ -376,13 +430,12 @@ def main(root):
 
 def _inicializar_formulario(root):
     """Inicializa o formulário principal."""
-    if hasattr(g, 'IMPRESSAO_FORM') and g.IMPRESSAO_FORM:
+    if hasattr(g, "IMPRESSAO_FORM") and g.IMPRESSAO_FORM:
         g.IMPRESSAO_FORM.close()
 
     g.IMPRESSAO_FORM = QDialog(root)
     g.IMPRESSAO_FORM.setWindowTitle("Impressão em Lote de PDFs")
-    g.IMPRESSAO_FORM.setFixedSize(
-        LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
+    g.IMPRESSAO_FORM.setFixedSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
     # Remover barra nativa
     g.IMPRESSAO_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
@@ -432,7 +485,7 @@ def _configurar_layout_grid():
 
 def _criar_secao_diretorio_grid():
     """Cria a seção de seleção de diretório usando QGridLayout."""
-    frame_diretorio = QGroupBox('Diretório dos PDFs')
+    frame_diretorio = QGroupBox("Diretório dos PDFs")
 
     # Layout interno em grid
     dir_layout = QGridLayout()
@@ -444,7 +497,7 @@ def _criar_secao_diretorio_grid():
     dir_layout.addWidget(g.IMPRESSAO_DIRETORIO_ENTRY, 0, 0)
 
     procurar_btn = QPushButton("📁 Procurar")
-    aplicar_estilo_botao(procurar_btn, 'cinza')
+    aplicar_estilo_botao(procurar_btn, "cinza")
     procurar_btn.clicked.connect(selecionar_diretorio)
     dir_layout.addWidget(procurar_btn, 0, 1)
 
@@ -453,7 +506,7 @@ def _criar_secao_diretorio_grid():
 
 def _criar_secao_arquivos_grid():
     """Cria a seção de gerenciamento de arquivos usando QGridLayout."""
-    frame_arquivos = QGroupBox('Lista de Arquivos para Impressão')
+    frame_arquivos = QGroupBox("Lista de Arquivos para Impressão")
 
     # Layout interno em grid
     arquivos_layout = QGridLayout()
@@ -470,17 +523,18 @@ def _criar_secao_arquivos_grid():
     g.IMPRESSAO_LISTA_TEXT = QTextEdit()
     g.IMPRESSAO_LISTA_TEXT.setMaximumHeight(ALTURA_MAXIMA_LISTA)
     g.IMPRESSAO_LISTA_TEXT.setPlaceholderText(PLACEHOLDER_LISTA_ARQUIVOS)
-    arquivos_layout.addWidget(g.IMPRESSAO_LISTA_TEXT,
-                              1, 0, 2, 2)  # rowspan=2, colspan=2
+    arquivos_layout.addWidget(
+        g.IMPRESSAO_LISTA_TEXT, 1, 0, 2, 2
+    )  # rowspan=2, colspan=2
 
     # Botões do campo de texto (coluna 2)
     adicionar_btn = QPushButton("➕ Adicionar")
-    aplicar_estilo_botao(adicionar_btn, 'azul')
+    aplicar_estilo_botao(adicionar_btn, "azul")
     adicionar_btn.clicked.connect(adicionar_lista_arquivos)
     arquivos_layout.addWidget(adicionar_btn, 1, 2)
 
     limpar_text_btn = QPushButton("🧹 Limpar")
-    aplicar_estilo_botao(limpar_text_btn, 'amarelo')
+    aplicar_estilo_botao(limpar_text_btn, "amarelo")
     limpar_text_btn.clicked.connect(limpar_texto_placeholder)
     arquivos_layout.addWidget(limpar_text_btn, 2, 2)
 
@@ -494,21 +548,22 @@ def _criar_secao_arquivos_grid():
     g.IMPRESSAO_LISTA_ARQUIVOS = QListWidget()
     g.IMPRESSAO_LISTA_ARQUIVOS.setMaximumHeight(ALTURA_MAXIMA_LISTA_WIDGET)
     arquivos_layout.addWidget(
-        g.IMPRESSAO_LISTA_ARQUIVOS, 4, 0, 3, 2)  # rowspan=3, colspan=2
+        g.IMPRESSAO_LISTA_ARQUIVOS, 4, 0, 3, 2
+    )  # rowspan=3, colspan=2
 
     # Botões da lista (coluna 2)
     remover_btn = QPushButton("🗑️ Remover")
-    aplicar_estilo_botao(remover_btn, 'vermelho')
+    aplicar_estilo_botao(remover_btn, "vermelho")
     remover_btn.clicked.connect(remover_arquivo)
     arquivos_layout.addWidget(remover_btn, 4, 2)
 
     limpar_lista_btn = QPushButton("🧹 Limpar")
-    aplicar_estilo_botao(limpar_lista_btn, 'amarelo')
+    aplicar_estilo_botao(limpar_lista_btn, "amarelo")
     limpar_lista_btn.clicked.connect(limpar_lista)
     arquivos_layout.addWidget(limpar_lista_btn, 5, 2)
 
     imprimir_btn = QPushButton("🖨️ Imprimir")
-    aplicar_estilo_botao(imprimir_btn, 'verde')
+    aplicar_estilo_botao(imprimir_btn, "verde")
     imprimir_btn.clicked.connect(executar_impressao)
     arquivos_layout.addWidget(imprimir_btn, 6, 2)
 
@@ -517,7 +572,7 @@ def _criar_secao_arquivos_grid():
 
 def _criar_secao_resultado_grid():
     """Cria a seção de resultado da impressão usando QGridLayout."""
-    frame_resultado = QGroupBox('Resultado da Impressão')
+    frame_resultado = QGroupBox("Resultado da Impressão")
 
     # Layout interno em grid
     resultado_layout = QGridLayout()

@@ -4,9 +4,10 @@ Permite arrastar a janela e adapta o tema (dark/light/auto).
 """
 
 import darkdetect
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtCore import QEvent, QPoint, Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtCore import Qt, QPoint, QEvent
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
+
 from src.utils.utilitarios import ICON_PATH
 
 
@@ -16,7 +17,7 @@ class BarraTitulo(QWidget):
     Inclui ícone, título, botões de minimizar/fechar e suporte a tema.
     """
 
-    def __init__(self, parent=None, tema='dark'):
+    def __init__(self, parent=None, tema="dark"):
         """
         Inicializa a barra de título customizada.
         :param parent: Janela pai.
@@ -72,11 +73,11 @@ class BarraTitulo(QWidget):
         self.current_theme = tema
 
         tema_real = tema
-        if tema == 'auto':
+        if tema == "auto":
             try:
-                tema_real = 'dark' if darkdetect.isDark() else 'light'
+                tema_real = "dark" if darkdetect.isDark() else "light"
             except (ImportError, TypeError):
-                tema_real = 'dark'
+                tema_real = "dark"
 
         if tema_real == self.real_theme_applied:
             return
@@ -84,7 +85,7 @@ class BarraTitulo(QWidget):
         # SOLUÇÃO: Define a flag para True antes de mudar o estilo.
         self._is_updating_style = True
         try:
-            if tema_real == 'dark':
+            if tema_real == "dark":
                 self.setStyleSheet("background-color: #232629; color: #fff;")
             else:
                 self.setStyleSheet("background-color: #f0f0f0; color: #222;")
@@ -127,8 +128,10 @@ class BarraTitulo(QWidget):
         if event.button() == Qt.LeftButton:
             self.pressing = True
             if self.parent:
-                self.start = event.globalPosition().toPoint(
-                ) - self.parent.frameGeometry().topLeft()
+                self.start = (
+                    event.globalPosition().toPoint()
+                    - self.parent.frameGeometry().topLeft()
+                )
             event.accept()
 
     def mouseMoveEvent(self, event):  # pylint: disable=invalid-name

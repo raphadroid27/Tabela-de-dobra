@@ -1,6 +1,7 @@
 """
 Este módulo define variáveis globais para uso em diferentes partes da aplicação.
 """
+
 # Variáveis globais
 NO_TOPO_VAR = None
 VALORES_W = [1, 2]
@@ -65,7 +66,7 @@ RAIO_K = {
     7.0: 0.49,
     8.0: 0.49,
     9.0: 0.50,
-    10.0: 0.50
+    10.0: 0.50,
 }
 
 # nova_espessura.py widgets

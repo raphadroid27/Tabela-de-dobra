@@ -8,23 +8,23 @@
 # O link para o GitHub abre o navegador padrão ao ser clicado.
 """
 
-
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QWidget
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QFont
+from PySide6.QtGui import QFont, QIcon
+from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout, QWidget
+
 from src import __version__
-from src.config import globals as g
-from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.components.barra_titulo import BarraTitulo
+from src.config import globals as g
 from src.utils.estilo import obter_tema_atual
+from src.utils.janelas import aplicar_no_topo, posicionar_janela
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 
 def main(root):
     """
     Função principal que cria a janela "Sobre" com barra de título customizada.
     """
-    if getattr(g, 'SOBRE_FORM', None):
+    if getattr(g, "SOBRE_FORM", None):
         g.SOBRE_FORM.close()
 
     g.SOBRE_FORM = QDialog(root)
@@ -35,7 +35,7 @@ def main(root):
     g.SOBRE_FORM.setWindowIcon(QIcon(ICON_PATH))
 
     aplicar_no_topo(g.SOBRE_FORM)
-    posicionar_janela(g.SOBRE_FORM, 'centro')
+    posicionar_janela(g.SOBRE_FORM, "centro")
 
     # Layout principal vertical: barra de título + conteúdo
     layout = QVBoxLayout(g.SOBRE_FORM)
@@ -74,15 +74,15 @@ def main(root):
     conteudo_layout.addWidget(label_autor)
 
     # Descrição
-    label_desc = QLabel(
-        "Aplicativo para cálculo de dobras em\nchapas metálicas.")
+    label_desc = QLabel("Aplicativo para cálculo de dobras em\nchapas metálicas.")
     label_desc.setFont(font_normal)
     label_desc.setAlignment(Qt.AlignCenter)
     conteudo_layout.addWidget(label_desc)
 
     # Link para o GitHub
     label_link = QLabel(
-        '<a href="https://github.com/raphadroid27/Tabela-de-dobra">Repositório no GitHub</a>')
+        '<a href="https://github.com/raphadroid27/Tabela-de-dobra">Repositório no GitHub</a>'
+    )
     label_link.setFont(font_normal)
     label_link.setAlignment(Qt.AlignCenter)
     label_link.setOpenExternalLinks(True)

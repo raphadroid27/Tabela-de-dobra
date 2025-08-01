@@ -7,11 +7,12 @@ recebem dados brutos como argumentos, processam-nos e retornam os resultados,
 sem modificar ou sequer conhecer a interface gráfica.
 """
 
-from math import pi
 import re
+from math import pi
 from typing import List
+
 from src.config import globals as g
-from src.models.models import Canal, Espessura, Material, Deducao
+from src.models.models import Canal, Deducao, Espessura, Material
 from src.utils.banco_dados import session
 
 # --- FUNÇÕES DE CONVERSÃO DE DADOS ---
@@ -32,9 +33,10 @@ def converter_para_float(valor_str: str, default_value=0.0) -> float:
         return default_value
     try:
         # Remove " Copiado!" e substitui vírgula por ponto
-        return float(valor_str.replace(' Copiado!', '').replace(',', '.'))
+        return float(valor_str.replace(" Copiado!", "").replace(",", "."))
     except (ValueError, TypeError):
         return default_value
+
 
 # --- CLASSES DE CÁLCULO (INDEPENDENTES DA UI) ---
 
@@ -54,26 +56,29 @@ class CalculoDeducaoDB:
 
         try:
             espessura_valor = float(espessura_str)
-            espessura_obj = session.query(Espessura).filter_by(
-                valor=espessura_valor).first()
-            material_obj = session.query(Material).filter_by(
-                nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(
-                valor=canal_valor).first()
+            espessura_obj = (
+                session.query(Espessura).filter_by(valor=espessura_valor).first()
+            )
+            material_obj = session.query(Material).filter_by(nome=material_nome).first()
+            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
             if not all([espessura_obj, material_obj, canal_obj]):
-                return {'valor': 'N/A', 'obs': 'Combinação não encontrada.'}
+                return {"valor": "N/A", "obs": "Combinação não encontrada."}
 
-            deducao_obj = session.query(Deducao).filter(
-                Deducao.espessura_id == espessura_obj.id,
-                Deducao.material_id == material_obj.id,
-                Deducao.canal_id == canal_obj.id
-            ).first()
+            deducao_obj = (
+                session.query(Deducao)
+                .filter(
+                    Deducao.espessura_id == espessura_obj.id,
+                    Deducao.material_id == material_obj.id,
+                    Deducao.canal_id == canal_obj.id,
+                )
+                .first()
+            )
 
             if deducao_obj:
-                return {'valor': deducao_obj.valor, 'obs': deducao_obj.observacao or ''}
+                return {"valor": deducao_obj.valor, "obs": deducao_obj.observacao or ""}
 
-            return {'valor': 'N/A', 'obs': 'Dedução não encontrada.'}
+            return {"valor": "N/A", "obs": "Dedução não encontrada."}
 
         except (ValueError, TypeError):
             return None
@@ -87,8 +92,7 @@ class CalculoFatorK:
         """Fórmula para calcular o Fator K."""
         if espessura == 0:
             return 0.0
-        numerador = 4 * (espessura - (deducao / 2) +
-                         raio_interno) - (pi * raio_interno)
+        numerador = 4 * (espessura - (deducao / 2) + raio_interno) - (pi * raio_interno)
         denominador = pi * espessura
         fator_k = numerador / denominador if denominador != 0 else 0
         return max(0.0, min(fator_k, 0.5))
@@ -102,7 +106,7 @@ class CalculoFatorK:
 
         razoes = sorted(g.RAIO_K.keys())
         for i in range(len(razoes) - 1):
-            r1, r2 = razoes[i], razoes[i+1]
+            r1, r2 = razoes[i], razoes[i + 1]
             if r1 <= razao_re <= r2:
                 k1, k2 = g.RAIO_K[r1], g.RAIO_K[r2]
                 return k1 + (k2 - k1) * (razao_re - r1) / (r2 - r1)
@@ -116,14 +120,13 @@ class CalculoFatorK:
             return None
 
         if deducao_usada > 0:
-            fator_k = self._formula_fator_k(
-                espessura, deducao_usada, raio_interno)
+            fator_k = self._formula_fator_k(espessura, deducao_usada, raio_interno)
         else:
             razao_re = raio_interno / espessura if espessura > 0 else 0
             fator_k = self._obter_fator_k_tabela(razao_re)
 
         offset = fator_k * espessura
-        return {'fator_k': fator_k, 'offset': offset}
+        return {"fator_k": fator_k, "offset": offset}
 
 
 class CalculoAbaMinima:
@@ -134,7 +137,7 @@ class CalculoAbaMinima:
         """Extrai o valor numérico de uma string de canal."""
         if not canal_str:
             return None
-        numeros = re.findall(r'\d+\.?\d*', canal_str)
+        numeros = re.findall(r"\d+\.?\d*", canal_str)
         return float(numeros[0]) if numeros else None
 
     def calcular(self, canal_str: str, espessura: float):
@@ -189,21 +192,24 @@ class CalculoForca:
     def _obter_forca_db(espessura_valor, material_nome, canal_valor):
         """Busca o valor da força no banco de dados."""
         try:
-            espessura_obj = session.query(Espessura).filter_by(
-                valor=espessura_valor).first()
-            material_obj = session.query(Material).filter_by(
-                nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(
-                valor=canal_valor).first()
+            espessura_obj = (
+                session.query(Espessura).filter_by(valor=espessura_valor).first()
+            )
+            material_obj = session.query(Material).filter_by(nome=material_nome).first()
+            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
             if not all([espessura_obj, material_obj, canal_obj]):
                 return None, None
 
-            deducao_obj = session.query(Deducao).filter(
-                Deducao.espessura_id == espessura_obj.id,
-                Deducao.material_id == material_obj.id,
-                Deducao.canal_id == canal_obj.id
-            ).first()
+            deducao_obj = (
+                session.query(Deducao)
+                .filter(
+                    Deducao.espessura_id == espessura_obj.id,
+                    Deducao.material_id == material_obj.id,
+                    Deducao.canal_id == canal_obj.id,
+                )
+                .first()
+            )
 
             return deducao_obj.forca if deducao_obj else None, canal_obj
         except (AttributeError, TypeError, ValueError):
@@ -216,22 +222,24 @@ class CalculoForca:
         if not all([espessura, material, canal]):
             return None
 
-        forca_base, canal_obj = self._obter_forca_db(
-            espessura, material, canal)
+        forca_base, canal_obj = self._obter_forca_db(espessura, material, canal)
 
         if forca_base is None:
-            return {'forca': None, 'canal_obj': canal_obj}
+            return {"forca": None, "canal_obj": canal_obj}
 
-        toneladas_m = (forca_base * comprimento) / \
-            1000 if comprimento > 0 else forca_base
-        return {'forca': toneladas_m, 'canal_obj': canal_obj}
+        toneladas_m = (
+            (forca_base * comprimento) / 1000 if comprimento > 0 else forca_base
+        )
+        return {"forca": toneladas_m, "canal_obj": canal_obj}
 
 
 class CalculoDobra:
     """Calcula as medidas de dobra, metade e blank."""
 
     @staticmethod
-    def _calcular_medida_individual(valor_dobra, deducao, pos_atual, blocos_preenchidos):
+    def _calcular_medida_individual(
+        valor_dobra, deducao, pos_atual, blocos_preenchidos
+    ):
         """
         Calcula a medida de uma única dobra, considerando sua posição no bloco.
         """
@@ -275,13 +283,12 @@ class CalculoDobra:
         blank_total = 0
         for i, dobra_valor in enumerate(valores_dobras):
             if dobra_valor <= 0:
-                resultados.append({'medida': None, 'metade': None})
+                resultados.append({"medida": None, "metade": None})
                 continue
 
-            medida = self._calcular_medida_individual(
-                dobra_valor, deducao, i, blocos)
+            medida = self._calcular_medida_individual(dobra_valor, deducao, i, blocos)
             metade = medida / 2
             blank_total += medida
-            resultados.append({'medida': medida, 'metade': metade})
+            resultados.append({"medida": medida, "metade": metade})
 
-        return {'resultados': resultados, 'blank_total': blank_total}
+        return {"resultados": resultados, "blank_total": blank_total}

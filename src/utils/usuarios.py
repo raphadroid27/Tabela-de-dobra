@@ -1,17 +1,20 @@
 """
 Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
 """
+
 import hashlib
+
 from PySide6.QtWidgets import QMessageBox
+
 from src.config import globals as g
 from src.models.models import Usuario
-from src.utils.banco_dados import (session,
-                                   tratativa_erro,
-                                   )
-from src.utils.janelas import HABILITAR_JANELAS
+from src.utils.banco_dados import (
+    session,
+    tratativa_erro,
+)
 from src.utils.interface import listar, obter_configuracoes
-from src.utils.utilitarios import (
-    ask_string, show_error, show_info, show_warning)
+from src.utils.janelas import HABILITAR_JANELAS
+from src.utils.utilitarios import ask_string, show_error, show_info, show_warning
 
 
 def novo_usuario():
@@ -32,8 +35,7 @@ def novo_usuario():
         return
 
     # Verificar se o usuário já existe
-    usuario_obj = session.query(Usuario).filter_by(
-        nome=novo_usuario_nome).first()
+    usuario_obj = session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
     if usuario_obj:
         show_error("Erro", "Usuário já existente.")
         return
@@ -43,8 +45,7 @@ def novo_usuario():
         return
 
     admin_value = g.ADMIN_VAR if g.ADMIN_VAR else "viewer"
-    usuario = Usuario(nome=novo_usuario_nome,
-                      senha=senha_hash, role=admin_value)
+    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=admin_value)
     session.add(usuario)
 
     # Usar tratativa_erro para tratar erros e confirmar a operação
@@ -75,25 +76,30 @@ def login():
 
     if usuario_obj:
         # Usar getattr para acessar o valor da coluna de forma segura
-        senha_db = getattr(usuario_obj, 'senha', None)
+        senha_db = getattr(usuario_obj, "senha", None)
         if senha_db == "nova_senha":
             nova_senha = ask_string(
                 "Nova Senha",
                 "Digite uma nova senha:",
-                parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
+                parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
+            )
             if nova_senha:
                 # Usar setattr para atribuir valor à coluna de forma segura
                 senha_hash = hashlib.sha256(nova_senha.encode()).hexdigest()
-                setattr(usuario_obj, 'senha', senha_hash)
+                setattr(usuario_obj, "senha", senha_hash)
                 tratativa_erro()
                 show_info(
                     "Sucesso",
                     "Senha alterada com sucesso. Faça login novamente.",
-                    parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
+                    parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
+                )
                 return
         elif senha_db == hashlib.sha256(usuario_senha.encode()).hexdigest():
-            show_info("Login", "Login efetuado com sucesso.",
-                      parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
+            show_info(
+                "Login",
+                "Login efetuado com sucesso.",
+                parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
+            )
             g.USUARIO_ID = usuario_obj.id
             if g.AUTEN_FORM is not None:
                 g.AUTEN_FORM.close()
@@ -101,14 +107,20 @@ def login():
                 titulo = f"Cálculo de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
                 g.PRINC_FORM.setWindowTitle(titulo)
             # Atualiza a barra de título customizada, se existir
-            if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
+            if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
                 g.BARRA_TITULO.titulo.setText(titulo)
         else:
-            show_error("Erro", "Usuário ou senha incorretos.",
-                       parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
+            show_error(
+                "Erro",
+                "Usuário ou senha incorretos.",
+                parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
+            )
     else:
-        show_error("Erro", "Usuário ou senha incorretos.",
-                   parent=g.AUTEN_FORM if g.AUTEN_FORM else None)
+        show_error(
+            "Erro",
+            "Usuário ou senha incorretos.",
+            parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
+        )
 
     if callable(HABILITAR_JANELAS):
         HABILITAR_JANELAS()
@@ -122,7 +134,7 @@ def logado(tipo):
     config = configuracoes[tipo]
 
     if g.USUARIO_ID is None:
-        show_error("Erro", "Login requerido.", parent=config['form'])
+        show_error("Erro", "Login requerido.", parent=config["form"])
         return False
     return True
 
@@ -142,13 +154,16 @@ def tem_permissao(tipo, role_requerida, show_message=True):
     usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
     if not usuario_obj:
         if show_message:
-            show_error("Erro", "Você não tem permissão para acessar esta função.",
-                       parent=config['form'])
+            show_error(
+                "Erro",
+                "Você não tem permissão para acessar esta função.",
+                parent=config["form"],
+            )
         return False
 
     # Permitir hierarquia de permissões
     roles_hierarquia = ["viewer", "editor", "admin"]
-    usuario_role = getattr(usuario_obj, 'role', 'viewer')
+    usuario_role = getattr(usuario_obj, "role", "viewer")
 
     try:
         required_index = roles_hierarquia.index(role_requerida)
@@ -192,21 +207,29 @@ def resetar_senha():
     # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
     user_id = item_selecionado_usuario()
     if user_id is None:
-        show_warning("Aviso",
-                     "Selecione um usuário para resetar a senha.",
-                     parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        show_warning(
+            "Aviso",
+            "Selecione um usuário para resetar a senha.",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
         return
 
     novo_password = "nova_senha"  # Defina a nova senha padrão aqui
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
     if usuario_obj:
-        setattr(usuario_obj, 'senha', novo_password)
+        setattr(usuario_obj, "senha", novo_password)
         tratativa_erro()
-        show_info("Sucesso", "Senha resetada com sucesso.",
-                  parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        show_info(
+            "Sucesso",
+            "Senha resetada com sucesso.",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
     else:
-        show_error("Erro", "Usuário não encontrado.",
-                   parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        show_error(
+            "Erro",
+            "Usuário não encontrado.",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
 
 
 def excluir_usuario():
@@ -214,14 +237,17 @@ def excluir_usuario():
     Exclui o usuário selecionado na lista de usuários.
     """
     # Validações iniciais
-    if not tem_permissao('usuario', 'admin') or g.LIST_USUARIO is None:
+    if not tem_permissao("usuario", "admin") or g.LIST_USUARIO is None:
         return
 
     # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
     obj_id = item_selecionado_usuario()
     if obj_id is None:
-        show_warning("Aviso", "Selecione um usuário para excluir.",
-                     parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        show_warning(
+            "Aviso",
+            "Selecione um usuário para excluir.",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
         return
 
     # Obter dados do usuário selecionado
@@ -230,26 +256,30 @@ def excluir_usuario():
     erro_msg = None
     if obj is None:
         erro_msg = "Usuário não encontrado."
-    elif getattr(obj, 'role', None) == "admin":
+    elif getattr(obj, "role", None) == "admin":
         erro_msg = "Não é possível excluir um administrador."
 
     if erro_msg:
-        show_error("Erro", erro_msg,
-                   parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        show_error("Erro", erro_msg, parent=g.USUAR_FORM if g.USUAR_FORM else None)
         return
 
     # Confirmar exclusão
-    aviso = QMessageBox.question(g.USUAR_FORM if g.USUAR_FORM else None,
-                                 "Atenção!",
-                                 "Tem certeza que deseja excluir o usuário?",
-                                 QMessageBox.Yes | QMessageBox.No)
+    aviso = QMessageBox.question(
+        g.USUAR_FORM if g.USUAR_FORM else None,
+        "Atenção!",
+        "Tem certeza que deseja excluir o usuário?",
+        QMessageBox.Yes | QMessageBox.No,
+    )
     if aviso == QMessageBox.Yes:
         session.delete(obj)
         tratativa_erro()
         # Atualizar a lista após exclusão
-        listar('usuario')
-        show_info("Sucesso", "Usuário excluído com sucesso!",
-                  parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        listar("usuario")
+        show_info(
+            "Sucesso",
+            "Usuário excluído com sucesso!",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
 
 
 def tornar_editor():
@@ -263,38 +293,48 @@ def tornar_editor():
     # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
     user_id = item_selecionado_usuario()
     if user_id is None:
-        show_warning("Aviso",
-                     "Selecione um usuário para promover a editor.",
-                     parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        show_warning(
+            "Aviso",
+            "Selecione um usuário para promover a editor.",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
         return
 
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
 
     if usuario_obj:
         # Usar getattr para acessar o valor da coluna de forma segura
-        usuario_role = getattr(usuario_obj, 'role', None)
+        usuario_role = getattr(usuario_obj, "role", None)
         if usuario_role == "admin":
-            show_error("Erro",
-                       "O usuário já é um administrador.",
-                       parent=g.USUAR_FORM if g.USUAR_FORM else None)
+            show_error(
+                "Erro",
+                "O usuário já é um administrador.",
+                parent=g.USUAR_FORM if g.USUAR_FORM else None,
+            )
             return
         if usuario_role == "editor":
-            show_info("Informação",
-                      "O usuário já é um editor.",
-                      parent=g.USUAR_FORM if g.USUAR_FORM else None)
+            show_info(
+                "Informação",
+                "O usuário já é um editor.",
+                parent=g.USUAR_FORM if g.USUAR_FORM else None,
+            )
             return
 
         # Usar setattr para atribuir valor à coluna de forma segura
-        setattr(usuario_obj, 'role', "editor")
+        setattr(usuario_obj, "role", "editor")
         tratativa_erro()
-        show_info("Sucesso",
-                  "Usuário promovido a editor com sucesso.",
-                  parent=g.USUAR_FORM if g.USUAR_FORM else None)
-        listar('usuario')  # Atualiza a lista de usuários na interface
+        show_info(
+            "Sucesso",
+            "Usuário promovido a editor com sucesso.",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
+        listar("usuario")  # Atualiza a lista de usuários na interface
     else:
-        show_error("Erro",
-                   "Usuário não encontrado.",
-                   parent=g.USUAR_FORM if g.USUAR_FORM else None)
+        show_error(
+            "Erro",
+            "Usuário não encontrado.",
+            parent=g.USUAR_FORM if g.USUAR_FORM else None,
+        )
 
 
 def item_selecionado_usuario():
