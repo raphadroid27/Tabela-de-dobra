@@ -12,6 +12,7 @@ from typing import Set, Dict, List, Tuple, Any, Callable
 from PySide6.QtWidgets import QWidget, QComboBox, QLineEdit, QLabel
 from src.models.models import Espessura, Material, Canal
 from src.utils.banco_dados import session
+from src.utils.utilitarios import tem_configuracao_dobras_valida
 import src.config.globals as g
 
 # Configurar logger
@@ -544,7 +545,7 @@ class WidgetManager:
     @classmethod
     def get_dobra_widgets(cls, valor_w: int) -> Dict[str, List[QWidget]]:
         """Retorna widgets de dobras para um valor W."""
-        if not hasattr(g, 'N'):
+        if not tem_configuracao_dobras_valida():
             return {}
 
         widgets = {
@@ -687,7 +688,7 @@ class WidgetStateManager:
         """Captura o estado dos widgets das dobras."""
         dobras_state = {}
 
-        if not (hasattr(g, 'VALORES_W') and hasattr(g, 'N')):
+        if not tem_configuracao_dobras_valida():
             self.widget_cache['dobras'] = dobras_state
             return
 
@@ -700,7 +701,7 @@ class WidgetStateManager:
 
         self.widget_cache['dobras'] = dobras_state
 
-    def _get_widget_value_safely(self, widget, widget_name):
+    def _get_widget_value_safely(self, widget, _):
         """Obtém valor do widget de forma segura."""
         if not WidgetManager.is_widget_valid(widget):
             return ''

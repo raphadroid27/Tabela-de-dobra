@@ -12,6 +12,7 @@ import os
 import sys
 
 from PySide6.QtWidgets import (QInputDialog, QLineEdit, QMessageBox)
+from src.config import globals as g
 
 # --- 1. LÓGICA CENTRALIZADA DE CAMINHOS ---
 
@@ -103,6 +104,15 @@ def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
             layout.setContentsMargins(margem, margem, margem, margem)
         if hasattr(layout, 'setSpacing'):
             layout.setSpacing(espaco)
+
+
+def tem_configuracao_dobras_valida():
+    """Verifica se as configurações de dobras estão disponíveis.
+    
+    Returns:
+        bool: True se VALORES_W e N estão definidos em globals
+    """
+    return hasattr(g, 'VALORES_W') and hasattr(g, 'N')
 
 
 def ask_string(title, prompt, parent=None):

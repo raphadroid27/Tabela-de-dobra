@@ -13,6 +13,7 @@ from src.config import globals as g
 from src.utils.interface import todas_funcoes, calcular_valores
 from src.utils.widget import widget_state_manager
 from src.utils import utilitarios
+from src.utils.utilitarios import tem_configuracao_dobras_valida
 
 
 def safe_process_events():
@@ -61,7 +62,7 @@ def clear_global_widget_references():
     ]
 
     # Limpar widgets de dobras dinamicamente
-    if hasattr(g, 'VALORES_W') and hasattr(g, 'N'):
+    if tem_configuracao_dobras_valida():
         for w in g.VALORES_W:
             for i in range(1, 11):  # Limpar até o máximo de abas possível
                 widget_names.extend([
