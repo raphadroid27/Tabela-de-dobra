@@ -4,15 +4,17 @@ Sistema robusto com gerenciamento seguro de widgets.
 """
 
 import traceback
+
 from PySide6.QtWidgets import QApplication
-from src.components.cabecalho import cabecalho
-from src.components.avisos import avisos
-from src.components.dobra_90 import dobras
+
 from src.components import botoes
+from src.components.avisos import avisos
+from src.components.cabecalho import cabecalho
+from src.components.dobra_90 import dobras
 from src.config import globals as g
-from src.utils.interface import todas_funcoes, calcular_valores
-from src.utils.widget import widget_state_manager
+from src.utils.interface import calcular_valores, todas_funcoes
 from src.utils.utilitarios import tem_configuracao_dobras_valida
+from src.utils.widget import widget_state_manager
 
 
 def safe_process_events():
@@ -29,7 +31,7 @@ def safe_clear_layout(layout):
     Args:
         layout: Layout a ser limpo
     """
-    if not hasattr(layout, 'count'):
+    if not hasattr(layout, "count"):
         return
 
     # Primeiro, remover todos os itens do layout
@@ -55,24 +57,33 @@ def safe_clear_layout(layout):
 def clear_global_widget_references():
     """Limpa referências globais de widgets antes da recriação."""
     widget_names = [
-        'MAT_COMB', 'ESP_COMB', 'CANAL_COMB', 'DED_LBL', 'RI_ENTRY',
-        'K_LBL', 'OFFSET_LBL', 'OBS_LBL', 'FORCA_LBL', 'COMPR_ENTRY',
-        'ABA_EXT_LBL', 'Z_EXT_LBL', 'DED_ESPEC_ENTRY'
+        "MAT_COMB",
+        "ESP_COMB",
+        "CANAL_COMB",
+        "DED_LBL",
+        "RI_ENTRY",
+        "K_LBL",
+        "OFFSET_LBL",
+        "OBS_LBL",
+        "FORCA_LBL",
+        "COMPR_ENTRY",
+        "ABA_EXT_LBL",
+        "Z_EXT_LBL",
+        "DED_ESPEC_ENTRY",
     ]
 
     # Limpar widgets de dobras dinamicamente
     if tem_configuracao_dobras_valida():
         for w in g.VALORES_W:
             for i in range(1, 11):  # Limpar até o máximo de abas possível
-                widget_names.extend([
-                    f'aba{i}_entry_{w}',
-                    f'medidadobra{i}_label_{w}',
-                    f'metadedobra{i}_label_{w}'
-                ])
-            widget_names.extend([
-                f'medida_blank_label_{w}',
-                f'metade_blank_label_{w}'
-            ])
+                widget_names.extend(
+                    [
+                        f"aba{i}_entry_{w}",
+                        f"medidadobra{i}_label_{w}",
+                        f"metadedobra{i}_label_{w}",
+                    ]
+                )
+            widget_names.extend([f"medida_blank_label_{w}", f"metade_blank_label_{w}"])
 
     for widget_name in widget_names:
         if hasattr(g, widget_name):
@@ -92,8 +103,7 @@ def carregar_interface(var, layout):
         g.PRINC_FORM.setUpdatesEnabled(False)
         g.INTERFACE_RELOADING = True
 
-        print(
-            f'Iniciando carregamento da interface: EXP_V={g.EXP_V}, EXP_H={g.EXP_H}')
+        print(f"Iniciando carregamento da interface: EXP_V={g.EXP_V}, EXP_H={g.EXP_H}")
 
         # 1. Capturar e limpar estado anterior
         _preparar_interface_reload(layout)
@@ -120,7 +130,7 @@ def carregar_interface(var, layout):
 def _preparar_interface_reload(layout):
     """Prepara a interface para recarregamento."""
     # Capturar estado atual dos widgets
-    if hasattr(g, 'MAT_COMB') and g.MAT_COMB is not None:
+    if hasattr(g, "MAT_COMB") and g.MAT_COMB is not None:
         print("Capturando estado atual dos widgets...")
         widget_state_manager.capture_current_state()
     else:

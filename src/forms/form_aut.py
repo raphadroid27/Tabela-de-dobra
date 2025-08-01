@@ -8,19 +8,25 @@ com a biblioteca PySide6, utilizando o módulo globals para variáveis globais e
 módulo funcoes para operações auxiliares. O banco de dados é gerenciado com SQLAlchemy.
 """
 
-from PySide6.QtWidgets import (
-    QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QCheckBox, QVBoxLayout, QWidget)
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QDialog,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
-from src.utils.banco_dados import session
-from src.models import Usuario
-from src.utils.usuarios import login, novo_usuario
-from src.utils.janelas import (HABILITAR_JANELAS, posicionar_janela)
-from src.utils.estilo import (
-    obter_tema_atual,
-    aplicar_estilo_botao)
-from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
+from src.config import globals as g
+from src.models import Usuario
+from src.utils.banco_dados import session
+from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
+from src.utils.janelas import HABILITAR_JANELAS, posicionar_janela
+from src.utils.usuarios import login, novo_usuario
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 # Constantes para configuração da interface
@@ -82,14 +88,14 @@ def _criar_campos_usuario_senha(main_layout):
 
 def _verificar_admin_existente():
     """Verifica se já existe um usuário administrador."""
-    return session.query(Usuario).filter(Usuario.role == 'admin').first()
+    return session.query(Usuario).filter(Usuario.role == "admin").first()
 
 
 def _configurar_modo_login(main_layout):
     """Configura o formulário para modo login."""
     g.AUTEN_FORM.setWindowTitle("Login")
     login_btn = QPushButton("🔐 Login")
-    aplicar_estilo_botao(login_btn, 'verde')
+    aplicar_estilo_botao(login_btn, "verde")
     login_btn.clicked.connect(login)
     main_layout.addWidget(login_btn, 3, 0, 1, 2)
 
@@ -101,7 +107,7 @@ def _configurar_checkbox_admin(main_layout):
     admin_checkbox = QCheckBox()
 
     def on_admin_checkbox_changed(checked):
-        g.ADMIN_VAR = 'admin' if checked else 'viewer'
+        g.ADMIN_VAR = "admin" if checked else "viewer"
 
     admin_checkbox.stateChanged.connect(on_admin_checkbox_changed)
     main_layout.addWidget(admin_checkbox, 2, 1)
@@ -114,11 +120,11 @@ def _configurar_modo_novo_usuario(main_layout):
     if not admin_existente:
         _configurar_checkbox_admin(main_layout)
     else:
-        g.ADMIN_VAR = 'viewer'
+        g.ADMIN_VAR = "viewer"
 
     g.AUTEN_FORM.setWindowTitle("Novo Usuário")
     save_btn = QPushButton("💾 Salvar")
-    aplicar_estilo_botao(save_btn, 'azul')
+    aplicar_estilo_botao(save_btn, "azul")
     save_btn.clicked.connect(novo_usuario)
     main_layout.addWidget(save_btn, 3, 0, 1, 2)
 
@@ -131,7 +137,7 @@ def _criar_conteudo_principal(vlayout):
     _criar_campos_usuario_senha(main_layout)
 
     # Inicializar variável admin
-    g.ADMIN_VAR = 'viewer'
+    g.ADMIN_VAR = "viewer"
 
     if g.LOGIN:
         _configurar_modo_login(main_layout)
@@ -144,7 +150,7 @@ def _criar_conteudo_principal(vlayout):
 
 def _finalizar_configuracao():
     """Finaliza a configuração da janela."""
-    posicionar_janela(g.AUTEN_FORM, 'centro')
+    posicionar_janela(g.AUTEN_FORM, "centro")
     g.AUTEN_FORM.show()
     g.AUTEN_FORM.raise_()
     g.AUTEN_FORM.activateWindow()

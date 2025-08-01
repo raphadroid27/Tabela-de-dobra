@@ -1,21 +1,23 @@
 """
 Módulo utilitário para manipulação de banco de dados no aplicativo de cálculo de dobras.
 """
-import os
+
 import logging
+import os
 from contextlib import contextmanager
-from typing import Tuple, Optional, Type, Iterator
+from typing import Iterator, Optional, Tuple, Type
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import Session as SQLAlchemySession
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
-from src.models.models import (Log, SystemControl, Base)
+from sqlalchemy.orm import Session as SQLAlchemySession
+from sqlalchemy.orm import sessionmaker
+
+from src.models.models import Base, Log, SystemControl
 from src.utils.utilitarios import DB_PATH
 
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
-engine = create_engine(
-    f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
+engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -47,7 +49,7 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
             acao=acao,
             tabela=tabela,
             registro_id=registro_id,
-            detalhes=detalhes
+            detalhes=detalhes,
         )
         session.add(log)
     except (IntegrityError, OperationalError) as e:
@@ -55,7 +57,9 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
 
 
 @contextmanager
-def session_scope() -> Iterator[Tuple[Optional[SQLAlchemySession], Optional[Type[SystemControl]]]]:
+def session_scope() -> (
+    Iterator[Tuple[Optional[SQLAlchemySession], Optional[Type[SystemControl]]]]
+):
     """Fornece um escopo transacional para operações de banco de dados."""
     if not os.path.exists(DB_PATH):
         logging.error("Banco de dados não encontrado em: %s", DB_PATH)
@@ -84,11 +88,11 @@ def inicializar_banco_dados():
 
     db_session = Session()
     try:
-        if not db_session.query(SystemControl).filter_by(key='UPDATE_CMD').first():
-            logging.info(
-                "Inicializando o comando de atualização (UPDATE_CMD) no DB.")
+        if not db_session.query(SystemControl).filter_by(key="UPDATE_CMD").first():
+            logging.info("Inicializando o comando de atualização (UPDATE_CMD) no DB.")
             initial_command = SystemControl(
-                type='COMMAND', key='UPDATE_CMD', value='NONE')
+                type="COMMAND", key="UPDATE_CMD", value="NONE"
+            )
             db_session.add(initial_command)
             db_session.commit()
     finally:

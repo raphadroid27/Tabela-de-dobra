@@ -1,16 +1,24 @@
 """
 Formulário para o cálculo de Spring Back
 """
-import sys
-from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QGridLayout, QLabel, QComboBox, QWidget, QApplication)
-from PySide6.QtCore import Qt
 
+import sys
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QDialog,
+    QGridLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
+
+from src.components.barra_titulo import BarraTitulo
+from src.config import globals as g
 from src.models.models import Material
 from src.utils.banco_dados import session
-
-from src.config import globals as g
-from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
 
 
@@ -33,8 +41,7 @@ def create_spring_back_form(root=None):
     conteudo = QWidget()
     layout = QGridLayout(conteudo)
 
-    materiais = [str(material.nome)
-                 for material in session.query(Material).all()]
+    materiais = [str(material.nome) for material in session.query(Material).all()]
 
     layout.addWidget(QLabel("Material:"), 0, 0)
     g.MAT_COMB = QComboBox()

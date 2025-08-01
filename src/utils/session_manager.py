@@ -2,26 +2,32 @@
 Gerenciamento de sessões do sistema, incluindo registro,
 remoção e verificação de comandos do sistema.
 """
-import socket
+
 import logging
+import socket
 from datetime import datetime, timezone
+
 from sqlalchemy.exc import SQLAlchemyError
+
+from src.config import globals as g
 from src.models.models import SystemControl
 from src.utils.banco_dados import session as db_session
-from src.config import globals as g
 
 
 def registrar_sessao():
     """Registra a sessão atual no banco de dados."""
     try:
         hostname = socket.gethostname()
-        sessao_existente = db_session.query(
-            SystemControl).filter_by(key=g.SESSION_ID).first()
+        sessao_existente = (
+            db_session.query(SystemControl).filter_by(key=g.SESSION_ID).first()
+        )
         if not sessao_existente:
             logging.info(
-                "Registrando nova sessão: ID %s para host %s", g.SESSION_ID, hostname)
+                "Registrando nova sessão: ID %s para host %s", g.SESSION_ID, hostname
+            )
             nova_sessao = SystemControl(
-                type='SESSION', key=g.SESSION_ID, value=hostname)
+                type="SESSION", key=g.SESSION_ID, value=hostname
+            )
             db_session.add(nova_sessao)
             db_session.commit()
     except SQLAlchemyError as e:
@@ -33,8 +39,9 @@ def remover_sessao():
     """Remove a sessão atual do banco de dados ao fechar."""
     try:
         logging.info("Removendo sessão: ID %s", g.SESSION_ID)
-        sessao_para_remover = db_session.query(
-            SystemControl).filter_by(key=g.SESSION_ID).first()
+        sessao_para_remover = (
+            db_session.query(SystemControl).filter_by(key=g.SESSION_ID).first()
+        )
         if sessao_para_remover:
             db_session.delete(sessao_para_remover)
             db_session.commit()
@@ -46,8 +53,9 @@ def remover_sessao():
 def atualizar_heartbeat_sessao():
     """Atualiza o timestamp da sessão ativa para indicar que está online."""
     try:
-        sessao_atual = db_session.query(
-            SystemControl).filter_by(key=g.SESSION_ID).first()
+        sessao_atual = (
+            db_session.query(SystemControl).filter_by(key=g.SESSION_ID).first()
+        )
         if sessao_atual:
             sessao_atual.last_updated = datetime.now(timezone.utc)
             db_session.commit()
@@ -62,8 +70,7 @@ def atualizar_heartbeat_sessao():
 def obter_comando_sistema() -> str | None:
     """Busca no banco e retorna o comando atual do sistema ('SHUTDOWN', 'NONE', etc.)."""
     try:
-        cmd_entry = db_session.query(
-            SystemControl).filter_by(key='UPDATE_CMD').first()
+        cmd_entry = db_session.query(SystemControl).filter_by(key="UPDATE_CMD").first()
         return cmd_entry.value if cmd_entry else None
     except SQLAlchemyError as e:
         logging.error("Erro ao obter comando do sistema: %s", e)

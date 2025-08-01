@@ -7,16 +7,13 @@ serão utilizados para manipular as dobras e a interface de forma
 interativa.
 """
 
-from PySide6.QtWidgets import QWidget, QGridLayout, QCheckBox, QPushButton, QApplication
-from PySide6.QtCore import QTimer
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QApplication, QCheckBox, QGridLayout, QPushButton, QWidget
+
+import src.config.globals as g
+from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_checkbox
 from src.utils.interface import limpar_dobras, limpar_tudo
 from src.utils.janelas import remover_janelas_orfas
-from src.utils.estilo import (
-    aplicar_estilo_botao,
-    aplicar_estilo_checkbox
-)
-import src.config.globals as g
 
 
 class ExpansionManager:
@@ -52,12 +49,13 @@ class ExpansionManager:
             g.EXP_V = exp_v
             g.VALORES_W = [1, 2] if exp_h else [1]
 
-            print(
-                f"Atualizando interface para: {largura}x{altura}, {colunas} colunas")
+            print(f"Atualizando interface para: {largura}x{altura}, {colunas} colunas")
 
             g.PRINC_FORM.setFixedSize(largura, altura)
 
-            if hasattr(g, 'CARREGAR_INTERFACE_FUNC') and callable(g.CARREGAR_INTERFACE_FUNC):
+            if hasattr(g, "CARREGAR_INTERFACE_FUNC") and callable(
+                g.CARREGAR_INTERFACE_FUNC
+            ):
                 g.CARREGAR_INTERFACE_FUNC(colunas, g.MAIN_LAYOUT)
 
             app = QApplication.instance()
@@ -99,9 +97,9 @@ def criar_botoes():
 
 def _inicializar_valores_globais():
     """Inicializa valores globais se não existirem."""
-    if not hasattr(g, 'EXP_V') or g.EXP_V is None:
+    if not hasattr(g, "EXP_V") or g.EXP_V is None:
         g.EXP_V = False
-    if not hasattr(g, 'EXP_H') or g.EXP_H is None:
+    if not hasattr(g, "EXP_H") or g.EXP_H is None:
         g.EXP_H = False
 
 
@@ -110,16 +108,16 @@ def _criar_widgets_botoes(expansion_manager):
     widgets = {}
 
     # Checkbox para expandir vertical
-    widgets['exp_v_check'] = _criar_checkbox_vertical(expansion_manager)
+    widgets["exp_v_check"] = _criar_checkbox_vertical(expansion_manager)
 
     # Checkbox para expandir horizontal
-    widgets['exp_h_check'] = _criar_checkbox_horizontal(expansion_manager)
+    widgets["exp_h_check"] = _criar_checkbox_horizontal(expansion_manager)
 
     # Botão para limpar dobras
-    widgets['limpar_dobras_btn'] = _criar_botao_limpar_dobras()
+    widgets["limpar_dobras_btn"] = _criar_botao_limpar_dobras()
 
     # Botão para limpar tudo
-    widgets['limpar_tudo_btn'] = _criar_botao_limpar_tudo()
+    widgets["limpar_tudo_btn"] = _criar_botao_limpar_tudo()
 
     return widgets
 
@@ -157,7 +155,7 @@ def _criar_checkbox_horizontal(expansion_manager):
 def _criar_botao_limpar_dobras():
     """Cria o botão para limpar dobras."""
     limpar_dobras_btn = QPushButton("🧹 Limpar Dobras")
-    aplicar_estilo_botao(limpar_dobras_btn, 'amarelo')
+    aplicar_estilo_botao(limpar_dobras_btn, "amarelo")
     limpar_dobras_btn.clicked.connect(limpar_dobras)
     return limpar_dobras_btn
 
@@ -165,30 +163,32 @@ def _criar_botao_limpar_dobras():
 def _criar_botao_limpar_tudo():
     """Cria o botão para limpar tudo."""
     limpar_tudo_btn = QPushButton("🗑️ Limpar Tudo")
-    aplicar_estilo_botao(limpar_tudo_btn, 'vermelho')
+    aplicar_estilo_botao(limpar_tudo_btn, "vermelho")
     limpar_tudo_btn.clicked.connect(limpar_tudo)
     return limpar_tudo_btn
 
 
 def _adicionar_widgets_ao_layout(layout, widgets):
     """Adiciona os widgets ao layout."""
-    layout.addWidget(widgets['exp_v_check'], 0, 0,
-                     alignment=Qt.AlignmentFlag.AlignCenter)
-    layout.addWidget(widgets['exp_h_check'], 0, 1,
-                     alignment=Qt.AlignmentFlag.AlignCenter)
-    layout.addWidget(widgets['limpar_dobras_btn'], 1, 0)
-    layout.addWidget(widgets['limpar_tudo_btn'], 1, 1)
+    layout.addWidget(
+        widgets["exp_v_check"], 0, 0, alignment=Qt.AlignmentFlag.AlignCenter
+    )
+    layout.addWidget(
+        widgets["exp_h_check"], 0, 1, alignment=Qt.AlignmentFlag.AlignCenter
+    )
+    layout.addWidget(widgets["limpar_dobras_btn"], 1, 0)
+    layout.addWidget(widgets["limpar_tudo_btn"], 1, 1)
 
 
 def _configurar_estilos_botoes(widgets):
     """Configura os estilos dos botões."""
-    aplicar_estilo_botao(widgets['limpar_dobras_btn'], 'amarelo')
-    aplicar_estilo_botao(widgets['limpar_tudo_btn'], 'vermelho')
+    aplicar_estilo_botao(widgets["limpar_dobras_btn"], "amarelo")
+    aplicar_estilo_botao(widgets["limpar_tudo_btn"], "vermelho")
 
 
 def _configurar_tooltips(widgets):
     """Configura os tooltips dos widgets."""
-    widgets['exp_v_check'].setToolTip("Expande a interface verticalmente")
-    widgets['exp_h_check'].setToolTip("Expande a interface horizontalmente")
-    widgets['limpar_dobras_btn'].setToolTip("Limpa as dobras")
-    widgets['limpar_tudo_btn'].setToolTip("Limpa todos os valores")
+    widgets["exp_v_check"].setToolTip("Expande a interface verticalmente")
+    widgets["exp_h_check"].setToolTip("Expande a interface horizontalmente")
+    widgets["limpar_dobras_btn"].setToolTip("Limpa as dobras")
+    widgets["limpar_tudo_btn"].setToolTip("Limpa todos os valores")
