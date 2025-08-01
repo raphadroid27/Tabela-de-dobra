@@ -16,10 +16,8 @@ from src.utils.utilitarios import tem_configuracao_dobras_valida
 from src.utils.estilo import ALTURA_PADRAO_COMPONENTE
 import src.config.globals as g
 
-# Configurar logger
 logger = logging.getLogger(__name__)
 
-# Adicionar o diretório raiz ao path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 sys.path.insert(0, project_root)
@@ -952,9 +950,6 @@ def analyze_project_widgets(root_path: str = None) -> str:
 
 
 if __name__ == "__main__":
-    # Executar análise se o script for chamado diretamente
     print(analyze_project_widgets())
 
-
-# Instância global do gerenciador de estado
 widget_state_manager = WidgetStateManager()

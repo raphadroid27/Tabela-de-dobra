@@ -38,7 +38,6 @@ def novo_usuario():
         show_error("Erro", "Usuário já existente.")
         return
 
-    # Criar o novo usuário
     if g.ADMIN_VAR is None:
         show_error("Erro", "Variável de administrador não inicializada.")
         return

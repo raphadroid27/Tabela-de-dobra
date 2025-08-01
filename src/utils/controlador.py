@@ -59,7 +59,6 @@ def adicionar(tipo):
     elif tipo == 'canal':
         sucesso, mensagem, _ = operacoes_crud.criar_canal(dados_para_criar)
 
-    # 3. Processar resultado e atualizar UI
     if sucesso:
         show_info("Sucesso", mensagem, parent=config.get('form'))
         _limpar_campos(tipo)
@@ -106,7 +105,6 @@ def editar(tipo):
     sucesso, mensagem, _ = operacoes_crud.editar_objeto(
         obj, dados_para_editar)
 
-    # 3. Processar resultado e atualizar UI
     if sucesso:
         show_info("Sucesso", mensagem, parent=config.get('form'))
         _limpar_campos(tipo)
@@ -140,10 +138,8 @@ def excluir(tipo):
     if not aviso:
         return
 
-    # Chamar a lógica de dados
     sucesso, mensagem = operacoes_crud.excluir_objeto(obj)
 
-    # Processar resultado e atualizar UI
     if sucesso:
         show_info("Sucesso", mensagem, parent=config['form'])
         _limpar_campos(tipo)

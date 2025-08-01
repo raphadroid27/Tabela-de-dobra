@@ -16,9 +16,6 @@ from src.utils.estilo import (
     LARGURA_MINIMA_COMPONENTE
 )
 
-# Nota: Usando constantes centralizadas de estilo
-# ALTURA_PADRAO_COMPONENTE e LARGURA_MINIMA_COMPONENTE são importadas de src.utils.estilo
-
 
 @dataclass
 class ConfigLabelResultado:
@@ -124,13 +121,11 @@ def criar_entry_dobra(config: ConfigEntry):
     entry.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     entry.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
 
-    # Aplicar estilo auto-ajustável
     aplicar_estilo_widget_auto_ajustavel(entry, 'lineedit')
 
     setattr(g, config.nome_global, entry)
     config.layout.addWidget(entry, linha, coluna)
 
-    # Configurar eventos
     configurar_eventos_entry(entry, config)
 
     return entry
@@ -157,7 +152,6 @@ def criar_label_resultado(config: ConfigLabelResultado):
     setattr(g, config.nome_global, label)
     config.layout.addWidget(label, linha, coluna)
 
-    # Configurar eventos e tooltip
     label.mousePressEvent = lambda event: copiar(
         config.copy_type, config.i, config.w)
     label.setToolTip(config.tooltip_text)

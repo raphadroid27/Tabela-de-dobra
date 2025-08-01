@@ -187,7 +187,6 @@ class ButtonConfigManager:
             atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
             botao_layout.addWidget(atualizar_btn)
         else:
-            # Botão Adicionar
             adicionar_btn = QPushButton("➕ Adicionar")
             aplicar_estilo_botao(adicionar_btn, 'azul')
             adicionar_btn.clicked.connect(
@@ -261,7 +260,6 @@ class FormManager:
         vlayout.setContentsMargins(0, 0, 0, 0)
         vlayout.setSpacing(0)
 
-        # Definir título dinâmico para a barra
         is_edit = getattr(g, self.config['global_edit'], False)
         if is_edit:
             nome = self.config['titulo'].split(' ')[-1]
@@ -328,7 +326,6 @@ class FormManager:
 
     def criar_frame_edicoes(self):
         """Cria o frame de edições se necessário."""
-        # Sempre criar frame de edições, exceto para espessura em modo edição
         is_edit = getattr(g, self.config['global_edit'], False)
         if is_edit and self.tipo == 'espessura':
             return None

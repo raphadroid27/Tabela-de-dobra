@@ -423,8 +423,6 @@ def _configurar_layout_grid():
     layout_principal.setRowStretch(1, 1)
     layout_principal.setRowStretch(2, 0)
 
-    # === CRIAR E POSICIONAR SEÇÕES ===
-    # Linha 0: Seção de Diretório
     frame_diretorio = _criar_secao_diretorio_grid()
     layout_principal.addWidget(frame_diretorio, 0, 0)
 
