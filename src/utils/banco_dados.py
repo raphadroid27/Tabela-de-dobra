@@ -34,11 +34,11 @@ def tratativa_erro():
         session.commit()
     except (IntegrityError, OperationalError) as e:
         session.rollback()
-        print(f"Erro de banco de dados: {e}")
+        logging.error("Erro de banco de dados: %s", e)
         raise
     except Exception as e:
         session.rollback()
-        print(f"Erro inesperado: {e}")
+        logging.error("Erro inesperado: %s", e)
         raise
 
 
@@ -56,7 +56,7 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
         )
         session.add(log)
     except (IntegrityError, OperationalError) as e:
-        print(f"Erro de banco de dados ao criar log: {e}")
+        logging.error("Erro de banco de dados ao criar log: %s", e)
 
 
 @contextmanager
