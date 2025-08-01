@@ -55,8 +55,7 @@ BASE_DIR = obter_dir_base()
 DATABASE_DIR = os.path.join(BASE_DIR, "database")
 DB_PATH = os.path.join(DATABASE_DIR, "tabela_de_dobra.db")
 
-# Diretório de assets (ícones, etc.)
-ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+# Ícone da aplicação
 ICON_PATH = obter_dir_icone()
 
 # Diretório de logs
@@ -66,7 +65,6 @@ LOG_DIR = os.path.join(BASE_DIR, 'logs')
 UPDATES_DIR = os.path.join(BASE_DIR, 'updates')
 UPDATE_TEMP_DIR = os.path.join(BASE_DIR, 'update_temp')
 VERSION_FILE_PATH = os.path.join(UPDATES_DIR, 'versao.json')
-UPDATE_FLAG_FILE = os.path.join(BASE_DIR, 'update_pending.flag')
 
 # Arquivo executável da aplicação principal
 APP_EXECUTABLE_NAME = "Cálculo de Dobra.exe"
@@ -108,7 +106,7 @@ def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
 
 def tem_configuracao_dobras_valida():
     """Verifica se as configurações de dobras estão disponíveis.
-    
+
     Returns:
         bool: True se VALORES_W e N estão definidos em globals
     """
