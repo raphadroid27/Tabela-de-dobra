@@ -15,6 +15,15 @@ from src.config import globals as g
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
 
+# Constantes para configuração da interface
+JANELA_LARGURA = 240
+JANELA_ALTURA = 280
+LABEL_ALTURA = 20
+COLUNA_RAZAO_LARGURA = 100
+COLUNA_FATOR_K_LARGURA = 100
+AVISO_ALTURA_MAXIMA = 70
+AVISO_LARGURA_MAXIMA = 220
+
 
 def main(root):
     """
@@ -38,7 +47,7 @@ def _fechar_form_antigo():
 def _criar_form(root):
     g.RIE_FORM = QDialog(root)
     g.RIE_FORM.setWindowTitle("Raio Interno / Espessura")
-    g.RIE_FORM.setFixedSize(240, 280)
+    g.RIE_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
     g.RIE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
     g.RIE_FORM.setWindowIcon(QIcon(ICON_PATH))
     aplicar_no_topo(g.RIE_FORM)
@@ -92,7 +101,7 @@ def _criar_label_resultado(main_layout):
     g.RAZAO_RIE_LBL.setMinimumWidth(100)
     g.RAZAO_RIE_LBL.setFrameShape(QLabel.Shape.Panel)
     g.RAZAO_RIE_LBL.setFrameShadow(QLabel.Shadow.Sunken)
-    g.RAZAO_RIE_LBL.setFixedHeight(20)
+    g.RAZAO_RIE_LBL.setFixedHeight(LABEL_ALTURA)
     g.RAZAO_RIE_LBL.setAlignment(Qt.AlignCenter)
     main_layout.addWidget(g.RAZAO_RIE_LBL, 0, 1)
 
@@ -106,8 +115,8 @@ def _create_table(parent_layout, data):
     tree = QTreeWidget()
     tree.setHeaderLabels(["Razão", "Fator K"])
     tree.setRootIsDecorated(False)
-    tree.setColumnWidth(0, 100)
-    tree.setColumnWidth(1, 100)
+    tree.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
+    tree.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
     try:
         if isinstance(data, dict):
             for razao, k in data.items():
@@ -140,8 +149,8 @@ def _criar_aviso(main_layout):
             Utilize-os apenas na ausência de dados mais precisos.
         </p>
     """)
-    aviso_browser.setMaximumHeight(70)
-    aviso_browser.setMaximumWidth(220)
+    aviso_browser.setMaximumHeight(AVISO_ALTURA_MAXIMA)
+    aviso_browser.setMaximumWidth(AVISO_LARGURA_MAXIMA)
     aviso_browser.setFrameStyle(0)
     aviso_browser.setVerticalScrollBarPolicy(
         Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
