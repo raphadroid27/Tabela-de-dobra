@@ -35,15 +35,6 @@ PADDING_INTERNO_COMPONENTE = "2px 4px"  # Padding interno uniforme
 ALTURA_PADRAO_BOTAO = 25  # Altura padrão para botões
 LARGURA_MINIMA_BOTAO = 20  # Largura mínima para botões
 
-# Definir constantes globais (compatibilidade)
-g.WIDGET_MAX_HEIGHT = ALTURA_PADRAO_COMPONENTE
-g.WIDGET_MIN_WIDTH = LARGURA_MINIMA_COMPONENTE
-
-# Aliases para compatibilidade com código existente (DEPRECATED)
-WIDGET_HEIGHT_PADRAO = ALTURA_PADRAO_COMPONENTE  # Use ALTURA_PADRAO_COMPONENTE
-BOTAO_ALTURA_PADRAO = ALTURA_PADRAO_BOTAO  # Use ALTURA_PADRAO_BOTAO
-BOTAO_LARGURA_MINIMA = LARGURA_MINIMA_BOTAO  # Use LARGURA_MINIMA_BOTAO
-
 
 class GerenciadorTemas:
     """Classe para gerenciar temas da aplicação de forma organizada."""
@@ -152,37 +143,37 @@ def obter_css_correcao_widgets():
     Returns:
         str: CSS para correção de tamanhos
     """
-    return """
-    QComboBox { 
-        min-height: 1em; 
-        max-height: {g.WIDGET_MAX_HEIGHT}px; 
-        padding: 2px 4px; 
-        font-size: 10pt;
-    }
-    QLineEdit { 
-        min-height: 1em; 
-        max-height: {g.WIDGET_MAX_HEIGHT}px; 
-        padding: 2px 4px; 
-        font-size: 10pt;
-    }
-    QLabel { 
+    return f"""
+    QComboBox {{
         min-height: 1em;
-        padding: 2px; 
+        max-height: {ALTURA_PADRAO_COMPONENTE}px;
+        padding: 2px 4px;
         font-size: 10pt;
-    }
-    QGroupBox::title {
+    }}
+    QLineEdit {{
+        min-height: 1em;
+        max-height: {ALTURA_PADRAO_COMPONENTE}px;
+        padding: 2px 4px;
+        font-size: 10pt;
+    }}
+    QLabel {{
+        min-height: 1em;
+        padding: 2px;
+        font-size: 10pt;
+    }}
+    QGroupBox::title {{
         font-size: 10pt;
         padding: 2px;
-    }
+    }}
 
-    QToolTip {
+    QToolTip {{
         color: white;
         background-color: #2d2d2d;
         border-radius: 3px;
         padding: 4px 6px;
         font-size: 9pt;
         opacity: 240;
-    }
+    }}
     """
 
 
@@ -196,18 +187,18 @@ def obter_css_widgets_auto_ajustaveis():
     return {
         'combobox': f"""
             QComboBox {{
-                min-width: {g.WIDGET_MIN_WIDTH}px;
+                min-width: {LARGURA_MINIMA_COMPONENTE}px;
                 min-height: 1em; 
-                max-height: {g.WIDGET_MAX_HEIGHT}px;
+                max-height: {ALTURA_PADRAO_COMPONENTE}px;
                 padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
             }}
         """,
         'lineedit': f"""
             QLineEdit {{
-                min-width: {g.WIDGET_MIN_WIDTH}px;
+                min-width: {LARGURA_MINIMA_COMPONENTE}px;
                 min-height: 1em; 
-                max-height: {g.WIDGET_MAX_HEIGHT}px;
+                max-height: {ALTURA_PADRAO_COMPONENTE}px;
                 padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
             }}
@@ -237,8 +228,8 @@ def obter_configuracao_layout_flexivel():
         dict: Configurações de layout flexível
     """
     return {
-        'g.WIDGET_MAX_HEIGHT': g.WIDGET_MAX_HEIGHT,
-        'g.WIDGET_MIN_WIDTH': g.WIDGET_MIN_WIDTH,
+        'altura_padrao': ALTURA_PADRAO_COMPONENTE,
+        'largura_minima': LARGURA_MINIMA_COMPONENTE,
         'horizontal_spacing': 5,
         'vertical_spacing': 3
     }
