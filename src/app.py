@@ -32,8 +32,12 @@ from src.components.menu_custom import MenuCustom
 from src.config import globals as g
 from src.forms import (form_aut, form_impressao, form_razao_rie, form_sobre,
                        form_usuario)
-from src.forms.form_wrappers import (FormCanal, FormDeducao, FormEspessura,
-                                     FormMaterial)
+from src.forms.form_universal import (
+    form_canal_main as FormCanal,
+    form_deducao_main as FormDeducao,
+    form_espessura_main as FormEspessura,
+    form_material_main as FormMaterial
+)
 from src.models.models import Usuario
 from src.utils.banco_dados import inicializar_banco_dados
 from src.utils.banco_dados import session as db_session
@@ -154,12 +158,12 @@ def configurar_janela_principal(config):
 
 
 # --- REATORAÇÃO: Lógica de Abertura de Formulários ---
-def abrir_formulario(form_class, edit_flag_name, is_edit_mode):
+def abrir_formulario(form_function, edit_flag_name, is_edit_mode):
     """
     Abre um formulário genérico, configurando a flag de edição correspondente.
     """
     setattr(g, edit_flag_name, is_edit_mode)
-    form_class.main(g.PRINC_FORM)
+    form_function(g.PRINC_FORM)
 
 
 def _executar_autenticacao(is_login):
