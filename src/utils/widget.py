@@ -814,17 +814,30 @@ class WidgetStateManager:
         return f"Cache: {cabecalho_count} widgets de cabeçalho, {dobras_count} widgets de dobras"
 
 
+def _create_combo_base(height: int = 20) -> QComboBox:
+    """Cria um combobox base com configurações padrão."""
+    combo = QComboBox()
+    combo.setFixedHeight(height)
+    return combo
+
+
+def _create_entry_base(height: int = 20, placeholder: str = "") -> QLineEdit:
+    """Cria um entry base com configurações padrão."""
+    entry = QLineEdit()
+    entry.setFixedHeight(height)
+    if placeholder:
+        entry.setPlaceholderText(placeholder)
+    return entry
+
+
 def create_deducao_material_combo():
     """Cria combobox de material para formulário de dedução."""
     try:
-        combo = QComboBox()
-        combo.setFixedHeight(20)
-
+        combo = _create_combo_base()
         # Carregar materiais do banco
         materiais = [m.nome for m in session.query(
             Material).order_by(Material.nome)]
         combo.addItems(materiais)
-
         return combo
     except RuntimeError as e:
         print(f"Erro ao criar combobox de material: {e}")
@@ -834,15 +847,12 @@ def create_deducao_material_combo():
 def create_deducao_espessura_combo():
     """Cria combobox de espessura para formulário de dedução."""
     try:
-        combo = QComboBox()
-        combo.setFixedHeight(20)
-
+        combo = _create_combo_base()
         # Carregar espessuras do banco
         valores_espessura = session.query(Espessura.valor).distinct().all()
         valores_limpos = [float(valor[0])
                           for valor in valores_espessura if valor[0] is not None]
         combo.addItems([str(valor) for valor in sorted(valores_limpos)])
-
         return combo
     except RuntimeError as e:
         print(f"Erro ao criar combobox de espessura: {e}")
@@ -852,15 +862,12 @@ def create_deducao_espessura_combo():
 def create_deducao_canal_combo():
     """Cria combobox de canal para formulário de dedução."""
     try:
-        combo = QComboBox()
-        combo.setFixedHeight(20)
-
+        combo = _create_combo_base()
         # Carregar canais do banco
         valores_canal = session.query(Canal.valor).distinct().all()
         valores_canal_limpos = [str(valor[0])
                                 for valor in valores_canal if valor[0] is not None]
         combo.addItems(sorted(valores_canal_limpos))
-
         return combo
     except RuntimeError as e:
         print(f"Erro ao criar combobox de canal: {e}")
@@ -870,10 +877,7 @@ def create_deducao_canal_combo():
 def create_deducao_valor_entry():
     """Cria campo de entrada para valor de dedução."""
     try:
-        entry = QLineEdit()
-        entry.setFixedHeight(20)
-        entry.setPlaceholderText("Digite o valor da dedução")
-        return entry
+        return _create_entry_base(placeholder="Digite o valor da dedução")
     except RuntimeError as e:
         print(f"Erro ao criar entry de valor: {e}")
         return None
@@ -882,10 +886,7 @@ def create_deducao_valor_entry():
 def create_deducao_observacao_entry():
     """Cria campo de entrada para observação de dedução."""
     try:
-        entry = QLineEdit()
-        entry.setFixedHeight(20)
-        entry.setPlaceholderText("Observação (opcional)")
-        return entry
+        return _create_entry_base(placeholder="Observação (opcional)")
     except RuntimeError as e:
         print(f"Erro ao criar entry de observação: {e}")
         return None
@@ -894,10 +895,7 @@ def create_deducao_observacao_entry():
 def create_deducao_forca_entry():
     """Cria campo de entrada para força de dedução."""
     try:
-        entry = QLineEdit()
-        entry.setFixedHeight(20)
-        entry.setPlaceholderText("Força (opcional)")
-        return entry
+        return _create_entry_base(placeholder="Força (opcional)")
     except RuntimeError as e:
         print(f"Erro ao criar entry de força: {e}")
         return None
@@ -913,6 +911,8 @@ WidgetFactory.register_creator(
     'DED_OBSER_ENTRY', create_deducao_observacao_entry)
 WidgetFactory.register_creator('DED_FORCA_ENTRY', create_deducao_forca_entry)
 
+# DEPRECATED: OptimizedWidgetManager é redundante com WidgetManager
+# Considere usar WidgetManager diretamente no futuro
 optimized_widget_manager = OptimizedWidgetManager()
 
 
@@ -939,20 +939,24 @@ def validate_widgets_for_operation(operation_type: str) -> Tuple[bool, Dict[str,
     return validator()
 
 
+# DEPRECATED: Funções wrapper redundantes - use WidgetManager diretamente
 def safe_get_widget_value(widget_name: str, default: str = '') -> str:
-    """Função global para obter valor de widget de forma segura."""
+    """Função global para obter valor de widget de forma segura.
+    DEPRECATED: Use WidgetManager.get_widget_value() diretamente."""
     widget = WidgetManager.safe_get_widget(widget_name)
     return WidgetManager.get_widget_value(widget, default)
 
 
 def safe_set_widget_value(widget_name: str, value: str) -> bool:
-    """Função global para definir valor de widget de forma segura."""
+    """Função global para definir valor de widget de forma segura.
+    DEPRECATED: Use WidgetManager.set_widget_value() diretamente."""
     widget = WidgetManager.safe_get_widget(widget_name)
     return WidgetManager.set_widget_value(widget, value)
 
 
 def safe_clear_widget(widget_name: str) -> bool:
-    """Função global para limpar widget de forma segura."""
+    """Função global para limpar widget de forma segura.
+    DEPRECATED: Use WidgetManager.clear_widget() diretamente."""
     widget = WidgetManager.safe_get_widget(widget_name)
     return WidgetManager.clear_widget(widget)
 
