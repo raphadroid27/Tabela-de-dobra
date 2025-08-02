@@ -64,6 +64,11 @@ ICON_PATH = obter_dir_icone()
 # Diretório de logs
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 
+
+# Margens e espaçamentos padrão para layouts
+MARGEM_PADRAO = 5
+ESPACAMENTO_PADRAO = 5
+
 # Diretórios e arquivos de atualização
 UPDATES_DIR = os.path.join(BASE_DIR, "updates")
 UPDATE_TEMP_DIR = os.path.join(BASE_DIR, "update_temp")
@@ -94,7 +99,8 @@ ensure_dirs_exist()
 
 # --- 2. FUNÇÕES UTILITÁRIAS ---
 def aplicar_medida_borda_espaco(
-    layout_ou_widget: Union[QLayout, QWidget], margem: int = 5, espaco: int = 5
+    layout_ou_widget: Union[QLayout, QWidget], margem: int =
+    MARGEM_PADRAO, espaco: int = ESPACAMENTO_PADRAO
 ) -> None:
     """Aplica margens e espaçamento a um layout ou widget."""
     if hasattr(layout_ou_widget, "setContentsMargins"):
@@ -157,7 +163,8 @@ def ask_yes_no(title: str, message: str, parent: Optional[QWidget] = None) -> bo
     msg.setIcon(QMessageBox.Icon.Question)
     msg.setWindowTitle(title)
     msg.setText(message)
-    msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+    msg.setStandardButtons(QMessageBox.StandardButton.Yes |
+                           QMessageBox.StandardButton.No)
     msg.setDefaultButton(QMessageBox.StandardButton.No)
     return msg.exec() == QMessageBox.StandardButton.Yes
 
@@ -193,7 +200,8 @@ def setup_logging(log_filename: str, log_to_console: bool = True) -> None:
         logging.info("Logging configurado. Arquivo de log em: %s", log_filepath)
 
     except (OSError, IOError) as e:
-        print(f"ERRO CRÍTICO: Não foi possível configurar o logging em arquivo: {e}")
+        logging.critical(
+            "ERRO CRÍTICO: Não foi possível configurar o logging em arquivo: %s", e)
         logging.basicConfig(
             level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
         )
