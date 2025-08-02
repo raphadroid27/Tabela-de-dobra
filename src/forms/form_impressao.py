@@ -47,6 +47,9 @@ MARGEM_LAYOUT_PRINCIPAL = 10
 ALTURA_MAXIMA_LISTA = 100
 ALTURA_MAXIMA_LISTA_WIDGET = 120
 
+# Métodos de impressão em ordem de prioridade
+METODOS_IMPRESSAO = ["foxit", "impressora_padrao", "adobe"]
+
 # Strings de interface
 STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
 PLACEHOLDER_LISTA_ARQUIVOS = (
@@ -68,9 +71,29 @@ class PrintManager:
     """Gerencia as operações de impressão de PDFs."""
 
     def __init__(self):
-        self.arquivos_encontrados = []
-        self.arquivos_nao_encontrados = []
-        self.resultado_impressao = ""
+        self.arquivos_encontrados: List[str] = []
+        self.arquivos_nao_encontrados: List[str] = []
+        self.resultado_impressao: str = ""
+
+    def _validar_metodos_disponiveis(self) -> List[str]:
+        """Valida quais métodos de impressão estão disponíveis."""
+        metodos_disponiveis = []
+
+        # Verificar Foxit
+        if os.path.exists(FOXIT_PATH):
+            metodos_disponiveis.append("foxit")
+
+        # Verificar impressora padrão (Windows)
+        if hasattr(os, "startfile"):
+            metodos_disponiveis.append("impressora_padrao")
+
+        # Verificar Adobe
+        for adobe_path in ADOBE_PATHS:
+            if os.path.exists(adobe_path):
+                metodos_disponiveis.append("adobe")
+                break
+
+        return metodos_disponiveis
 
     def buscar_arquivos(self, diretorio: str, lista_arquivos: List[str]) -> None:
         """Busca os arquivos no diretório especificado."""
@@ -132,7 +155,7 @@ class PrintManager:
 
         return resultado
 
-    def executar_impressao(self, diretorio):
+    def executar_impressao(self, diretorio: str) -> str:
         """Executa a impressão dos arquivos encontrados."""
         if not self.arquivos_encontrados:
             return "Nenhum arquivo foi encontrado para impressão."
@@ -145,22 +168,25 @@ class PrintManager:
 
         return self.resultado_impressao
 
-    def _imprimir_arquivo_individual(self, nome_arquivo, caminho_completo):
+    def _imprimir_arquivo_individual(self, nome_arquivo: str, caminho_completo: str) -> None:
         """Imprime um arquivo individual usando diferentes métodos."""
         sucesso = False
 
-        sucesso = self._tentar_foxit(nome_arquivo, caminho_completo)
+        for metodo in METODOS_IMPRESSAO:
+            if metodo == "foxit":
+                sucesso = self._tentar_foxit(nome_arquivo, caminho_completo)
+            elif metodo == "impressora_padrao":
+                sucesso = self._tentar_impressora_padrao(nome_arquivo, caminho_completo)
+            elif metodo == "adobe":
+                sucesso = self._tentar_adobe(nome_arquivo, caminho_completo)
 
-        if not sucesso:
-            sucesso = self._tentar_impressora_padrao(nome_arquivo, caminho_completo)
-
-        if not sucesso:
-            sucesso = self._tentar_adobe(nome_arquivo, caminho_completo)
+            if sucesso:
+                break
 
         if not sucesso:
             self.resultado_impressao += f" ✗ Falha ao imprimir {nome_arquivo}\n"
 
-    def _tentar_foxit(self, nome_arquivo, caminho_completo):
+    def _tentar_foxit(self, nome_arquivo: str, caminho_completo: str) -> bool:
         """Tenta imprimir usando Foxit PDF Reader."""
         if not os.path.exists(FOXIT_PATH):
             return False
@@ -188,7 +214,7 @@ class PrintManager:
             self.resultado_impressao += f" ✗ Erro com Foxit: {str(e)}\n"
             return False
 
-    def _tentar_impressora_padrao(self, nome_arquivo, caminho_completo):
+    def _tentar_impressora_padrao(self, nome_arquivo: str, caminho_completo: str) -> bool:
         """Tenta imprimir usando a impressora padrão do Windows."""
         try:
             self.resultado_impressao += (
@@ -207,7 +233,7 @@ class PrintManager:
             self.resultado_impressao += f" ✗ Erro com impressora padrão: {str(e)}\n"
             return False
 
-    def _tentar_adobe(self, nome_arquivo, caminho_completo):
+    def _tentar_adobe(self, nome_arquivo: str, caminho_completo: str) -> bool:
         """Tenta imprimir usando Adobe Reader."""
         # Validar se o arquivo existe antes de tentar imprimir
         if not os.path.exists(caminho_completo):
@@ -238,7 +264,7 @@ class PrintManager:
         return False
 
 
-def imprimir_pdf(diretorio, lista_arquivos):
+def imprimir_pdf(diretorio: str, lista_arquivos: List[str]) -> None:
     """Imprime os PDFs usando diferentes métodos disponíveis."""
     try:
         print_manager = PrintManager()
@@ -311,8 +337,8 @@ def selecionar_diretorio():
 
 def _validar_interface_entry():
     """Valida se o campo de diretório está disponível."""
-    return (hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY") and
-            g.IMPRESSAO_DIRETORIO_ENTRY is not None)
+    return (hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY")
+            and g.IMPRESSAO_DIRETORIO_ENTRY is not None)
 
 
 # Função adicionar_arquivo() removida - não utilizada no projeto
@@ -331,7 +357,7 @@ def adicionar_lista_arquivos():
     _adicionar_arquivos_a_lista(arquivos)
 
 
-def _processar_texto_arquivos(texto):
+def _processar_texto_arquivos(texto: str) -> List[str]:
     """Processa o texto e retorna lista de arquivos."""
     if not texto or not isinstance(texto, str):
         return []
@@ -354,8 +380,8 @@ def _adicionar_arquivos_a_lista(arquivos):
 
 def _validar_lista_arquivos():
     """Valida se a lista de arquivos está disponível."""
-    return (hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS") and
-            g.IMPRESSAO_LISTA_ARQUIVOS is not None)
+    return (hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS")
+            and g.IMPRESSAO_LISTA_ARQUIVOS is not None)
 
 
 def _limpar_campo_texto():
