@@ -2,8 +2,10 @@
 Módulo com funções auxiliares para manipulação de janelas no aplicativo.
 """
 
+from typing import Optional
+
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
 from src.config import globals as g
 
@@ -15,33 +17,35 @@ class Janela:
     """
 
     @staticmethod
-    def aplicar_no_topo_app_principal():
+    def aplicar_no_topo_app_principal() -> None:
         """
         Alterna se a janela deve ficar sempre no topo ou não.
         """
         # Alternar o estado de NO_TOPO_VAR
         if g.NO_TOPO_VAR is None:
-            g.NO_TOPO_VAR = False
+            g.NO_TOPO_VAR = False  # type: ignore[assignment]
 
-        g.NO_TOPO_VAR = not g.NO_TOPO_VAR
+        # Garantir que temos um valor booleano válido
+        current_state = bool(g.NO_TOPO_VAR)
+        g.NO_TOPO_VAR = not current_state  # type: ignore[assignment]
 
         Janela.aplicar_no_topo_todas_janelas()
 
         print(f"No topo {'ativado' if g.NO_TOPO_VAR else 'desativado'}")
 
     @staticmethod
-    def aplicar_no_topo_todas_janelas():
+    def aplicar_no_topo_todas_janelas() -> None:
         """
         Aplica a configuração 'no topo' a todas as janelas abertas do aplicativo.
         """
 
-        def set_topmost(window, on_top):
+        def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
             if window and window.isVisible():  # Só aplicar a janelas visíveis
                 current_flags = window.windowFlags()
                 if on_top:
-                    new_flags = current_flags | Qt.WindowStaysOnTopHint
+                    new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
                 else:
-                    new_flags = current_flags & ~Qt.WindowStaysOnTopHint
+                    new_flags = current_flags & ~Qt.WindowType.WindowStaysOnTopHint
 
                 essential_flags = Janela.janela_flags()
 
@@ -51,6 +55,9 @@ class Janela:
 
         if g.NO_TOPO_VAR is None:
             return
+
+        # Garantir que temos um valor booleano válido
+        on_top_state = bool(g.NO_TOPO_VAR)
 
         # Lista de janelas que podem estar abertas
         janelas = [
@@ -68,29 +75,29 @@ class Janela:
         count = 0
         for janela in janelas:
             if janela is not None:
-                set_topmost(janela, g.NO_TOPO_VAR)
+                set_topmost(janela, on_top_state)
                 count += 1
 
         if count > 0:
             print(
-                f"Estado 'no topo' {'ativado' if g.NO_TOPO_VAR else 'desativado'}\n"
+                f"Estado 'no topo' {'ativado' if on_top_state else 'desativado'}\n"
                 f"aplicado a {count} janela(s)"
             )
 
     @staticmethod
-    def aplicar_no_topo(form):
+    def aplicar_no_topo(form: Optional[QWidget]) -> None:
         """
         Aplica o estado atual de 'no topo' a uma janela específica sem alternar.
         Usado quando uma nova janela é criada e deve herdar o estado atual.
         """
 
-        def set_topmost(window, on_top):
+        def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
             if window:
                 current_flags = window.windowFlags()
                 if on_top:
-                    new_flags = current_flags | Qt.WindowStaysOnTopHint
+                    new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
                 else:
-                    new_flags = current_flags & ~Qt.WindowStaysOnTopHint
+                    new_flags = current_flags & ~Qt.WindowType.WindowStaysOnTopHint
 
                 essential_flags = Janela.janela_flags()
 
@@ -99,22 +106,25 @@ class Janela:
                 window.show()
 
         if g.NO_TOPO_VAR is None:
-            g.NO_TOPO_VAR = False
+            g.NO_TOPO_VAR = False  # type: ignore[assignment]
+
+        # Garantir que temos um valor booleano válido
+        current_state = bool(g.NO_TOPO_VAR)
 
         if form:
-            set_topmost(form, g.NO_TOPO_VAR)
+            set_topmost(form, current_state)
             print(
-                f"Estado 'no topo' {'ativado' if g.NO_TOPO_VAR else 'desativado'} "
+                f"Estado 'no topo' {'ativado' if current_state else 'desativado'} "
                 "aplicado à nova janela"
             )
 
     @staticmethod
-    def posicionar_janela(form, posicao=None):
+    def posicionar_janela(form: Optional[QWidget], posicao: Optional[str] = None) -> None:
         """
         Posiciona a janela em relação à janela principal.
         """
         # Verificar se a janela principal existe
-        if g.PRINC_FORM is None:
+        if g.PRINC_FORM is None or form is None:
             return
 
         screen = QApplication.primaryScreen()
@@ -148,7 +158,7 @@ class Janela:
         form.move(x, y)
 
     @staticmethod
-    def estado_janelas(estado: bool):
+    def estado_janelas(estado: bool) -> None:
         """
         Desabilita ou habilita todas as janelas do aplicativo.
         """
@@ -158,7 +168,7 @@ class Janela:
                 form.setEnabled(estado)
 
     @staticmethod
-    def remover_janelas_orfas():
+    def remover_janelas_orfas() -> None:
         """
         Remove todas as janelas órfãs que possam estar abertas,
         mas preserva formulários ativos.
@@ -194,7 +204,15 @@ class Janela:
                     ):
                         active_forms.append(form)
 
-            top_level_widgets = app.topLevelWidgets()
+            # Obter widgets de nível superior de forma segura
+            try:
+                if hasattr(app, 'topLevelWidgets'):
+                    top_level_widgets = app.topLevelWidgets()
+                else:
+                    # Fallback para versões diferentes do PySide6
+                    top_level_widgets = []
+            except AttributeError:
+                top_level_widgets = []
 
             for widget in top_level_widgets[:]:  # Cópia para iteração segura
                 if (
@@ -228,19 +246,19 @@ class Janela:
             pass
 
     @staticmethod
-    def janela_flags():
+    def janela_flags() -> Qt.WindowType:
         """
         Define as flags essenciais para janelas do aplicativo.
         Essas flags garantem que a janela tenha todos os botões necessários
         na barra de título e se comporte corretamente no sistema operacional.
         """
         essential_flags = (
-            Qt.Window
-            | Qt.WindowTitleHint
-            | Qt.WindowSystemMenuHint
-            | Qt.WindowMinimizeButtonHint
-            | Qt.WindowMaximizeButtonHint
-            | Qt.WindowCloseButtonHint
+            Qt.WindowType.Window
+            | Qt.WindowType.WindowTitleHint
+            | Qt.WindowType.WindowSystemMenuHint
+            | Qt.WindowType.WindowMinimizeButtonHint
+            | Qt.WindowType.WindowMaximizeButtonHint
+            | Qt.WindowType.WindowCloseButtonHint
         )
         return essential_flags
 
@@ -250,5 +268,13 @@ aplicar_no_topo = Janela.aplicar_no_topo
 aplicar_no_topo_todas_janelas = Janela.aplicar_no_topo_todas_janelas
 remover_janelas_orfas = Janela.remover_janelas_orfas
 posicionar_janela = Janela.posicionar_janela
-HABILITAR_JANELAS = Janela.estado_janelas(True)
-DESABILITAR_JANELAS = Janela.estado_janelas(False)
+
+
+def HABILITAR_JANELAS() -> None:
+    """Habilita todas as janelas do aplicativo."""
+    Janela.estado_janelas(True)
+
+
+def DESABILITAR_JANELAS() -> None:
+    """Desabilita todas as janelas do aplicativo."""
+    Janela.estado_janelas(False)
