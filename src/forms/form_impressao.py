@@ -8,6 +8,7 @@ O formulário é construído usando QGridLayout para melhor organização e cont
 
 import os
 import subprocess
+from typing import List
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -71,7 +72,7 @@ class PrintManager:
         self.arquivos_nao_encontrados = []
         self.resultado_impressao = ""
 
-    def buscar_arquivos(self, diretorio, lista_arquivos):
+    def buscar_arquivos(self, diretorio: str, lista_arquivos: List[str]) -> None:
         """Busca os arquivos no diretório especificado."""
         self.arquivos_encontrados.clear()
         self.arquivos_nao_encontrados.clear()
@@ -87,21 +88,33 @@ class PrintManager:
 
     def _extrair_nome_base(self, arquivo):
         """Extrai a parte principal do nome do arquivo."""
-        return arquivo.split(" - ")[0].strip() if " - " in arquivo else arquivo
+        if not arquivo or not isinstance(arquivo, str):
+            return ""
+        return arquivo.split(" - ")[0].strip() if " - " in arquivo else arquivo.strip()
 
     def _procurar_arquivo(self, diretorio, nome_base):
         """Procura um arquivo específico no diretório."""
+        if not diretorio or not nome_base:
+            return None
+
         try:
+            # Normalizar o caminho para evitar problemas de segurança
+            diretorio = os.path.normpath(diretorio)
+
+            # Verificar se o diretório existe
+            if not os.path.exists(diretorio) or not os.path.isdir(diretorio):
+                return None
+
             arquivos_pdf = [
                 f
                 for f in os.listdir(diretorio)
-                if nome_base.lower() in f.lower() and f.endswith(".pdf")
+                if nome_base.lower() in f.lower() and f.lower().endswith(".pdf")
             ]
             return arquivos_pdf[0] if arquivos_pdf else None
-        except (OSError, PermissionError):
+        except (OSError, PermissionError, ValueError):
             return None
 
-    def gerar_relatorio_busca(self):
+    def gerar_relatorio_busca(self) -> str:
         """Gera relatório dos arquivos encontrados e não encontrados."""
         resultado = ""
 
@@ -152,12 +165,18 @@ class PrintManager:
         if not os.path.exists(FOXIT_PATH):
             return False
 
+        # Validar se o arquivo existe antes de tentar imprimir
+        if not os.path.exists(caminho_completo):
+            self.resultado_impressao += f" ✗ Arquivo não encontrado: {caminho_completo}\n"
+            return False
+
         try:
             self.resultado_impressao += f"Imprimindo {nome_arquivo} com Foxit...\n"
             subprocess.run(
                 [FOXIT_PATH, "/p", caminho_completo],
                 check=True,
                 timeout=TIMEOUT_IMPRESSAO,
+                shell=False,  # Explicitamente desabilitar shell para segurança
             )
             self.resultado_impressao += " ✓ Sucesso com Foxit\n"
             return True
@@ -190,6 +209,11 @@ class PrintManager:
 
     def _tentar_adobe(self, nome_arquivo, caminho_completo):
         """Tenta imprimir usando Adobe Reader."""
+        # Validar se o arquivo existe antes de tentar imprimir
+        if not os.path.exists(caminho_completo):
+            self.resultado_impressao += f" ✗ Arquivo não encontrado: {caminho_completo}\n"
+            return False
+
         for adobe_path in ADOBE_PATHS:
             if os.path.exists(adobe_path):
                 try:
@@ -200,6 +224,7 @@ class PrintManager:
                         [adobe_path, "/p", caminho_completo],
                         check=True,
                         timeout=TIMEOUT_IMPRESSAO,
+                        shell=False,  # Explicitamente desabilitar shell para segurança
                     )
                     self.resultado_impressao += " ✓ Sucesso com Adobe\n"
                     return True
@@ -267,21 +292,27 @@ def _mostrar_erro_impressao(erro):
 
 def selecionar_diretorio():
     """Abre o diálogo para seleção de diretório."""
-    if callable(DESABILITAR_JANELAS):
-        DESABILITAR_JANELAS()
-    diretorio = QFileDialog.getExistingDirectory(
-        g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs"
-    )
-    if callable(HABILITAR_JANELAS):
-        HABILITAR_JANELAS()
+    try:
+        if callable(DESABILITAR_JANELAS):
+            DESABILITAR_JANELAS()
 
-    if (
-        diretorio
-        and hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY")
-        and g.IMPRESSAO_DIRETORIO_ENTRY
-    ):
-        g.IMPRESSAO_DIRETORIO_ENTRY.clear()
-        g.IMPRESSAO_DIRETORIO_ENTRY.setText(diretorio)
+        diretorio = QFileDialog.getExistingDirectory(
+            g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs"
+        )
+
+        if diretorio and _validar_interface_entry():
+            g.IMPRESSAO_DIRETORIO_ENTRY.clear()
+            g.IMPRESSAO_DIRETORIO_ENTRY.setText(diretorio)
+
+    finally:
+        if callable(HABILITAR_JANELAS):
+            HABILITAR_JANELAS()
+
+
+def _validar_interface_entry():
+    """Valida se o campo de diretório está disponível."""
+    return (hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY") and
+            g.IMPRESSAO_DIRETORIO_ENTRY is not None)
 
 
 # Função adicionar_arquivo() removida - não utilizada no projeto
@@ -311,23 +342,34 @@ def _processar_texto_arquivos(texto):
 
 def _adicionar_arquivos_a_lista(arquivos):
     """Adiciona arquivos à lista da interface."""
-    if not (
-        hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS")
-        and g.IMPRESSAO_LISTA_ARQUIVOS
-        and arquivos
-    ):
+    if not arquivos or not _validar_lista_arquivos():
         return
 
     for arquivo in arquivos:
         g.IMPRESSAO_LISTA_ARQUIVOS.addItem(arquivo)
 
+    _limpar_campo_texto()
+    _mostrar_confirmacao_adicao(len(arquivos))
+
+
+def _validar_lista_arquivos():
+    """Valida se a lista de arquivos está disponível."""
+    return (hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS") and
+            g.IMPRESSAO_LISTA_ARQUIVOS is not None)
+
+
+def _limpar_campo_texto():
+    """Limpa o campo de texto se disponível."""
     if hasattr(g, "IMPRESSAO_LISTA_TEXT") and g.IMPRESSAO_LISTA_TEXT:
         g.IMPRESSAO_LISTA_TEXT.clear()
 
+
+def _mostrar_confirmacao_adicao(num_arquivos):
+    """Mostra confirmação de adição de arquivos."""
     QMessageBox.information(
         g.IMPRESSAO_FORM,
         "Sucesso",
-        f"{len(arquivos)} arquivo(s) adicionado(s) à lista!",
+        f"{num_arquivos} arquivo(s) adicionado(s) à lista!",
     )
 
 
