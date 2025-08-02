@@ -7,6 +7,8 @@ serão utilizados para manipular as dobras e a interface de forma
 interativa.
 """
 
+import logging
+
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QApplication, QCheckBox, QGridLayout, QPushButton, QWidget
 
@@ -14,6 +16,14 @@ import src.config.globals as g
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_checkbox
 from src.utils.interface import limpar_dobras, limpar_tudo
 from src.utils.janelas import remover_janelas_orfas
+
+# Constantes para dimensões da interface
+LARGURA_CONTRAIDA = 360
+ALTURA_CONTRAIDA = 510
+LARGURA_EXPANDIDA = 720
+ALTURA_EXPANDIDA = 650
+COLUNAS_CONTRAIDA = 1
+COLUNAS_EXPANDIDA = 2
 
 
 class ExpansionManager:
@@ -40,16 +50,17 @@ class ExpansionManager:
         self.is_updating = True
         try:
             # Calcular novo tamanho baseado na expansão
-            largura = 720 if exp_h else 360
-            altura = 650 if exp_v else 500
-            colunas = 2 if exp_h else 1
+            largura = LARGURA_EXPANDIDA if exp_h else LARGURA_CONTRAIDA
+            altura = ALTURA_EXPANDIDA if exp_v else ALTURA_CONTRAIDA
+            colunas = COLUNAS_EXPANDIDA if exp_h else COLUNAS_CONTRAIDA
 
             # Atualizar estados globais
             g.EXP_H = exp_h
             g.EXP_V = exp_v
             g.VALORES_W = [1, 2] if exp_h else [1]
 
-            print(f"Atualizando interface para: {largura}x{altura}, {colunas} colunas")
+            logging.info("Atualizando interface para: %dx%d, %d colunas",
+                         largura, altura, colunas)
 
             g.PRINC_FORM.setFixedSize(largura, altura)
 
@@ -66,7 +77,7 @@ class ExpansionManager:
             self.cleanup_timer.start(500)
 
         except (ValueError, TypeError, RuntimeError) as e:
-            print(f"Erro ao atualizar o tamanho da interface: {e}")
+            logging.error("Erro ao atualizar o tamanho da interface: %s", e)
         finally:
             self.is_updating = False
 

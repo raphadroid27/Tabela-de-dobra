@@ -9,9 +9,7 @@ import logging
 import os
 import sys
 from typing import Any, Callable, Dict, List, Set, Tuple
-
 from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QWidget
-
 import src.config.globals as g
 from src.models.models import Canal, Espessura, Material
 from src.utils.banco_dados import session
@@ -651,6 +649,12 @@ def analyze_project_widgets(root_path: str = None) -> str:
 
 
 if __name__ == "__main__":
-    print(analyze_project_widgets())
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+    logger.info("Iniciando análise de widgets do projeto...")
+    RESULT = analyze_project_widgets()
+    logger.info("Análise concluída.")
+    logger.info(RESULT)
 
 widget_state_manager = WidgetStateManager()

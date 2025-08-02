@@ -71,7 +71,17 @@ from src.utils.utilitarios import (
     setup_logging,
 )
 
+# Constantes para configuração da aplicação
 APP_VERSION = __version__
+JANELA_PRINCIPAL_LARGURA = 360
+JANELA_PRINCIPAL_ALTURA = 510
+TIMER_SISTEMA_INTERVALO = 5000  # 5 segundos
+TIMER_UPDATE_INTERVALO = 300000  # 5 minutos
+TIMER_UPDATE_DELAY_INICIAL = 1000  # 1 segundo
+LAYOUT_ESPACAMENTO = 0
+LAYOUT_MARGEM = 0
+VALORES_W_INICIAL = [1]
+
 g.SESSION_ID = str(uuid.uuid4())
 
 
@@ -141,7 +151,7 @@ def configurar_janela_principal(config):
 
     g.PRINC_FORM = QMainWindow()
     g.PRINC_FORM.setWindowTitle(f"Cálculo de Dobra - v{APP_VERSION}")
-    g.PRINC_FORM.setFixedSize(360, 500)
+    g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
@@ -301,7 +311,7 @@ def configurar_frames():
     central_widget = QWidget()
     g.PRINC_FORM.setCentralWidget(central_widget)
     vlayout = QVBoxLayout(central_widget)
-    aplicar_medida_borda_espaco(vlayout, 0, 0)
+    aplicar_medida_borda_espaco(vlayout, LAYOUT_MARGEM, LAYOUT_ESPACAMENTO)
 
     tema_atual = getattr(g, "TEMA_ATUAL", "dark")
     g.BARRA_TITULO = BarraTitulo(g.PRINC_FORM, tema=tema_atual)
@@ -317,7 +327,7 @@ def configurar_frames():
     layout = QGridLayout(conteudo_widget)
     vlayout.addWidget(conteudo_widget)
 
-    g.VALORES_W = [1]
+    g.VALORES_W = VALORES_W_INICIAL
     g.EXP_V = False
     g.EXP_H = False
     g.MAIN_LAYOUT = layout
@@ -359,12 +369,12 @@ def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g' para mantê-los ativos."""
     g.TIMER_SISTEMA = QTimer()
     g.TIMER_SISTEMA.timeout.connect(processar_verificacao_sistema)
-    g.TIMER_SISTEMA.start(5000)
+    g.TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
 
     g.UPDATE_CHECK_TIMER = QTimer()
     g.UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
-    g.UPDATE_CHECK_TIMER.start(300000)
-    QTimer.singleShot(1000, checagem_periodica_update)
+    g.UPDATE_CHECK_TIMER.start(TIMER_UPDATE_INTERVALO)
+    QTimer.singleShot(TIMER_UPDATE_DELAY_INICIAL, checagem_periodica_update)
 
 
 def main():

@@ -25,7 +25,7 @@ from src.config import globals as g
 from src.models import Usuario
 from src.utils.banco_dados import session
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
-from src.utils.janelas import HABILITAR_JANELAS, posicionar_janela
+from src.utils.janelas import habilitar_janelas, posicionar_janela
 from src.utils.usuarios import login, novo_usuario
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
@@ -47,8 +47,8 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     def close_event(event):
-        if callable(HABILITAR_JANELAS):
-            HABILITAR_JANELAS()
+        if callable(habilitar_janelas):
+            habilitar_janelas()
         event.accept()
 
     g.AUTEN_FORM.closeEvent = close_event

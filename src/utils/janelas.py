@@ -2,6 +2,7 @@
 Módulo com funções auxiliares para manipulação de janelas no aplicativo.
 """
 
+import logging
 from typing import Optional
 
 from PySide6.QtCore import Qt
@@ -31,7 +32,7 @@ class Janela:
 
         Janela.aplicar_no_topo_todas_janelas()
 
-        print(f"No topo {'ativado' if g.NO_TOPO_VAR else 'desativado'}")
+        logging.info("No topo %s", 'ativado' if g.NO_TOPO_VAR else 'desativado')
 
     @staticmethod
     def aplicar_no_topo_todas_janelas() -> None:
@@ -79,9 +80,10 @@ class Janela:
                 count += 1
 
         if count > 0:
-            print(
-                f"Estado 'no topo' {'ativado' if on_top_state else 'desativado'}\n"
-                f"aplicado a {count} janela(s)"
+            logging.info(
+                "Estado 'no topo' %s aplicado a %d janela(s)",
+                'ativado' if on_top_state else 'desativado',
+                count
             )
 
     @staticmethod
@@ -113,9 +115,9 @@ class Janela:
 
         if form:
             set_topmost(form, current_state)
-            print(
-                f"Estado 'no topo' {'ativado' if current_state else 'desativado'} "
-                "aplicado à nova janela"
+            logging.info(
+                "Estado 'no topo' %s aplicado à nova janela",
+                'ativado' if current_state else 'desativado'
             )
 
     @staticmethod
@@ -270,11 +272,11 @@ remover_janelas_orfas = Janela.remover_janelas_orfas
 posicionar_janela = Janela.posicionar_janela
 
 
-def HABILITAR_JANELAS() -> None:
+def habilitar_janelas() -> None:
     """Habilita todas as janelas do aplicativo."""
     Janela.estado_janelas(True)
 
 
-def DESABILITAR_JANELAS() -> None:
+def desabilitar_janelas() -> None:
     """Desabilita todas as janelas do aplicativo."""
     Janela.estado_janelas(False)

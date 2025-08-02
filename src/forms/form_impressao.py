@@ -32,8 +32,8 @@ from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import (
-    DESABILITAR_JANELAS,
-    HABILITAR_JANELAS,
+    desabilitar_janelas,
+    habilitar_janelas,
     aplicar_no_topo,
     posicionar_janela,
 )
@@ -319,8 +319,8 @@ def _mostrar_erro_impressao(erro):
 def selecionar_diretorio():
     """Abre o diálogo para seleção de diretório."""
     try:
-        if callable(DESABILITAR_JANELAS):
-            DESABILITAR_JANELAS()
+        if callable(desabilitar_janelas):
+            desabilitar_janelas()
 
         diretorio = QFileDialog.getExistingDirectory(
             g.IMPRESSAO_FORM, "Selecionar Diretório dos PDFs"
@@ -331,8 +331,8 @@ def selecionar_diretorio():
             g.IMPRESSAO_DIRETORIO_ENTRY.setText(diretorio)
 
     finally:
-        if callable(HABILITAR_JANELAS):
-            HABILITAR_JANELAS()
+        if callable(habilitar_janelas):
+            habilitar_janelas()
 
 
 def _validar_interface_entry():

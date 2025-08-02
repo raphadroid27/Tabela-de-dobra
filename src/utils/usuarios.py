@@ -13,7 +13,7 @@ from src.utils.banco_dados import (
     tratativa_erro,
 )
 from src.utils.interface import listar, obter_configuracoes
-from src.utils.janelas import HABILITAR_JANELAS
+from src.utils.janelas import habilitar_janelas
 from src.utils.utilitarios import ask_string, show_error, show_info, show_warning
 
 
@@ -55,8 +55,8 @@ def novo_usuario():
     if g.AUTEN_FORM is not None:
         g.AUTEN_FORM.close()
 
-    if callable(HABILITAR_JANELAS):
-        HABILITAR_JANELAS()
+    if callable(habilitar_janelas):
+        habilitar_janelas()
 
 
 def login():
@@ -122,8 +122,8 @@ def login():
             parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
         )
 
-    if callable(HABILITAR_JANELAS):
-        HABILITAR_JANELAS()
+    if callable(habilitar_janelas):
+        habilitar_janelas()
 
 
 def logado(tipo):

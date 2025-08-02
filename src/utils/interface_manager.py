@@ -3,10 +3,8 @@ Módulo para gerenciar a interface principal do aplicativo.
 Sistema robusto com gerenciamento seguro de widgets.
 """
 
-import traceback
-
+import logging
 from PySide6.QtWidgets import QApplication
-
 from src.components import botoes
 from src.components.avisos import avisos
 from src.components.cabecalho import cabecalho
@@ -103,7 +101,8 @@ def carregar_interface(var, layout):
         g.PRINC_FORM.setUpdatesEnabled(False)
         g.INTERFACE_RELOADING = True
 
-        print(f"Iniciando carregamento da interface: EXP_V={g.EXP_V}, EXP_H={g.EXP_H}")
+        logging.info(
+            "Iniciando carregamento da interface: EXP_V=%s, EXP_H=%s", g.EXP_V, g.EXP_H)
 
         # 1. Capturar e limpar estado anterior
         _preparar_interface_reload(layout)
@@ -131,16 +130,16 @@ def _preparar_interface_reload(layout):
     """Prepara a interface para recarregamento."""
     # Capturar estado atual dos widgets
     if hasattr(g, "MAT_COMB") and g.MAT_COMB is not None:
-        print("Capturando estado atual dos widgets...")
+        logging.info("Capturando estado atual dos widgets...")
         widget_state_manager.capture_current_state()
     else:
-        print("Primeira execução - não há widgets para capturar")
+        logging.info("Primeira execução - não há widgets para capturar")
 
     # Limpar widgets antigos
-    print("Limpando layout anterior...")
+    logging.info("Limpando layout anterior...")
     safe_clear_layout(layout)
 
-    print("Limpando referências globais...")
+    logging.info("Limpando referências globais...")
     clear_global_widget_references()
 
     safe_process_events()
@@ -148,7 +147,7 @@ def _preparar_interface_reload(layout):
 
 def _criar_widgets_interface(var, layout):
     """Cria os widgets da interface."""
-    print("Criando novos widgets...")
+    logging.info("Criando novos widgets...")
 
     # Cabeçalho principal
     cabecalho_widget = cabecalho()
@@ -172,7 +171,7 @@ def _criar_widgets_interface(var, layout):
 
 def _configurar_layout_interface(layout):
     """Configura o layout da interface."""
-    print("Configurando layout...")
+    logging.info("Configurando layout...")
     layout.setRowStretch(0, 0)  # Cabeçalho: tamanho fixo
     layout.setRowStretch(1, 1)  # Dobras: expansível
     layout.setRowStretch(2, 0)  # Botões: tamanho fixo
@@ -188,37 +187,30 @@ def _finalizar_interface_reload():
     """Finaliza o recarregamento da interface."""
     # Desabilitar gerenciamento de estado durante `todas_funcoes` para evitar loops
     widget_state_manager.disable()
-    print("Executando todas as funções de preenchimento...")
+    logging.info("Executando todas as funções de preenchimento...")
     try:
         todas_funcoes()
     except RuntimeError as e:
-        print(f"Erro ao executar todas as funções: {e}")
-        traceback.print_exc()
+        logging.error("Erro ao executar todas as funções: %s", e)
+        logging.debug("Detalhes do erro:", exc_info=True)
     finally:
         widget_state_manager.enable()
 
     # Restaurar estado dos widgets
-    print("Restaurando estado dos widgets...")
+    logging.info("Restaurando estado dos widgets...")
     widget_state_manager.restore_widget_state()
 
     # Recalcular todos os valores com base no estado restaurado
-    print("Recalculando valores finais...")
+    logging.info("Recalculando valores finais...")
     calcular_valores()
 
-    print("Interface carregada com sucesso!")
-    print(widget_state_manager.get_cache_info())
+    logging.info("Interface carregada com sucesso!")
+    logging.debug("Cache info: %s", widget_state_manager.get_cache_info())
 
 
 def _tratar_erro_interface_reload(e):
     """Trata erros durante o recarregamento da interface."""
     widget_state_manager.enable()
     g.INTERFACE_RELOADING = False
-    print(f"ERRO CRÍTICO no carregamento da interface: {e}")
-    traceback.print_exc()
-    # Não relançar a exceção para tentar manter o app funcional
-    # raise e
-
-
-# Funções não utilizadas removidas:
-# - reload_interface_safely()
-# - configurar_frame_principal()
+    logging.critical("ERRO CRÍTICO no carregamento da interface: %s", e)
+    logging.debug("Detalhes do erro:", exc_info=True)

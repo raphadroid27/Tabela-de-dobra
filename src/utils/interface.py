@@ -9,7 +9,7 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 - Lidar com ações diretas na interface, como limpeza de campos e cópia de valores.
 """
 
-import traceback
+import logging
 from dataclasses import dataclass
 from functools import partial
 
@@ -154,7 +154,7 @@ class LimparBusca:
                 self._limpar_busca_generica(config)
             listar(tipo)
         except (AttributeError, RuntimeError, ValueError, KeyError) as e:
-            print(f"Erro ao limpar busca para {tipo}: {e}")
+            logging.error("Erro ao limpar busca para %s: %s", tipo, e)
 
     def _limpar_busca_deducao(self, config):
         entries = config.get("entries", {})
@@ -687,8 +687,8 @@ def calcular_valores():
                 _atualizar_coluna_dobras_ui(w, deducao_usada, aba_min)
 
     except (AttributeError, RuntimeError, ValueError, KeyError, TypeError) as e:
-        print(f"Erro inesperado em calcular_valores: {e}")
-        traceback.print_exc()
+        logging.error("Erro inesperado em calcular_valores: %s", e)
+        logging.debug("Detalhes do erro:", exc_info=True)
 
 
 def todas_funcoes():
