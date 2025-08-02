@@ -32,9 +32,9 @@ from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import (
+    aplicar_no_topo,
     desabilitar_janelas,
     habilitar_janelas,
-    aplicar_no_topo,
     posicionar_janela,
 )
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco

@@ -9,12 +9,19 @@ import logging
 import os
 import sys
 from typing import Any, Callable, Dict, List, Set, Tuple
+
 from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QWidget
+
 import src.config.globals as g
 from src.models.models import Canal, Espessura, Material
 from src.utils.banco_dados import session
 from src.utils.estilo import ALTURA_PADRAO_COMPONENTE
-from src.utils.utilitarios import tem_configuracao_dobras_valida, WIDGET_CABECALHO, WIDGETS_DOBRAS, WIDGETS_ENTRADA_CABECALHO
+from src.utils.utilitarios import (
+    WIDGET_CABECALHO,
+    WIDGETS_DOBRAS,
+    WIDGETS_ENTRADA_CABECALHO,
+    tem_configuracao_dobras_valida,
+)
 
 logger = logging.getLogger(__name__)
 

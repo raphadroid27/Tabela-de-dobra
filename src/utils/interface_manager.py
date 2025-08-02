@@ -4,14 +4,16 @@ Sistema robusto com gerenciamento seguro de widgets.
 """
 
 import logging
+
 from PySide6.QtWidgets import QApplication
+
 from src.components import botoes
 from src.components.avisos import avisos
 from src.components.cabecalho import cabecalho
 from src.components.dobra_90 import dobras
 from src.config import globals as g
 from src.utils.interface import calcular_valores, todas_funcoes
-from src.utils.utilitarios import tem_configuracao_dobras_valida, WIDGET_CABECALHO
+from src.utils.utilitarios import WIDGET_CABECALHO, tem_configuracao_dobras_valida
 from src.utils.widget import widget_state_manager
 
 
