@@ -69,6 +69,44 @@ LOG_DIR = os.path.join(BASE_DIR, "logs")
 MARGEM_PADRAO = 5
 ESPACAMENTO_PADRAO = 5
 
+# === CONSTANTES DE WIDGETS ===
+
+# Lista de widgets do cabeçalho principal
+WIDGET_CABECALHO = [
+    "MAT_COMB",
+    "ESP_COMB",
+    "CANAL_COMB",
+    "DED_LBL",
+    "RI_ENTRY",
+    "K_LBL",
+    "OFFSET_LBL",
+    "OBS_LBL",
+    "FORCA_LBL",
+    "COMPR_ENTRY",
+    "ABA_EXT_LBL",
+    "Z_EXT_LBL",
+    "DED_ESPEC_ENTRY",
+]
+
+# Lista de widgets de entrada/input do cabeçalho (para captura de estado)
+WIDGETS_ENTRADA_CABECALHO = [
+    "MAT_COMB",
+    "ESP_COMB",
+    "CANAL_COMB",
+    "COMPR_ENTRY",
+    "RI_ENTRY",
+    "DED_ESPEC_ENTRY",
+]
+
+# Prefixos para categorização de widgets de dobras
+WIDGETS_DOBRAS = [
+    "aba",
+    "medidadobra",
+    "metadedobra",
+    "blank",
+    "FRAME_DOBRA",
+]
+
 # Diretórios e arquivos de atualização
 UPDATES_DIR = os.path.join(BASE_DIR, "updates")
 UPDATE_TEMP_DIR = os.path.join(BASE_DIR, "update_temp")
