@@ -10,8 +10,9 @@ import logging
 import logging.handlers
 import os
 import sys
+from typing import Optional, Union
 
-from PySide6.QtWidgets import QInputDialog, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QInputDialog, QLayout, QLineEdit, QMessageBox, QWidget
 
 from src.config import globals as g
 
@@ -78,7 +79,7 @@ CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 
-def ensure_dirs_exist():
+def ensure_dirs_exist() -> None:
     """
     Garante que todos os diretórios essenciais para a aplicação existam.
     """
@@ -92,7 +93,9 @@ ensure_dirs_exist()
 
 
 # --- 2. FUNÇÕES UTILITÁRIAS ---
-def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
+def aplicar_medida_borda_espaco(
+    layout_ou_widget: Union[QLayout, QWidget], margem: int = 5, espaco: int = 5
+) -> None:
     """Aplica margens e espaçamento a um layout ou widget."""
     if hasattr(layout_ou_widget, "setContentsMargins"):
         layout_ou_widget.setContentsMargins(margem, margem, margem, margem)
@@ -100,9 +103,9 @@ def aplicar_medida_borda_espaco(layout_ou_widget, margem=5, espaco=5):
         layout_ou_widget.setSpacing(espaco)
     elif hasattr(layout_ou_widget, "layout") and layout_ou_widget.layout():
         layout = layout_ou_widget.layout()
-        if hasattr(layout, "setContentsMargins"):
+        if layout and hasattr(layout, "setContentsMargins"):
             layout.setContentsMargins(margem, margem, margem, margem)
-        if hasattr(layout, "setSpacing"):
+        if layout and hasattr(layout, "setSpacing"):
             layout.setSpacing(espaco)
 
 
@@ -115,51 +118,51 @@ def tem_configuracao_dobras_valida():
     return hasattr(g, "VALORES_W") and hasattr(g, "N")
 
 
-def ask_string(title, prompt, parent=None):
+def ask_string(title: str, prompt: str, parent: Optional[QWidget] = None) -> Optional[str]:
     """Pede uma string usando QInputDialog."""
-    text, ok = QInputDialog.getText(parent, title, prompt, QLineEdit.Normal)
+    text, ok = QInputDialog.getText(parent, title, prompt, QLineEdit.EchoMode.Normal)
     return text if ok else None
 
 
-def show_error(title, message, parent=None):
+def show_error(title: str, message: str, parent: Optional[QWidget] = None) -> None:
     """Mostra uma mensagem de erro usando QMessageBox."""
     msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Critical)
+    msg.setIcon(QMessageBox.Icon.Critical)
     msg.setWindowTitle(title)
     msg.setText(message)
     msg.exec()
 
 
-def show_info(title, message, parent=None):
+def show_info(title: str, message: str, parent: Optional[QWidget] = None) -> None:
     """Mostra uma mensagem de informação usando QMessageBox."""
     msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Information)
+    msg.setIcon(QMessageBox.Icon.Information)
     msg.setWindowTitle(title)
     msg.setText(message)
     msg.exec()
 
 
-def show_warning(title, message, parent=None):
+def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> None:
     """Mostra uma mensagem de aviso usando QMessageBox."""
     msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Warning)
+    msg.setIcon(QMessageBox.Icon.Warning)
     msg.setWindowTitle(title)
     msg.setText(message)
     msg.exec()
 
 
-def ask_yes_no(title, message, parent=None):
+def ask_yes_no(title: str, message: str, parent: Optional[QWidget] = None) -> bool:
     """Pergunta sim/não usando QMessageBox."""
     msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Question)
+    msg.setIcon(QMessageBox.Icon.Question)
     msg.setWindowTitle(title)
     msg.setText(message)
-    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-    msg.setDefaultButton(QMessageBox.No)
-    return msg.exec() == QMessageBox.Yes
+    msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+    msg.setDefaultButton(QMessageBox.StandardButton.No)
+    return msg.exec() == QMessageBox.StandardButton.Yes
 
 
-def setup_logging(log_filename: str, log_to_console: bool = True):
+def setup_logging(log_filename: str, log_to_console: bool = True) -> None:
     """
     Configura o logging para arquivo e, opcionalmente, para o console.
     """
