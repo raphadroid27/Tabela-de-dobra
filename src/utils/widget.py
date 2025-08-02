@@ -14,7 +14,7 @@ import src.config.globals as g
 from src.models.models import Canal, Espessura, Material
 from src.utils.banco_dados import session
 from src.utils.estilo import ALTURA_PADRAO_COMPONENTE
-from src.utils.utilitarios import tem_configuracao_dobras_valida
+from src.utils.utilitarios import tem_configuracao_dobras_valida, WIDGET_CABECALHO, WIDGETS_DOBRAS, WIDGETS_ENTRADA_CABECALHO
 
 logger = logging.getLogger(__name__)
 
@@ -152,34 +152,9 @@ class WidgetUsageAnalyzer:
         }
 
         for widget in all_globals:
-            if any(
-                prefix in widget
-                for prefix in [
-                    "MAT_COMB",
-                    "ESP_COMB",
-                    "CANAL_COMB",
-                    "DED_LBL",
-                    "RI_ENTRY",
-                    "K_LBL",
-                    "OFFSET_LBL",
-                    "OBS_LBL",
-                    "FORCA_LBL",
-                    "COMPR_ENTRY",
-                    "ABA_EXT_LBL",
-                    "Z_EXT_LBL",
-                ]
-            ):
+            if any(prefix in widget for prefix in WIDGET_CABECALHO):
                 categories["cabecalho"].append(widget)
-            elif any(
-                prefix in widget
-                for prefix in [
-                    "aba",
-                    "medidadobra",
-                    "metadedobra",
-                    "blank",
-                    "FRAME_DOBRA",
-                ]
-            ):
+            elif any(prefix in widget for prefix in WIDGETS_DOBRAS):
                 categories["dobras"].append(widget)
             elif widget.endswith("_FORM"):
                 categories["formularios"].append(widget)
@@ -381,16 +356,8 @@ class WidgetStateManager:
     def _capture_cabecalho_state(self):
         """Captura o estado dos widgets do cabeçalho."""
         cabecalho_state = {}
-        widget_names = [
-            "MAT_COMB",
-            "ESP_COMB",
-            "CANAL_COMB",
-            "COMPR_ENTRY",
-            "RI_ENTRY",
-            "DED_ESPEC_ENTRY",
-        ]
 
-        for widget_name in widget_names:
+        for widget_name in WIDGETS_ENTRADA_CABECALHO:
             widget = getattr(g, widget_name, None)
             value = self._get_widget_value_safely(widget, widget_name)
             cabecalho_state[widget_name] = value

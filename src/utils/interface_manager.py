@@ -11,7 +11,7 @@ from src.components.cabecalho import cabecalho
 from src.components.dobra_90 import dobras
 from src.config import globals as g
 from src.utils.interface import calcular_valores, todas_funcoes
-from src.utils.utilitarios import tem_configuracao_dobras_valida
+from src.utils.utilitarios import tem_configuracao_dobras_valida, WIDGET_CABECALHO
 from src.utils.widget import widget_state_manager
 
 
@@ -54,21 +54,7 @@ def safe_clear_layout(layout):
 
 def clear_global_widget_references():
     """Limpa referências globais de widgets antes da recriação."""
-    widget_names = [
-        "MAT_COMB",
-        "ESP_COMB",
-        "CANAL_COMB",
-        "DED_LBL",
-        "RI_ENTRY",
-        "K_LBL",
-        "OFFSET_LBL",
-        "OBS_LBL",
-        "FORCA_LBL",
-        "COMPR_ENTRY",
-        "ABA_EXT_LBL",
-        "Z_EXT_LBL",
-        "DED_ESPEC_ENTRY",
-    ]
+    widget_names = WIDGET_CABECALHO.copy()
 
     # Limpar widgets de dobras dinamicamente
     if tem_configuracao_dobras_valida():
