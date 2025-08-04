@@ -16,30 +16,30 @@ class Janela:
     Classe utilitária para manipulação e controle de janelas no aplicativo,
     incluindo posicionamento, estado 'sempre no topo', e gerenciamento de janelas órfãs.
     """
+    _on_top_state: bool = False
 
     @staticmethod
-    def aplicar_no_topo_app_principal() -> None:
-        """
-        Alterna se a janela deve ficar sempre no topo ou não.
-        """
-        # Alternar o estado de NO_TOPO_VAR
-        if g.NO_TOPO_VAR is None:
-            g.NO_TOPO_VAR = False  # type: ignore[assignment]
+    def get_on_top_state() -> bool:
+        """Retorna o estado atual de 'sempre no topo'."""
+        return Janela._on_top_state
 
-        # Garantir que temos um valor booleano válido
-        current_state = bool(g.NO_TOPO_VAR)
-        g.NO_TOPO_VAR = not current_state  # type: ignore[assignment]
+    @staticmethod
+    def set_on_top_state(state: bool) -> None:
+        """
+        Define o estado 'sempre no topo' e o aplica a todas as janelas.
+        """
+        if Janela._on_top_state == state:
+            return  # Não faz nada se o estado já for o desejado
 
+        Janela._on_top_state = state
         Janela.aplicar_no_topo_todas_janelas()
-
-        logging.info("No topo %s", 'ativado' if g.NO_TOPO_VAR else 'desativado')
+        logging.info("No topo %s", 'ativado' if Janela._on_top_state else 'desativado')
 
     @staticmethod
     def aplicar_no_topo_todas_janelas() -> None:
         """
         Aplica a configuração 'no topo' a todas as janelas abertas do aplicativo.
         """
-
         def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
             if window and window.isVisible():  # Só aplicar a janelas visíveis
                 current_flags = window.windowFlags()
@@ -54,11 +54,8 @@ class Janela:
                 window.setWindowFlags(new_flags)
                 window.show()
 
-        if g.NO_TOPO_VAR is None:
-            return
-
-        # Garantir que temos um valor booleano válido
-        on_top_state = bool(g.NO_TOPO_VAR)
+        # CORREÇÃO: Lê o estado diretamente do atributo da classe.
+        on_top_state = Janela._on_top_state
 
         # Lista de janelas que podem estar abertas
         janelas = [
@@ -92,7 +89,6 @@ class Janela:
         Aplica o estado atual de 'no topo' a uma janela específica sem alternar.
         Usado quando uma nova janela é criada e deve herdar o estado atual.
         """
-
         def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
             if window:
                 current_flags = window.windowFlags()
@@ -107,11 +103,8 @@ class Janela:
                 window.setWindowFlags(new_flags)
                 window.show()
 
-        if g.NO_TOPO_VAR is None:
-            g.NO_TOPO_VAR = False  # type: ignore[assignment]
-
-        # Garantir que temos um valor booleano válido
-        current_state = bool(g.NO_TOPO_VAR)
+        # CORREÇÃO: Lê o estado diretamente do atributo da classe.
+        current_state = Janela._on_top_state
 
         if form:
             set_topmost(form, current_state)
@@ -125,21 +118,20 @@ class Janela:
         """
         Posiciona a janela em relação à janela principal.
         """
-        # Verificar se a janela principal existe
         if g.PRINC_FORM is None or form is None:
             return
 
         screen = QApplication.primaryScreen()
+        if not screen:
+            return
+
         largura_monitor = screen.size().width()
         posicao_x = g.PRINC_FORM.x()
         largura_janela = g.PRINC_FORM.width()
         largura_form = form.width()
 
         if posicao is None:
-            if posicao_x > largura_monitor / 2:
-                posicao = "esquerda"
-            else:
-                posicao = "direita"
+            posicao = "esquerda" if posicao_x > largura_monitor / 2 else "direita"
 
         if posicao == "centro":
             x = g.PRINC_FORM.x() + ((g.PRINC_FORM.width() - largura_form) // 2)
@@ -181,69 +173,35 @@ class Janela:
                 return
 
             main_window = g.PRINC_FORM if hasattr(g, "PRINC_FORM") else None
-
-            # Lista de formulários ativos que devem ser preservados
             active_forms = []
             form_vars = [
-                "DEDUC_FORM",
-                "MATER_FORM",
-                "CANAL_FORM",
-                "ESPES_FORM",
-                "SOBRE_FORM",
-                "AUTEN_FORM",
-                "USUAR_FORM",
-                "RIE_FORM",
-                "IMPRESSAO_FORM",
+                "DEDUC_FORM", "MATER_FORM", "CANAL_FORM", "ESPES_FORM",
+                "SOBRE_FORM", "AUTEN_FORM", "USUAR_FORM", "RIE_FORM", "IMPRESSAO_FORM",
             ]
 
             for form_var in form_vars:
-                if hasattr(g, form_var):
-                    form = getattr(g, form_var)
-                    if (
-                        form is not None
-                        and hasattr(form, "isVisible")
-                        and form.isVisible()
-                    ):
-                        active_forms.append(form)
+                form = getattr(g, form_var, None)
+                if form and hasattr(form, "isVisible") and form.isVisible():
+                    active_forms.append(form)
 
-            # Obter widgets de nível superior de forma segura
-            try:
-                if hasattr(app, 'topLevelWidgets'):
-                    top_level_widgets = app.topLevelWidgets()
-                else:
-                    # Fallback para versões diferentes do PySide6
-                    top_level_widgets = []
-            except AttributeError:
-                top_level_widgets = []
+            top_level_widgets = app.topLevelWidgets() if hasattr(app, 'topLevelWidgets') else []
 
-            for widget in top_level_widgets[:]:  # Cópia para iteração segura
-                if (
-                    widget != main_window
-                    and widget not in active_forms
-                    and widget.isVisible()
-                    and not hasattr(widget, "_is_system_widget")
-                    and not hasattr(widget, "_is_main_window")
-                ):
+            for widget in top_level_widgets[:]:
+                is_special = (
+                    widget == main_window or
+                    widget in active_forms or
+                    hasattr(widget, "_is_system_widget") or
+                    hasattr(widget, "_is_main_window")
+                )
+                if widget.isVisible() and not is_special:
+                    try:
+                        widget.hide()
+                        widget.close()
+                        widget.deleteLater()
+                    except (RuntimeError, AttributeError):
+                        pass
 
-                    widget_type = type(widget).__name__
-                    if widget_type in [
-                        "QLabel",
-                        "QFrame",
-                        "QWidget",
-                        "QDialog",
-                        "QWindow",
-                        "QMainWindow",
-                    ]:
-                        try:
-                            widget.hide()
-                            widget.close()
-                            widget.deleteLater()
-                        except (RuntimeError, AttributeError):
-                            pass
-
-            # Processar eventos para garantir limpeza
             app.processEvents()
-
         except (RuntimeError, AttributeError):
             pass
 
@@ -251,21 +209,19 @@ class Janela:
     def janela_flags() -> Qt.WindowType:
         """
         Define as flags essenciais para janelas do aplicativo.
-        Essas flags garantem que a janela tenha todos os botões necessários
-        na barra de título e se comporte corretamente no sistema operacional.
         """
-        essential_flags = (
-            Qt.WindowType.Window
-            | Qt.WindowType.WindowTitleHint
-            | Qt.WindowType.WindowSystemMenuHint
-            | Qt.WindowType.WindowMinimizeButtonHint
-            | Qt.WindowType.WindowMaximizeButtonHint
-            | Qt.WindowType.WindowCloseButtonHint
+        return (
+            Qt.WindowType.Window |
+            Qt.WindowType.WindowTitleHint |
+            Qt.WindowType.WindowSystemMenuHint |
+            Qt.WindowType.WindowMinimizeButtonHint |
+            Qt.WindowType.WindowMaximizeButtonHint |
+            Qt.WindowType.WindowCloseButtonHint
         )
-        return essential_flags
 
 
-aplicar_no_topo_app_principal = Janela.aplicar_no_topo_app_principal
+# CORREÇÃO: A função `aplicar_no_topo_app_principal` não é mais necessária.
+# Os aliases agora apontam para os métodos corretos.
 aplicar_no_topo = Janela.aplicar_no_topo
 aplicar_no_topo_todas_janelas = Janela.aplicar_no_topo_todas_janelas
 remover_janelas_orfas = Janela.remover_janelas_orfas
