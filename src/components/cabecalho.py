@@ -59,20 +59,20 @@ def criar_widget_cabecalho(layout, tipo, nome_global, pos, **kwargs):
         widget = QLabel(kwargs.pop("text", ""))
         widget.setFrameShape(QLabel.Shape.Panel)
         widget.setFrameShadow(QLabel.Shadow.Sunken)
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)  # Apenas altura fixa
-        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)  # Largura mínima
+        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
+        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
         widget.setAlignment(Qt.AlignCenter)
 
     elif tipo == "combobox":
         widget = QComboBox(**kwargs)
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)  # Apenas altura fixa
-        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)  # Largura mínima
+        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
+        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
         aplicar_estilo_widget_auto_ajustavel(widget, "combobox")
 
     elif tipo == "entry":
         widget = QLineEdit(**kwargs)
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)  # Apenas altura fixa
-        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)  # Largura mínima
+        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
+        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
         widget.setAlignment(Qt.AlignCenter)
         aplicar_estilo_widget_auto_ajustavel(widget, "lineedit")
     else:
@@ -100,7 +100,7 @@ def criar_widget_observacao(layout, nome_global, pos, **kwargs):
     widget = QLabel(kwargs.pop("text", ""))
     widget.setFrameShape(QLabel.Shape.Panel)
     widget.setFrameShadow(QLabel.Shadow.Sunken)
-    widget.setFixedHeight(20)  # Apenas altura fixa, largura flexível
+    widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     widget.setAlignment(Qt.AlignCenter)
 
     layout.addWidget(widget, *pos)

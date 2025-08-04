@@ -212,7 +212,7 @@ def resetar_senha():
         )
         return
 
-    novo_password = "nova_senha"  # Defina a nova senha padrão aqui
+    novo_password = "nova_senha"
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
     if usuario_obj:
         setattr(usuario_obj, "senha", novo_password)
