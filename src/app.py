@@ -51,7 +51,8 @@ from src.utils.estilo import (
     registrar_tema_actions,
 )
 from src.utils.interface_manager import carregar_interface
-from src.utils.janelas import aplicar_no_topo_app_principal, remover_janelas_orfas
+# CORREÇÃO: Importa a classe Janela para acessar seus novos métodos estáticos.
+from src.utils.janelas import Janela, remover_janelas_orfas
 from src.utils.session_manager import (
     atualizar_heartbeat_sessao,
     obter_comando_sistema,
@@ -188,9 +189,11 @@ def _executar_autenticacao(is_login):
     form_aut.main(g.PRINC_FORM)
 
 
-def _toggle_no_topo():
-    """Alterna o estado 'sempre no topo' da janela principal."""
-    aplicar_no_topo_app_principal()
+def _on_toggle_no_topo(checked: bool):
+    """
+    Define o estado 'sempre no topo' com base na ação do menu.
+    """
+    Janela.set_on_top_state(checked)
 
 
 def configurar_menu():
@@ -273,12 +276,12 @@ def _adicionar_acoes_ao_menu(menu, acoes):
 def _criar_menu_opcoes(menu_bar):
     """Cria o menu Opções."""
     opcoes_menu = menu_bar.addMenu("⚙️ Opções")
-    if not hasattr(g, "NO_TOPO_VAR") or g.NO_TOPO_VAR is None:
-        g.NO_TOPO_VAR = False
+
+    # CORREÇÃO: A lógica agora usa a classe Janela para gerenciar o estado.
     no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
-    no_topo_action.setChecked(g.NO_TOPO_VAR)
-    no_topo_action.triggered.connect(_toggle_no_topo)
+    no_topo_action.setChecked(Janela.get_on_top_state())  # Pega o estado inicial
+    no_topo_action.triggered.connect(_on_toggle_no_topo)  # Conecta ao novo handler
     opcoes_menu.addAction(no_topo_action)
 
     temas_menu = opcoes_menu.addMenu("🎨 Temas")
