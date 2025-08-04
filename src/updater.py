@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Updater Gráfico para a Aplicação de Cálculo de Dobra.
 """
@@ -102,10 +101,6 @@ except ImportError as e:
     msg.setWindowTitle("Erro de Módulo")
     msg.exec()
     sys.exit(1)
-
-
-# ... (O resto do seu código do updater.py continua aqui, sem nenhuma alteração) ...
-# (AdminAuthWidget, UpdaterWindow, etc.)
 
 
 class AdminAuthWidget(QWidget):

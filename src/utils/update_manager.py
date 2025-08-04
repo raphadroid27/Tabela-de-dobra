@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Módulo para Gerenciamento de Atualizações da Aplicação.
 

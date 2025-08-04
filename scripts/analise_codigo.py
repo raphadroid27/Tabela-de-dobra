@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Script para análise completa de qualidade de código.
 Executa múltiplas ferramentas de análise e formatação.
@@ -94,7 +93,8 @@ def main():
         # 2. Análise de qualidade core
         print("\n🔍 ANÁLISE DE QUALIDADE")
         if tools['pylint']:
-            run_command("python -m pylint src --disable=C0114,C0115,C0116,R0903,R0913 --reports=n --score=y --jobs=0",
+            run_command("python -m pylint src --disable=C0114,C0115,C0116,R0903,R0913 "
+                        "--reports=n --score=y --jobs=0",
                         "Análise completa com Pylint", 300)
         else:
             print("⏭️  Pulando pylint - não instalado")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Funções e constantes utilitárias genéricas para a aplicação.
 
