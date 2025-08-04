@@ -26,7 +26,7 @@ from src.config import globals as g
 from src.utils.controlador import buscar
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.interface import limpar_busca, listar
-from src.utils.janelas import aplicar_no_topo, posicionar_janela
+from src.utils.janelas import Janela
 from src.utils.usuarios import (
     excluir_usuario,
     resetar_senha,
@@ -60,8 +60,8 @@ def _configurar_janela_base(root):
 
     g.USUAR_FORM.setWindowIcon(QIcon(ICON_PATH))
 
-    aplicar_no_topo(g.USUAR_FORM)
-    posicionar_janela(g.USUAR_FORM, "centro")
+    Janela.aplicar_no_topo(g.USUAR_FORM)
+    Janela.posicionar_janela(g.USUAR_FORM, "centro")
 
 
 def _criar_layout_principal():
