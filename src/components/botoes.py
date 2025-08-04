@@ -59,8 +59,12 @@ class ExpansionManager:
             g.EXP_V = exp_v
             g.VALORES_W = [1, 2] if exp_h else [1]
 
-            logging.info("Atualizando interface para: %dx%d, %d colunas",
-                         largura, altura, colunas)
+            logging.info(
+                "Atualizando interface para: %dx%d, %d colunas",
+                largura,
+                altura,
+                colunas,
+            )
 
             g.PRINC_FORM.setFixedSize(largura, altura)
 

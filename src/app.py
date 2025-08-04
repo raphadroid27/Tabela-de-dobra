@@ -82,7 +82,8 @@ def verificar_admin_existente():
     admin_existente = db_session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
         logging.warning(
-            "Nenhum administrador encontrado. Abrindo formulário de autorização.")
+            "Nenhum administrador encontrado. Abrindo formulário de autorização."
+        )
         form_aut.main(g.PRINC_FORM)
     else:
         logging.info("Administrador encontrado.")
@@ -95,7 +96,8 @@ def carregar_configuracao():
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     logging.warning(
-        "Arquivo de configuração não encontrado. Usando configuração padrão.")
+        "Arquivo de configuração não encontrado. Usando configuração padrão."
+    )
     return {}
 
 
@@ -186,18 +188,42 @@ def configurar_menu():
 
     estrutura_menu = {
         "📁 Arquivo": [
-            ("➕ Nova Dedução", partial(abrir_formulario, FormDeducao, "EDIT_DED", False)),
-            ("➕ Novo Material", partial(abrir_formulario, FormMaterial, "EDIT_MAT", False)),
-            ("➕ Nova Espessura", partial(abrir_formulario, FormEspessura, "EDIT_ESP", False)),
-            ("➕ Novo Canal", partial(abrir_formulario, FormCanal, "EDIT_CANAL", False)),
+            (
+                "➕ Nova Dedução",
+                partial(abrir_formulario, FormDeducao, "EDIT_DED", False),
+            ),
+            (
+                "➕ Novo Material",
+                partial(abrir_formulario, FormMaterial, "EDIT_MAT", False),
+            ),
+            (
+                "➕ Nova Espessura",
+                partial(abrir_formulario, FormEspessura, "EDIT_ESP", False),
+            ),
+            (
+                "➕ Novo Canal",
+                partial(abrir_formulario, FormCanal, "EDIT_CANAL", False),
+            ),
             ("separator", None),
             ("🚪 Sair", fechar_aplicativo),
         ],
         "✏️ Editar": [
-            ("📝 Editar Dedução", partial(abrir_formulario, FormDeducao, "EDIT_DED", True)),
-            ("📝 Editar Material", partial(abrir_formulario, FormMaterial, "EDIT_MAT", True)),
-            ("📝 Editar Espessura", partial(abrir_formulario, FormEspessura, "EDIT_ESP", True)),
-            ("📝 Editar Canal", partial(abrir_formulario, FormCanal, "EDIT_CANAL", True)),
+            (
+                "📝 Editar Dedução",
+                partial(abrir_formulario, FormDeducao, "EDIT_DED", True),
+            ),
+            (
+                "📝 Editar Material",
+                partial(abrir_formulario, FormMaterial, "EDIT_MAT", True),
+            ),
+            (
+                "📝 Editar Espessura",
+                partial(abrir_formulario, FormEspessura, "EDIT_ESP", True),
+            ),
+            (
+                "📝 Editar Canal",
+                partial(abrir_formulario, FormCanal, "EDIT_CANAL", True),
+            ),
         ],
         "🔧 Utilidades": [
             ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
@@ -298,10 +324,12 @@ def configurar_frames():
 
 def configurar_sinais_excecoes():
     """Configura handlers para exceções não tratadas e sinais do sistema."""
+
     def handle_exception(exc_type, exc_value, exc_traceback):
         if exc_type != KeyboardInterrupt:
-            error_msg = "".join(traceback.format_exception(
-                exc_type, exc_value, exc_traceback))
+            error_msg = "".join(
+                traceback.format_exception(exc_type, exc_value, exc_traceback)
+            )
             logging.critical("ERRO NÃO TRATADO:\n%s", error_msg)
 
     def signal_handler(signum, _):
@@ -360,7 +388,13 @@ def main():
 
         logging.critical("ERRO FATAL: A janela principal não foi criada!")
         return 1
-    except (RuntimeError, SQLAlchemyError, ImportError, FileNotFoundError, OSError) as e:
+    except (
+        RuntimeError,
+        SQLAlchemyError,
+        ImportError,
+        FileNotFoundError,
+        OSError,
+    ) as e:
         logging.critical("ERRO CRÍTICO na inicialização: %s", e, exc_info=True)
         if app:
             app.quit()
