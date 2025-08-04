@@ -16,6 +16,7 @@ class Janela:
     Classe utilitária para manipulação e controle de janelas no aplicativo,
     incluindo posicionamento, estado 'sempre no topo', e gerenciamento de janelas órfãs.
     """
+
     _on_top_state: bool = False
 
     @staticmethod
@@ -33,13 +34,14 @@ class Janela:
 
         Janela._on_top_state = state
         Janela.aplicar_no_topo_todas_janelas()
-        logging.info("No topo %s", 'ativado' if Janela._on_top_state else 'desativado')
+        logging.info("No topo %s", "ativado" if Janela._on_top_state else "desativado")
 
     @staticmethod
     def aplicar_no_topo_todas_janelas() -> None:
         """
         Aplica a configuração 'no topo' a todas as janelas abertas do aplicativo.
         """
+
         def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
             if window and window.isVisible():
                 current_flags = window.windowFlags()
@@ -54,10 +56,14 @@ class Janela:
 
         on_top_state = Janela._on_top_state
         janelas = [
-            g.PRINC_FORM, getattr(g, "DEDUC_FORM", None),
-            getattr(g, "ESPES_FORM", None), getattr(g, "MATER_FORM", None),
-            getattr(g, "CANAL_FORM", None), getattr(g, "SOBRE_FORM", None),
-            getattr(g, "USUAR_FORM", None), getattr(g, "RIE_FORM", None),
+            g.PRINC_FORM,
+            getattr(g, "DEDUC_FORM", None),
+            getattr(g, "ESPES_FORM", None),
+            getattr(g, "MATER_FORM", None),
+            getattr(g, "CANAL_FORM", None),
+            getattr(g, "SOBRE_FORM", None),
+            getattr(g, "USUAR_FORM", None),
+            getattr(g, "RIE_FORM", None),
             getattr(g, "IMPRESSAO_FORM", None),
         ]
 
@@ -70,7 +76,8 @@ class Janela:
         if count > 0:
             logging.info(
                 "Estado 'no topo' %s aplicado a %d janela(s)",
-                'ativado' if on_top_state else 'desativado', count
+                "ativado" if on_top_state else "desativado",
+                count,
             )
 
     @staticmethod
@@ -94,7 +101,9 @@ class Janela:
         form.show()
 
     @staticmethod
-    def posicionar_janela(form: Optional[QWidget], posicao: Optional[str] = None) -> None:
+    def posicionar_janela(
+        form: Optional[QWidget], posicao: Optional[str] = None
+    ) -> None:
         """
         Posiciona a janela em relação à janela principal.
         """
@@ -112,7 +121,9 @@ class Janela:
 
         posicao_final = posicao
         if posicao_final is None:
-            posicao_final = "esquerda" if posicao_x_principal > largura_monitor / 2 else "direita"
+            posicao_final = (
+                "esquerda" if posicao_x_principal > largura_monitor / 2 else "direita"
+            )
 
         if posicao_final == "centro":
             x = posicao_x_principal + (largura_principal - largura_form) // 2
@@ -155,8 +166,15 @@ class Janela:
             main_window = g.PRINC_FORM if hasattr(g, "PRINC_FORM") else None
             active_forms = []
             form_vars = [
-                "DEDUC_FORM", "MATER_FORM", "CANAL_FORM", "ESPES_FORM",
-                "SOBRE_FORM", "AUTEN_FORM", "USUAR_FORM", "RIE_FORM", "IMPRESSAO_FORM",
+                "DEDUC_FORM",
+                "MATER_FORM",
+                "CANAL_FORM",
+                "ESPES_FORM",
+                "SOBRE_FORM",
+                "AUTEN_FORM",
+                "USUAR_FORM",
+                "RIE_FORM",
+                "IMPRESSAO_FORM",
             ]
 
             for form_var in form_vars:
@@ -164,14 +182,16 @@ class Janela:
                 if form and hasattr(form, "isVisible") and form.isVisible():
                     active_forms.append(form)
 
-            top_level_widgets = app.topLevelWidgets() if hasattr(app, 'topLevelWidgets') else []
+            top_level_widgets = (
+                app.topLevelWidgets() if hasattr(app, "topLevelWidgets") else []
+            )
 
             for widget in top_level_widgets[:]:
                 is_special = (
-                    widget == main_window or
-                    widget in active_forms or
-                    hasattr(widget, "_is_system_widget") or
-                    hasattr(widget, "_is_main_window")
+                    widget == main_window
+                    or widget in active_forms
+                    or hasattr(widget, "_is_system_widget")
+                    or hasattr(widget, "_is_main_window")
                 )
                 if widget.isVisible() and not is_special:
                     try:
@@ -191,13 +211,14 @@ class Janela:
         Define as flags essenciais para janelas do aplicativo.
         """
         return (
-            Qt.WindowType.Window |
-            Qt.WindowType.WindowTitleHint |
-            Qt.WindowType.WindowSystemMenuHint |
-            Qt.WindowType.WindowMinimizeButtonHint |
-            Qt.WindowType.WindowMaximizeButtonHint |
-            Qt.WindowType.WindowCloseButtonHint
+            Qt.WindowType.Window
+            | Qt.WindowType.WindowTitleHint
+            | Qt.WindowType.WindowSystemMenuHint
+            | Qt.WindowType.WindowMinimizeButtonHint
+            | Qt.WindowType.WindowMaximizeButtonHint
+            | Qt.WindowType.WindowCloseButtonHint
         )
+
 
 # CORREÇÃO: Bloco de aliases no final do arquivo foi removido para evitar confusão do linter.
 # As chamadas agora devem ser feitas diretamente pela classe: Janela.metodo()

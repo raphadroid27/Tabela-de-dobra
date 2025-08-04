@@ -13,6 +13,7 @@ from src import __version__
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.utils.estilo import obter_tema_atual
+
 # CORREÇÃO: Importa apenas a classe Janela.
 from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco

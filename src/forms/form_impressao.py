@@ -163,7 +163,9 @@ class PrintManager:
 
         return self.resultado_impressao
 
-    def _imprimir_arquivo_individual(self, nome_arquivo: str, caminho_completo: str) -> None:
+    def _imprimir_arquivo_individual(
+        self, nome_arquivo: str, caminho_completo: str
+    ) -> None:
         """Imprime um arquivo individual usando diferentes métodos."""
         sucesso = False
 
@@ -188,7 +190,9 @@ class PrintManager:
 
         # Validar se o arquivo existe antes de tentar imprimir
         if not os.path.exists(caminho_completo):
-            self.resultado_impressao += f" ✗ Arquivo não encontrado: {caminho_completo}\n"
+            self.resultado_impressao += (
+                f" ✗ Arquivo não encontrado: {caminho_completo}\n"
+            )
             return False
 
         try:
@@ -209,7 +213,9 @@ class PrintManager:
             self.resultado_impressao += f" ✗ Erro com Foxit: {str(e)}\n"
             return False
 
-    def _tentar_impressora_padrao(self, nome_arquivo: str, caminho_completo: str) -> bool:
+    def _tentar_impressora_padrao(
+        self, nome_arquivo: str, caminho_completo: str
+    ) -> bool:
         """Tenta imprimir usando a impressora padrão do Windows."""
         try:
             self.resultado_impressao += (
@@ -232,7 +238,9 @@ class PrintManager:
         """Tenta imprimir usando Adobe Reader."""
         # Validar se o arquivo existe antes de tentar imprimir
         if not os.path.exists(caminho_completo):
-            self.resultado_impressao += f" ✗ Arquivo não encontrado: {caminho_completo}\n"
+            self.resultado_impressao += (
+                f" ✗ Arquivo não encontrado: {caminho_completo}\n"
+            )
             return False
 
         for adobe_path in ADOBE_PATHS:
@@ -330,8 +338,10 @@ def selecionar_diretorio():
 
 def _validar_interface_entry():
     """Valida se o campo de diretório está disponível."""
-    return (hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY")
-            and g.IMPRESSAO_DIRETORIO_ENTRY is not None)
+    return (
+        hasattr(g, "IMPRESSAO_DIRETORIO_ENTRY")
+        and g.IMPRESSAO_DIRETORIO_ENTRY is not None
+    )
 
 
 # Função adicionar_arquivo() removida - não utilizada no projeto
@@ -373,8 +383,10 @@ def _adicionar_arquivos_a_lista(arquivos):
 
 def _validar_lista_arquivos():
     """Valida se a lista de arquivos está disponível."""
-    return (hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS")
-            and g.IMPRESSAO_LISTA_ARQUIVOS is not None)
+    return (
+        hasattr(g, "IMPRESSAO_LISTA_ARQUIVOS")
+        and g.IMPRESSAO_LISTA_ARQUIVOS is not None
+    )
 
 
 def _limpar_campo_texto():

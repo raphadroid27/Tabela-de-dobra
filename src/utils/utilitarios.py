@@ -136,8 +136,9 @@ ensure_dirs_exist()
 
 # --- 2. FUNÇÕES UTILITÁRIAS ---
 def aplicar_medida_borda_espaco(
-    layout_ou_widget: Union[QLayout, QWidget], margem: int =
-    MARGEM_PADRAO, espaco: int = ESPACAMENTO_PADRAO
+    layout_ou_widget: Union[QLayout, QWidget],
+    margem: int = MARGEM_PADRAO,
+    espaco: int = ESPACAMENTO_PADRAO,
 ) -> None:
     """Aplica margens e espaçamento a um layout ou widget."""
     if hasattr(layout_ou_widget, "setContentsMargins"):
@@ -161,7 +162,9 @@ def tem_configuracao_dobras_valida():
     return hasattr(g, "VALORES_W") and hasattr(g, "N")
 
 
-def ask_string(title: str, prompt: str, parent: Optional[QWidget] = None) -> Optional[str]:
+def ask_string(
+    title: str, prompt: str, parent: Optional[QWidget] = None
+) -> Optional[str]:
     """Pede uma string usando QInputDialog."""
     text, ok = QInputDialog.getText(parent, title, prompt, QLineEdit.EchoMode.Normal)
     return text if ok else None
@@ -200,8 +203,9 @@ def ask_yes_no(title: str, message: str, parent: Optional[QWidget] = None) -> bo
     msg.setIcon(QMessageBox.Icon.Question)
     msg.setWindowTitle(title)
     msg.setText(message)
-    msg.setStandardButtons(QMessageBox.StandardButton.Yes |
-                           QMessageBox.StandardButton.No)
+    msg.setStandardButtons(
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+    )
     msg.setDefaultButton(QMessageBox.StandardButton.No)
     return msg.exec() == QMessageBox.StandardButton.Yes
 
@@ -238,7 +242,8 @@ def setup_logging(log_filename: str, log_to_console: bool = True) -> None:
 
     except (OSError, IOError) as e:
         logging.critical(
-            "ERRO CRÍTICO: Não foi possível configurar o logging em arquivo: %s", e)
+            "ERRO CRÍTICO: Não foi possível configurar o logging em arquivo: %s", e
+        )
         logging.basicConfig(
             level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
         )

@@ -1,4 +1,3 @@
-
 """
 Módulo para Gerenciamento de Atualizações da Aplicação.
 

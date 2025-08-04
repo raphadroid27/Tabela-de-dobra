@@ -142,7 +142,11 @@ class BarraTitulo(QWidget):
         Move a janela enquanto o mouse é arrastado com o botão esquerdo pressionado.
         """
         # CORREÇÃO: Qt.MouseButton.LeftButton e self._parent
-        if self.pressing and event.buttons() == Qt.MouseButton.LeftButton and self._parent:
+        if (
+            self.pressing
+            and event.buttons() == Qt.MouseButton.LeftButton
+            and self._parent
+        ):
             self._parent.move(event.globalPosition().toPoint() - self.start)
             event.accept()
 
