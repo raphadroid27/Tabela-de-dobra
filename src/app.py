@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Formulário Principal do Aplicativo de Cálculo de Dobra.
 """
@@ -43,7 +42,6 @@ from src.utils.estilo import (
     registrar_tema_actions,
 )
 from src.utils.interface_manager import carregar_interface
-# CORREÇÃO: Importa apenas a classe Janela.
 from src.utils.janelas import Janela
 from src.utils.session_manager import (
     atualizar_heartbeat_sessao,
@@ -129,7 +127,6 @@ def fechar_aplicativo():
 def configurar_janela_principal(config):
     """Configura a janela principal do aplicativo."""
     logging.info("Configurando a janela principal.")
-    # CORREÇÃO: Chamada explícita através da classe Janela.
     Janela.remover_janelas_orfas()
     if g.PRINC_FORM:
         try:
@@ -178,7 +175,6 @@ def _executar_autenticacao(is_login):
 
 def _on_toggle_no_topo(checked: bool):
     """Define o estado 'sempre no topo' com base na ação do menu."""
-    # CORREÇÃO: Chamada explícita ao método da classe Janela.
     Janela.set_on_top_state(checked)
 
 
@@ -241,7 +237,6 @@ def _criar_menu_opcoes(menu_bar):
 
     no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
-    # CORREÇÃO: Chamada explícita ao método da classe Janela.
     no_topo_action.setChecked(Janela.get_on_top_state())
     no_topo_action.triggered.connect(_on_toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)

@@ -230,8 +230,6 @@ class WidgetFactory:
         """Registra uma função criadora para um widget."""
         cls._widget_creators[widget_name] = creator_func
 
-    # Métodos de cache e otimização removidos - não utilizados no projeto
-
 
 class WidgetManager:
     """Gerenciador centralizado para operações com widgets."""
@@ -301,16 +299,6 @@ class WidgetManager:
             return False
         except (AttributeError, RuntimeError):
             return False if safe else None
-
-    # Método restore_combobox_selection() removido - não utilizado
-
-    # Método removido - não utilizado
-
-    # Métodos não utilizados removidos:
-    # - clear_dobra_widgets()
-    # - get_cabecalho_widgets()
-    # - batch_clear_widgets()
-    # - batch_set_widgets()
 
     @classmethod
     def validate_widgets_exist(cls, widget_names: List[str]) -> Dict[str, bool]:
@@ -495,8 +483,6 @@ class WidgetStateManager:
 
         return self.safe_restore_entry(widget, value)
 
-    # Método removido - não utilizado
-
     def get_cache_info(self):
         """Retorna informações sobre o cache atual."""
         cabecalho_count = len(self.widget_cache.get("cabecalho", {}))
@@ -601,10 +587,6 @@ WidgetFactory.register_creator("DED_CANAL_COMB", create_deducao_canal_combo)
 WidgetFactory.register_creator("DED_VALOR_ENTRY", create_deducao_valor_entry)
 WidgetFactory.register_creator("DED_OBSER_ENTRY", create_deducao_observacao_entry)
 WidgetFactory.register_creator("DED_FORCA_ENTRY", create_deducao_forca_entry)
-
-
-# Funções não utilizadas removidas:
-# - validate_widgets_for_operation()
 
 
 def analyze_project_widgets(root_path: str = None) -> str:

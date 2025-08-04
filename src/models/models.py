@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Modelo de dados para o sistema de cálculo de dobra de chapas.
 
