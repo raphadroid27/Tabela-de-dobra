@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Formulário Principal do Aplicativo de Cálculo de Dobra.
-
-Este módulo implementa a interface principal do aplicativo, permitindo a gestão
-de deduções, materiais, espessuras e canais. Utiliza PySide6 para a interface
-gráfica, além de módulos auxiliares para banco de dados, variáveis globais e
-funcionalidades específicas, incluindo um sistema de atualização controlado.
-
-Versão Refatorada: Reduz a redundância na criação de menus e na abertura de
-formulários, centralizando a lógica e melhorando a manutenibilidade.
 """
 
 import json
@@ -51,8 +43,8 @@ from src.utils.estilo import (
     registrar_tema_actions,
 )
 from src.utils.interface_manager import carregar_interface
-# CORREÇÃO: Importa a classe Janela para acessar seus novos métodos estáticos.
-from src.utils.janelas import Janela, remover_janelas_orfas
+# CORREÇÃO: Importa apenas a classe Janela.
+from src.utils.janelas import Janela
 from src.utils.session_manager import (
     atualizar_heartbeat_sessao,
     obter_comando_sistema,
@@ -76,9 +68,9 @@ from src.utils.utilitarios import (
 APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
 JANELA_PRINCIPAL_ALTURA = 510
-TIMER_SISTEMA_INTERVALO = 5000  # 5 segundos
-TIMER_UPDATE_INTERVALO = 300000  # 5 minutos
-TIMER_UPDATE_DELAY_INICIAL = 1000  # 1 segundo
+TIMER_SISTEMA_INTERVALO = 5000
+TIMER_UPDATE_INTERVALO = 300000
+TIMER_UPDATE_DELAY_INICIAL = 1000
 LAYOUT_ESPACAMENTO = 0
 LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
@@ -92,8 +84,7 @@ def verificar_admin_existente():
     admin_existente = db_session.query(Usuario).filter(Usuario.role == "admin").first()
     if not admin_existente:
         logging.warning(
-            "Nenhum administrador encontrado. Abrindo formulário de autorização."
-        )
+            "Nenhum administrador encontrado. Abrindo formulário de autorização.")
         form_aut.main(g.PRINC_FORM)
     else:
         logging.info("Administrador encontrado.")
@@ -106,8 +97,7 @@ def carregar_configuracao():
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     logging.warning(
-        "Arquivo de configuração não encontrado. Usando configuração padrão."
-    )
+        "Arquivo de configuração não encontrado. Usando configuração padrão.")
     return {}
 
 
@@ -121,7 +111,6 @@ def salvar_configuracao(config):
 def fechar_aplicativo():
     """Fecha o aplicativo de forma segura."""
     logging.info("Iniciando o processo de fechamento do aplicativo.")
-
     try:
         if g.PRINC_FORM:
             pos = g.PRINC_FORM.pos()
@@ -129,7 +118,6 @@ def fechar_aplicativo():
             config["geometry"] = f"+{pos.x()}+{pos.y()}"
             salvar_configuracao(config)
             g.PRINC_FORM.close()
-
         app = QApplication.instance()
         if app:
             app.quit()
@@ -141,7 +129,8 @@ def fechar_aplicativo():
 def configurar_janela_principal(config):
     """Configura a janela principal do aplicativo."""
     logging.info("Configurando a janela principal.")
-    remover_janelas_orfas()
+    # CORREÇÃO: Chamada explícita através da classe Janela.
+    Janela.remover_janelas_orfas()
     if g.PRINC_FORM:
         try:
             g.PRINC_FORM.close()
@@ -176,9 +165,7 @@ def configurar_janela_principal(config):
 
 
 def abrir_formulario(form_function, edit_flag_name, is_edit_mode):
-    """
-    Abre um formulário genérico, configurando a flag de edição correspondente.
-    """
+    """Abre um formulário genérico, configurando a flag de edição."""
     setattr(g, edit_flag_name, is_edit_mode)
     form_function(g.PRINC_FORM)
 
@@ -190,56 +177,31 @@ def _executar_autenticacao(is_login):
 
 
 def _on_toggle_no_topo(checked: bool):
-    """
-    Define o estado 'sempre no topo' com base na ação do menu.
-    """
+    """Define o estado 'sempre no topo' com base na ação do menu."""
+    # CORREÇÃO: Chamada explícita ao método da classe Janela.
     Janela.set_on_top_state(checked)
 
 
 def configurar_menu():
-    """Configura o menu superior da janela principal de forma centralizada."""
+    """Configura o menu superior da janela principal."""
     if not hasattr(g, "MENU_CUSTOM") or g.MENU_CUSTOM is None:
         return
     menu_bar = g.MENU_CUSTOM.get_menu_bar()
 
     estrutura_menu = {
         "📁 Arquivo": [
-            (
-                "➕ Nova Dedução",
-                partial(abrir_formulario, FormDeducao, "EDIT_DED", False),
-            ),
-            (
-                "➕ Novo Material",
-                partial(abrir_formulario, FormMaterial, "EDIT_MAT", False),
-            ),
-            (
-                "➕ Nova Espessura",
-                partial(abrir_formulario, FormEspessura, "EDIT_ESP", False),
-            ),
-            (
-                "➕ Novo Canal",
-                partial(abrir_formulario, FormCanal, "EDIT_CANAL", False),
-            ),
+            ("➕ Nova Dedução", partial(abrir_formulario, FormDeducao, "EDIT_DED", False)),
+            ("➕ Novo Material", partial(abrir_formulario, FormMaterial, "EDIT_MAT", False)),
+            ("➕ Nova Espessura", partial(abrir_formulario, FormEspessura, "EDIT_ESP", False)),
+            ("➕ Novo Canal", partial(abrir_formulario, FormCanal, "EDIT_CANAL", False)),
             ("separator", None),
             ("🚪 Sair", fechar_aplicativo),
         ],
         "✏️ Editar": [
-            (
-                "📝 Editar Dedução",
-                partial(abrir_formulario, FormDeducao, "EDIT_DED", True),
-            ),
-            (
-                "📝 Editar Material",
-                partial(abrir_formulario, FormMaterial, "EDIT_MAT", True),
-            ),
-            (
-                "📝 Editar Espessura",
-                partial(abrir_formulario, FormEspessura, "EDIT_ESP", True),
-            ),
-            (
-                "📝 Editar Canal",
-                partial(abrir_formulario, FormCanal, "EDIT_CANAL", True),
-            ),
+            ("📝 Editar Dedução", partial(abrir_formulario, FormDeducao, "EDIT_DED", True)),
+            ("📝 Editar Material", partial(abrir_formulario, FormMaterial, "EDIT_MAT", True)),
+            ("📝 Editar Espessura", partial(abrir_formulario, FormEspessura, "EDIT_ESP", True)),
+            ("📝 Editar Canal", partial(abrir_formulario, FormCanal, "EDIT_CANAL", True)),
         ],
         "🔧 Utilidades": [
             ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
@@ -277,11 +239,11 @@ def _criar_menu_opcoes(menu_bar):
     """Cria o menu Opções."""
     opcoes_menu = menu_bar.addMenu("⚙️ Opções")
 
-    # CORREÇÃO: A lógica agora usa a classe Janela para gerenciar o estado.
     no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
-    no_topo_action.setChecked(Janela.get_on_top_state())  # Pega o estado inicial
-    no_topo_action.triggered.connect(_on_toggle_no_topo)  # Conecta ao novo handler
+    # CORREÇÃO: Chamada explícita ao método da classe Janela.
+    no_topo_action.setChecked(Janela.get_on_top_state())
+    no_topo_action.triggered.connect(_on_toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
 
     temas_menu = opcoes_menu.addMenu("🎨 Temas")
@@ -341,12 +303,10 @@ def configurar_frames():
 
 def configurar_sinais_excecoes():
     """Configura handlers para exceções não tratadas e sinais do sistema."""
-
     def handle_exception(exc_type, exc_value, exc_traceback):
         if exc_type != KeyboardInterrupt:
-            error_msg = "".join(
-                traceback.format_exception(exc_type, exc_value, exc_traceback)
-            )
+            error_msg = "".join(traceback.format_exception(
+                exc_type, exc_value, exc_traceback))
             logging.critical("ERRO NÃO TRATADO:\n%s", error_msg)
 
     def signal_handler(signum, _):
@@ -361,15 +321,13 @@ def configurar_sinais_excecoes():
 def processar_verificacao_sistema():
     """Função chamada pelo timer para verificar o estado do sistema."""
     atualizar_heartbeat_sessao()
-
     comando = obter_comando_sistema()
-
     if comando == "SHUTDOWN":
         fechar_aplicativo()
 
 
 def iniciar_timers():
-    """Inicializa e armazena os QTimers no objeto global 'g' para mantê-los ativos."""
+    """Inicializa e armazena os QTimers no objeto global 'g'."""
     g.TIMER_SISTEMA = QTimer()
     g.TIMER_SISTEMA.timeout.connect(processar_verificacao_sistema)
     g.TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
@@ -387,21 +345,15 @@ def main():
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
-
         set_installed_version(APP_VERSION)
-
         configurar_sinais_excecoes()
-
         app = QApplication(sys.argv)
         aplicar_tema_inicial("dark")
-
         app.aboutToQuit.connect(remover_sessao)
-
         config = carregar_configuracao()
         configurar_janela_principal(config)
         configurar_frames()
         configurar_menu()
-
         registrar_sessao()
         verificar_admin_existente()
 
@@ -413,14 +365,7 @@ def main():
 
         logging.critical("ERRO FATAL: A janela principal não foi criada!")
         return 1
-
-    except (
-        RuntimeError,
-        SQLAlchemyError,
-        ImportError,
-        FileNotFoundError,
-        OSError,
-    ) as e:
+    except (RuntimeError, SQLAlchemyError, ImportError, FileNotFoundError, OSError) as e:
         logging.critical("ERRO CRÍTICO na inicialização: %s", e, exc_info=True)
         if app:
             app.quit()

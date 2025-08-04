@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QGridLayout, QPushButton,
 import src.config.globals as g
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_checkbox
 from src.utils.interface import limpar_dobras, limpar_tudo
-from src.utils.janelas import remover_janelas_orfas
+from src.utils.janelas import Janela
 
 # Constantes para dimensões da interface
 LARGURA_CONTRAIDA = 360
@@ -38,7 +38,7 @@ class ExpansionManager:
     def force_cleanup_orphans(self):
         """Remove todas as janelas órfãs - usa função centralizada"""
         try:
-            remover_janelas_orfas()
+            Janela.remover_janelas_orfas()
         except (ImportError, ValueError, RuntimeError):
             pass
 

@@ -1,11 +1,6 @@
 """
 # Formulário "Sobre"
 # Este módulo implementa a janela "Sobre" do aplicativo.
-# Ele exibe informações como o nome do aplicativo, versão, autor,
-# descrição e um link interativo para o repositório no GitHub.
-# A janela é criada como uma QDialog do PySide6, centralizada na tela,
-# e configurada para permanecer no topo das outras janelas.
-# O link para o GitHub abre o navegador padrão ao ser clicado.
 """
 
 from typing import Optional
@@ -18,7 +13,8 @@ from src import __version__
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.utils.estilo import obter_tema_atual
-from src.utils.janelas import aplicar_no_topo, posicionar_janela
+# CORREÇÃO: Importa apenas a classe Janela.
+from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 
@@ -26,7 +22,7 @@ def main(root: Optional[QWidget]) -> None:
     """
     Função principal que cria a janela "Sobre" com barra de título customizada.
     """
-    if getattr(g, "SOBRE_FORM", None):
+    if hasattr(g, "SOBRE_FORM") and g.SOBRE_FORM is not None:
         g.SOBRE_FORM.close()
 
     sobre_form = QDialog(root)
@@ -37,8 +33,9 @@ def main(root: Optional[QWidget]) -> None:
 
     sobre_form.setWindowIcon(QIcon(ICON_PATH))
 
-    aplicar_no_topo(sobre_form)
-    posicionar_janela(sobre_form, "centro")
+    # CORREÇÃO: Chamadas explícitas através da classe Janela.
+    Janela.aplicar_no_topo(sobre_form)
+    Janela.posicionar_janela(sobre_form, "centro")
 
     # Layout principal vertical: barra de título + conteúdo
     layout = QVBoxLayout(sobre_form)

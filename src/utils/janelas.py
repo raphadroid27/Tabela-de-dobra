@@ -29,7 +29,7 @@ class Janela:
         Define o estado 'sempre no topo' e o aplica a todas as janelas.
         """
         if Janela._on_top_state == state:
-            return  # Não faz nada se o estado já for o desejado
+            return
 
         Janela._on_top_state = state
         Janela.aplicar_no_topo_todas_janelas()
@@ -41,7 +41,7 @@ class Janela:
         Aplica a configuração 'no topo' a todas as janelas abertas do aplicativo.
         """
         def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
-            if window and window.isVisible():  # Só aplicar a janelas visíveis
+            if window and window.isVisible():
                 current_flags = window.windowFlags()
                 if on_top:
                     new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
@@ -49,24 +49,15 @@ class Janela:
                     new_flags = current_flags & ~Qt.WindowType.WindowStaysOnTopHint
 
                 essential_flags = Janela.janela_flags()
-
-                new_flags = new_flags | essential_flags
-                window.setWindowFlags(new_flags)
+                window.setWindowFlags(new_flags | essential_flags)
                 window.show()
 
-        # CORREÇÃO: Lê o estado diretamente do atributo da classe.
         on_top_state = Janela._on_top_state
-
-        # Lista de janelas que podem estar abertas
         janelas = [
-            g.PRINC_FORM,
-            getattr(g, "DEDUC_FORM", None),
-            getattr(g, "ESPES_FORM", None),
-            getattr(g, "MATER_FORM", None),
-            getattr(g, "CANAL_FORM", None),
-            getattr(g, "SOBRE_FORM", None),
-            getattr(g, "USUAR_FORM", None),
-            getattr(g, "RIE_FORM", None),
+            g.PRINC_FORM, getattr(g, "DEDUC_FORM", None),
+            getattr(g, "ESPES_FORM", None), getattr(g, "MATER_FORM", None),
+            getattr(g, "CANAL_FORM", None), getattr(g, "SOBRE_FORM", None),
+            getattr(g, "USUAR_FORM", None), getattr(g, "RIE_FORM", None),
             getattr(g, "IMPRESSAO_FORM", None),
         ]
 
@@ -79,39 +70,28 @@ class Janela:
         if count > 0:
             logging.info(
                 "Estado 'no topo' %s aplicado a %d janela(s)",
-                'ativado' if on_top_state else 'desativado',
-                count
+                'ativado' if on_top_state else 'desativado', count
             )
 
     @staticmethod
     def aplicar_no_topo(form: Optional[QWidget]) -> None:
         """
-        Aplica o estado atual de 'no topo' a uma janela específica sem alternar.
-        Usado quando uma nova janela é criada e deve herdar o estado atual.
+        Aplica o estado atual de 'no topo' a uma janela específica.
         """
-        def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
-            if window:
-                current_flags = window.windowFlags()
-                if on_top:
-                    new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
-                else:
-                    new_flags = current_flags & ~Qt.WindowType.WindowStaysOnTopHint
+        if not form:
+            return
 
-                essential_flags = Janela.janela_flags()
-
-                new_flags = new_flags | essential_flags
-                window.setWindowFlags(new_flags)
-                window.show()
-
-        # CORREÇÃO: Lê o estado diretamente do atributo da classe.
         current_state = Janela._on_top_state
+        current_flags = form.windowFlags()
 
-        if form:
-            set_topmost(form, current_state)
-            logging.info(
-                "Estado 'no topo' %s aplicado à nova janela",
-                'ativado' if current_state else 'desativado'
-            )
+        if current_state:
+            new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
+        else:
+            new_flags = current_flags & ~Qt.WindowType.WindowStaysOnTopHint
+
+        essential_flags = Janela.janela_flags()
+        form.setWindowFlags(new_flags | essential_flags)
+        form.show()
 
     @staticmethod
     def posicionar_janela(form: Optional[QWidget], posicao: Optional[str] = None) -> None:
@@ -126,26 +106,27 @@ class Janela:
             return
 
         largura_monitor = screen.size().width()
-        posicao_x = g.PRINC_FORM.x()
-        largura_janela = g.PRINC_FORM.width()
+        posicao_x_principal = g.PRINC_FORM.x()
+        largura_principal = g.PRINC_FORM.width()
         largura_form = form.width()
 
-        if posicao is None:
-            posicao = "esquerda" if posicao_x > largura_monitor / 2 else "direita"
+        posicao_final = posicao
+        if posicao_final is None:
+            posicao_final = "esquerda" if posicao_x_principal > largura_monitor / 2 else "direita"
 
-        if posicao == "centro":
-            x = g.PRINC_FORM.x() + ((g.PRINC_FORM.width() - largura_form) // 2)
-            y = g.PRINC_FORM.y() + ((g.PRINC_FORM.height() - form.height()) // 2)
-        elif posicao == "direita":
-            x = g.PRINC_FORM.x() + largura_janela + 10
+        if posicao_final == "centro":
+            x = posicao_x_principal + (largura_principal - largura_form) // 2
+            y = g.PRINC_FORM.y() + (g.PRINC_FORM.height() - form.height()) // 2
+        elif posicao_final == "direita":
+            x = posicao_x_principal + largura_principal + 10
             y = g.PRINC_FORM.y()
             if x + largura_form > largura_monitor:
-                x = g.PRINC_FORM.x() - largura_form - 10
-        elif posicao == "esquerda":
-            x = g.PRINC_FORM.x() - largura_form - 10
+                x = posicao_x_principal - largura_form - 10
+        elif posicao_final == "esquerda":
+            x = posicao_x_principal - largura_form - 10
             y = g.PRINC_FORM.y()
             if x < 0:
-                x = g.PRINC_FORM.x() + largura_janela + 10
+                x = posicao_x_principal + largura_principal + 10
         else:
             return
 
@@ -154,7 +135,7 @@ class Janela:
     @staticmethod
     def estado_janelas(estado: bool) -> None:
         """
-        Desabilita ou habilita todas as janelas do aplicativo.
+        Desabilita ou habilita as janelas principais do aplicativo.
         """
         forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
         for form in forms:
@@ -164,8 +145,7 @@ class Janela:
     @staticmethod
     def remover_janelas_orfas() -> None:
         """
-        Remove todas as janelas órfãs que possam estar abertas,
-        mas preserva formulários ativos.
+        Remove todas as janelas órfãs que possam estar abertas.
         """
         try:
             app = QApplication.instance()
@@ -219,20 +199,5 @@ class Janela:
             Qt.WindowType.WindowCloseButtonHint
         )
 
-
-# CORREÇÃO: A função `aplicar_no_topo_app_principal` não é mais necessária.
-# Os aliases agora apontam para os métodos corretos.
-aplicar_no_topo = Janela.aplicar_no_topo
-aplicar_no_topo_todas_janelas = Janela.aplicar_no_topo_todas_janelas
-remover_janelas_orfas = Janela.remover_janelas_orfas
-posicionar_janela = Janela.posicionar_janela
-
-
-def habilitar_janelas() -> None:
-    """Habilita todas as janelas do aplicativo."""
-    Janela.estado_janelas(True)
-
-
-def desabilitar_janelas() -> None:
-    """Desabilita todas as janelas do aplicativo."""
-    Janela.estado_janelas(False)
+# CORREÇÃO: Bloco de aliases no final do arquivo foi removido para evitar confusão do linter.
+# As chamadas agora devem ser feitas diretamente pela classe: Janela.metodo()
