@@ -36,7 +36,7 @@ from src.utils.interface import (  # <--- IMPORTA A NOVA FUNÇÃO
     limpar_busca,
     listar,
 )
-from src.utils.janelas import aplicar_no_topo, posicionar_janela
+from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 # Configurações para cada tipo de formulário
@@ -386,8 +386,8 @@ class FormManager:
         # Guardar referência para uso posterior
         new_form.conteudo_layout = grid_layout
 
-        aplicar_no_topo(new_form)
-        posicionar_janela(new_form, None)
+        Janela.aplicar_no_topo(new_form)
+        Janela.posicionar_janela(new_form, None)
 
         return new_form
 

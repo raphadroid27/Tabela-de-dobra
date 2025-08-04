@@ -19,7 +19,7 @@ from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.utils.estilo import obter_tema_atual
 from src.utils.interface import calcular_valores
-from src.utils.janelas import aplicar_no_topo, posicionar_janela
+from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 # Constantes para configuração da interface
@@ -57,8 +57,8 @@ def _criar_form(root):
     g.RIE_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
     g.RIE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
     g.RIE_FORM.setWindowIcon(QIcon(ICON_PATH))
-    aplicar_no_topo(g.RIE_FORM)
-    posicionar_janela(g.RIE_FORM, None)
+    Janela.aplicar_no_topo(g.RIE_FORM)
+    Janela.posicionar_janela(g.RIE_FORM, None)
 
 
 def _criar_layout_principal(parent):
