@@ -32,7 +32,7 @@ def avisos():
 
     for aviso in avisos_textos:
         aviso_label = QLabel(aviso)
-        aviso_label.setAlignment(Qt.AlignLeft)
+        aviso_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         aviso_label.setFont(font)
         aviso_label.setWordWrap(True)
         aviso_label.setMaximumWidth(300)

@@ -18,7 +18,7 @@ from src.utils.banco_dados import session
 # --- FUNÇÕES DE CONVERSÃO DE DADOS ---
 
 
-def converter_para_float(valor_str: str, default_value=0.0) -> float:
+def converter_para_float(valor_str: str, default_value: float = 0.0) -> float:
     """
     Converte uma string para float, tratando vírgulas e valores vazios.
 

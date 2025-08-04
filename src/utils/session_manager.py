@@ -71,7 +71,7 @@ def obter_comando_sistema() -> str | None:
     """Busca no banco e retorna o comando atual do sistema ('SHUTDOWN', 'NONE', etc.)."""
     try:
         cmd_entry = db_session.query(SystemControl).filter_by(key="UPDATE_CMD").first()
-        return cmd_entry.value if cmd_entry else None
+        return str(cmd_entry.value) if cmd_entry and cmd_entry.value else None
     except SQLAlchemyError as e:
         logging.error("Erro ao obter comando do sistema: %s", e)
         db_session.rollback()

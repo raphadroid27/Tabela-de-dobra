@@ -63,7 +63,7 @@ def criar_label_header(layout, texto, pos):
     header_label = QLabel(texto)
     header_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     header_label.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
-    header_label.setAlignment(Qt.AlignCenter)
+    header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(header_label, linha, coluna)
     return header_label
 
@@ -84,7 +84,7 @@ def criar_label_aba(layout, texto, pos):
     aba_label = QLabel(texto)
     aba_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     aba_label.setFixedWidth(50)  # Largura fixa menor para labels de aba
-    aba_label.setAlignment(Qt.AlignCenter)
+    aba_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(aba_label, linha, coluna)
     return aba_label
 
@@ -102,9 +102,9 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
     entry.returnPressed.connect(lambda: focus_next_entry(config.i, config.w))
 
     def custom_key_press_event(event):
-        if event.key() == Qt.Key_Down:
+        if event.key() == Qt.Key.Key_Down:
             focus_next_entry(config.i, config.w)
-        elif event.key() == Qt.Key_Up:
+        elif event.key() == Qt.Key.Key_Up:
             focus_previous_entry(config.i, config.w)
         else:
             QLineEdit.keyPressEvent(entry, event)
@@ -125,7 +125,7 @@ def criar_entry_dobra(config: ConfigEntry):
     """
     linha, coluna = config.pos
     entry = QLineEdit()
-    entry.setAlignment(Qt.AlignCenter)
+    entry.setAlignment(Qt.AlignmentFlag.AlignCenter)
     entry.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     entry.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
 
@@ -155,12 +155,16 @@ def criar_label_resultado(config: ConfigLabelResultado):
     label.setFrameShadow(QLabel.Shadow.Sunken)
     label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     label.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
-    label.setAlignment(Qt.AlignCenter)
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     setattr(g, config.nome_global, label)
     config.layout.addWidget(label, linha, coluna)
 
-    label.mousePressEvent = lambda event: copiar(config.copy_type, config.i, config.w)
+    def mouse_press_handler(_):
+        copiar(config.copy_type, config.i, config.w)
+
+    # Use type ignore para contornar o problema de tipagem
+    label.mousePressEvent = mouse_press_handler  # type: ignore[method-assign]
     label.setToolTip(config.tooltip_text)
 
     return label
@@ -176,14 +180,15 @@ def dobras(w):
     Returns:
         QGroupBox configurado com os campos de dobras auto-ajustáveis.
     """
-    g.FRAME_DOBRA = QGroupBox()
-    g.FRAME_DOBRA.setFlat(True)
-    g.FRAME_DOBRA.setStyleSheet("QGroupBox { margin-top: 0px; }")
-    layout = QGridLayout(g.FRAME_DOBRA)
+    frame_dobra = QGroupBox()
+    g.FRAME_DOBRA = frame_dobra
+    frame_dobra.setFlat(True)
+    frame_dobra.setStyleSheet("QGroupBox { margin-top: 0px; }")
+    layout = QGridLayout(frame_dobra)
     layout.setContentsMargins(10, 0, 10, 0)
     layout.setSpacing(5)
 
-    g.FRAME_DOBRA.setLayout(layout)
+    frame_dobra.setLayout(layout)
 
     _configurar_layout_dobra(layout)
     _criar_headers(layout)
@@ -259,7 +264,7 @@ def _criar_labels_blank(layout, w):
     """Cria os labels do blank com widgets auto-ajustáveis."""
     # Label "Medida do Blank:"
     blank_label = QLabel("Medida do Blank:")
-    blank_label.setAlignment(Qt.AlignCenter)
+    blank_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     blank_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     layout.addWidget(blank_label, g.N, 0, 1, 2)
 
