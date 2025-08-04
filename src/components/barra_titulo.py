@@ -24,7 +24,7 @@ class BarraTitulo(QWidget):
         :param tema: Tema visual ('dark', 'light' ou 'auto').
         """
         super().__init__(parent)
-        self.parent = parent
+        self._parent = parent
         self.pressing = False
         self.start = QPoint(0, 0)
         self.setFixedHeight(32)
@@ -32,7 +32,6 @@ class BarraTitulo(QWidget):
 
         self.current_theme = tema
         self.real_theme_applied = None
-        # SOLUÇÃO: Flag para evitar o loop de recursão.
         self._is_updating_style = False
 
         self.set_tema(self.current_theme)
@@ -99,15 +98,17 @@ class BarraTitulo(QWidget):
         """
         Minimiza a janela pai.
         """
-        if self.parent:
-            self.parent.showMinimized()
+        # CORREÇÃO: Usando self._parent
+        if self._parent:
+            self._parent.showMinimized()
 
     def fechar(self):
         """
         Fecha a janela pai.
         """
-        if self.parent:
-            self.parent.close()
+        # CORREÇÃO: Usando self._parent
+        if self._parent:
+            self._parent.close()
 
     def changeEvent(self, event):  # pylint: disable=invalid-name
         """
@@ -125,12 +126,14 @@ class BarraTitulo(QWidget):
         """
         Inicia o arrasto da janela ao pressionar o botão esquerdo do mouse.
         """
-        if event.button() == Qt.LeftButton:
+        # CORREÇÃO: Qt.MouseButton.LeftButton é o correto para PySide6
+        if event.button() == Qt.MouseButton.LeftButton:
             self.pressing = True
-            if self.parent:
+            # CORREÇÃO: Usando self._parent
+            if self._parent:
                 self.start = (
                     event.globalPosition().toPoint()
-                    - self.parent.frameGeometry().topLeft()
+                    - self._parent.frameGeometry().topLeft()
                 )
             event.accept()
 
@@ -138,8 +141,9 @@ class BarraTitulo(QWidget):
         """
         Move a janela enquanto o mouse é arrastado com o botão esquerdo pressionado.
         """
-        if self.pressing and event.buttons() == Qt.LeftButton and self.parent:
-            self.parent.move(event.globalPosition().toPoint() - self.start)
+        # CORREÇÃO: Qt.MouseButton.LeftButton e self._parent
+        if self.pressing and event.buttons() == Qt.MouseButton.LeftButton and self._parent:
+            self._parent.move(event.globalPosition().toPoint() - self.start)
             event.accept()
 
     def mouseReleaseEvent(self, event):  # pylint: disable=invalid-name
