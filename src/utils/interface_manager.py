@@ -90,7 +90,8 @@ def carregar_interface(var, layout):
         g.INTERFACE_RELOADING = True
 
         logging.info(
-            "Iniciando carregamento da interface: EXP_V=%s, EXP_H=%s", g.EXP_V, g.EXP_H)
+            "Iniciando carregamento da interface: EXP_V=%s, EXP_H=%s", g.EXP_V, g.EXP_H
+        )
 
         # 1. Capturar e limpar estado anterior
         _preparar_interface_reload(layout)

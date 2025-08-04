@@ -1,4 +1,3 @@
-
 """
 Modelo de dados para o sistema de cálculo de dobra de chapas.
 
