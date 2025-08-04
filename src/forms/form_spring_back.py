@@ -3,6 +3,7 @@ Formulário para o cálculo de Spring Back
 """
 
 import sys
+from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -22,12 +23,12 @@ from src.utils.banco_dados import session
 from src.utils.estilo import obter_tema_atual
 
 
-def create_spring_back_form(root=None):
+def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     """Cria o formulário de Spring Back usando QDialog com barra customizada"""
     form_spring = QDialog(root)
     form_spring.setWindowTitle("Cálculo de Spring Back")
     form_spring.setFixedSize(300, 150)
-    form_spring.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+    form_spring.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
     # Layout vertical: barra de título customizada + conteúdo grid
     vlayout = QVBoxLayout(form_spring)

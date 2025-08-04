@@ -18,13 +18,15 @@ from sqlalchemy import (
     UniqueConstraint,
     create_engine,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 from src.utils.utilitarios import DB_PATH
 
 # --- Modelos ORM ---
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Base class for all ORM models."""
 
 
 class Usuario(Base):

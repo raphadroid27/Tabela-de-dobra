@@ -47,7 +47,7 @@ def get_installed_version() -> Optional[str]:
         )
         if version_entry:
             logging.info("Versão instalada encontrada no DB: %s", version_entry.value)
-            return version_entry.value
+            return str(version_entry.value) if version_entry.value else None
         logging.warning(
             "Nenhuma entrada 'INSTALLED_VERSION' encontrada no banco de dados."
         )
@@ -75,11 +75,11 @@ def set_installed_version(version: str):
                     version_entry.value,
                     version,
                 )
-                version_entry.value = version
+                version_entry.value = str(version)
         else:
             logging.info("Gravando a versão inicial no DB: %s", version)
             new_entry = SystemControl(
-                key="INSTALLED_VERSION", value=version, type="CONFIG"
+                key="INSTALLED_VERSION", value=str(version), type="CONFIG"
             )
             session.add(new_entry)
         session.commit()
@@ -114,7 +114,7 @@ def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
 
         if Version(latest_version_str) > Version(current_version_str):
             logging.info("Nova versão encontrada: %s", latest_version_str)
-            return server_info
+            return dict(server_info)
 
         return None
     except (json.JSONDecodeError, KeyError, ValueError, IOError, OSError) as e:
@@ -152,7 +152,7 @@ def checagem_periodica_update():
     update_info = checar_updates(versao_atual)
     if update_info:
         logging.info("Nova versão encontrada: %s", update_info.get("ultima_versao"))
-        g.UPDATE_INFO = update_info
+        g.UPDATE_INFO = dict(update_info)
         _atualizar_ui_conforme_status(True)
     else:
         logging.info("Nenhuma nova atualização encontrada.")

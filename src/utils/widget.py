@@ -36,8 +36,8 @@ class WidgetUsageAnalyzer:
     def __init__(self, root_path: str):
         self.project_root = root_path
         self.src_path = os.path.join(root_path, "src")
-        self.widget_assignments = set()
-        self.widget_usages = set()
+        self.widget_assignments: Set[str] = set()
+        self.widget_usages: Set[str] = set()
 
     def get_all_global_widgets(self) -> Set[str]:
         """Retorna o conjunto de nomes de widgets definidos em globals.py."""
@@ -56,7 +56,8 @@ class WidgetUsageAnalyzer:
 
     def scan_python_file(self, file_path: str) -> Tuple[Set[str], Set[str]]:
         """Escaneia um arquivo Python procurando por usos de widgets globais."""
-        assignments, usages = set(), set()
+        assignments: Set[str] = set()
+        usages: Set[str] = set()
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -145,7 +146,7 @@ class WidgetUsageAnalyzer:
     def get_widgets_by_category(self) -> Dict[str, List[str]]:
         """Categoriza widgets globais por tipo/funcionalidade."""
         all_globals = self.get_all_global_widgets()
-        categories = {
+        categories: Dict[str, List[str]] = {
             "cabecalho": [],
             "dobras": [],
             "formularios": [],
@@ -373,7 +374,7 @@ class WidgetStateManager:
 
     def _capture_dobras_state(self):
         """Captura o estado dos widgets das dobras."""
-        dobras_state = {}
+        dobras_state: Dict[str, Any] = {}
 
         if not tem_configuracao_dobras_valida():
             self.widget_cache["dobras"] = dobras_state

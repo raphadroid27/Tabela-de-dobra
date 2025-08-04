@@ -14,7 +14,7 @@ import sys
 import time
 import zipfile
 from datetime import datetime, timezone
-from typing import Type
+from typing import Any, Type
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
@@ -93,7 +93,7 @@ except ImportError as e:
     logging.critical("Erro de Importação: %s. BASE_DIR: %s", e, BASE_DIR)
     QApplication(sys.argv)
     msg = QMessageBox()
-    msg.setIcon(QMessageBox.Critical)
+    msg.setIcon(QMessageBox.Icon.Critical)
     msg.setText(
         "Erro Crítico de Inicialização:\n"
         f"Não foi possível encontrar os módulos da aplicação.\n\n{e}\n\n"
@@ -517,7 +517,7 @@ class UpdaterWindow(QMainWindow):
         self.close()
 
     def force_shutdown_all_instances(
-        self, session: any, model: Type[SystemControlModel]
+        self, session: Any, model: Type[SystemControlModel]
     ) -> bool:
         """Força o encerramento de todas as instâncias da aplicação."""
         logging.info("A enviar comando de encerramento...")
