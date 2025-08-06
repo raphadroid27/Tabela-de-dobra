@@ -34,6 +34,7 @@ from src.forms.form_universal import form_material_main as FormMaterial
 from src.models.models import Usuario
 from src.utils.banco_dados import inicializar_banco_dados
 from src.utils.banco_dados import session as db_session
+from src.utils.cache_manager import limpar_cache
 from src.utils.estilo import (
     aplicar_tema_inicial,
     aplicar_tema_qdarktheme,
@@ -49,6 +50,7 @@ from src.utils.session_manager import (
     registrar_sessao,
     remover_sessao,
 )
+from src.utils.ui_optimization import cleanup_optimization, optimize_ui_updates
 from src.utils.update_manager import (
     checagem_periodica_update,
     manipular_clique_update,
@@ -62,13 +64,14 @@ from src.utils.utilitarios import (
     setup_logging,
 )
 
-# Constantes para configuração da aplicação
+# Constantes para configuração da aplicação - OTIMIZADAS PARA REDE
 APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
 JANELA_PRINCIPAL_ALTURA = 510
-TIMER_SISTEMA_INTERVALO = 5000
-TIMER_UPDATE_INTERVALO = 300000
-TIMER_UPDATE_DELAY_INICIAL = 1000
+# Timers otimizados para reduzir tráfego de rede
+TIMER_SISTEMA_INTERVALO = 30000  # Aumentado de 5s para 30s
+TIMER_UPDATE_INTERVALO = 1800000  # Aumentado de 5min para 30min
+TIMER_UPDATE_DELAY_INICIAL = 10000  # Aumentado de 1s para 10s
 LAYOUT_ESPACAMENTO = 0
 LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
@@ -109,9 +112,13 @@ def salvar_configuracao(config):
 
 
 def fechar_aplicativo():
-    """Fecha o aplicativo de forma segura."""
+    """Fecha o aplicativo de forma segura com limpeza das otimizações."""
     logging.info("Iniciando o processo de fechamento do aplicativo.")
     try:
+        # Limpar recursos de otimização
+        cleanup_optimization()
+        limpar_cache()
+
         if g.PRINC_FORM:
             pos = g.PRINC_FORM.pos()
             config = carregar_configuracao()
@@ -382,8 +389,12 @@ def main():
 
         if g.PRINC_FORM:
             g.PRINC_FORM.show()
+            # Ativar otimizações da UI após interface carregada
+            optimize_ui_updates()
             iniciar_timers()
-            logging.info("Aplicativo iniciado. Entrando no loop de eventos.")
+            logging.info(
+                "Aplicativo iniciado com otimizações ativas. Entrando no loop de eventos."
+            )
             return app.exec()
 
         logging.critical("ERRO FATAL: A janela principal não foi criada!")

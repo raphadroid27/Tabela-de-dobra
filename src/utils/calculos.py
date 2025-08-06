@@ -14,6 +14,7 @@ from typing import List
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material
 from src.utils.banco_dados import session
+from src.utils.cache_manager import cache_com_ttl
 
 # --- FUNÇÕES DE CONVERSÃO DE DADOS ---
 
@@ -42,11 +43,13 @@ def converter_para_float(valor_str: str, default_value: float = 0.0) -> float:
 
 
 class CalculoDeducaoDB:
-    """Busca a dedução e observação do banco de dados."""
+    """Busca a dedução e observação do banco de dados com cache otimizado."""
 
+    @cache_com_ttl(300)  # Cache por 5 minutos
     def buscar(self, material_nome: str, espessura_str: str, canal_valor: str):
         """
         Busca a dedução no banco de dados com base nos valores fornecidos.
+        Usa cache para otimizar consultas repetidas.
 
         Returns:
             dict: {'valor': float/str, 'obs': str} ou None
@@ -56,26 +59,23 @@ class CalculoDeducaoDB:
 
         try:
             espessura_valor = float(espessura_str)
-            espessura_obj = (
-                session.query(Espessura).filter_by(valor=espessura_valor).first()
-            )
-            material_obj = session.query(Material).filter_by(nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
-            if not all([espessura_obj, material_obj, canal_obj]):
-                return {"valor": "N/A", "obs": "Combinação não encontrada."}
-
-            deducao_obj = (
-                session.query(Deducao)
+            # Consulta otimizada usando JOIN para reduzir queries
+            resultado = (
+                session.query(Deducao, Material, Espessura, Canal)
+                .join(Material, Deducao.material_id == Material.id)
+                .join(Espessura, Deducao.espessura_id == Espessura.id)
+                .join(Canal, Deducao.canal_id == Canal.id)
                 .filter(
-                    Deducao.espessura_id == espessura_obj.id,
-                    Deducao.material_id == material_obj.id,
-                    Deducao.canal_id == canal_obj.id,
+                    Material.nome == material_nome,
+                    Espessura.valor == espessura_valor,
+                    Canal.valor == canal_valor,
                 )
                 .first()
             )
 
-            if deducao_obj:
+            if resultado:
+                deducao_obj = resultado[0]
                 return {"valor": deducao_obj.valor, "obs": deducao_obj.observacao or ""}
 
             return {"valor": "N/A", "obs": "Dedução não encontrada."}

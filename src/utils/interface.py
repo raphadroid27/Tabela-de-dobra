@@ -21,6 +21,7 @@ from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import session
+from src.utils.cache_manager import cache_com_ttl, cache_manager, limpar_cache_expirado
 from src.utils.widget import WidgetManager
 
 # --- Estrutura de Dados para Entradas da UI ---
@@ -100,14 +101,65 @@ copiar = CopyManager().copiar
 
 
 class ListManager:
-    """Gerencia operações de listagem de dados do banco na interface."""
+    """Gerencia operações de listagem de dados do banco na interface com cache otimizado."""
 
     def __init__(self):
         self.configuracoes = None
+        # Timer para limpeza periódica do cache
+        self._setup_cache_cleanup()
+
+    def _setup_cache_cleanup(self):
+        """Configura timer para limpeza automática do cache."""
+        if hasattr(g, "CACHE_CLEANUP_TIMER"):
+            return
+
+        g.CACHE_CLEANUP_TIMER = QTimer()
+        g.CACHE_CLEANUP_TIMER.timeout.connect(limpar_cache_expirado)
+        g.CACHE_CLEANUP_TIMER.start(300000)  # Limpa cache a cada 5 minutos
+
+    @cache_com_ttl(300)  # Cache por 5 minutos
+    def _buscar_dados_banco(self, tipo):
+        """Busca dados do banco com cache."""
+        if not self.configuracoes or tipo not in self.configuracoes:
+            return []
+
+        config = self.configuracoes[tipo]
+
+        # Usar cache específico para tipos frequentes
+        if tipo == "material":
+            cached_data = cache_manager.get_materiais()
+            if cached_data is not None:
+                return cached_data
+
+            dados = session.query(config["modelo"]).order_by(config["ordem"]).all()
+            cache_manager.set_materiais(dados)
+            return dados
+
+        elif tipo == "espessura":
+            cached_data = cache_manager.get_espessuras()
+            if cached_data is not None:
+                return cached_data
+
+            dados = session.query(config["modelo"]).order_by(config["ordem"]).all()
+            cache_manager.set_espessuras(dados)
+            return dados
+
+        elif tipo == "canal":
+            cached_data = cache_manager.get_canais()
+            if cached_data is not None:
+                return cached_data
+
+            dados = session.query(config["modelo"]).order_by(config["ordem"]).all()
+            cache_manager.set_canais(dados)
+            return dados
+
+        # Para outros tipos, usar cache padrão
+        return session.query(config["modelo"]).order_by(config["ordem"]).all()
 
     def listar(self, tipo):
         """
         Lista os itens do banco de dados na interface gráfica, de acordo com o tipo informado.
+        Otimizado com cache para melhorar performance em rede.
         """
         self.configuracoes = obter_configuracoes()
         if not self.configuracoes or tipo not in self.configuracoes:
@@ -119,7 +171,9 @@ class ListManager:
             return
 
         lista_widget.clear()
-        itens = session.query(config["modelo"]).order_by(config["ordem"]).all()
+
+        # Usar dados em cache se disponível
+        itens = self._buscar_dados_banco(tipo)
 
         for item in itens:
             if tipo == "dedução" and not all(
@@ -130,6 +184,22 @@ class ListManager:
             valores_str = [str(v) if v is not None else "" for v in valores]
             item_widget = QTreeWidgetItem(valores_str)
             lista_widget.addTopLevelItem(item_widget)
+
+    def invalidar_cache_tipo(self, tipo):
+        """Invalida cache para um tipo específico quando há alterações."""
+        if tipo == "material":
+            cache_manager.set_materiais(None)
+        elif tipo == "espessura":
+            cache_manager.set_espessuras(None)
+        elif tipo == "canal":
+            cache_manager.set_canais(None)
+
+        # Força nova busca no banco
+        if hasattr(self, "_buscar_dados_banco"):
+            cache_key = f"_buscar_dados_banco_{hash(str((tipo,)))}"
+            if hasattr(cache_manager, "_cache_dados"):
+                cache_manager._cache_dados.pop(cache_key, None)
+                cache_manager._cache_timestamps.pop(cache_key, None)
 
 
 listar = ListManager().listar
