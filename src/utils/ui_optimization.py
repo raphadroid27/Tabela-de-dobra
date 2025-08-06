@@ -66,6 +66,7 @@ def throttle(interval_ms: int = 1000):
             if now - last_called["time"] >= interval_ms:
                 last_called["time"] = now
                 return func(*args, **kwargs)
+            return None  # Retorna None quando em throttle
 
         return wrapper
 
