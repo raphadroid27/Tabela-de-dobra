@@ -181,7 +181,6 @@ def dobras(w):
         QGroupBox configurado com os campos de dobras auto-ajustáveis.
     """
     frame_dobra = QGroupBox()
-    g.FRAME_DOBRA = frame_dobra
     frame_dobra.setFlat(True)
     frame_dobra.setStyleSheet("QGroupBox { margin-top: 0px; }")
     layout = QGridLayout(frame_dobra)
@@ -195,7 +194,7 @@ def dobras(w):
     _criar_entradas_e_resultados(layout, w)
     _criar_labels_blank(layout, w)
 
-    return g.FRAME_DOBRA
+    return frame_dobra
 
 
 def _configurar_layout_dobra(layout):
