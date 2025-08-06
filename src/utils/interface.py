@@ -9,6 +9,13 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 - Lidar com ações diretas na interface, como limpeza de campos e cópia de valores.
 """
 
+from src.utils.widget import WidgetManager
+from src.utils.cache_manager import (
+    cache_com_ttl,
+    cache_manager,
+    limpar_cache_expirado,
+    limpar_cache,
+)
 import logging
 from dataclasses import dataclass
 from functools import partial
@@ -21,7 +28,9 @@ from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import session
-from src.utils.widget import WidgetManager
+<< << << < HEAD
+== == == =
+>>>>>> > bdd2e34(refatora: melhora a limpeza de cache e adiciona retorno None na função throttle)
 
 # --- Estrutura de Dados para Entradas da UI ---
 
