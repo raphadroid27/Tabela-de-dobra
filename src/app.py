@@ -140,7 +140,8 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.setWindowTitle(f"Cálculo de Dobra - v{APP_VERSION}")
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.is_main_window = True
-    g.PRINC_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+    g.PRINC_FORM.setWindowFlags(
+        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
     if "geometry" in config and isinstance(config["geometry"], str):
         parts = config["geometry"].split("+")
@@ -157,7 +158,7 @@ def configurar_janela_principal(config):
     else:
         logging.error("Arquivo de ícone não encontrado em: %s", ICON_PATH)
 
-    g.PRINC_FORM.setAttribute(Qt.WA_QuitOnClose, True)
+    g.PRINC_FORM.setAttribute(Qt.WidgetAttribute.WA_QuitOnClose, True)
     logging.info("Configuração da janela principal concluída.")
 
 
