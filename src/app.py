@@ -344,7 +344,7 @@ def iniciar_timers():
     g.UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
     g.UPDATE_CHECK_TIMER.start(300000)  # 5 minutos
     # A verificação inicial também não precisa do argumento
-    QTimer.singleShot(1000, checagem_periodica_update)
+    QTimer.singleShot(10000, checagem_periodica_update)  # 10 segundos
 
 
 # --- Função Principal ---
