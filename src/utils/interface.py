@@ -28,11 +28,6 @@ from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import session
-<< << << < HEAD
-== == == =
->>>>>> > bdd2e34(refatora: melhora a limpeza de cache e adiciona retorno None na função throttle)
-
-# --- Estrutura de Dados para Entradas da UI ---
 
 # pylint: disable=R0902
 
