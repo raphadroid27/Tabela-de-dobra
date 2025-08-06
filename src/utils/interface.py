@@ -21,7 +21,12 @@ from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import session
-from src.utils.cache_manager import cache_com_ttl, cache_manager, limpar_cache_expirado
+from src.utils.cache_manager import (
+    cache_com_ttl,
+    cache_manager,
+    limpar_cache_expirado,
+    limpar_cache,
+)
 from src.utils.widget import WidgetManager
 
 # --- Estrutura de Dados para Entradas da UI ---
@@ -195,12 +200,8 @@ class ListManager:
         elif tipo == "canal":
             cache_manager.set_canais(None)
 
-        # Força nova busca no banco
-        if hasattr(self, "_buscar_dados_banco"):
-            cache_key = f"_buscar_dados_banco_{hash(str((tipo,)))}"
-            if hasattr(cache_manager, "_cache_dados"):
-                cache_manager._cache_dados.pop(cache_key, None)
-                cache_manager._cache_timestamps.pop(cache_key, None)
+        # Força nova busca no banco usando função pública
+        limpar_cache()
 
 
 listar = ListManager().listar
