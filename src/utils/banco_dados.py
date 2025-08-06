@@ -7,7 +7,7 @@ import os
 from contextlib import contextmanager
 from typing import Iterator, Optional, Tuple, Type
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session as SQLAlchemySession
 from sqlalchemy.orm import sessionmaker
@@ -17,9 +17,50 @@ from src.utils.utilitarios import DB_PATH
 
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
-engine = create_engine(f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}')
 
-Session = sessionmaker(bind=engine)
+# Configurações otimizadas para SQLite em rede
+DB_URL = f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}'
+
+
+def apply_sqlite_optimizations(dbapi_connection, _connection_record):
+    """Aplica otimizações SQLite após a conexão."""
+    cursor = dbapi_connection.cursor()
+
+    # Configurações para melhor performance em rede
+    optimizations = [
+        "PRAGMA journal_mode = WAL",  # Write-Ahead Logging
+        "PRAGMA synchronous = NORMAL",  # Balanceia performance e segurança
+        "PRAGMA cache_size = -64000",  # 64MB de cache
+        "PRAGMA temp_store = MEMORY",  # Temporários em memória
+        "PRAGMA mmap_size = 268435456",  # 256MB memory-mapped I/O
+        "PRAGMA busy_timeout = 30000",  # 30s timeout para locks
+        "PRAGMA wal_autocheckpoint = 1000",  # Checkpoint automático
+    ]
+
+    for pragma in optimizations:
+        try:
+            cursor.execute(pragma)
+        except (OperationalError, IntegrityError) as e:
+            logging.warning("Falha ao aplicar %s: %s", pragma, e)
+
+    cursor.close()
+
+
+engine = create_engine(
+    DB_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    connect_args={
+        "timeout": 30,
+        "check_same_thread": False,
+    },
+    echo=False,  # Disable SQL logging em produção
+)
+
+# Aplicar otimizações após cada conexão
+event.listen(engine, "connect", apply_sqlite_optimizations)
+
+Session = sessionmaker(bind=engine, expire_on_commit=False)
 session = Session()
 
 
@@ -82,9 +123,12 @@ def session_scope() -> (
 
 
 def inicializar_banco_dados():
-    """Cria as tabelas do banco de dados e registros iniciais, se necessário."""
+    """Cria as tabelas do banco de dados, índices e registros iniciais, se necessário."""
     logging.info("Inicializando o banco de dados e criando tabelas.")
     Base.metadata.create_all(engine)
+
+    # Criar índices para otimizar consultas frequentes
+    _criar_indices_otimizacao()
 
     db_session = Session()
     try:
@@ -97,3 +141,53 @@ def inicializar_banco_dados():
             db_session.commit()
     finally:
         db_session.close()
+
+
+def _criar_indices_otimizacao():
+    """Cria índices para otimizar consultas frequentes."""
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+
+            # Índices para a tabela de deduções (consulta mais frequente)
+            conn.execute(text(
+                """
+                CREATE INDEX IF NOT EXISTS idx_deducao_material_espessura_canal 
+                ON deducao(material_id, espessura_id, canal_id)
+                """
+            ))
+
+            # Índices para busca por valores específicos
+            conn.execute(text(
+                "CREATE INDEX IF NOT EXISTS idx_material_nome ON material(nome)"
+            ))
+
+            conn.execute(text(
+                "CREATE INDEX IF NOT EXISTS idx_espessura_valor ON espessura(valor)"
+            ))
+
+            conn.execute(text(
+                "CREATE INDEX IF NOT EXISTS idx_canal_valor ON canal(valor)"
+            ))
+
+            # Índice para logs (se precisar consultar histórico)
+            conn.execute(text(
+                """
+                CREATE INDEX IF NOT EXISTS idx_log_usuario_data 
+                ON log(usuario_nome, data_hora)
+                """
+            ))
+
+            # Índice para system_control
+            conn.execute(text(
+                """
+                CREATE INDEX IF NOT EXISTS idx_system_control_type_key 
+                ON system_control(type, key)
+                """
+            ))
+
+            conn.commit()
+            logging.info("Índices de otimização criados com sucesso")
+
+    except (OperationalError, IntegrityError) as e:
+        logging.error("Erro ao criar índices de otimização: %s", e)
