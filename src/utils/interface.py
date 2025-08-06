@@ -118,6 +118,7 @@ class ListManager:
         g.CACHE_CLEANUP_TIMER.start(300000)  # Limpa cache a cada 5 minutos
 
     @cache_com_ttl(300)  # Cache por 5 minutos
+    # pylint: disable=R0911
     def _buscar_dados_banco(self, tipo):
         """Busca dados do banco com cache."""
         if not self.configuracoes or tipo not in self.configuracoes:
@@ -135,7 +136,7 @@ class ListManager:
             cache_manager.set_materiais(dados)
             return dados
 
-        elif tipo == "espessura":
+        if tipo == "espessura":
             cached_data = cache_manager.get_espessuras()
             if cached_data is not None:
                 return cached_data
@@ -144,7 +145,7 @@ class ListManager:
             cache_manager.set_espessuras(dados)
             return dados
 
-        elif tipo == "canal":
+        if tipo == "canal":
             cached_data = cache_manager.get_canais()
             if cached_data is not None:
                 return cached_data
