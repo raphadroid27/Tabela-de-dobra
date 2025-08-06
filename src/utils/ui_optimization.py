@@ -38,7 +38,10 @@ def debounce(delay_ms: int = 300):
             # Criar novo timer
             timer = QTimer()
             timer.setSingleShot(True)
-            timer.timeout.connect(lambda: func(*args, **kwargs))
+            # Capturar args e kwargs no momento da criação
+            captured_args = args
+            captured_kwargs = kwargs
+            timer.timeout.connect(lambda: func(*captured_args, **captured_kwargs))
             timer.start(delay_ms)
 
             DEBOUNCE_TIMERS[func_id] = timer
@@ -86,7 +89,7 @@ class OptimizedEventHandler(QObject):
         self.batch_timer.timeout.connect(self._process_batch_updates)
 
     @debounce(500)  # Debounce de 500ms para cálculos
-    def handle_calculation_trigger(self):
+    def handle_calculation_trigger(self, *args, **kwargs):  # pylint: disable=unused-argument
         """Handler otimizado para triggers de cálculo."""
 
         calcular_valores()
