@@ -5,13 +5,15 @@ remoção e verificação de comandos do sistema.
 
 import logging
 import socket
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.config import globals as g
 from src.models.models import SystemControl
 from src.utils.banco_dados import session as db_session
+
+SESSION_ID = str(uuid.uuid4())
 
 
 def registrar_sessao():
@@ -19,14 +21,14 @@ def registrar_sessao():
     try:
         hostname = socket.gethostname()
         sessao_existente = (
-            db_session.query(SystemControl).filter_by(key=g.SESSION_ID).first()
+            db_session.query(SystemControl).filter_by(key=SESSION_ID).first()
         )
         if not sessao_existente:
             logging.info(
-                "Registrando nova sessão: ID %s para host %s", g.SESSION_ID, hostname
+                "Registrando nova sessão: ID %s para host %s", SESSION_ID, hostname
             )
             nova_sessao = SystemControl(
-                type="SESSION", key=g.SESSION_ID, value=hostname
+                type="SESSION", key=SESSION_ID, value=hostname
             )
             db_session.add(nova_sessao)
             db_session.commit()
@@ -38,9 +40,9 @@ def registrar_sessao():
 def remover_sessao():
     """Remove a sessão atual do banco de dados ao fechar."""
     try:
-        logging.info("Removendo sessão: ID %s", g.SESSION_ID)
+        logging.info("Removendo sessão: ID %s", SESSION_ID)
         sessao_para_remover = (
-            db_session.query(SystemControl).filter_by(key=g.SESSION_ID).first()
+            db_session.query(SystemControl).filter_by(key=SESSION_ID).first()
         )
         if sessao_para_remover:
             db_session.delete(sessao_para_remover)
@@ -54,7 +56,7 @@ def atualizar_heartbeat_sessao():
     """Atualiza o timestamp da sessão ativa para indicar que está online."""
     try:
         sessao_atual = (
-            db_session.query(SystemControl).filter_by(key=g.SESSION_ID).first()
+            db_session.query(SystemControl).filter_by(key=SESSION_ID).first()
         )
         if sessao_atual:
             sessao_atual.last_updated = datetime.now(timezone.utc)
