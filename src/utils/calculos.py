@@ -66,6 +66,7 @@ class CalculoDeducaoDB:
                 .join(Material, Deducao.material_id == Material.id)
                 .join(Espessura, Deducao.espessura_id == Espessura.id)
                 .join(Canal, Deducao.canal_id == Canal.id)
+                # pylint: disable=R0801
                 .filter(
                     Material.nome == material_nome,
                     Espessura.valor == espessura_valor,

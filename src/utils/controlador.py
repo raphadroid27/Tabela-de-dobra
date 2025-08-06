@@ -216,6 +216,7 @@ def _item_selecionado(tipo):
                 .join(Material)
                 .join(Espessura)
                 .join(Canal)
+                # pylint: disable=R0801
                 .filter(
                     Material.nome == material_nome,
                     Espessura.valor == espessura_valor,
