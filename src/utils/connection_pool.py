@@ -8,9 +8,8 @@ import threading
 import time
 from contextlib import contextmanager
 from queue import Empty, Queue
-from sqlalchemy import event
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 

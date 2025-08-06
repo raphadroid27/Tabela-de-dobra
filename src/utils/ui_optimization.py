@@ -8,10 +8,9 @@ from functools import wraps
 from typing import Any, Callable
 
 from PySide6.QtCore import QObject, QTimer, Signal
-from src.utils.interface import listar
 
 from src.config import globals as g
-from src.utils.interface import calcular_valores
+from src.utils.interface import calcular_valores, listar
 from src.utils.widget import WidgetManager
 
 # Armazenamento global para timers de debounce
