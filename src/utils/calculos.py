@@ -62,11 +62,13 @@ class CalculoDeducaoDB:
             material_obj = session.query(Material).filter_by(nome=material_nome).first()
             canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
 
-            if not all([espessura_obj, material_obj, canal_obj]):
-                return {"valor": "N/A", "obs": "Combinação não encontrada."}
-
-            deducao_obj = (
-                session.query(Deducao)
+            # Consulta otimizada usando JOIN para reduzir queries
+            resultado = (
+                session.query(Deducao, Material, Espessura, Canal)
+                .join(Material, Deducao.material_id == Material.id)
+                .join(Espessura, Deducao.espessura_id == Espessura.id)
+                .join(Canal, Deducao.canal_id == Canal.id)
+                # pylint: disable=R0801
                 .filter(
                     Deducao.espessura_id == espessura_obj.id,
                     Deducao.material_id == material_obj.id,
