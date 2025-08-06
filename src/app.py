@@ -379,7 +379,7 @@ def main():
 
         if g.PRINC_FORM:
             g.PRINC_FORM.show()
-            iniciar_timers()
+            # iniciar_timers()
             logging.info("Aplicativo iniciado. Entrando no loop de eventos.")
             return app.exec()
 
