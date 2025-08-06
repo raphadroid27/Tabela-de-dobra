@@ -8,7 +8,6 @@ import os
 import signal
 import sys
 import traceback
-import uuid
 from functools import partial
 
 from PySide6.QtCore import Qt, QTimer
@@ -73,8 +72,6 @@ TIMER_UPDATE_DELAY_INICIAL = 1800000  # 30min
 LAYOUT_ESPACAMENTO = 0
 LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
-
-g.SESSION_ID = str(uuid.uuid4())
 
 
 def verificar_admin_existente():
