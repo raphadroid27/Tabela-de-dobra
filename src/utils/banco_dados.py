@@ -6,9 +6,8 @@ import logging
 import os
 from contextlib import contextmanager
 from typing import Iterator, Optional, Tuple, Type
-from sqlalchemy import text
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session as SQLAlchemySession
 from sqlalchemy.orm import sessionmaker

@@ -24,8 +24,8 @@ from src.utils.banco_dados import session
 from src.utils.cache_manager import (
     cache_com_ttl,
     cache_manager,
-    limpar_cache_expirado,
     limpar_cache,
+    limpar_cache_expirado,
 )
 from src.utils.widget import WidgetManager
 
