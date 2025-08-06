@@ -3,12 +3,13 @@ Sistema de pool de conexões otimizado para SQLite em rede.
 """
 
 import logging
+import sqlite3
 import threading
 import time
 from contextlib import contextmanager
 from queue import Empty, Queue
+from sqlalchemy import event
 
-import sqlite3
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
@@ -38,12 +39,9 @@ class SQLiteConnectionPool:
             echo=False,
         )
 
-        # Aplicar otimizações SQLite após conexão
-        from sqlalchemy import event
-
         event.listen(self.engine, "connect", self._apply_sqlite_optimizations)
 
-        self.Session = sessionmaker(
+        self.db_session = sessionmaker(
             bind=self.engine,
             expire_on_commit=False,
             autoflush=False,  # Controle manual de flush
@@ -78,7 +76,7 @@ class SQLiteConnectionPool:
         """Inicializa o pool com conexões."""
         try:
             for _ in range(min(3, self.max_connections)):  # Inicia com 3 conexões
-                session = self.Session()
+                session = self.db_session()
                 self.pool.put(session)
                 self.active_connections += 1
                 logging.debug("Sessão adicionada ao pool")
@@ -103,7 +101,7 @@ class SQLiteConnectionPool:
                 # Se pool vazio, criar nova sessão se permitido
                 with self.lock:
                     if self.active_connections < self.max_connections:
-                        session = self.Session()
+                        session = self.db_session()
                         self.active_connections += 1
                         logging.debug("Nova sessão criada")
                     else:
@@ -119,7 +117,7 @@ class SQLiteConnectionPool:
             except SQLAlchemyError:
                 # Sessão inválida, criar nova
                 session.close()
-                session = self.Session()
+                session = self.db_session()
                 logging.debug("Sessão recriada devido a erro")
 
             yield session
@@ -225,9 +223,7 @@ class BatchProcessor:
                 session.flush()  # Enviar para DB mas não commitar ainda
                 operations_count = len(self.pending_operations)
                 self.pending_operations.clear()
-                logging.debug(
-                    "Lote de %s operações processado", operations_count
-                )
+                logging.debug("Lote de %s operações processado", operations_count)
 
         except SQLAlchemyError as e:
             logging.error("Erro ao processar lote: %s", e)

@@ -2,14 +2,20 @@
 Sistema de debounce para otimizar eventos da interface em ambientes de rede.
 """
 
+import logging
 import time
 from functools import wraps
 from typing import Any, Callable
 
 from PySide6.QtCore import QObject, QTimer, Signal
+from src.utils.interface import listar
+
+from src.config import globals as g
+from src.utils.interface import calcular_valores
+from src.utils.widget import WidgetManager
 
 # Armazenamento global para timers de debounce
-_debounce_timers = {}
+DEBOUNCE_TIMERS = {}
 
 
 def debounce(delay_ms: int = 300):
@@ -26,9 +32,9 @@ def debounce(delay_ms: int = 300):
             func_id = f"{func.__name__}_{id(func)}"
 
             # Cancelar timer anterior se existir
-            if func_id in _debounce_timers:
-                _debounce_timers[func_id].stop()
-                _debounce_timers[func_id].deleteLater()
+            if func_id in DEBOUNCE_TIMERS:
+                DEBOUNCE_TIMERS[func_id].stop()
+                DEBOUNCE_TIMERS[func_id].deleteLater()
 
             # Criar novo timer
             timer = QTimer()
@@ -36,7 +42,7 @@ def debounce(delay_ms: int = 300):
             timer.timeout.connect(lambda: func(*args, **kwargs))
             timer.start(delay_ms)
 
-            _debounce_timers[func_id] = timer
+            DEBOUNCE_TIMERS[func_id] = timer
 
         return wrapper
 
@@ -82,14 +88,12 @@ class OptimizedEventHandler(QObject):
     @debounce(500)  # Debounce de 500ms para cálculos
     def handle_calculation_trigger(self):
         """Handler otimizado para triggers de cálculo."""
-        from src.utils.interface import calcular_valores
 
         calcular_valores()
 
     @throttle(1000)  # Throttle de 1s para atualizações de lista
     def handle_list_update(self, list_type: str):
         """Handler otimizado para atualizações de lista."""
-        from src.utils.interface import listar
 
         listar(list_type)
 
@@ -107,8 +111,6 @@ class OptimizedEventHandler(QObject):
             return
 
         try:
-            from src.config import globals as g
-            from src.utils.widget import WidgetManager
 
             for widget_id, value in self.pending_updates.items():
                 widget = getattr(g, widget_id, None)
@@ -117,8 +119,7 @@ class OptimizedEventHandler(QObject):
 
             self.pending_updates.clear()
 
-        except Exception as e:
-            import logging
+        except (AttributeError, TypeError, ValueError) as e:
 
             logging.error("Erro ao processar lote de atualizações: %s", e)
             self.pending_updates.clear()
@@ -178,7 +179,6 @@ def optimize_ui_updates():
     Chame esta função após inicializar a interface.
     """
     try:
-        from src.config import globals as g
 
         # Conectar eventos otimizados aos widgets principais
         if hasattr(g, "MAT_COMB") and g.MAT_COMB:
@@ -198,23 +198,21 @@ def optimize_ui_updates():
 
         # Adicionar mais conexões conforme necessário
 
-    except Exception as e:
-        import logging
+    except (AttributeError, RuntimeError, TypeError) as e:
 
         logging.error("Erro ao otimizar atualizações da UI: %s", e)
 
 
 def cleanup_optimization():
     """Limpa recursos de otimização."""
-    global _debounce_timers
 
     # Parar e limpar todos os timers de debounce
-    for timer in _debounce_timers.values():
+    for timer in DEBOUNCE_TIMERS.values():
         if timer.isActive():
             timer.stop()
         timer.deleteLater()
 
-    _debounce_timers.clear()
+    DEBOUNCE_TIMERS.clear()
 
     # Limpar dados do lazy loader
     lazy_loader.clear_all()

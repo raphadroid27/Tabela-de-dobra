@@ -6,6 +6,7 @@ import logging
 import os
 from contextlib import contextmanager
 from typing import Iterator, Optional, Tuple, Type
+from sqlalchemy import text
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
@@ -147,44 +148,51 @@ def _criar_indices_otimizacao():
     """Cria índices para otimizar consultas frequentes."""
     try:
         with engine.connect() as conn:
-            from sqlalchemy import text
 
             # Índices para a tabela de deduções (consulta mais frequente)
-            conn.execute(text(
-                """
+            conn.execute(
+                text(
+                    """
                 CREATE INDEX IF NOT EXISTS idx_deducao_material_espessura_canal 
                 ON deducao(material_id, espessura_id, canal_id)
                 """
-            ))
+                )
+            )
 
             # Índices para busca por valores específicos
-            conn.execute(text(
-                "CREATE INDEX IF NOT EXISTS idx_material_nome ON material(nome)"
-            ))
+            conn.execute(
+                text("CREATE INDEX IF NOT EXISTS idx_material_nome ON material(nome)")
+            )
 
-            conn.execute(text(
-                "CREATE INDEX IF NOT EXISTS idx_espessura_valor ON espessura(valor)"
-            ))
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_espessura_valor ON espessura(valor)"
+                )
+            )
 
-            conn.execute(text(
-                "CREATE INDEX IF NOT EXISTS idx_canal_valor ON canal(valor)"
-            ))
+            conn.execute(
+                text("CREATE INDEX IF NOT EXISTS idx_canal_valor ON canal(valor)")
+            )
 
             # Índice para logs (se precisar consultar histórico)
-            conn.execute(text(
-                """
+            conn.execute(
+                text(
+                    """
                 CREATE INDEX IF NOT EXISTS idx_log_usuario_data 
                 ON log(usuario_nome, data_hora)
                 """
-            ))
+                )
+            )
 
             # Índice para system_control
-            conn.execute(text(
-                """
+            conn.execute(
+                text(
+                    """
                 CREATE INDEX IF NOT EXISTS idx_system_control_type_key 
                 ON system_control(type, key)
                 """
-            ))
+                )
+            )
 
             conn.commit()
             logging.info("Índices de otimização criados com sucesso")
