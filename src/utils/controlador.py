@@ -216,7 +216,6 @@ def _item_selecionado(tipo):
                 .join(Material)
                 .join(Espessura)
                 .join(Canal)
-                # pylint: disable=R0801
                 .filter(
                     Material.nome == material_nome,
                     Espessura.valor == espessura_valor,
@@ -224,17 +223,15 @@ def _item_selecionado(tipo):
                 )
                 .first()
             )
-
-        # Correção R1705: "elif" desnecessário após return implícito
-        if tipo == "material":
+        elif tipo == "material":
             nome = selected_item.text(0)
             obj = session.query(Material).filter_by(nome=nome).first()
 
-        if tipo == "canal":
+        elif tipo == "canal":
             valor = selected_item.text(0)
             obj = session.query(Canal).filter_by(valor=valor).first()
 
-        if tipo == "espessura":
+        elif tipo == "espessura":
             valor = float(selected_item.text(0))
             obj = session.query(Espessura).filter_by(valor=valor).first()
 
