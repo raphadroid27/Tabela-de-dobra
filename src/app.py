@@ -185,11 +185,11 @@ def _on_toggle_no_topo(checked: bool):
     Janela.set_on_top_state(checked)
 
 
-def configurar_menu():
+def configurar_menu(menu_custom):
     """Configura o menu superior da janela principal."""
-    if not hasattr(g, "MENU_CUSTOM") or g.MENU_CUSTOM is None:
+    if menu_custom is None:
         return
-    menu_bar = g.MENU_CUSTOM.get_menu_bar()
+    menu_bar = menu_custom.get_menu_bar()
 
     estrutura_menu = {
         "📁 Arquivo": [
@@ -311,8 +311,8 @@ def configurar_frames():
     if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
         g.BARRA_TITULO.set_tema(obter_tema_atual())
 
-    g.MENU_CUSTOM = MenuCustom(g.PRINC_FORM)
-    vlayout.addWidget(g.MENU_CUSTOM)
+    menu_custom = MenuCustom(g.PRINC_FORM)
+    vlayout.addWidget(menu_custom)
 
     conteudo_widget = QWidget()
     layout = QGridLayout(conteudo_widget)
@@ -325,6 +325,7 @@ def configurar_frames():
     g.CARREGAR_INTERFACE_FUNC = carregar_interface
     carregar_interface(1, layout)
     logging.info("Configuração dos frames concluída.")
+    return menu_custom
 
 
 def configurar_sinais_excecoes():
@@ -380,8 +381,8 @@ def main():
         app.aboutToQuit.connect(remover_sessao)
         config = carregar_configuracao()
         configurar_janela_principal(config)
-        configurar_frames()
-        configurar_menu()
+        menu_custom = configurar_frames()
+        configurar_menu(menu_custom)
         registrar_sessao()
         verificar_admin_existente()
 
