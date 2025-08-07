@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404 - subprocess necessário para execução controlada do updater
 from typing import Any, Dict, Optional
 
 from semantic_version import Version
@@ -179,7 +179,9 @@ def manipular_clique_update():
             "Lançando o atualizador: %s %s", UPDATER_EXECUTABLE_PATH, argumento
         )
         # pylint: disable=consider-using-with
-        subprocess.Popen([UPDATER_EXECUTABLE_PATH, argumento])
+        subprocess.Popen(
+            [UPDATER_EXECUTABLE_PATH, argumento]
+        )  # nosec B603 - executável validado do updater
 
     except OSError as e:
         logging.error("Falha ao iniciar o updater.exe: %s", e)
