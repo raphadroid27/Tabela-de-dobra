@@ -44,7 +44,8 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM = QDialog(root)
     g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
     g.AUTEN_FORM.setModal(True)
-    g.AUTEN_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+    g.AUTEN_FORM.setWindowFlags(
+        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
     def close_event(event):
 
