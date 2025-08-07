@@ -45,7 +45,7 @@ def converter_para_float(valor_str: str, default_value: float = 0.0) -> float:
 class CalculoDeducaoDB:
     """Busca a dedução e observação do banco de dados com cache otimizado."""
 
-    @cache_com_ttl(300)  # Cache por 5 minutos
+    @cache_com_ttl(600, shared=True)  # Cache compartilhado de 10 minutos
     def buscar(self, material_nome: str, espessura_str: str, canal_valor: str):
         """
         Busca a dedução no banco de dados com base nos valores fornecidos.
