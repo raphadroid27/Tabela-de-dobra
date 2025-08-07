@@ -100,7 +100,11 @@ def carregar_configuracao():
     logging.warning(
         "Arquivo de configuração não encontrado. Usando configuração padrão."
     )
-    return {}
+    # Configuração padrão
+    return {
+        "tema": "dark",  # Tema padrão
+        "geometry": None
+    }
 
 
 def salvar_configuracao(config):
@@ -108,6 +112,23 @@ def salvar_configuracao(config):
     logging.info("Salvando configurações em %s", CONFIG_FILE)
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4)
+
+
+def salvar_tema_atual(tema):
+    """Salva o tema atual no arquivo de configuração."""
+    try:
+        config = carregar_configuracao()
+        config["tema"] = tema
+        salvar_configuracao(config)
+        logging.info("Tema salvo: %s", tema)
+    except (OSError, IOError, json.JSONDecodeError) as e:
+        logging.error("Erro ao salvar tema: %s", e)
+
+
+def _aplicar_e_salvar_tema(tema):
+    """Aplica um tema e salva automaticamente a escolha."""
+    aplicar_tema_qdarktheme(tema)
+    salvar_tema_atual(tema)
 
 
 def fechar_aplicativo():
@@ -118,6 +139,10 @@ def fechar_aplicativo():
             pos = g.PRINC_FORM.pos()
             config = carregar_configuracao()
             config["geometry"] = f"+{pos.x()}+{pos.y()}"
+            # Preservar o tema atual na configuração
+            tema_atual = obter_tema_atual()
+            if tema_atual:
+                config["tema"] = tema_atual
             salvar_configuracao(config)
             g.PRINC_FORM.close()
         app = QApplication.instance()
@@ -276,7 +301,7 @@ def _criar_menu_opcoes(menu_bar):
         action = QAction(tema.capitalize(), g.PRINC_FORM)
         action.setCheckable(True)
         action.setChecked(tema == getattr(g, "TEMA_ATUAL", "dark"))
-        action.triggered.connect(lambda checked, t=tema: aplicar_tema_qdarktheme(t))
+        action.triggered.connect(lambda checked, t=tema: _aplicar_e_salvar_tema(t))
         temas_menu.addAction(action)
         temas_actions[tema] = action
     registrar_tema_actions(temas_actions)
@@ -373,9 +398,10 @@ def main():
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
         app = QApplication(sys.argv)
-        aplicar_tema_inicial("dark")
-        app.aboutToQuit.connect(remover_sessao)
         config = carregar_configuracao()
+        tema_salvo = config.get("tema", "dark")
+        aplicar_tema_inicial(tema_salvo)
+        app.aboutToQuit.connect(remover_sessao)
         configurar_janela_principal(config)
         menu_custom = configurar_frames()
         configurar_menu(menu_custom)
