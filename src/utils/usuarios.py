@@ -3,6 +3,8 @@ Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de
 """
 
 import hashlib
+import secrets
+import string
 
 from PySide6.QtWidgets import QMessageBox
 
@@ -212,14 +214,20 @@ def resetar_senha():
         )
         return
 
-    novo_password = "nova_senha"
+    # Gerar senha aleatória de 10 caracteres
+    alphabet = string.ascii_letters + string.digits
+    novo_password = "".join(
+        secrets.choice(alphabet) for _ in range(10)
+    )  # nosec B105 - senha gerada dinamicamente
+
     usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
     if usuario_obj:
         setattr(usuario_obj, "senha", novo_password)
         tratativa_erro()
         show_info(
             "Sucesso",
-            "Senha resetada com sucesso.",
+            f"Senha resetada com sucesso.\nNova senha temporária: "
+            f"{novo_password}\n\nAnote esta senha, pois ela não será exibida novamente.",
             parent=g.USUAR_FORM if g.USUAR_FORM else None,
         )
     else:

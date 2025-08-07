@@ -55,7 +55,6 @@ from src.utils.update_manager import (
     manipular_clique_update,
     set_installed_version,
 )
-
 from src.utils.usuarios import logout
 from src.utils.utilitarios import (
     CONFIG_FILE,
