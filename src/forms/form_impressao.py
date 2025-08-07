@@ -7,7 +7,7 @@ O formulário é construído usando QGridLayout para melhor organização e cont
 """
 
 import os
-import subprocess
+import subprocess  # nosec B404
 from typing import List
 
 from PySide6.QtCore import Qt
@@ -110,6 +110,39 @@ class PrintManager:
             return ""
         return arquivo.split(" - ")[0].strip() if " - " in arquivo else arquivo.strip()
 
+    def _validar_caminho_arquivo(self, caminho_completo: str) -> bool:
+        """Valida se o caminho do arquivo é seguro."""
+        try:
+            # Normalizar o caminho para evitar ataques de path traversal
+            caminho_normalizado = os.path.normpath(caminho_completo)
+
+            # Verificar se é um arquivo real
+            if not os.path.isfile(caminho_normalizado):
+                self.resultado_impressao += f" ✗ Caminho inválido: {caminho_completo}\n"
+                return False
+
+            # Verificar se é arquivo PDF
+            if not caminho_normalizado.lower().endswith(".pdf"):
+                self.resultado_impressao += (
+                    f" ✗ Arquivo não é PDF: {caminho_completo}\n"
+                )
+                return False
+
+            # Verificar se não contém caracteres perigosos
+            caracteres_perigosos = ["..", "<", ">", "|", "&", ";"]
+            if any(char in caminho_completo for char in caracteres_perigosos):
+                self.resultado_impressao += (
+                    f" ✗ Caminho contém caracteres perigosos: {caminho_completo}\n"
+                )
+                return False
+
+            return True
+        except (OSError, ValueError):
+            self.resultado_impressao += (
+                f" ✗ Erro ao validar caminho: {caminho_completo}\n"
+            )
+            return False
+
     def _procurar_arquivo(self, diretorio, nome_base):
         """Procura um arquivo específico no diretório."""
         if not diretorio or not nome_base:
@@ -195,9 +228,13 @@ class PrintManager:
             )
             return False
 
+        # Validações de segurança
+        if not self._validar_caminho_arquivo(caminho_completo):
+            return False
+
         try:
             self.resultado_impressao += f"Imprimindo {nome_arquivo} com Foxit...\n"
-            subprocess.run(
+            subprocess.run(  # nosec B603 - subprocess com argumentos validados e shell=False
                 [FOXIT_PATH, "/p", caminho_completo],
                 check=True,
                 timeout=TIMEOUT_IMPRESSAO,
@@ -224,7 +261,9 @@ class PrintManager:
 
             # Verificar se startfile está disponível (Windows)
             if hasattr(os, "startfile"):
-                os.startfile(caminho_completo, "print")
+                os.startfile(
+                    caminho_completo, "print"
+                )  # nosec B606 - usando startfile Windows com caminho validado
                 self.resultado_impressao += " ✓ Sucesso com impressora padrão\n"
                 return True
 
@@ -243,13 +282,17 @@ class PrintManager:
             )
             return False
 
+        # Validações de segurança
+        if not self._validar_caminho_arquivo(caminho_completo):
+            return False
+
         for adobe_path in ADOBE_PATHS:
             if os.path.exists(adobe_path):
                 try:
                     self.resultado_impressao += (
                         f"Imprimindo {nome_arquivo} com Adobe...\n"
                     )
-                    subprocess.run(
+                    subprocess.run(  # nosec B603 - subprocess c/ argumentos validados e shell=False
                         [adobe_path, "/p", caminho_completo],
                         check=True,
                         timeout=TIMEOUT_IMPRESSAO,

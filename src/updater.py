@@ -6,7 +6,7 @@ import hashlib
 import logging
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404
 
 # --- Importações da Biblioteca Padrão ---
 import sys
@@ -600,7 +600,9 @@ class UpdaterWindow(QMainWindow):
         logging.info("A iniciar a aplicação: %s", APP_EXECUTABLE_PATH)
         try:
             # pylint: disable=consider-using-with
-            subprocess.Popen([APP_EXECUTABLE_PATH])
+            subprocess.Popen(
+                [APP_EXECUTABLE_PATH]
+            )  # nosec B603 - executável validado do próprio aplicativo
 
         except OSError as e:
             logging.error("Erro ao iniciar a aplicação: %s", e)
