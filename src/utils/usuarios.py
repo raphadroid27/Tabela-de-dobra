@@ -154,8 +154,8 @@ def tem_permissao(tipo, role_requerida, show_message=True):
     usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
     if not usuario_obj:
         if show_message:
-            show_error(
-                "Erro",
+            show_warning(
+                "Aviso",
                 "Você não tem permissão para acessar esta função.",
                 parent=config["form"],
             )
