@@ -9,6 +9,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from threading import Timer
+from typing import Optional
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -110,7 +111,7 @@ class SessionManager:
             self.heartbeat_timer = None
 
     @staticmethod
-    def obter_comando_sistema() -> str | None:
+    def obter_comando_sistema() -> Optional[str]:
         """Busca no banco e retorna o comando atual do sistema ('SHUTDOWN', 'NONE', etc.)."""
         try:
             cmd_entry = db_session.query(
@@ -143,7 +144,7 @@ def atualizar_heartbeat_sessao():
     return session_manager.atualizar_heartbeat_sessao()
 
 
-def obter_comando_sistema() -> str | None:
+def obter_comando_sistema() -> Optional[str]:
     """Busca no banco e retorna o comando atual do sistema."""
     return session_manager.obter_comando_sistema()
 
