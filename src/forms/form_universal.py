@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QTreeWidget,
     QVBoxLayout,
     QWidget,
-
 )
 
 from src.components.barra_titulo import BarraTitulo
@@ -352,8 +351,7 @@ class FormManager:
         new_form.setFixedSize(*self.config["size"])
 
         # Remover barra de título nativa
-        new_form.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.Window)
+        new_form.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
         new_form.setWindowIcon(QIcon(ICON_PATH))
 
         # Layout vertical: barra de título + conteúdo

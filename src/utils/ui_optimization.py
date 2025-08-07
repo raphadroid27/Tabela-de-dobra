@@ -89,7 +89,9 @@ class OptimizedEventHandler(QObject):
         self.batch_timer.timeout.connect(self._process_batch_updates)
 
     @debounce(1000)  # Aumentado para 1s para cálculos em rede
-    def handle_calculation_trigger(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def handle_calculation_trigger(
+        self, *args, **kwargs
+    ):  # pylint: disable=unused-argument
         """Handler otimizado para triggers de cálculo em ambiente multi-usuário."""
         calcular_valores()
 

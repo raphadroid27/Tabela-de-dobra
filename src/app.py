@@ -55,6 +55,7 @@ from src.utils.update_manager import (
     manipular_clique_update,
     set_installed_version,
 )
+
 from src.utils.usuarios import logout
 from src.utils.utilitarios import (
     CONFIG_FILE,
@@ -67,8 +68,8 @@ from src.utils.utilitarios import (
 APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
 JANELA_PRINCIPAL_ALTURA = 510
-# Timers otimizados para reduzir tráfego de rede
-TIMER_SISTEMA_INTERVALO = 30000  # 30s
+# Timers otimizados para reduzir tráfego de rede e overhead
+TIMER_SISTEMA_INTERVALO = 15000  # 15s para comandos críticos (balanceado)
 TIMER_UPDATE_INTERVALO = 1800000  # 30min
 TIMER_UPDATE_DELAY_INICIAL = 1800000  # 30min
 LAYOUT_ESPACAMENTO = 0
@@ -151,7 +152,8 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(
-        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
+    )
 
     if "geometry" in config and isinstance(config["geometry"], str):
         parts = config["geometry"].split("+")
@@ -354,8 +356,11 @@ def configurar_sinais_excecoes():
 def processar_verificacao_sistema():
     """Função chamada pelo timer para verificar o estado do sistema."""
     atualizar_heartbeat_sessao()
+
+    # Verifica comando do sistema (SHUTDOWN, etc.)
     comando = obter_comando_sistema()
     if comando == "SHUTDOWN":
+        logging.info("Comando SHUTDOWN detectado. Fechando aplicativo...")
         fechar_aplicativo()
 
 
@@ -367,6 +372,8 @@ def iniciar_timers():
     UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
     UPDATE_CHECK_TIMER.start(TIMER_UPDATE_INTERVALO)
     QTimer.singleShot(TIMER_UPDATE_DELAY_INICIAL, checagem_periodica_update)
+
+    logging.info("Sistema de notificações de atualização ativado.")
 
 
 def main():

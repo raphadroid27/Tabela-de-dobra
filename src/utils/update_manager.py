@@ -88,6 +88,9 @@ def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
     """
     Verifica se há uma nova versão comparando com o arquivo versao.json.
 
+    Sistema simples: qualquer versão superior disponível será oferecida
+    como atualização opcional ao usuário. Não há classificação de prioridade.
+
     Args:
         current_version_str: A versão atual da aplicação (ex: "2.2.0").
 
@@ -111,10 +114,16 @@ def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
             logging.error("Chave 'ultima_versao' não encontrada no versao.json.")
             return None
 
+        # Verificação simples: apenas compara versões numericamente
         if Version(latest_version_str) > Version(current_version_str):
-            logging.info("Nova versão encontrada: %s", latest_version_str)
+            logging.info(
+                "Nova versão %s disponível (atual: %s)",
+                latest_version_str,
+                current_version_str,
+            )
             return dict(server_info)
 
+        logging.info("Sistema atualizado. Versão atual: %s", current_version_str)
         return None
     except (json.JSONDecodeError, KeyError, ValueError, IOError, OSError) as e:
         logging.error("Erro ao ler ou processar o arquivo de versão: %s", e)
@@ -161,7 +170,11 @@ def checagem_periodica_update():
 
 def manipular_clique_update():
     """
-    Gerencia o clique no botão de atualização, lançando o updater.exe.
+    Gerencia o clique no botão de atualização (APENAS ADMIN).
+
+    Sistema de Hierarquia:
+    - ADMIN: Decide quando aplicar atualizações
+    - USUÁRIOS: Apenas recebem notificação que o app será fechado
     """
     if not os.path.exists(UPDATER_EXECUTABLE_PATH):
         show_error(
@@ -176,7 +189,7 @@ def manipular_clique_update():
 
     try:
         logging.info(
-            "Lançando o atualizador: %s %s", UPDATER_EXECUTABLE_PATH, argumento
+            "ADMIN iniciando atualizador: %s %s", UPDATER_EXECUTABLE_PATH, argumento
         )
         # pylint: disable=consider-using-with
         subprocess.Popen([UPDATER_EXECUTABLE_PATH, argumento])

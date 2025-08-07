@@ -44,10 +44,14 @@ def cache_com_ttl(ttl_seconds: int = CACHE_TTL, shared: bool = False):
                 and current_time - _cache_timestamps[cache_key] < effective_ttl
             ):
                 # Incrementar contador de acesso
-                _cache_access_count[cache_key] = _cache_access_count.get(
-                    cache_key, 0) + 1
-                logging.debug("Cache hit para %s (acessos: %d)",
-                              func.__name__, _cache_access_count[cache_key])
+                _cache_access_count[cache_key] = (
+                    _cache_access_count.get(cache_key, 0) + 1
+                )
+                logging.debug(
+                    "Cache hit para %s (acessos: %d)",
+                    func.__name__,
+                    _cache_access_count[cache_key],
+                )
                 return _cache_dados[cache_key]
 
             # Executar função e armazenar resultado
