@@ -120,9 +120,9 @@ class ListManager:
 
         g.CACHE_CLEANUP_TIMER = QTimer()
         g.CACHE_CLEANUP_TIMER.timeout.connect(limpar_cache_expirado)
-        g.CACHE_CLEANUP_TIMER.start(300000)  # Limpa cache a cada 5 minutos
+        g.CACHE_CLEANUP_TIMER.start(600000)  # 10 minutos para ambiente multi-usuário
 
-    @cache_com_ttl(300)  # Cache por 5 minutos
+    @cache_com_ttl(600, shared=True)  # Cache compartilhado por 10 minutos
     # pylint: disable=R0911
     def _buscar_dados_banco(self, tipo):
         """Busca dados do banco com cache."""

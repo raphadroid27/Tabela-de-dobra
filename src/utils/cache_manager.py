@@ -9,20 +9,28 @@ from functools import wraps
 # Cache global para dados frequentemente acessados
 _cache_dados = {}
 _cache_timestamps = {}
-CACHE_TTL = 300  # 5 minutos
+_cache_access_count = {}  # Contador de acessos para otimização
+CACHE_TTL = 600  # Aumentado para 10 minutos para múltiplos usuários
+# 30 minutos para dados compartilhados (materiais, espessuras, etc.)
+CACHE_TTL_SHARED = 1800
+CACHE_TTL_STATIC = 3600  # 1 hora para dados estáticos
 
 
-def cache_com_ttl(ttl_seconds: int = CACHE_TTL):
+def cache_com_ttl(ttl_seconds: int = CACHE_TTL, shared: bool = False):
     """
-    Decorator para cache com TTL (Time To Live).
+    Decorator para cache com TTL (Time To Live) otimizado para múltiplos usuários.
 
     Args:
         ttl_seconds: Tempo de vida do cache em segundos
+        shared: Se True, usa TTL mais longo para dados compartilhados
     """
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            # Usar TTL apropriado baseado no tipo de dados
+            effective_ttl = CACHE_TTL_SHARED if shared else ttl_seconds
+
             # Criar chave única baseada na função e argumentos
             cache_key = (
                 f"{func.__name__}_{hash(str(args) + str(sorted(kwargs.items())))}"
@@ -33,15 +41,20 @@ def cache_com_ttl(ttl_seconds: int = CACHE_TTL):
             if (
                 cache_key in _cache_dados
                 and cache_key in _cache_timestamps
-                and current_time - _cache_timestamps[cache_key] < ttl_seconds
+                and current_time - _cache_timestamps[cache_key] < effective_ttl
             ):
-                logging.debug("Cache hit para %s", func.__name__)
+                # Incrementar contador de acesso
+                _cache_access_count[cache_key] = _cache_access_count.get(
+                    cache_key, 0) + 1
+                logging.debug("Cache hit para %s (acessos: %d)",
+                              func.__name__, _cache_access_count[cache_key])
                 return _cache_dados[cache_key]
 
             # Executar função e armazenar resultado
             resultado = func(*args, **kwargs)
             _cache_dados[cache_key] = resultado
             _cache_timestamps[cache_key] = current_time
+            _cache_access_count[cache_key] = 1
 
             logging.debug("Cache miss para %s - resultado armazenado", func.__name__)
             return resultado

@@ -17,9 +17,9 @@ from src.utils.widget import WidgetManager
 DEBOUNCE_TIMERS = {}
 
 
-def debounce(delay_ms: int = 300):
+def debounce(delay_ms: int = 800):  # Aumentado para 800ms para ambiente de rede
     """
-    Decorator que implementa debounce para funções.
+    Decorator que implementa debounce para funções otimizado para múltiplos usuários.
 
     Args:
         delay_ms: Delay em milissegundos antes de executar a função
@@ -88,16 +88,14 @@ class OptimizedEventHandler(QObject):
         self.batch_timer.setSingleShot(True)
         self.batch_timer.timeout.connect(self._process_batch_updates)
 
-    @debounce(500)  # Debounce de 500ms para cálculos
+    @debounce(1000)  # Aumentado para 1s para cálculos em rede
     def handle_calculation_trigger(self, *args, **kwargs):  # pylint: disable=unused-argument
-        """Handler otimizado para triggers de cálculo."""
-
+        """Handler otimizado para triggers de cálculo em ambiente multi-usuário."""
         calcular_valores()
 
-    @throttle(1000)  # Throttle de 1s para atualizações de lista
+    @throttle(2000)  # Aumentado para 2s para atualizações de lista
     def handle_list_update(self, list_type: str):
-        """Handler otimizado para atualizações de lista."""
-
+        """Handler otimizado para atualizações de lista em ambiente multi-usuário."""
         listar(list_type)
 
     def batch_widget_update(self, widget_id: str, value: Any):
