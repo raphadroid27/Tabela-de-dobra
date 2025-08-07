@@ -35,7 +35,9 @@ class SessionManager:
             )
             if not sessao_existente:
                 logging.info(
-                    "Registrando nova sessão: ID %s para host %s", self.session_id, hostname
+                    "Registrando nova sessão: ID %s para host %s",
+                    self.session_id,
+                    hostname,
                 )
                 nova_sessao = SystemControl(
                     type="SESSION", key=self.session_id, value=hostname
@@ -96,7 +98,8 @@ class SessionManager:
             self.heartbeat_timer.cancel()
 
         self.heartbeat_timer = Timer(
-            self.heartbeat_interval, self.atualizar_heartbeat_sessao)
+            self.heartbeat_interval, self.atualizar_heartbeat_sessao
+        )
         self.heartbeat_timer.daemon = True
         self.heartbeat_timer.start()
 
@@ -114,8 +117,9 @@ class SessionManager:
     def obter_comando_sistema() -> Optional[str]:
         """Busca no banco e retorna o comando atual do sistema ('SHUTDOWN', 'NONE', etc.)."""
         try:
-            cmd_entry = db_session.query(
-                SystemControl).filter_by(key="UPDATE_CMD").first()
+            cmd_entry = (
+                db_session.query(SystemControl).filter_by(key="UPDATE_CMD").first()
+            )
             return str(cmd_entry.value) if cmd_entry and cmd_entry.value else None
         except SQLAlchemyError as e:
             logging.error("Erro ao obter comando do sistema: %s", e)

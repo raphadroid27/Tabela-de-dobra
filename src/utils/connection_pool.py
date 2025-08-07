@@ -55,12 +55,12 @@ class PoolStats:
     def get_stats_dict(self):
         """Retorna estatísticas como dicionário."""
         return {
-            'total_requests': self.total_requests,
-            'pool_hits': self.pool_hits,
-            'pool_misses': self.pool_misses,
-            'errors': self.errors,
-            'hit_ratio': self.pool_hits / max(1, self.total_requests) * 100,
-            'error_ratio': self.errors / max(1, self.total_requests) * 100,
+            "total_requests": self.total_requests,
+            "pool_hits": self.pool_hits,
+            "pool_misses": self.pool_misses,
+            "errors": self.errors,
+            "hit_ratio": self.pool_hits / max(1, self.total_requests) * 100,
+            "error_ratio": self.errors / max(1, self.total_requests) * 100,
         }
 
 
@@ -114,10 +114,10 @@ class SQLiteConnectionPool:
         optimizations = [
             "PRAGMA journal_mode = WAL",
             "PRAGMA synchronous = NORMAL",
-            "PRAGMA cache_size = -256000",        # 256MB cache por conexão
+            "PRAGMA cache_size = -256000",  # 256MB cache por conexão
             "PRAGMA temp_store = MEMORY",
-            "PRAGMA mmap_size = 1073741824",     # 1GB memory-mapped I/O
-            "PRAGMA busy_timeout = 90000",        # 90s timeout para locks
+            "PRAGMA mmap_size = 1073741824",  # 1GB memory-mapped I/O
+            "PRAGMA busy_timeout = 90000",  # 90s timeout para locks
             "PRAGMA wal_autocheckpoint = 2000",
             "PRAGMA optimize",
             "PRAGMA analysis_limit = 1000",
@@ -141,8 +141,11 @@ class SQLiteConnectionPool:
                 session = self.db_session()
                 self.pool.put(session)
                 self.active_connections += 1
-                logging.debug("Sessão adicionada ao pool (%d/%d)",
-                              self.active_connections, self.config.max_connections)
+                logging.debug(
+                    "Sessão adicionada ao pool (%d/%d)",
+                    self.active_connections,
+                    self.config.max_connections,
+                )
         except SQLAlchemyError as e:
             logging.error("Erro ao inicializar pool de conexões: %s", e)
 
@@ -163,8 +166,11 @@ class SQLiteConnectionPool:
             if self.active_connections < self.config.max_connections:
                 session = self.db_session()
                 self.active_connections += 1
-                logging.debug("Nova sessão criada (%d/%d)",
-                              self.active_connections, self.config.max_connections)
+                logging.debug(
+                    "Nova sessão criada (%d/%d)",
+                    self.active_connections,
+                    self.config.max_connections,
+                )
                 return session
 
             # Pool cheio, aguardar com timeout reduzido
@@ -190,8 +196,9 @@ class SQLiteConnectionPool:
 
         if attempt < retry_count - 1:
             wait_time = (attempt + 1) * 0.5  # Backoff progressivo
-            logging.warning("Erro na tentativa %d, aguardando %.1fs: %s",
-                            attempt + 1, wait_time, e)
+            logging.warning(
+                "Erro na tentativa %d, aguardando %.1fs: %s", attempt + 1, wait_time, e
+            )
             time.sleep(wait_time)
         else:
             logging.error("Falha após %d tentativas: %s", retry_count, e)
@@ -271,7 +278,7 @@ class SQLiteConnectionPool:
             "pool_size": self.pool.qsize(),
             "active_connections": self.active_connections,
             "max_connections": self.config.max_connections,
-            **self.stats.get_stats_dict()
+            **self.stats.get_stats_dict(),
         }
 
     def close_all(self):

@@ -36,6 +36,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+# --- Configuração de constantes ---
+# SHUTDOWN_WAIT_SECONDS define o tempo de espera (em segundos) após enviar o comando de shutdown
+# para garantir que todas as instâncias da aplicação tenham tempo suficiente para encerrar
+# antes de prosseguir com a atualização. Ajuste conforme necessário para ambientes diferentes.
+SHUTDOWN_WAIT_SECONDS = 3  # Tempo de espera após comando de shutdown
+
 # --- LÓGICA DE BOOTSTRAP: Encontrar o diretório base ANTES de outras importações ---
 
 
@@ -237,7 +243,7 @@ class UpdaterWindow(QMainWindow):
         self.progress_status_label = None
         self.progress_bar = None
 
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         self.setFixedSize(360, 180)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
@@ -396,7 +402,12 @@ class UpdaterWindow(QMainWindow):
             QApplication.restoreOverrideCursor()
 
     def show_update_available(self):
-        """Mostra a mensagem de que uma nova atualização está disponível."""
+        """
+        Mostra a mensagem de que uma nova atualização está disponível.
+
+        Apenas ADMINS veem esta interface. Usuários comuns nunca abrem o updater
+        diretamente - eles apenas recebem notificações via UpdateNotificationDialog.
+        """
         latest_version = self.update_info.get("ultima_versao", "N/A")
         self.status_label.setText("Nova versão disponível!")
         self.version_label.setText(f"Versão {latest_version}")
@@ -446,7 +457,13 @@ class UpdaterWindow(QMainWindow):
             QApplication.restoreOverrideCursor()
 
     def on_login_success(self):
-        """Inicia o processo de atualização após o login bem-sucedido."""
+        """
+        Inicia o processo de atualização após o ADMIN fazer login com sucesso.
+
+        Hierarquia clara:
+        - ADMIN: Tem controle total, pode iniciar atualizações
+        - USUÁRIOS: Não veem esta tela, apenas recebem notificações
+        """
         reply = QMessageBox.question(
             self,
             "Confirmar Atualização",
@@ -478,6 +495,7 @@ class UpdaterWindow(QMainWindow):
 
     def run_update_steps(self):
         """Executa as etapas sequenciais da atualização."""
+
         self.progress_status_label.setText("A baixar ficheiros...")
         self.progress_bar.setValue(10)
         QApplication.processEvents()
@@ -489,6 +507,10 @@ class UpdaterWindow(QMainWindow):
 
         self.progress_status_label.setText("A fechar a aplicação principal...")
         QApplication.processEvents()
+
+        # Aguarda um pouco para que as instâncias detectem o sinal
+        time.sleep(3)
+
         with session_scope() as (db_session, model):
             if not db_session or not model:
                 raise ConnectionError("Não foi possível ligar à base de dados.")
