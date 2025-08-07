@@ -26,13 +26,13 @@ from PySide6.QtWidgets import (
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.utils.controlador import adicionar, buscar, editar, excluir, preencher_campos
+from src.utils.controlador import (adicionar, buscar, editar, excluir, preencher_campos)
 from src.utils.estilo import (
     ALTURA_PADRAO_COMPONENTE,
     aplicar_estilo_botao,
     obter_tema_atual,
 )
-from src.utils.interface import (  # <--- IMPORTA A NOVA FUNÇÃO
+from src.utils.interface import (
     atualizar_comboboxes_formulario,
     limpar_busca,
     listar,
@@ -106,8 +106,6 @@ FORM_CONFIGS = {
                 },
             ],
         },
-        # --- MUDANÇA PRINCIPAL AQUI ---
-        # Chama a nova função que só atualiza os comboboxes do formulário
         "post_init": lambda: atualizar_comboboxes_formulario(
             ["material", "espessura", "canal"]
         ),
@@ -271,7 +269,6 @@ class ButtonConfigManager:
 
     def create_button_container(self):
         """Cria o container para os botões fora do grid."""
-        # Verificar se é espessura em modo edição (não mostrar botões)
         if self.tipo == "espessura" and self.is_edit:
             return None
 
@@ -280,7 +277,6 @@ class ButtonConfigManager:
         aplicar_medida_borda_espaco(botao_layout, 0)
 
         if self.is_edit:
-            # Botão Atualizar
             atualizar_btn = QPushButton("✏️ Atualizar")
             aplicar_estilo_botao(atualizar_btn, "verde")
             atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
@@ -332,6 +328,7 @@ class FormManager:
         self.tipo = tipo
         self.config = config
         self.root = root
+        self.main_layout = None
 
     def setup_window(self):
         """Configura a janela principal do formulário."""
@@ -340,22 +337,25 @@ class FormManager:
         if current_form:
             current_form.close()
 
-        new_form = self._create_dialog()
+        new_form, main_layout = self._create_dialog()
+        self.main_layout = main_layout
         setattr(g, form_attr, new_form)
         return new_form
 
     def _create_dialog(self):
-        """Cria o diálogo do formulário com barra de título customizada."""
+        """
+        Cria o diálogo do formulário com barra de título customizada.
+        Retorna uma tupla (QDialog, QGridLayout)
+        """
         new_form = QDialog(self.root)
         new_form.setWindowTitle(self.config["titulo"])
         new_form.resize(*self.config["size"])
         new_form.setFixedSize(*self.config["size"])
 
-        # Remover barra de título nativa
-        new_form.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        new_form.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         new_form.setWindowIcon(QIcon(ICON_PATH))
 
-        # Layout vertical: barra de título + conteúdo
         vlayout = QVBoxLayout(new_form)
         vlayout.setContentsMargins(0, 0, 0, 0)
         vlayout.setSpacing(0)
@@ -371,31 +371,24 @@ class FormManager:
                 nome = self.config["titulo"].split(" ")[-1]
                 barra_titulo = f"Adicionar {nome}"
 
-        # Barra de título customizada
         barra = BarraTitulo(new_form, tema=obter_tema_atual())
         barra.titulo.setText(barra_titulo)
         vlayout.addWidget(barra)
 
-        # Widget de conteúdo principal
         conteudo_widget = QWidget()
         vlayout.addWidget(conteudo_widget)
 
-        # Layout do conteúdo principal
         grid_layout = QGridLayout(conteudo_widget)
         conteudo_widget.setLayout(grid_layout)
-
-        # Guardar referência para uso posterior
-        new_form.conteudo_layout = grid_layout
 
         Janela.aplicar_no_topo(new_form)
         Janela.posicionar_janela(new_form, None)
 
-        return new_form
+        return new_form, grid_layout
 
-    def config_layout_main(self, form):
+    def config_layout_main(self):
         """Configura o layout principal do formulário."""
-        # Usar o layout do widget de conteúdo
-        return form.conteudo_layout
+        return self.main_layout
 
     def criar_frame_busca(self):
         """Cria o frame de busca."""
@@ -442,16 +435,25 @@ def criar_label(layout, texto, pos):
     return label
 
 
-def criar_widget(layout, tipo, nome_global, pos, **kwargs):
-    """Cria e configura um widget, o adiciona ao layout e o armazena em g."""
+def criar_widget(layout, tipo, nome_global, pos, **kwargs) -> QWidget | None:
+    """
+    Cria e configura um widget, o adiciona ao layout e o armazena em g.
+    Esta função foi corrigida para ser mais robusta e compatível com type checking.
+    """
+    # Declara a variável `widget` para que possa conter QLineEdit, QComboBox ou None.
+    widget: QLineEdit | QComboBox | None = None
+
     if tipo == "entry":
         widget = QLineEdit()
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     elif tipo == "combobox":
         widget = QComboBox()
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-    else:
+
+    # Se o tipo de widget não for suportado, retorna None imediatamente.
+    if widget is None:
         return None
+
+    # Agora é seguro chamar métodos no widget, pois sabemos que não é None.
+    widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
 
     colspan = kwargs.get("colspan", 1)
     rowspan = kwargs.get("rowspan", 1)
@@ -484,7 +486,8 @@ def _criar_campo_busca(layout, campo, col, tipo_busca):
     widget = criar_widget(layout, campo["widget"], campo["global"], (1, col))
 
     # Configurar conexões
-    configurar_conexoes_busca(widget, campo, tipo_busca)
+    if widget:
+        configurar_conexoes_busca(widget, campo, tipo_busca)
 
 
 def _criar_botao_limpar_busca(layout, col, tipo_busca):
@@ -500,9 +503,9 @@ def configurar_conexoes_busca(widget, campo_config, tipo_busca):
     if campo_config.get("connect") != "buscar":
         return
 
-    if campo_config["widget"] == "entry":
+    if isinstance(widget, QLineEdit):
         widget.textChanged.connect(lambda _, tb=tipo_busca: buscar(tb))
-    elif campo_config["widget"] == "combobox":
+    elif isinstance(widget, QComboBox):
         widget.currentTextChanged.connect(lambda _, tb=tipo_busca: buscar(tb))
 
 
@@ -513,7 +516,6 @@ def criar_lista(config, tipo):
     tree_widget.header().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
     tree_widget.setRootIsDecorated(False)
 
-    # Configurar larguras das colunas
     for i, width in enumerate(config["lista"]["widths"]):
         tree_widget.setColumnWidth(i, width)
 
@@ -575,11 +577,11 @@ def main(tipo, root):
     config = FORM_CONFIGS[tipo]
     gerenciador_form = FormManager(tipo, config, root)
 
-    # Configurar janela
     novo_form = gerenciador_form.setup_window()
-    layout_principal = gerenciador_form.config_layout_main(novo_form)
+    layout_principal = gerenciador_form.config_layout_main()
 
-    _config_componentes_form(gerenciador_form, layout_principal)
+    if layout_principal:
+        _config_componentes_form(gerenciador_form, layout_principal)
 
     _executar_pos_inicio(config, tipo)
 
@@ -596,20 +598,17 @@ def _config_componentes_form(gerenciador_form, layout):
     lista_widget = gerenciador_form.criar_widget_lista()
     layout.addWidget(lista_widget, 1, 0)
 
-    # Botão Excluir (se necessário)
     excluir_container = gerenciador_form.criar_botao_delete()
     current_row = 2
     if excluir_container:
         layout.addWidget(excluir_container, current_row, 0)
         current_row += 1
 
-    # Frame de edições (se necessário)
     frame_edicoes = gerenciador_form.criar_frame_edicoes()
     if frame_edicoes:
         layout.addWidget(frame_edicoes, current_row, 0)
         current_row += 1
 
-    # Botões Adicionar/Atualizar (fora do grid)
     botao_container = configurar_botoes(gerenciador_form.config, gerenciador_form.tipo)
     if botao_container:
         layout.addWidget(botao_container, current_row, 0)
@@ -620,7 +619,6 @@ def _executar_pos_inicio(config, tipo):
     if "post_init" in config:
         config["post_init"]()
 
-    # Garantir que a lista seja carregada
     tipo_lista = config.get("tipo_busca", tipo)
     listar(tipo_lista)
 
@@ -647,5 +645,4 @@ def form_espessura_main(root):
 
 
 if __name__ == "__main__":
-    # Teste básico
-    main("material", None)
+    print("Arquivo form_universal.py carregado e pronto para uso.")
