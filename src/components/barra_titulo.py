@@ -8,6 +8,7 @@ from PySide6.QtCore import QEvent, QPoint, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
+from src.config import globals as g
 from src.utils.utilitarios import ICON_PATH
 
 
@@ -64,6 +65,29 @@ class BarraTitulo(QWidget):
         layout.addWidget(btn_close)
 
         self.setLayout(layout)
+
+        # Registrar esta barra de título para atualizações de tema
+        self._registrar_barra_titulo()
+
+    def _registrar_barra_titulo(self):
+        """Registra esta barra de título na lista global para atualizações de tema."""
+        if self not in g.BARRAS_TITULO_ATIVAS:
+            g.BARRAS_TITULO_ATIVAS.append(self)
+
+    def _desregistrar_barra_titulo(self):
+        """Remove esta barra de título da lista global."""
+        if self in g.BARRAS_TITULO_ATIVAS:
+            g.BARRAS_TITULO_ATIVAS.remove(self)
+
+    def closeEvent(self, event):  # pylint: disable=invalid-name
+        """Desregistra a barra de título quando a janela é fechada."""
+        self._desregistrar_barra_titulo()
+        super().closeEvent(event)
+
+    def deleteLater(self):  # pylint: disable=invalid-name
+        """Desregistra a barra de título antes de deletar."""
+        self._desregistrar_barra_titulo()
+        super().deleteLater()
 
     def set_tema(self, tema):
         """
