@@ -74,6 +74,10 @@ LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
 
 
+TIMER_SISTEMA = QTimer()
+UPDATE_CHECK_TIMER = QTimer()
+
+
 def verificar_admin_existente():
     """Verifica se existe um administrador cadastrado."""
     logging.info("Verificando se existe um administrador.")
@@ -351,13 +355,11 @@ def processar_verificacao_sistema():
 
 def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g'."""
-    g.TIMER_SISTEMA = QTimer()
-    g.TIMER_SISTEMA.timeout.connect(processar_verificacao_sistema)
-    g.TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
+    TIMER_SISTEMA.timeout.connect(processar_verificacao_sistema)
+    TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
 
-    g.UPDATE_CHECK_TIMER = QTimer()
-    g.UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
-    g.UPDATE_CHECK_TIMER.start(TIMER_UPDATE_INTERVALO)
+    UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
+    UPDATE_CHECK_TIMER.start(TIMER_UPDATE_INTERVALO)
     QTimer.singleShot(TIMER_UPDATE_DELAY_INICIAL, checagem_periodica_update)
 
 
