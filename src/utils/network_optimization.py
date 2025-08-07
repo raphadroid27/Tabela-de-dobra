@@ -5,7 +5,7 @@ Configurações e otimizações específicas para ambiente de rede com múltiplo
 import logging
 import threading
 import time
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Configurações para múltiplos usuários
 NETWORK_CONFIG = {

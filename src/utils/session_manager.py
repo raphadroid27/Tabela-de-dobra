@@ -5,8 +5,8 @@ incluindo registro, remoção e verificação de comandos do sistema.
 
 import logging
 import socket
-import uuid
 import time
+import uuid
 from datetime import datetime, timezone
 from threading import Timer
 
