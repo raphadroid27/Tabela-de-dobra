@@ -16,46 +16,96 @@ from sqlalchemy.orm import sessionmaker
 from src.utils.utilitarios import DB_PATH
 
 
-class SQLiteConnectionPool:
-    """Pool de conexões SQLite otimizado para acesso em rede."""
+class PoolConfig:
+    """Configuração do pool de conexões."""
 
     def __init__(self, max_connections=20, db_path=None):
         self.max_connections = max_connections
         self.db_path = db_path or DB_PATH
-        self.pool = Queue(maxsize=max_connections)
-        self.active_connections = 0
-        self.lock = threading.RLock()
-        self.stats = {
-            'total_requests': 0,
-            'pool_hits': 0,
-            'pool_misses': 0,
-            'errors': 0
+        self.timeout = 90
+        self.pool_recycle = 1800
+        self.max_overflow = 5
+
+
+class PoolStats:
+    """Estatísticas do pool de conexões."""
+
+    def __init__(self):
+        self.total_requests = 0
+        self.pool_hits = 0
+        self.pool_misses = 0
+        self.errors = 0
+
+    def record_request(self):
+        """Registra uma nova requisição."""
+        self.total_requests += 1
+
+    def record_hit(self):
+        """Registra um cache hit."""
+        self.pool_hits += 1
+
+    def record_miss(self):
+        """Registra um cache miss."""
+        self.pool_misses += 1
+
+    def record_error(self):
+        """Registra um erro."""
+        self.errors += 1
+
+    def get_stats_dict(self):
+        """Retorna estatísticas como dicionário."""
+        return {
+            'total_requests': self.total_requests,
+            'pool_hits': self.pool_hits,
+            'pool_misses': self.pool_misses,
+            'errors': self.errors,
+            'hit_ratio': self.pool_hits / max(1, self.total_requests) * 100,
+            'error_ratio': self.errors / max(1, self.total_requests) * 100,
         }
 
-        # Configuração otimizada do engine para múltiplos usuários
-        self.engine = create_engine(
-            f"sqlite:///{self.db_path}",
+
+class SQLiteConnectionPool:
+    """Pool de conexões SQLite otimizado para acesso em rede."""
+
+    def __init__(self, max_connections=20, db_path=None):
+        self.config = PoolConfig(max_connections, db_path)
+        self.pool = Queue(maxsize=self.config.max_connections)
+        self.active_connections = 0
+        self.lock = threading.RLock()
+        self.stats = PoolStats()
+
+        # Configurar engine
+        self.engine = self._create_engine()
+        self.db_session = self._create_session_maker()
+
+        # Pré-criar algumas sessões
+        self._initialize_pool()
+
+    def _create_engine(self):
+        """Cria e configura o engine SQLite."""
+        engine = create_engine(
+            f"sqlite:///{self.config.db_path}",
             pool_pre_ping=True,
-            pool_recycle=1800,  # 30 minutos
-            pool_size=max_connections,
-            max_overflow=5,  # Permite overflow para picos
+            pool_recycle=self.config.pool_recycle,
+            pool_size=self.config.max_connections,
+            max_overflow=self.config.max_overflow,
             connect_args={
-                "timeout": 90,  # Aumentado para 90s
+                "timeout": self.config.timeout,
                 "check_same_thread": False,
             },
             echo=False,
         )
 
-        event.listen(self.engine, "connect", self._apply_sqlite_optimizations)
+        event.listen(engine, "connect", self._apply_sqlite_optimizations)
+        return engine
 
-        self.db_session = sessionmaker(
+    def _create_session_maker(self):
+        """Cria o session maker."""
+        return sessionmaker(
             bind=self.engine,
             expire_on_commit=False,
-            autoflush=False,  # Controle manual de flush
+            autoflush=False,
         )
-
-        # Pré-criar algumas sessões
-        self._initialize_pool()
 
     def _apply_sqlite_optimizations(self, dbapi_connection, _connection_record):
         """Aplica otimizações SQLite após a conexão para múltiplos usuários."""
@@ -86,15 +136,87 @@ class SQLiteConnectionPool:
         """Inicializa o pool com conexões para múltiplos usuários."""
         try:
             # Inicia com 8 conexões para suportar 4+ usuários
-            initial_connections = min(8, self.max_connections)
+            initial_connections = min(8, self.config.max_connections)
             for _ in range(initial_connections):
                 session = self.db_session()
                 self.pool.put(session)
                 self.active_connections += 1
                 logging.debug("Sessão adicionada ao pool (%d/%d)",
-                              self.active_connections, self.max_connections)
+                              self.active_connections, self.config.max_connections)
         except SQLAlchemyError as e:
             logging.error("Erro ao inicializar pool de conexões: %s", e)
+
+    def _try_get_session_from_pool(self, timeout):
+        """Tenta obter uma sessão do pool."""
+        try:
+            session = self.pool.get(timeout=timeout)
+            self.stats.record_hit()
+            logging.debug("Sessão obtida do pool")
+            return session
+        except Empty:
+            self.stats.record_miss()
+            return None
+
+    def _create_new_session_if_allowed(self, timeout):
+        """Cria nova sessão se permitido, senão aguarda."""
+        with self.lock:
+            if self.active_connections < self.config.max_connections:
+                session = self.db_session()
+                self.active_connections += 1
+                logging.debug("Nova sessão criada (%d/%d)",
+                              self.active_connections, self.config.max_connections)
+                return session
+
+            # Pool cheio, aguardar com timeout reduzido
+            return self.pool.get(timeout=timeout // 2)
+
+    def _validate_session(self, session):
+        """Valida se a sessão ainda está funcionando."""
+        try:
+            session.execute("SELECT 1")
+            return True
+        except SQLAlchemyError:
+            if session:
+                session.close()
+            return False
+
+    def _handle_session_error(self, session, attempt, retry_count, e):
+        """Lida com erros na obtenção de sessão."""
+        if session:
+            try:
+                session.close()
+            except SQLAlchemyError:
+                pass
+
+        if attempt < retry_count - 1:
+            wait_time = (attempt + 1) * 0.5  # Backoff progressivo
+            logging.warning("Erro na tentativa %d, aguardando %.1fs: %s",
+                            attempt + 1, wait_time, e)
+            time.sleep(wait_time)
+        else:
+            logging.error("Falha após %d tentativas: %s", retry_count, e)
+            raise e
+
+    def _get_valid_session(self, timeout, attempt):
+        """Obtém uma sessão válida do pool ou cria uma nova."""
+        # Tentar obter sessão existente do pool
+        session = self._try_get_session_from_pool(timeout)
+
+        if session is None:
+            # Se pool vazio, criar nova sessão se permitido
+            session = self._create_new_session_if_allowed(timeout)
+
+        if session is None:
+            raise SQLAlchemyError("Não foi possível obter sessão do pool")
+
+        # Verificar se sessão ainda é válida
+        if self._validate_session(session):
+            return session
+
+        # Sessão inválida, recriar
+        session = self.db_session()
+        logging.debug("Sessão recriada devido a erro (tentativa %d)", attempt + 1)
+        return session
 
     @contextmanager
     def get_session(self, timeout=45, retry_count=3):
@@ -103,59 +225,14 @@ class SQLiteConnectionPool:
 
         for attempt in range(retry_count):
             try:
-                self.stats['total_requests'] += 1
-
-                # Tentar obter sessão existente do pool
-                try:
-                    session = self.pool.get(timeout=timeout)
-                    self.stats['pool_hits'] += 1
-                    logging.debug("Sessão obtida do pool (tentativa %d)", attempt + 1)
-                except Empty:
-                    self.stats['pool_misses'] += 1
-                    # Se pool vazio, criar nova sessão se permitido
-                    with self.lock:
-                        if self.active_connections < self.max_connections:
-                            session = self.db_session()
-                            self.active_connections += 1
-                            logging.debug("Nova sessão criada (%d/%d)",
-                                          self.active_connections, self.max_connections)
-                        else:
-                            # Pool cheio, aguardar com timeout reduzido
-                            session = self.pool.get(timeout=timeout // 2)
-
-                if session is None:
-                    raise SQLAlchemyError("Não foi possível obter sessão do pool")
-
-                # Verificar se sessão ainda é válida
-                try:
-                    session.execute("SELECT 1")
-                    break  # Sessão válida, sair do loop de retry
-                except SQLAlchemyError:
-                    # Sessão inválida, tentar recriar
-                    if session:
-                        session.close()
-                    session = self.db_session()
-                    logging.debug(
-                        "Sessão recriada devido a erro (tentativa %d)", attempt + 1)
-                    break
+                self.stats.record_request()
+                session = self._get_valid_session(timeout, attempt)
+                break
 
             except (SQLAlchemyError, Empty) as e:
-                self.stats['errors'] += 1
-                if session:
-                    try:
-                        session.close()
-                    except SQLAlchemyError:
-                        pass
-                    session = None
-
-                if attempt < retry_count - 1:
-                    wait_time = (attempt + 1) * 0.5  # Backoff progressivo
-                    logging.warning("Erro na tentativa %d, aguardando %.1fs: %s",
-                                    attempt + 1, wait_time, e)
-                    time.sleep(wait_time)
-                else:
-                    logging.error("Falha após %d tentativas: %s", retry_count, e)
-                    raise e
+                self.stats.record_error()
+                self._handle_session_error(session, attempt, retry_count, e)
+                session = None
         try:
             yield session
 
@@ -193,13 +270,8 @@ class SQLiteConnectionPool:
         return {
             "pool_size": self.pool.qsize(),
             "active_connections": self.active_connections,
-            "max_connections": self.max_connections,
-            "total_requests": self.stats['total_requests'],
-            "pool_hits": self.stats['pool_hits'],
-            "pool_misses": self.stats['pool_misses'],
-            "errors": self.stats['errors'],
-            "hit_ratio": self.stats['pool_hits'] / max(1, self.stats['total_requests']) * 100,
-            "error_ratio": self.stats['errors'] / max(1, self.stats['total_requests']) * 100,
+            "max_connections": self.config.max_connections,
+            **self.stats.get_stats_dict()
         }
 
     def close_all(self):
