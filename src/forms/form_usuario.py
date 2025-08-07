@@ -43,11 +43,6 @@ COLUNA_PERMISSOES_LARGURA = 100
 TITULO_FORMULARIO = "Editar/Excluir Usuário"
 
 
-def _verificar_permissao():
-    """Verifica se o usuário tem permissão para gerenciar usuários."""
-    return tem_permissao("usuario", "admin")
-
-
 def _configurar_janela_base(root):
     """Configura a janela base do formulário."""
     if g.USUAR_FORM is not None:
@@ -150,7 +145,7 @@ def main(root):
     Inicializa a interface gráfica para edição, exclusão e gerenciamento de permissões.
     """
     # Verificar se o usuário é administrador
-    if not _verificar_permissao():
+    if not tem_permissao("usuario", "admin"):
         return
 
     _configurar_janela_base(root)
