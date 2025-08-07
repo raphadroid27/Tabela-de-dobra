@@ -152,7 +152,7 @@ def _criar_indices_otimizacao():
             conn.execute(
                 text(
                     """
-                CREATE INDEX IF NOT EXISTS idx_deducao_material_espessura_canal 
+                CREATE INDEX IF NOT EXISTS idx_deducao_material_espessura_canal
                 ON deducao(material_id, espessura_id, canal_id)
                 """
                 )
@@ -177,7 +177,7 @@ def _criar_indices_otimizacao():
             conn.execute(
                 text(
                     """
-                CREATE INDEX IF NOT EXISTS idx_log_usuario_data 
+                CREATE INDEX IF NOT EXISTS idx_log_usuario_data
                 ON log(usuario_nome, data_hora)
                 """
                 )
@@ -187,7 +187,7 @@ def _criar_indices_otimizacao():
             conn.execute(
                 text(
                     """
-                CREATE INDEX IF NOT EXISTS idx_system_control_type_key 
+                CREATE INDEX IF NOT EXISTS idx_system_control_type_key
                 ON system_control(type, key)
                 """
                 )
