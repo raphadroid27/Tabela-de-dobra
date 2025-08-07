@@ -21,12 +21,11 @@ from PySide6.QtWidgets import (
     QTreeWidget,
     QVBoxLayout,
     QWidget,
-
 )
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.utils.controlador import (adicionar, buscar, editar, excluir, preencher_campos)
+from src.utils.controlador import adicionar, buscar, editar, excluir, preencher_campos
 from src.utils.estilo import (
     ALTURA_PADRAO_COMPONENTE,
     aplicar_estilo_botao,
