@@ -109,7 +109,7 @@ def _criar_label_resultado(main_layout):
     g.RAZAO_RIE_LBL.setFrameShape(QLabel.Shape.Panel)
     g.RAZAO_RIE_LBL.setFrameShadow(QLabel.Shadow.Sunken)
     g.RAZAO_RIE_LBL.setFixedHeight(LABEL_ALTURA)
-    g.RAZAO_RIE_LBL.setAlignment(Qt.AlignCenter)
+    g.RAZAO_RIE_LBL.setAlignment(Qt.AlignmentFlag.AlignCenter)
     main_layout.addWidget(g.RAZAO_RIE_LBL, 0, 1)
 
 
