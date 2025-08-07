@@ -98,7 +98,6 @@ class BarraTitulo(QWidget):
         """
         Minimiza a janela pai.
         """
-        # CORREÇÃO: Usando self._parent
         if self._parent:
             self._parent.showMinimized()
 
@@ -106,7 +105,6 @@ class BarraTitulo(QWidget):
         """
         Fecha a janela pai.
         """
-        # CORREÇÃO: Usando self._parent
         if self._parent:
             self._parent.close()
 
@@ -126,10 +124,8 @@ class BarraTitulo(QWidget):
         """
         Inicia o arrasto da janela ao pressionar o botão esquerdo do mouse.
         """
-        # CORREÇÃO: Qt.MouseButton.LeftButton é o correto para PySide6
         if event.button() == Qt.MouseButton.LeftButton:
             self.pressing = True
-            # CORREÇÃO: Usando self._parent
             if self._parent:
                 self.start = (
                     event.globalPosition().toPoint()
@@ -141,7 +137,6 @@ class BarraTitulo(QWidget):
         """
         Move a janela enquanto o mouse é arrastado com o botão esquerdo pressionado.
         """
-        # CORREÇÃO: Qt.MouseButton.LeftButton e self._parent
         if (
             self.pressing
             and event.buttons() == Qt.MouseButton.LeftButton

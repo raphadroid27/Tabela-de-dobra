@@ -218,7 +218,3 @@ class Janela:
             | Qt.WindowType.WindowMaximizeButtonHint
             | Qt.WindowType.WindowCloseButtonHint
         )
-
-
-# CORREÇÃO: Bloco de aliases no final do arquivo foi removido para evitar confusão do linter.
-# As chamadas agora devem ser feitas diretamente pela classe: Janela.metodo()
