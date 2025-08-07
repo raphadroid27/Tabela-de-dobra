@@ -11,6 +11,8 @@ USUARIO_ID = None
 USUARIO_NOME = None
 TEMA_ATUAL = None
 BARRA_TITULO = None
+# Lista para rastrear todas as barras de título ativas
+BARRAS_TITULO_ATIVAS = []
 SESSION_ID = None
 UPDATE_INFO = None
 UPDATE_ACTION = None
@@ -107,12 +109,6 @@ LOGIN = None
 USUARIO_BUSCA_ENTRY = None
 LIST_USUARIO = None
 
-# form_impressao.py widgets
-IMPRESSAO_FORM = None
-IMPRESSAO_DIRETORIO_ENTRY = None
-IMPRESSAO_LISTA_ARQUIVOS = None
-IMPRESSAO_LISTA_TEXT = None
-IMPRESSAO_RESULTADO_TEXT = None
 
 # formularios
 PRINC_FORM = None
