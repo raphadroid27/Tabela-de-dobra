@@ -176,8 +176,10 @@ class FormGerenciarInstancias(QDialog):
 
     def _executar_shutdown_geral(self):
         """Executa o shutdown de todas as instâncias após confirmação."""
-        msg = "⚠️ ATENÇÃO!\n\nEsta ação irá fechar TODAS as instâncias do sistema.\n\n"
-        msg += "Deseja continuar?"
+        msg = (
+            "⚠️ ATENÇÃO! "
+            "Esta ação irá fechar TODAS as instâncias do sistema. "
+            "Deseja continuar?")
         resposta = QMessageBox.question(
             self,
             "Confirmar Shutdown",
@@ -189,7 +191,7 @@ class FormGerenciarInstancias(QDialog):
             try:
                 session_manager.definir_comando_sistema("SHUTDOWN")
                 info_msg = (
-                    "✅ Comando de shutdown enviado para todas as instâncias.\n\n"
+                    "✅ Comando de shutdown enviado para todas as instâncias. "
                     "As instâncias serão fechadas nos próximos segundos."
                 )
                 QMessageBox.information(self, "Comando Enviado", info_msg)
