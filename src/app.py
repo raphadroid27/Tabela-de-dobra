@@ -25,7 +25,14 @@ from src import __version__
 from src.components.barra_titulo import BarraTitulo
 from src.components.menu_custom import MenuCustom
 from src.config import globals as g
-from src.forms import form_aut, form_impressao, form_razao_rie, form_sobre, form_usuario
+from src.forms import (
+    form_aut,
+    form_gerenciar_instancias,
+    form_impressao,
+    form_razao_rie,
+    form_sobre,
+    form_usuario,
+)
 from src.forms.form_universal import form_canal_main as FormCanal
 from src.forms.form_universal import form_deducao_main as FormDeducao
 from src.forms.form_universal import form_espessura_main as FormEspessura
@@ -36,6 +43,7 @@ from src.utils.banco_dados import session as db_session
 from src.utils.estilo import (
     aplicar_tema_inicial,
     aplicar_tema_qdarktheme,
+    limpar_barras_titulo_inativas,
     obter_tema_atual,
     obter_temas_disponiveis,
     registrar_tema_actions,
@@ -44,9 +52,10 @@ from src.utils.interface_manager import carregar_interface
 from src.utils.janelas import Janela
 from src.utils.session_manager import (
     atualizar_heartbeat_sessao,
-    obter_comando_sistema,
+    limpar_comando_sistema,
     registrar_sessao,
     remover_sessao,
+    verificar_comando_shutdown,
 )
 from src.utils.update_manager import (
     checagem_periodica_update,
@@ -261,6 +270,7 @@ def configurar_menu(menu_custom):
             ("🔐 Login", partial(_executar_autenticacao, True)),
             ("👥 Novo Usuário", partial(_executar_autenticacao, False)),
             ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
+            ("🖥️ Gerenciar Instâncias", lambda: form_gerenciar_instancias.main(g.PRINC_FORM)),
             ("separator", None),
             ("🚪 Sair", logout),
         ],
@@ -373,8 +383,12 @@ def configurar_sinais_excecoes():
 def processar_verificacao_sistema():
     """Função chamada pelo timer para verificar o estado do sistema."""
     atualizar_heartbeat_sessao()
-    comando = obter_comando_sistema()
-    if comando == "SHUTDOWN":
+
+    # Verifica comando de shutdown do sistema
+    if verificar_comando_shutdown():
+        logging.info("Comando SHUTDOWN detectado. Fechando aplicativo...")
+        # Limpar comando para evitar loops
+        limpar_comando_sistema()
         fechar_aplicativo()
 
 
