@@ -126,6 +126,86 @@ class SessionManager:
             db_session.rollback()
             return None
 
+    @staticmethod
+    def definir_comando_sistema(comando: str):
+        """Define um comando do sistema (ex: 'SHUTDOWN', 'UPDATE', etc.)."""
+        try:
+            cmd_entry = (
+                db_session.query(SystemControl).filter_by(key="SYSTEM_CMD").first()
+            )
+            if cmd_entry:
+                cmd_entry.value = comando
+                cmd_entry.last_updated = datetime.now(timezone.utc)
+            else:
+                novo_comando = SystemControl(
+                    type="COMMAND",
+                    key="SYSTEM_CMD",
+                    value=comando,
+                    last_updated=datetime.now(timezone.utc)
+                )
+                db_session.add(novo_comando)
+
+            db_session.commit()
+            logging.info("Comando do sistema definido: %s", comando)
+        except SQLAlchemyError as e:
+            logging.error("Erro ao definir comando do sistema: %s", e)
+            db_session.rollback()
+
+    @staticmethod
+    def obter_sessoes_ativas():
+        """Retorna lista de todas as sessões ativas."""
+        try:
+            sessoes = (
+                db_session.query(SystemControl)
+                .filter_by(type="SESSION")
+                .order_by(SystemControl.last_updated.desc())
+                .all()
+            )
+
+            resultado = []
+            for sessao in sessoes:
+                resultado.append({
+                    'session_id': sessao.key,
+                    'usuario': 'Sistema',  # Pode ser expandido para incluir usuário
+                    'hostname': sessao.value,
+                    'last_updated': sessao.last_updated.strftime('%Y-%m-%d %H:%M:%S')
+                    if sessao.last_updated else 'N/A'
+                })
+
+            return resultado
+        except SQLAlchemyError as e:
+            logging.error("Erro ao obter sessões ativas: %s", e)
+            db_session.rollback()
+            return []
+
+    @staticmethod
+    def limpar_comando_sistema():
+        """Limpa o comando do sistema."""
+        try:
+            cmd_entry = (
+                db_session.query(SystemControl).filter_by(key="SYSTEM_CMD").first()
+            )
+            if cmd_entry:
+                db_session.delete(cmd_entry)
+                db_session.commit()
+                logging.info("Comando do sistema limpo")
+        except SQLAlchemyError as e:
+            logging.error("Erro ao limpar comando do sistema: %s", e)
+            db_session.rollback()
+
+    @staticmethod
+    def verificar_comando_shutdown() -> bool:
+        """Verifica se existe comando de shutdown pendente."""
+        try:
+            cmd_entry = (
+                db_session.query(SystemControl).filter_by(key="SYSTEM_CMD").first()
+            )
+            return cmd_entry and cmd_entry.value == "SHUTDOWN"
+        except SQLAlchemyError as e:
+            logging.error("Erro ao verificar comando shutdown: %s", e)
+            db_session.rollback()
+            return False
+
 
 # Instância global do gerenciador de sessões
 session_manager = SessionManager()
@@ -151,6 +231,26 @@ def atualizar_heartbeat_sessao():
 def obter_comando_sistema() -> Optional[str]:
     """Busca no banco e retorna o comando atual do sistema."""
     return session_manager.obter_comando_sistema()
+
+
+def definir_comando_sistema(comando: str):
+    """Define um comando do sistema (ex: 'SHUTDOWN', 'UPDATE', etc.)."""
+    return session_manager.definir_comando_sistema(comando)
+
+
+def obter_sessoes_ativas():
+    """Retorna lista de todas as sessões ativas."""
+    return session_manager.obter_sessoes_ativas()
+
+
+def limpar_comando_sistema():
+    """Limpa o comando do sistema."""
+    return session_manager.limpar_comando_sistema()
+
+
+def verificar_comando_shutdown() -> bool:
+    """Verifica se existe comando de shutdown pendente."""
+    return session_manager.verificar_comando_shutdown()
 
 
 # Variáveis de compatibilidade
