@@ -93,7 +93,7 @@ class CopyManager:
         label.setText(f"{texto_original} Copiado!")
         label.setStyleSheet("QLabel { color: green; }")
 
-        QTimer.singleShot(2000, partial(self._restaurar_label, label, texto_original))
+        QTimer.singleShot(5000, partial(self._restaurar_label, label, texto_original))
 
     def _restaurar_label(self, label, texto):
         """Restaura o texto e estilo original do label."""
@@ -634,7 +634,21 @@ def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
     res_k = calculos.CalculoFatorK().calcular(
         data.espessura, data.raio_interno, deducao_usada
     )
-    estilo_k = "color: blue;" if data.deducao_espec > 0 else ""
+
+    estilo_k = ""  # Definição padrão
+
+    # Define o estilo do Fator K conforme a origem da dedução
+    if g.K_LBL.text() == "":
+        g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
+        g.K_LBL.setStyleSheet("")
+    elif data.deducao_espec > 0:
+        estilo_k = "QLabel {color: blue;}"
+        g.K_LBL.setToolTip("Fator K calculado com dedução específica.")
+    elif not deducao_usada:
+        estilo_k = "QLabel {color: orange;}"
+        g.K_LBL.setToolTip("Fator K teórico com base na tabela Raio/Espessura.")
+    else:
+        g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
 
     if res_k:
         _atualizar_label(g.K_LBL, res_k["fator_k"], estilo_sucesso=estilo_k)
