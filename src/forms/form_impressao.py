@@ -205,7 +205,7 @@ class PrintManager:
         msg = f"Tentando imprimir {nome_arquivo} com impressora padrão...\n"
         self.resultado_impressao += msg
         try:
-            os.startfile(caminho, "print")
+            os.startfile(caminho, "print")  # pylint: disable=no-member
             self.resultado_impressao += " ✓ Sucesso com impressora padrão\n"
             return True
         except (OSError, PermissionError, FileNotFoundError) as e:
