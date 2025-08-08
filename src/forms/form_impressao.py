@@ -11,7 +11,7 @@ Refatorado para usar uma abordagem baseada em classes, eliminando variáveis glo
 import os
 import subprocess  # nosec B404
 import sys
-from typing import List
+from typing import List, Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -95,7 +95,7 @@ class PrintManager:
             return ""
         return arquivo.split(" - ")[0].strip() if " - " in arquivo else arquivo.strip()
 
-    def _procurar_arquivo(self, diretorio: str, nome_base: str) -> str | None:
+    def _procurar_arquivo(self, diretorio: str, nome_base: str) -> Optional[str]:
         """Procura um arquivo específico no diretório."""
         if not diretorio or not nome_base:
             return None
@@ -187,7 +187,7 @@ class PrintManager:
                 check=True,
                 timeout=TIMEOUT_IMPRESSAO,
                 shell=False,
-            )
+            )  # nosec B603
             self.resultado_impressao += " ✓ Sucesso com Foxit\n"
             return True
         except (
@@ -205,7 +205,7 @@ class PrintManager:
         msg = f"Tentando imprimir {nome_arquivo} com impressora padrão...\n"
         self.resultado_impressao += msg
         try:
-            os.startfile(caminho, "print")  # pylint: disable=no-member
+            os.startfile(caminho, "print")  # pylint: disable=no-member # nosec B606
             self.resultado_impressao += " ✓ Sucesso com impressora padrão\n"
             return True
         except (OSError, PermissionError, FileNotFoundError) as e:
@@ -224,7 +224,7 @@ class PrintManager:
                         [adobe_path, "/p", caminho],
                         check=True,
                         timeout=TIMEOUT_IMPRESSAO,
-                        shell=False,
+                        shell=False,  # nosec B606
                     )
                     self.resultado_impressao += " ✓ Sucesso com Adobe\n"
                     return True
