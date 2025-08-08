@@ -209,7 +209,7 @@ class FormGerenciarInstancias(QDialog):
                 )
                 return
 
-            relatorio = f"📊 RELATÓRIO DE INSTÂNCIAS ATIVAS\n{'='*50}\n\n"
+            relatorio = f"📊 RELATÓRIO DE INSTÂNCIAS ATIVAS\n{'=' * 50}\n\n"
             relatorio += f"Total de Instâncias: {len(sessoes)}\n\n"
             for i, sessao in enumerate(sessoes, 1):
                 relatorio += f"{i}. ID: {sessao.get('session_id', 'N/A')}\n"
