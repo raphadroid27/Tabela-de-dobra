@@ -43,7 +43,7 @@ from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 FORM_CONFIGS = {
     "deducao": {
         "titulo": "Formulário de Deduções",
-        "size": (500, 500),
+        "size": (500, 510),
         "global_form": "DEDUC_FORM",
         "global_edit": "EDIT_DED",
         "busca": {
@@ -114,7 +114,7 @@ FORM_CONFIGS = {
     },
     "material": {
         "titulo": "Formulário de Materiais",
-        "size": (360, 500),
+        "size": (360, 510),
         "global_form": "MATER_FORM",
         "global_edit": "EDIT_MAT",
         "busca": {
@@ -167,7 +167,7 @@ FORM_CONFIGS = {
     },
     "canal": {
         "titulo": "Formulário de Canais",
-        "size": (360, 500),
+        "size": (360, 510),
         "global_form": "CANAL_FORM",
         "global_edit": "EDIT_CANAL",
         "busca": {
