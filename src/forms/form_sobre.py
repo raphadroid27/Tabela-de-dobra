@@ -1,51 +1,47 @@
 """
 # Formulário "Sobre"
 # Este módulo implementa a janela "Sobre" do aplicativo.
-# Ele exibe informações como o nome do aplicativo, versão, autor,
-# descrição e um link interativo para o repositório no GitHub.
-# A janela é criada como uma QDialog do PySide6, centralizada na tela,
-# e configurada para permanecer no topo das outras janelas.
-# O link para o GitHub abre o navegador padrão ao ser clicado.
 """
 
+from typing import Optional
 
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QWidget
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QFont
+from PySide6.QtGui import QFont, QIcon
+from PySide6.QtWidgets import QDialog, QLabel, QVBoxLayout, QWidget
+
 from src import __version__
-from src.config import globals as g
-from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.components.barra_titulo import BarraTitulo
+from src.config import globals as g
 from src.utils.estilo import obter_tema_atual
+from src.utils.janelas import Janela
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 
-def main(root):
+def main(root: Optional[QWidget]) -> None:
     """
     Função principal que cria a janela "Sobre" com barra de título customizada.
     """
-    if getattr(g, 'SOBRE_FORM', None):
+    if hasattr(g, "SOBRE_FORM") and g.SOBRE_FORM is not None:
         g.SOBRE_FORM.close()
 
-    g.SOBRE_FORM = QDialog(root)
-    g.SOBRE_FORM.setWindowTitle("Sobre")
-    g.SOBRE_FORM.setFixedSize(300, 210)
-    # Remover barra nativa
-    g.SOBRE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+    sobre_form = QDialog(root)
+    g.SOBRE_FORM = sobre_form
+    sobre_form.setWindowTitle("Sobre")
+    sobre_form.setFixedSize(300, 210)
+    sobre_form.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
-    # Define o ícone
-    g.SOBRE_FORM.setWindowIcon(QIcon(ICON_PATH))
+    sobre_form.setWindowIcon(QIcon(ICON_PATH))
 
-    aplicar_no_topo(g.SOBRE_FORM)
-    posicionar_janela(g.SOBRE_FORM, 'centro')
+    Janela.aplicar_no_topo(sobre_form)
+    Janela.posicionar_janela(sobre_form, "centro")
 
     # Layout principal vertical: barra de título + conteúdo
-    layout = QVBoxLayout(g.SOBRE_FORM)
+    layout = QVBoxLayout(sobre_form)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
 
     # Barra de título customizada
-    barra = BarraTitulo(g.SOBRE_FORM, tema=obter_tema_atual())
+    barra = BarraTitulo(sobre_form, tema=obter_tema_atual())
     barra.titulo.setText("Sobre")
     layout.addWidget(barra)
 
@@ -59,42 +55,41 @@ def main(root):
     font_titulo = QFont("Arial", 16)
     font_titulo.setBold(True)
     label_titulo.setFont(font_titulo)
-    label_titulo.setAlignment(Qt.AlignCenter)
+    label_titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_titulo)
 
     # Versão
     label_versao = QLabel(f"Versão: {__version__}")
     font_normal = QFont("Arial", 12)
     label_versao.setFont(font_normal)
-    label_versao.setAlignment(Qt.AlignCenter)
+    label_versao.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_versao)
 
     # Autor
     label_autor = QLabel("Autor: raphadroid27")
     label_autor.setFont(font_normal)
-    label_autor.setAlignment(Qt.AlignCenter)
+    label_autor.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_autor)
 
     # Descrição
-    label_desc = QLabel(
-        "Aplicativo para cálculo de dobras em\nchapas metálicas.")
+    label_desc = QLabel("Aplicativo para cálculo de dobras em\nchapas metálicas.")
     label_desc.setFont(font_normal)
-    label_desc.setAlignment(Qt.AlignCenter)
+    label_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_desc)
 
     # Link para o GitHub
     label_link = QLabel(
-        '<a href="https://github.com/raphadroid27/Tabela-de-dobra">Repositório no GitHub</a>')
+        '<a href="https://github.com/raphadroid27/Tabela-de-dobra">Repositório no GitHub</a>'
+    )
     label_link.setFont(font_normal)
-    label_link.setAlignment(Qt.AlignCenter)
+    label_link.setAlignment(Qt.AlignmentFlag.AlignCenter)
     label_link.setOpenExternalLinks(True)
     conteudo_layout.addWidget(label_link)
 
     conteudo.setLayout(conteudo_layout)
     layout.addWidget(conteudo)
 
-    g.SOBRE_FORM.show()
-    g.SOBRE_FORM.show()
+    sobre_form.show()
 
 
 if __name__ == "__main__":

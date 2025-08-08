@@ -1,27 +1,46 @@
-# -*- coding: utf-8 -*-
 """
 Updater Gráfico para a Aplicação de Cálculo de Dobra.
 """
 
+import hashlib
+import logging
+import os
+import shutil
+import subprocess  # nosec B404
+
 # --- Importações da Biblioteca Padrão ---
 import sys
-import os
-import subprocess
-import zipfile
 import time
-import shutil
-import logging
-import hashlib
+import zipfile
 from datetime import datetime, timezone
-from typing import Type
+from typing import Any, Type
+
+from PySide6.QtCore import QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QIcon
 
 # --- Importações de Terceiros ---
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
-                               QLabel, QPushButton, QHBoxLayout, QMessageBox,
-                               QGridLayout, QLineEdit, QProgressBar,
-                               QStackedWidget, QSizePolicy, QStyle)
-from PySide6.QtCore import Qt, QTimer, Signal, QSize
-from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QStackedWidget,
+    QStyle,
+    QVBoxLayout,
+    QWidget,
+)
+
+# --- Configuração de constantes ---
+# SHUTDOWN_WAIT_SECONDS define o tempo de espera (em segundos) após enviar o comando de shutdown
+# para garantir que todas as instâncias da aplicação tenham tempo suficiente para encerrar
+# antes de prosseguir com a atualização. Ajuste conforme necessário para ambientes diferentes.
+SHUTDOWN_WAIT_SECONDS = 3  # Tempo de espera após comando de shutdown
 
 # --- LÓGICA DE BOOTSTRAP: Encontrar o diretório base ANTES de outras importações ---
 
@@ -31,7 +50,7 @@ def obter_dir_base_local():
     Determina o diretório base. Lógica específica para o updater.py
     que reside na raiz do projeto.
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Modo compilado (updater.exe)
         return os.path.dirname(sys.executable)
     # Modo de script (python updater.py)
@@ -46,28 +65,40 @@ if BASE_DIR not in sys.path:
 
 try:
     # --- Importações da Aplicação Local (Agora funcionam) ---
-    from src.models.models import SystemControl as SystemControlModel, Usuario
-    from src.utils.banco_dados import session_scope
-    from src.utils.update_manager import checar_updates, download_update, get_installed_version
-    from src.utils.utilitarios import (
-        setup_logging, APP_EXECUTABLE_PATH, UPDATE_TEMP_DIR,
-        ICON_PATH, show_error, aplicar_medida_borda_espaco
-    )
     from src.components.barra_titulo import BarraTitulo
+    from src.models.models import SystemControl as SystemControlModel
+    from src.models.models import Usuario
+    from src.utils.banco_dados import session_scope
     from src.utils.estilo import (
-        obter_estilo_botao_verde, obter_estilo_botao_vermelho,
-        obter_estilo_botao_azul, obter_tema_atual, obter_estilo_progress_bar,
-        aplicar_estilo_widget_auto_ajustavel, aplicar_tema_inicial
+        aplicar_estilo_botao,
+        aplicar_estilo_widget_auto_ajustavel,
+        aplicar_tema_inicial,
+        obter_estilo_progress_bar,
+        obter_tema_atual,
+    )
+    from src.utils.update_manager import (
+        checar_updates,
+        download_update,
+        get_installed_version,
+    )
+    from src.utils.utilitarios import (
+        APP_EXECUTABLE_PATH,
+        ICON_PATH,
+        UPDATE_TEMP_DIR,
+        aplicar_medida_borda_espaco,
+        setup_logging,
+        show_error,
     )
 
 except ImportError as e:
     # Fallback de emergência
-    logging.basicConfig(level=logging.CRITICAL,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.CRITICAL, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
     logging.critical("Erro de Importação: %s. BASE_DIR: %s", e, BASE_DIR)
     QApplication(sys.argv)
     msg = QMessageBox()
-    msg.setIcon(QMessageBox.Critical)
+    msg.setIcon(QMessageBox.Icon.Critical)
     msg.setText(
         "Erro Crítico de Inicialização:\n"
         f"Não foi possível encontrar os módulos da aplicação.\n\n{e}\n\n"
@@ -78,13 +109,11 @@ except ImportError as e:
     sys.exit(1)
 
 
-# ... (O resto do seu código do updater.py continua aqui, sem nenhuma alteração) ...
-# (AdminAuthWidget, UpdaterWindow, etc.)
-
 class AdminAuthWidget(QWidget):
     """
     Widget para autenticação de administrador, para ser embutido em outras janelas.
     """
+
     # Sinais para comunicar o resultado para a janela pai
     login_successful = Signal()
     login_cancelled = Signal()
@@ -117,7 +146,7 @@ class AdminAuthWidget(QWidget):
         self.usuario_entry = QLineEdit()
         self.usuario_entry.setPlaceholderText("Digite o usuário admin")
         self.usuario_entry.setToolTip("Usuário admin para autenticação")
-        aplicar_estilo_widget_auto_ajustavel(self.usuario_entry, 'lineedit')
+        aplicar_estilo_widget_auto_ajustavel(self.usuario_entry, "lineedit")
         grid_layout.addWidget(self.usuario_entry, 0, 1)
 
         grid_layout.addWidget(QLabel("Senha:"), 1, 0)
@@ -125,7 +154,7 @@ class AdminAuthWidget(QWidget):
         self.senha_entry.setPlaceholderText("Digite a senha")
         self.senha_entry.setEchoMode(QLineEdit.Password)
         self.senha_entry.setToolTip("Senha do usuário admin")
-        aplicar_estilo_widget_auto_ajustavel(self.senha_entry, 'lineedit')
+        aplicar_estilo_widget_auto_ajustavel(self.senha_entry, "lineedit")
         grid_layout.addWidget(self.senha_entry, 1, 1)
 
         main_layout.addLayout(grid_layout)
@@ -136,12 +165,12 @@ class AdminAuthWidget(QWidget):
         aplicar_medida_borda_espaco(button_layout, 0, 10)
 
         cancel_btn = QPushButton("Cancelar")
-        cancel_btn.setStyleSheet(obter_estilo_botao_vermelho())
+        aplicar_estilo_botao(cancel_btn, "vermelho")
         cancel_btn.setToolTip("Clique para cancelar o login")
         cancel_btn.clicked.connect(self.login_cancelled.emit)
 
         login_btn = QPushButton("🔐 Login")
-        login_btn.setStyleSheet(obter_estilo_botao_verde())
+        aplicar_estilo_botao(login_btn, "verde")
         login_btn.setToolTip("Clique para fazer login como administrador")
         login_btn.clicked.connect(self.attempt_login)
 
@@ -155,28 +184,38 @@ class AdminAuthWidget(QWidget):
         password = self.senha_entry.text()
 
         if not username or not password:
-            show_error("Campos Vazios",
-                       "Por favor, preencha usuário e senha.", parent=self)
+            show_error(
+                "Campos Vazios", "Por favor, preencha usuário e senha.", parent=self
+            )
             return
 
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         with session_scope() as (db_session, _):
             if not db_session:
-                show_error("Erro de Banco de Dados",
-                           "Não foi possível conectar ao banco de dados.", parent=self)
+                show_error(
+                    "Erro de Banco de Dados",
+                    "Não foi possível conectar ao banco de dados.",
+                    parent=self,
+                )
                 return
 
-            user = db_session.query(Usuario).filter_by(
-                nome=username, senha=hashed_password).first()
+            user = (
+                db_session.query(Usuario)
+                .filter_by(nome=username, senha=hashed_password)
+                .first()
+            )
 
-            if user and user.role == 'admin':
+            if user and user.role == "admin":
                 self.login_successful.emit()
             else:
-                show_error("Falha na Autenticação",
-                           "Credenciais inválidas ou o usuário não é um administrador.",
-                           parent=self)
+                show_error(
+                    "Falha na Autenticação",
+                    "Credenciais inválidas ou o usuário não é um administrador.",
+                    parent=self,
+                )
                 self.senha_entry.clear()
+
 
 # pylint: disable=too-many-instance-attributes
 
@@ -184,7 +223,7 @@ class AdminAuthWidget(QWidget):
 class UpdaterWindow(QMainWindow):
     """Janela principal da interface do Updater com múltiplas telas."""
 
-    def __init__(self, mode='check'):
+    def __init__(self, mode="check"):
         super().__init__()
         self.update_info = None
         self.mode = mode
@@ -204,7 +243,7 @@ class UpdaterWindow(QMainWindow):
         self.progress_status_label = None
         self.progress_bar = None
 
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         self.setFixedSize(360, 180)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
@@ -223,11 +262,11 @@ class UpdaterWindow(QMainWindow):
         self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
         self.barra_titulo.titulo.setText("Atualizador")
 
-        refresh_icon = self.style().standardIcon(
-            QStyle.StandardPixmap.SP_BrowserReload)
+        refresh_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)
         self.refresh_button = QPushButton(icon=refresh_icon)
         self.refresh_button.setToolTip(
-            "Recarregar e verificar novamente por atualizações")
+            "Recarregar e verificar novamente por atualizações"
+        )
         self.refresh_button.setFlat(True)
         self.refresh_button.setFixedSize(28, 28)
         self.refresh_button.setIconSize(QSize(16, 16))
@@ -269,28 +308,27 @@ class UpdaterWindow(QMainWindow):
         self.version_label = QLabel("")
         self.version_label.setAlignment(Qt.AlignCenter)
         self.version_label.setStyleSheet(
-            "font-size: 16px; font-weight: bold; color: #55aaff;")
+            "font-size: 16px; font-weight: bold; color: #55aaff;"
+        )
 
         layout.addWidget(self.status_label)
         layout.addWidget(self.version_label)
         layout.addStretch()
 
         button_layout = QHBoxLayout()
-        aplicar_medida_borda_espaco(
-            button_layout, 0, 10)
+        aplicar_medida_borda_espaco(button_layout, 0, 10)
 
         self.cancel_button = QPushButton("Cancelar")
-        self.cancel_button.setStyleSheet(obter_estilo_botao_vermelho())
-        self.cancel_button.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Fixed)
+        aplicar_estilo_botao(self.cancel_button, "vermelho")
+        self.cancel_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.cancel_button.setToolTip("Cancelar a atualização")
 
         self.update_button = QPushButton("Atualizar Agora")
         self.update_button.setEnabled(False)
-        self.update_button.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.update_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.update_button.setToolTip(
-            "Clique para iniciar o processo de atualização após autenticação")
+            "Clique para iniciar o processo de atualização após autenticação"
+        )
 
         button_layout.addWidget(self.cancel_button)
         button_layout.addWidget(self.update_button)
@@ -357,24 +395,28 @@ class UpdaterWindow(QMainWindow):
             else:
                 self.show_no_update(current_version)
 
-            if self.mode == 'apply' and self.update_info:
+            if self.mode == "apply" and self.update_info:
                 self.request_authentication()
-                self.mode = 'check'
+                self.mode = "check"
         finally:
             QApplication.restoreOverrideCursor()
 
     def show_update_available(self):
-        """Mostra a mensagem de que uma nova atualização está disponível."""
+        """
+        Mostra a mensagem de que uma nova atualização está disponível.
+
+        Apenas ADMINS veem esta interface. Usuários comuns nunca abrem o updater
+        diretamente - eles apenas recebem notificações via UpdateNotificationDialog.
+        """
         latest_version = self.update_info.get("ultima_versao", "N/A")
         self.status_label.setText("Nova versão disponível!")
         self.version_label.setText(f"Versão {latest_version}")
         self.update_button.setEnabled(True)
-        self.update_button.setStyleSheet(obter_estilo_botao_azul())
+        aplicar_estilo_botao(self.update_button, "azul")
 
     def show_no_update(self, current_version: str):
         """Mostra a mensagem de que o aplicativo já está atualizado."""
-        self.status_label.setText(
-            "O seu aplicativo está atualizado.")
+        self.status_label.setText("O seu aplicativo está atualizado.")
         self.version_label.setText(f"Versão atual: {current_version}")
         self.update_button.setEnabled(False)
         self.update_button.setStyleSheet("")
@@ -385,39 +427,50 @@ class UpdaterWindow(QMainWindow):
         Verifica novamente se há atualizações antes de solicitar a autenticação.
         """
         logging.info(
-            "Botão 'Atualizar Agora' clicado. Verificando novamente o arquivo de versão.")
+            "Botão 'Atualizar Agora' clicado. Verificando novamente o arquivo de versão."
+        )
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             current_version = get_installed_version()
             if not current_version:
                 show_error(
-                    "Erro", "Não foi possível ler a versão instalada do banco de dados.")
+                    "Erro", "Não foi possível ler a versão instalada do banco de dados."
+                )
                 return
             self.update_info = checar_updates(current_version)
 
             if self.update_info:
-                logging.info(
-                    "Atualização confirmada. Solicitando autenticação.")
+                logging.info("Atualização confirmada. Solicitando autenticação.")
                 self.stacked_widget.setCurrentWidget(self.auth_view)
             else:
                 logging.warning(
-                    "Nenhuma atualização encontrada após a nova verificação.")
+                    "Nenhuma atualização encontrada após a nova verificação."
+                )
                 self.show_no_update(current_version)
                 QMessageBox.information(
                     self,
                     "Atualizado",
-                    "O aplicativo já está na versão mais recente. Nenhuma atualização é necessária."
+                    "O aplicativo já está na versão mais recente. "
+                    "Nenhuma atualização é necessária.",
                 )
         finally:
             QApplication.restoreOverrideCursor()
 
     def on_login_success(self):
-        """Inicia o processo de atualização após o login bem-sucedido."""
+        """
+        Inicia o processo de atualização após o ADMIN fazer login com sucesso.
+
+        Hierarquia clara:
+        - ADMIN: Tem controle total, pode iniciar atualizações
+        - USUÁRIOS: Não veem esta tela, apenas recebem notificações
+        """
         reply = QMessageBox.question(
-            self, "Confirmar Atualização",
+            self,
+            "Confirmar Atualização",
             "O aplicativo principal e todas as suas instâncias serão "
             "fechadas para continuar.\n\nDeseja prosseguir?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
         )
         if reply == QMessageBox.No:
             self.stacked_widget.setCurrentWidget(self.status_view)
@@ -430,8 +483,7 @@ class UpdaterWindow(QMainWindow):
             self.run_update_steps()
         except (ValueError, ConnectionError, RuntimeError, IOError, OSError) as e:
             logging.error("Erro no processo de atualização: %s", e)
-            show_error("Erro de Atualização",
-                       f"Ocorreu um erro: {e}", parent=self)
+            show_error("Erro de Atualização", f"Ocorreu um erro: {e}", parent=self)
             self.progress_status_label.setText("Falha na atualização.")
             self.stacked_widget.setCurrentWidget(self.status_view)
         finally:
@@ -443,6 +495,7 @@ class UpdaterWindow(QMainWindow):
 
     def run_update_steps(self):
         """Executa as etapas sequenciais da atualização."""
+
         self.progress_status_label.setText("A baixar ficheiros...")
         self.progress_bar.setValue(10)
         QApplication.processEvents()
@@ -454,13 +507,17 @@ class UpdaterWindow(QMainWindow):
 
         self.progress_status_label.setText("A fechar a aplicação principal...")
         QApplication.processEvents()
+
+        # Aguarda um pouco para que as instâncias detectem o sinal
+        time.sleep(3)
+
         with session_scope() as (db_session, model):
             if not db_session or not model:
-                raise ConnectionError(
-                    "Não foi possível ligar à base de dados.")
+                raise ConnectionError("Não foi possível ligar à base de dados.")
             if not self.force_shutdown_all_instances(db_session, model):
                 raise RuntimeError(
-                    "Não foi possível fechar as instâncias da aplicação.")
+                    "Não foi possível fechar as instâncias da aplicação."
+                )
         self.progress_bar.setValue(70)
 
         self.progress_status_label.setText("A aplicar a atualização...")
@@ -469,35 +526,34 @@ class UpdaterWindow(QMainWindow):
             raise IOError("Falha ao aplicar os ficheiros de atualização.")
         self.progress_bar.setValue(90)
 
-        self.progress_status_label.setText(
-            "Atualização concluída! A reiniciar...")
+        self.progress_status_label.setText("Atualização concluída! A reiniciar...")
         self.progress_bar.setValue(100)
         QApplication.processEvents()
         time.sleep(2)
         self.start_application()
         self.close()
 
-    def force_shutdown_all_instances(self, session: any, model: Type[SystemControlModel]) -> bool:
+    def force_shutdown_all_instances(
+        self, session: Any, model: Type[SystemControlModel]
+    ) -> bool:
         """Força o encerramento de todas as instâncias da aplicação."""
         logging.info("A enviar comando de encerramento...")
         try:
-            cmd_entry = session.query(model).filter_by(
-                key='UPDATE_CMD').first()
+            cmd_entry = session.query(model).filter_by(key="UPDATE_CMD").first()
             if cmd_entry:
-                cmd_entry.value = 'SHUTDOWN'
+                cmd_entry.value = "SHUTDOWN"
                 cmd_entry.last_updated = datetime.now(timezone.utc)
             else:
-                new_cmd = model(key='UPDATE_CMD',
-                                value='SHUTDOWN', type='COMMAND')
+                new_cmd = model(key="UPDATE_CMD", value="SHUTDOWN", type="COMMAND")
                 session.add(new_cmd)
             session.commit()
 
             start_time = time.time()
             while (time.time() - start_time) < 60:
-                active_sessions = session.query(
-                    model).filter_by(type='SESSION').count()
+                active_sessions = session.query(model).filter_by(type="SESSION").count()
                 self.progress_status_label.setText(
-                    f"A aguardar {active_sessions} instância(s)...")
+                    f"A aguardar {active_sessions} instância(s)..."
+                )
                 QApplication.processEvents()
                 if active_sessions == 0:
                     logging.info("Todas as instâncias foram fechadas.")
@@ -507,24 +563,22 @@ class UpdaterWindow(QMainWindow):
             logging.error("Timeout! As instâncias não fecharam a tempo.")
             return False
         finally:
-            cmd_entry = session.query(model).filter_by(
-                key='UPDATE_CMD').first()
-            if cmd_entry and cmd_entry.value == 'SHUTDOWN':
-                cmd_entry.value = 'NONE'
+            cmd_entry = session.query(model).filter_by(key="UPDATE_CMD").first()
+            if cmd_entry and cmd_entry.value == "SHUTDOWN":
+                cmd_entry.value = "NONE"
                 session.commit()
 
     def apply_update(self, zip_filename: str) -> bool:
         """Extrai e aplica os ficheiros da atualização."""
         zip_filepath = os.path.join(UPDATE_TEMP_DIR, zip_filename)
         if not os.path.exists(zip_filepath):
-            logging.error(
-                "Ficheiro de atualização não encontrado em %s", zip_filepath)
+            logging.error("Ficheiro de atualização não encontrado em %s", zip_filepath)
             return False
 
         app_dir = BASE_DIR
         try:
-            with zipfile.ZipFile(zip_filepath, 'r') as zip_ref:
-                extract_path = os.path.join(UPDATE_TEMP_DIR, 'extracted')
+            with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
+                extract_path = os.path.join(UPDATE_TEMP_DIR, "extracted")
                 if os.path.exists(extract_path):
                     shutil.rmtree(extract_path)
                 os.makedirs(extract_path, exist_ok=True)
@@ -540,8 +594,7 @@ class UpdaterWindow(QMainWindow):
                         os.remove(dst_path)
                     shutil.move(src_path, dst_path)
                 except OSError as e:
-                    logging.warning(
-                        "Não foi possível substituir '%s': %s.", item, e)
+                    logging.warning("Não foi possível substituir '%s': %s.", item, e)
 
             logging.info("Atualização aplicada com sucesso!")
             return True
@@ -554,14 +607,14 @@ class UpdaterWindow(QMainWindow):
                     shutil.rmtree(UPDATE_TEMP_DIR)
                 except OSError as e:
                     logging.error(
-                        "Não foi possível remover o diretório temporário: %s", e)
+                        "Não foi possível remover o diretório temporário: %s", e
+                    )
 
     def start_application(self):
         """Inicia a aplicação principal após a atualização."""
         if not os.path.exists(APP_EXECUTABLE_PATH):
             logging.error(
-                "Executável da aplicação não encontrado: %s",
-                APP_EXECUTABLE_PATH
+                "Executável da aplicação não encontrado: %s", APP_EXECUTABLE_PATH
             )
             mensagem = f"Não foi possível encontrar o executável principal:\n{APP_EXECUTABLE_PATH}"
             show_error("Erro Crítico", mensagem)
@@ -569,25 +622,29 @@ class UpdaterWindow(QMainWindow):
         logging.info("A iniciar a aplicação: %s", APP_EXECUTABLE_PATH)
         try:
             # pylint: disable=consider-using-with
-            subprocess.Popen([APP_EXECUTABLE_PATH])
+            subprocess.Popen(
+                [APP_EXECUTABLE_PATH]
+            )  # nosec B603 - executável validado do próprio aplicativo
 
         except OSError as e:
             logging.error("Erro ao iniciar a aplicação: %s", e)
-            show_error("Erro ao Reiniciar",
-                       f"Não foi possível reiniciar a aplicação principal:\n{e}")
+            show_error(
+                "Erro ao Reiniciar",
+                f"Não foi possível reiniciar a aplicação principal:\n{e}",
+            )
 
 
 def main():
     """Função principal que inicializa e executa o Updater."""
-    setup_logging('updater.log', log_to_console=True)
+    setup_logging("updater.log", log_to_console=True)
     logging.info("Updater Gráfico iniciado.")
 
     app = QApplication(sys.argv)
     aplicar_tema_inicial()
 
-    mode = 'check'
-    if len(sys.argv) > 1 and sys.argv[1] == '--apply':
-        mode = 'apply'
+    mode = "check"
+    if len(sys.argv) > 1 and sys.argv[1] == "--apply":
+        mode = "apply"
 
     window = UpdaterWindow(mode=mode)
     window.show()

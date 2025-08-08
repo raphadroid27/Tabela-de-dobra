@@ -9,22 +9,29 @@ Funcionalidades:
 - Widgets auto-ajustáveis para interface
 - Correções de CSS para compatibilidade com temas
 """
+
+import logging
+
 from src.config import globals as g
-# Imports no topo para evitar imports dentro de funções
+
 try:
     import qdarktheme
+
     QDARKTHEME_DISPONIVEL = True
 except ImportError:
     qdarktheme = None
     QDARKTHEME_DISPONIVEL = False
 
-# Constantes seguindo convenção UPPER_CASE
+logger = logging.getLogger(__name__)
+
 TEMA_ATUAL_PADRAO = "dark"
 
-# Constantes para widgets auto-ajustáveis
-g.WIDGET_MAX_HEIGHT = 20  # Manter altura fixa para consistência
-g.WIDGET_MIN_WIDTH = 60  # Largura mínima para garantir usabilidade
-WIDGET_PADDING = "2px 4px"  # Padding interno uniforme
+ALTURA_PADRAO_COMPONENTE = 20
+LARGURA_MINIMA_COMPONENTE = 60
+PADDING_INTERNO_COMPONENTE = "2px 4px"
+
+ALTURA_PADRAO_BOTAO = 25
+LARGURA_MINIMA_BOTAO = 20
 
 
 class GerenciadorTemas:
@@ -61,7 +68,7 @@ class GerenciadorTemas:
             nome_tema: Nome do tema a ser aplicado ("dark", "light", "auto")
         """
         if not QDARKTHEME_DISPONIVEL:
-            print("qdarktheme não está disponível.")
+            logger.warning("qdarktheme não está disponível.")
             return
 
         css_correcao = obter_css_correcao_widgets()
@@ -72,7 +79,9 @@ class GerenciadorTemas:
             elif hasattr(qdarktheme, "setup_theme"):
                 qdarktheme.setup_theme(nome_tema, additional_qss=css_correcao)
             else:
-                print("qdarktheme não possui métodos conhecidos para aplicar tema.")
+                logger.error(
+                    "qdarktheme não possui métodos conhecidos para aplicar tema."
+                )
                 return
 
             self.tema_atual = nome_tema
@@ -80,15 +89,15 @@ class GerenciadorTemas:
             # Atualizar checkboxes dos menus se registrados
             if self.temas_actions:
                 for tema, action in self.temas_actions.items():
-                    if hasattr(action, 'setChecked'):
+                    if hasattr(action, "setChecked"):
                         action.setChecked(tema == nome_tema)
 
-            print(f"Tema '{nome_tema}' aplicado com sucesso.")
+            logger.info("Tema '%s' aplicado com sucesso.", nome_tema)
 
         except ImportError as e:
-            print(f"Erro ao importar qdarktheme: {e}")
+            logger.error("Erro ao importar qdarktheme: %s", e)
         except (AttributeError, TypeError, ValueError) as e:
-            print(f"Erro ao aplicar tema: {e}")
+            logger.error("Erro ao aplicar tema: %s", e)
 
     def aplicar_tema_inicial(self, tema=None):
         """
@@ -101,7 +110,9 @@ class GerenciadorTemas:
             tema = TEMA_ATUAL_PADRAO
 
         if not QDARKTHEME_DISPONIVEL:
-            print("qdarktheme não encontrado. O tema escuro não será aplicado.")
+            logger.warning(
+                "qdarktheme não encontrado. O tema escuro não será aplicado."
+            )
             return
 
         try:
@@ -113,10 +124,10 @@ class GerenciadorTemas:
                 qdarktheme.enable(theme=tema, additional_qss=css_correcao)
 
             self.tema_atual = tema
-            print(f"Tema inicial '{tema}' aplicado com correções de CSS.")
+            logger.info("Tema inicial '%s' aplicado com correções de CSS.", tema)
 
         except (AttributeError, TypeError, ValueError) as e:
-            print(f"Erro ao aplicar tema inicial: {e}")
+            logger.error("Erro ao aplicar tema inicial: %s", e)
 
 
 # Instância global do gerenciador
@@ -131,37 +142,37 @@ def obter_css_correcao_widgets():
     Returns:
         str: CSS para correção de tamanhos
     """
-    return """
-    QComboBox { 
-        min-height: 1em; 
-        max-height: {g.WIDGET_MAX_HEIGHT}px; 
-        padding: 2px 4px; 
-        font-size: 10pt;
-    }
-    QLineEdit { 
-        min-height: 1em; 
-        max-height: {g.WIDGET_MAX_HEIGHT}px; 
-        padding: 2px 4px; 
-        font-size: 10pt;
-    }
-    QLabel { 
+    return f"""
+    QComboBox {{
         min-height: 1em;
-        padding: 2px; 
+        max-height: {ALTURA_PADRAO_COMPONENTE}px;
+        padding: 2px 4px;
         font-size: 10pt;
-    }
-    QGroupBox::title {
+    }}
+    QLineEdit {{
+        min-height: 1em;
+        max-height: {ALTURA_PADRAO_COMPONENTE}px;
+        padding: 2px 4px;
+        font-size: 10pt;
+    }}
+    QLabel {{
+        min-height: 1em;
+        padding: 2px;
+        font-size: 10pt;
+    }}
+    QGroupBox::title {{
         font-size: 10pt;
         padding: 2px;
-    }
+    }}
 
-    QToolTip {
+    QToolTip {{
         color: white;
         background-color: #2d2d2d;
         border-radius: 3px;
         padding: 4px 6px;
         font-size: 9pt;
         opacity: 240;
-    }
+    }}
     """
 
 
@@ -173,24 +184,24 @@ def obter_css_widgets_auto_ajustaveis():
         dict: CSS para cada tipo de widget com largura flexível
     """
     return {
-        'combobox': f"""
+        "combobox": f"""
             QComboBox {{
-                min-width: {g.WIDGET_MIN_WIDTH}px;
-                min-height: 1em; 
-                max-height: {g.WIDGET_MAX_HEIGHT}px;
-                padding: {WIDGET_PADDING};
+                min-width: {LARGURA_MINIMA_COMPONENTE}px;
+                min-height: 1em;
+                max-height: {ALTURA_PADRAO_COMPONENTE}px;
+                padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
             }}
         """,
-        'lineedit': f"""
+        "lineedit": f"""
             QLineEdit {{
-                min-width: {g.WIDGET_MIN_WIDTH}px;
-                min-height: 1em; 
-                max-height: {g.WIDGET_MAX_HEIGHT}px;
-                padding: {WIDGET_PADDING};
+                min-width: {LARGURA_MINIMA_COMPONENTE}px;
+                min-height: 1em;
+                max-height: {ALTURA_PADRAO_COMPONENTE}px;
+                padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
             }}
-        """
+        """,
     }
 
 
@@ -216,10 +227,10 @@ def obter_configuracao_layout_flexivel():
         dict: Configurações de layout flexível
     """
     return {
-        'g.WIDGET_MAX_HEIGHT': g.WIDGET_MAX_HEIGHT,
-        'g.WIDGET_MIN_WIDTH': g.WIDGET_MIN_WIDTH,
-        'horizontal_spacing': 5,
-        'vertical_spacing': 3
+        "altura_padrao": ALTURA_PADRAO_COMPONENTE,
+        "largura_minima": LARGURA_MINIMA_COMPONENTE,
+        "horizontal_spacing": 5,
+        "vertical_spacing": 3,
     }
 
 
@@ -232,13 +243,11 @@ def configurar_layout_flexivel(layout):
     """
     config = obter_configuracao_layout_flexivel()
 
-    # Configurar colunas com expansão proporcional
     for col in range(4):
-        layout.setColumnStretch(col, 1)  # Permitir expansão igual
+        layout.setColumnStretch(col, 1)
 
-    # Configurar espaçamento
-    layout.setHorizontalSpacing(config['horizontal_spacing'])
-    layout.setVerticalSpacing(config['vertical_spacing'])
+    layout.setHorizontalSpacing(config["horizontal_spacing"])
+    layout.setVerticalSpacing(config["vertical_spacing"])
 
 
 def obter_temas_disponiveis():
@@ -266,8 +275,59 @@ def aplicar_tema_qdarktheme(nome_tema):
     """Função de conveniência para aplicar tema."""
     gerenciador_temas.aplicar_tema_qdarktheme(nome_tema)
     # Atualizar barra de título customizada, se existir
-    if hasattr(g, 'BARRA_TITULO') and g.BARRA_TITULO:
+    if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
         g.BARRA_TITULO.set_tema(nome_tema)
+
+    # Atualizar todas as barras de título ativas dos formulários abertos
+    atualizar_barras_titulo_ativas(nome_tema)
+
+
+def atualizar_barras_titulo_ativas(tema):
+    """
+    Atualiza o tema de todas as barras de título ativas nos formulários abertos.
+
+    Args:
+        tema: Nome do tema a ser aplicado
+    """
+    if not hasattr(g, "BARRAS_TITULO_ATIVAS"):
+        return
+
+    # Criar uma cópia da lista para evitar problemas de modificação durante iteração
+    barras_ativas = g.BARRAS_TITULO_ATIVAS.copy()
+
+    for barra in barras_ativas:
+        try:
+            # Verificar se a barra ainda existe e é válida
+            if barra and hasattr(barra, "set_tema"):
+                barra.set_tema(tema)
+        except (RuntimeError, AttributeError) as e:
+            # Se a barra não é mais válida, removê-la da lista
+            logger.warning("Removendo barra de título inválida: %s", e)
+            if barra in g.BARRAS_TITULO_ATIVAS:
+                g.BARRAS_TITULO_ATIVAS.remove(barra)
+
+
+def limpar_barras_titulo_inativas():
+    """
+    Remove barras de título inativas da lista global.
+    Útil para limpeza periódica ou quando há suspeita de vazamentos de memória.
+    """
+    if not hasattr(g, "BARRAS_TITULO_ATIVAS"):
+        return
+
+    barras_validas = []
+    for barra in g.BARRAS_TITULO_ATIVAS:
+        try:
+            # Tentar acessar uma propriedade para verificar se o objeto ainda é válido
+            if barra and hasattr(barra, "set_tema") and hasattr(barra, "_parent"):
+                barras_validas.append(barra)
+        except (RuntimeError, AttributeError):
+            # Objeto não é mais válido
+            pass
+
+    # Atualizar a lista com apenas as barras válidas
+    g.BARRAS_TITULO_ATIVAS = barras_validas
+    logger.info("Limpeza de barras de título: %d barras mantidas", len(barras_validas))
 
 
 def aplicar_tema_inicial(tema=None):
@@ -280,105 +340,74 @@ def obter_tema_atual():
     return gerenciador_temas.obter_tema_atual()
 
 
-# Funções para estilos de botões coloridos
-def obter_estilo_botao_cinza():
-    """Retorna o estilo CSS para botões cinza."""
-    return """
-    QPushButton {
-        background-color: #9e9e9e;
-        color: white;
+# Configurações de cores para botões
+BUTTON_COLORS = {
+    "cinza": {
+        "normal": "#9e9e9e",
+        "hover": "#757575",
+        "pressed": "#616161",
+        "text": "white",
+    },
+    "azul": {
+        "normal": "#2196f3",
+        "hover": "#1976d2",
+        "pressed": "#1565c0",
+        "text": "white",
+    },
+    "amarelo": {
+        "normal": "#ffd93d",
+        "hover": "#ffcc02",
+        "pressed": "#e6b800",
+        "text": "#333",
+    },
+    "vermelho": {
+        "normal": "#ff6b6b",
+        "hover": "#ff5252",
+        "pressed": "#e53935",
+        "text": "white",
+    },
+    "verde": {
+        "normal": "#4caf50",
+        "hover": "#45a049",
+        "pressed": "#3d8b40",
+        "text": "white",
+    },
+}
+
+
+def obter_estilo_botao(cor: str) -> str:
+    """
+    Retorna o estilo CSS para botões com a cor especificada.
+
+    Args:
+        cor: Uma das cores disponíveis: 'cinza', 'azul', 'amarelo', 'vermelho', 'verde'
+
+    Returns:
+        String CSS para aplicar ao botão
+    """
+    if cor not in BUTTON_COLORS:
+        cor = "cinza"  # fallback para cor padrão
+
+    colors = BUTTON_COLORS[cor]
+    return f"""
+    QPushButton {{
+        background-color: {colors['normal']};
+        color: {colors['text']};
         border: none;
         padding: 4px 8px;
         font-weight: bold;
         border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #757575;
-    }
-    QPushButton:pressed {
-        background-color: #616161;
-    }
+    }}
+    QPushButton:hover {{
+        background-color: {colors['hover']};
+    }}
+    QPushButton:pressed {{
+        background-color: {colors['pressed']};
+    }}
     """
 
 
-def obter_estilo_botao_azul():
-    """Retorna o estilo CSS para botões azuis."""
-    return """
-    QPushButton {
-        background-color: #2196f3;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #1976d2;
-    }
-    QPushButton:pressed {
-        background-color: #1565c0;
-    }
-    """
-
-
-def obter_estilo_botao_amarelo():
-    """Retorna o estilo CSS para botões amarelos."""
-    return """
-    QPushButton {
-        background-color: #ffd93d;
-        color: #333;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #ffcc02;
-    }
-    QPushButton:pressed {
-        background-color: #e6b800;
-    }
-    """
-
-
-def obter_estilo_botao_vermelho():
-    """Retorna o estilo CSS para botões vermelhos."""
-    return """
-    QPushButton {
-        background-color: #ff6b6b;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #ff5252;
-    }
-    QPushButton:pressed {
-        background-color: #e53935;
-    }
-    """
-
-
-def obter_estilo_botao_verde():
-    """Retorna o estilo CSS para botões verdes."""
-    return """
-    QPushButton {
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        font-weight: bold;
-        border-radius: 4px;
-    }
-    QPushButton:hover {
-        background-color: #45a049;
-    }
-    QPushButton:pressed {
-        background-color: #3d8b40;
-    }
-    """
+# Funções de compatibilidade removidas - usar aplicar_estilo_botao() diretamente
 
 
 def obter_estilo_progress_bar():
@@ -395,3 +424,44 @@ def obter_estilo_progress_bar():
             border-radius: 4px;
         }
     """
+
+
+def aplicar_estilo_botao(botao, cor: str, altura: int = None, largura_min: int = None):
+    """Aplica estilo completo de botão de forma conveniente.
+
+    Args:
+        botao: O botão QPushButton a ser estilizado
+        cor: Cor do botão ('cinza', 'azul', 'amarelo', 'vermelho', 'verde')
+        altura: Altura do botão (padrão: ALTURA_PADRAO_BOTAO)
+        largura_min: Largura mínima do botão (padrão: LARGURA_MINIMA_BOTAO)
+    """
+    if not hasattr(botao, "setStyleSheet"):
+        return
+
+    botao.setStyleSheet(obter_estilo_botao(cor))
+
+    altura_final = altura if altura is not None else ALTURA_PADRAO_BOTAO
+    largura_final = largura_min if largura_min is not None else LARGURA_MINIMA_BOTAO
+
+    if hasattr(botao, "setFixedHeight"):
+        botao.setFixedHeight(altura_final)
+
+    if hasattr(botao, "setMinimumWidth"):
+        botao.setMinimumWidth(largura_final)
+
+
+# Função aplicar_estilo_componente removida - não utilizada no projeto
+
+
+def aplicar_estilo_checkbox(checkbox, altura: int = None):
+    """Aplica estilo padronizado para checkboxes.
+
+    Args:
+        checkbox: O checkbox QCheckBox a ser configurado
+        altura: Altura do checkbox (padrão: CHECKBOX_ALTURA_PADRAO)
+    """
+    if not hasattr(checkbox, "setFixedHeight"):
+        return
+
+    altura_final = altura if altura is not None else ALTURA_PADRAO_COMPONENTE
+    checkbox.setFixedHeight(altura_final)

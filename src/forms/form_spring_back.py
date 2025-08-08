@@ -1,27 +1,34 @@
 """
 Formulário para o cálculo de Spring Back
 """
-import sys
-from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QGridLayout, QLabel, QComboBox, QWidget, QApplication)
-from PySide6.QtCore import Qt
 
+import sys
+from typing import Optional
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QDialog,
+    QGridLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
+
+from src.components.barra_titulo import BarraTitulo
+from src.config import globals as g
 from src.models.models import Material
 from src.utils.banco_dados import session
-
-from src.config import globals as g
-from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import obter_tema_atual
 
-# Configuração do banco de dados
 
-
-def create_spring_back_form(root=None):
+def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     """Cria o formulário de Spring Back usando QDialog com barra customizada"""
     form_spring = QDialog(root)
     form_spring.setWindowTitle("Cálculo de Spring Back")
     form_spring.setFixedSize(300, 150)
-    form_spring.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+    form_spring.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
     # Layout vertical: barra de título customizada + conteúdo grid
     vlayout = QVBoxLayout(form_spring)
@@ -35,8 +42,7 @@ def create_spring_back_form(root=None):
     conteudo = QWidget()
     layout = QGridLayout(conteudo)
 
-    materiais = [str(material.nome)
-                 for material in session.query(Material).all()]
+    materiais = [str(material.nome) for material in session.query(Material).all()]
 
     layout.addWidget(QLabel("Material:"), 0, 0)
     g.MAT_COMB = QComboBox()

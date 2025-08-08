@@ -4,9 +4,11 @@ Permite arrastar a janela e adapta o tema (dark/light/auto).
 """
 
 import darkdetect
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtCore import QEvent, QPoint, Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtCore import Qt, QPoint, QEvent
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
+
+from src.config import globals as g
 from src.utils.utilitarios import ICON_PATH
 
 
@@ -16,14 +18,14 @@ class BarraTitulo(QWidget):
     Inclui ícone, título, botões de minimizar/fechar e suporte a tema.
     """
 
-    def __init__(self, parent=None, tema='dark'):
+    def __init__(self, parent=None, tema="dark"):
         """
         Inicializa a barra de título customizada.
         :param parent: Janela pai.
         :param tema: Tema visual ('dark', 'light' ou 'auto').
         """
         super().__init__(parent)
-        self.parent = parent
+        self._parent = parent
         self.pressing = False
         self.start = QPoint(0, 0)
         self.setFixedHeight(32)
@@ -31,7 +33,6 @@ class BarraTitulo(QWidget):
 
         self.current_theme = tema
         self.real_theme_applied = None
-        # SOLUÇÃO: Flag para evitar o loop de recursão.
         self._is_updating_style = False
 
         self.set_tema(self.current_theme)
@@ -65,6 +66,29 @@ class BarraTitulo(QWidget):
 
         self.setLayout(layout)
 
+        # Registrar esta barra de título para atualizações de tema
+        self._registrar_barra_titulo()
+
+    def _registrar_barra_titulo(self):
+        """Registra esta barra de título na lista global para atualizações de tema."""
+        if self not in g.BARRAS_TITULO_ATIVAS:
+            g.BARRAS_TITULO_ATIVAS.append(self)
+
+    def _desregistrar_barra_titulo(self):
+        """Remove esta barra de título da lista global."""
+        if self in g.BARRAS_TITULO_ATIVAS:
+            g.BARRAS_TITULO_ATIVAS.remove(self)
+
+    def closeEvent(self, event):  # pylint: disable=invalid-name
+        """Desregistra a barra de título quando a janela é fechada."""
+        self._desregistrar_barra_titulo()
+        super().closeEvent(event)
+
+    def deleteLater(self):  # pylint: disable=invalid-name
+        """Desregistra a barra de título antes de deletar."""
+        self._desregistrar_barra_titulo()
+        super().deleteLater()
+
     def set_tema(self, tema):
         """
         Define o tema visual da barra de título (dark, light ou auto).
@@ -72,11 +96,11 @@ class BarraTitulo(QWidget):
         self.current_theme = tema
 
         tema_real = tema
-        if tema == 'auto':
+        if tema == "auto":
             try:
-                tema_real = 'dark' if darkdetect.isDark() else 'light'
+                tema_real = "dark" if darkdetect.isDark() else "light"
             except (ImportError, TypeError):
-                tema_real = 'dark'
+                tema_real = "dark"
 
         if tema_real == self.real_theme_applied:
             return
@@ -84,7 +108,7 @@ class BarraTitulo(QWidget):
         # SOLUÇÃO: Define a flag para True antes de mudar o estilo.
         self._is_updating_style = True
         try:
-            if tema_real == 'dark':
+            if tema_real == "dark":
                 self.setStyleSheet("background-color: #232629; color: #fff;")
             else:
                 self.setStyleSheet("background-color: #f0f0f0; color: #222;")
@@ -98,15 +122,15 @@ class BarraTitulo(QWidget):
         """
         Minimiza a janela pai.
         """
-        if self.parent:
-            self.parent.showMinimized()
+        if self._parent:
+            self._parent.showMinimized()
 
     def fechar(self):
         """
         Fecha a janela pai.
         """
-        if self.parent:
-            self.parent.close()
+        if self._parent:
+            self._parent.close()
 
     def changeEvent(self, event):  # pylint: disable=invalid-name
         """
@@ -124,19 +148,25 @@ class BarraTitulo(QWidget):
         """
         Inicia o arrasto da janela ao pressionar o botão esquerdo do mouse.
         """
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.pressing = True
-            if self.parent:
-                self.start = event.globalPosition().toPoint(
-                ) - self.parent.frameGeometry().topLeft()
+            if self._parent:
+                self.start = (
+                    event.globalPosition().toPoint()
+                    - self._parent.frameGeometry().topLeft()
+                )
             event.accept()
 
     def mouseMoveEvent(self, event):  # pylint: disable=invalid-name
         """
         Move a janela enquanto o mouse é arrastado com o botão esquerdo pressionado.
         """
-        if self.pressing and event.buttons() == Qt.LeftButton and self.parent:
-            self.parent.move(event.globalPosition().toPoint() - self.start)
+        if (
+            self.pressing
+            and event.buttons() == Qt.MouseButton.LeftButton
+            and self._parent
+        ):
+            self._parent.move(event.globalPosition().toPoint() - self.start)
             event.accept()
 
     def mouseReleaseEvent(self, event):  # pylint: disable=invalid-name

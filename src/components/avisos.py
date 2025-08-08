@@ -1,9 +1,11 @@
 """
 Módulo responsável por criar o frame de avisos na interface gráfica.
 """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 
@@ -20,7 +22,7 @@ def avisos():
     avisos_textos = [
         "1. Xadrez → Laser sempre corta com a face xadrez para Baixo ↓.",
         "2. Corrugado → Laser sempre corta com a face do corrugado para Cima ↑.",
-        "3. Ferramenta 'bigode': fazer alívio de dobra em abas maiores que 20mm."
+        "3. Ferramenta 'bigode': fazer alívio de dobra em abas maiores que 20mm.",
     ]
 
     frame_avisos = QWidget()
@@ -30,7 +32,7 @@ def avisos():
 
     for aviso in avisos_textos:
         aviso_label = QLabel(aviso)
-        aviso_label.setAlignment(Qt.AlignLeft)
+        aviso_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         aviso_label.setFont(font)
         aviso_label.setWordWrap(True)
         aviso_label.setMaximumWidth(300)

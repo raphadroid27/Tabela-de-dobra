@@ -1,7 +1,8 @@
 """
 MenuCustom: Widget de barra de menu customizada para o aplicativo.
 """
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QMenuBar
+
+from PySide6.QtWidgets import QHBoxLayout, QMenuBar, QWidget
 
 
 class MenuCustom(QWidget):

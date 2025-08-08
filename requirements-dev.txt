@@ -1,0 +1,22 @@
+# Ferramentas de análise e formatação de código
+black
+isort
+flake8
+mypy
+bandit
+radon
+unimport
+vulture
+pyflakes
+autopep8
+rope
+pydocstyle
+mccabe
+pip-check
+pipdeptree
+
+# Extensões para flake8
+flake8-bugbear
+flake8-import-order
+flake8-docstrings
+flake8-comprehensions

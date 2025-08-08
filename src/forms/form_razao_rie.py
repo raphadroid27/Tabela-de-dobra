@@ -2,18 +2,34 @@
 Módulo para exibir o formulário de cálculo de razão raio interno / espessura.
 """
 
-
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QGridLayout,
-                               QLabel, QTreeWidget,
-                               QTreeWidgetItem, QWidget, QTextBrowser)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from src.utils.janelas import (aplicar_no_topo, posicionar_janela)
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
-from src.utils.interface import calcular_valores
-from src.config import globals as g
+from PySide6.QtWidgets import (
+    QDialog,
+    QGridLayout,
+    QLabel,
+    QTextBrowser,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
 from src.components.barra_titulo import BarraTitulo
+from src.config import globals as g
 from src.utils.estilo import obter_tema_atual
+from src.utils.interface import calcular_valores
+from src.utils.janelas import Janela
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
+
+# Constantes para configuração da interface
+JANELA_LARGURA = 240
+JANELA_ALTURA = 280
+LABEL_ALTURA = 20
+COLUNA_RAZAO_LARGURA = 100
+COLUNA_FATOR_K_LARGURA = 100
+AVISO_ALTURA_MAXIMA = 70
+AVISO_LARGURA_MAXIMA = 220
 
 
 def main(root):
@@ -31,18 +47,18 @@ def main(root):
 
 
 def _fechar_form_antigo():
-    if getattr(g, 'RIE_FORM', None):
+    if getattr(g, "RIE_FORM", None):
         g.RIE_FORM.close()
 
 
 def _criar_form(root):
     g.RIE_FORM = QDialog(root)
     g.RIE_FORM.setWindowTitle("Raio Interno / Espessura")
-    g.RIE_FORM.setFixedSize(240, 280)
+    g.RIE_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
     g.RIE_FORM.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
     g.RIE_FORM.setWindowIcon(QIcon(ICON_PATH))
-    aplicar_no_topo(g.RIE_FORM)
-    posicionar_janela(g.RIE_FORM, None)
+    Janela.aplicar_no_topo(g.RIE_FORM)
+    Janela.posicionar_janela(g.RIE_FORM, None)
 
 
 def _criar_layout_principal(parent):
@@ -83,17 +99,17 @@ def _criar_main_frame():
 
 
 def _criar_label_razao(main_layout):
-    razao_label = QLabel('Razão Raio Interno / Espessura: ')
+    razao_label = QLabel("Razão Raio Interno / Espessura: ")
     main_layout.addWidget(razao_label, 0, 0)
 
 
 def _criar_label_resultado(main_layout):
     g.RAZAO_RIE_LBL = QLabel("")
-    g.RAZAO_RIE_LBL.setMinimumWidth(100)
+    g.RAZAO_RIE_LBL.setMinimumWidth(COLUNA_RAZAO_LARGURA)
     g.RAZAO_RIE_LBL.setFrameShape(QLabel.Shape.Panel)
     g.RAZAO_RIE_LBL.setFrameShadow(QLabel.Shadow.Sunken)
-    g.RAZAO_RIE_LBL.setFixedHeight(20)
-    g.RAZAO_RIE_LBL.setAlignment(Qt.AlignCenter)
+    g.RAZAO_RIE_LBL.setFixedHeight(LABEL_ALTURA)
+    g.RAZAO_RIE_LBL.setAlignment(Qt.AlignmentFlag.AlignCenter)
     main_layout.addWidget(g.RAZAO_RIE_LBL, 0, 1)
 
 
@@ -106,16 +122,16 @@ def _create_table(parent_layout, data):
     tree = QTreeWidget()
     tree.setHeaderLabels(["Razão", "Fator K"])
     tree.setRootIsDecorated(False)
-    tree.setColumnWidth(0, 100)
-    tree.setColumnWidth(1, 100)
+    tree.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
+    tree.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
     try:
         if isinstance(data, dict):
             for razao, k in data.items():
                 item = QTreeWidgetItem([str(razao), str(k)])
                 tree.addTopLevelItem(item)
         elif (
-            hasattr(data, '__getitem__')
-            and len(data) > 0
+            hasattr(data, "__getitem__")
+            and data  # Pylint: usar truthiness ao invés de len() > 0
             and isinstance(data[0], (list, tuple))
             and len(data[0]) == 2
         ):
@@ -134,19 +150,19 @@ def _create_table(parent_layout, data):
 
 def _criar_aviso(main_layout):
     aviso_browser = QTextBrowser()
-    aviso_browser.setHtml("""
+    aviso_browser.setHtml(
+        """
         <p style="text-align: justify; font-weight: bold; color: red; padding: 5px;">
-            <strong>Atenção:</strong> Os valores apresentados na tabela são teóricos. 
+            <strong>Atenção:</strong> Os valores apresentados na tabela são teóricos.
             Utilize-os apenas na ausência de dados mais precisos.
         </p>
-    """)
-    aviso_browser.setMaximumHeight(70)
-    aviso_browser.setMaximumWidth(220)
+    """
+    )
+    aviso_browser.setMaximumHeight(AVISO_ALTURA_MAXIMA)
+    aviso_browser.setMaximumWidth(AVISO_LARGURA_MAXIMA)
     aviso_browser.setFrameStyle(0)
-    aviso_browser.setVerticalScrollBarPolicy(
-        Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    aviso_browser.setHorizontalScrollBarPolicy(
-        Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    aviso_browser.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    aviso_browser.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     main_layout.addWidget(aviso_browser, 2, 0, 1, 2)
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Modelo de dados para o sistema de cálculo de dobra de chapas.
 
@@ -7,23 +6,32 @@ utilizando SQLAlchemy para ORM.
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import (
-    Column, Integer, String, Float, ForeignKey, DateTime, create_engine,
-    UniqueConstraint
-)
-from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 
-# Importa o caminho do banco de dados do módulo utilitário centralizado
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    create_engine,
+)
+from sqlalchemy.orm import DeclarativeBase, relationship
+
 from src.utils.utilitarios import DB_PATH
 
 # --- Modelos ORM ---
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Base class for all ORM models."""
 
 
 class Usuario(Base):
     """Modelo da tabela de usuários."""
-    __tablename__ = 'usuario'
+
+    __tablename__ = "usuario"
     id = Column(Integer, primary_key=True)
     nome = Column(String, unique=True, nullable=False)
     senha = Column(String, nullable=False)
@@ -32,14 +40,16 @@ class Usuario(Base):
 
 class Espessura(Base):
     """Modelo da tabela de espessuras."""
-    __tablename__ = 'espessura'
+
+    __tablename__ = "espessura"
     id = Column(Integer, primary_key=True, autoincrement=True)
     valor = Column(Float, nullable=False)
 
 
 class Material(Base):
     """Modelo da tabela de materiais."""
-    __tablename__ = 'material'
+
+    __tablename__ = "material"
     id = Column(Integer, primary_key=True)
     nome = Column(String, nullable=False)
     densidade = Column(Float)
@@ -49,7 +59,8 @@ class Material(Base):
 
 class Canal(Base):
     """Modelo da tabela de canais (ferramentas)."""
-    __tablename__ = 'canal'
+
+    __tablename__ = "canal"
     id = Column(Integer, primary_key=True, autoincrement=True)
     valor = Column(String, nullable=False)
     largura = Column(Float)
@@ -60,11 +71,12 @@ class Canal(Base):
 
 class Deducao(Base):
     """Modelo da tabela de deduções, relacionando os outros elementos."""
-    __tablename__ = 'deducao'
+
+    __tablename__ = "deducao"
     id = Column(Integer, primary_key=True)
-    canal_id = Column(Integer, ForeignKey('canal.id'), nullable=False)
-    espessura_id = Column(Integer, ForeignKey('espessura.id'), nullable=False)
-    material_id = Column(Integer, ForeignKey('material.id'), nullable=False)
+    canal_id = Column(Integer, ForeignKey("canal.id"), nullable=False)
+    espessura_id = Column(Integer, ForeignKey("espessura.id"), nullable=False)
+    material_id = Column(Integer, ForeignKey("material.id"), nullable=False)
     valor = Column(Float, nullable=False)
     observacao = Column(String)
     forca = Column(Float)
@@ -74,14 +86,19 @@ class Deducao(Base):
     material = relationship("Material")
 
     __table_args__ = (
-        UniqueConstraint('canal_id', 'espessura_id', 'material_id',
-                         name='_canal_espessura_material_uc'),
+        UniqueConstraint(
+            "canal_id",
+            "espessura_id",
+            "material_id",
+            name="_canal_espessura_material_uc",
+        ),
     )
 
 
 class Log(Base):
     """Modelo da tabela de logs de ações do sistema."""
-    __tablename__ = 'log'
+
+    __tablename__ = "log"
     id = Column(Integer, primary_key=True)
     usuario_nome = Column(String, nullable=False)
     acao = Column(String, nullable=False)
@@ -92,19 +109,18 @@ class Log(Base):
 
 
 class SystemControl(Base):
-    """
-    Tabela de controle do sistema para atualizações e sessões ativas.
-    """
-    __tablename__ = 'system_control'
+    """Tabela de controle do sistema para atualizações e sessões ativas."""
+
+    __tablename__ = "system_control"
     id = Column(Integer, primary_key=True)
     type = Column(String, nullable=False)  # pylint: disable=redefined-builtin
     key = Column(String, unique=True, nullable=False)
     value = Column(String)
-    last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc),
-                          onupdate=lambda: datetime.now(timezone.utc))
+    last_updated = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
 
-# --- Configuração do Banco de Dados e Sessão ---
-# Usa o caminho centralizado para criar a engine do banco de dados.
-engine = create_engine(f'sqlite:///{DB_PATH}')
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine(f"sqlite:///{DB_PATH}")

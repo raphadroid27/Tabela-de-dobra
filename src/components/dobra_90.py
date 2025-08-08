@@ -4,22 +4,29 @@ com widgets auto-ajustáveis para melhor responsividade.
 """
 
 from dataclasses import dataclass
-from typing import Tuple, Any
-from PySide6.QtWidgets import QGroupBox, QLabel, QLineEdit, QGridLayout
-from PySide6.QtCore import Qt
-from src.config import globals as g
-from src.utils.interface import (
-    copiar, focus_next_entry, focus_previous_entry, calcular_valores)
-from src.utils.estilo import aplicar_estilo_widget_auto_ajustavel
+from typing import Any, Tuple
 
-# Constantes para widgets auto-ajustáveis
-WIDGET_HEIGHT = 20
-WIDGET_MIN_WIDTH = 60
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QLineEdit
+
+from src.config import globals as g
+from src.utils.estilo import (
+    ALTURA_PADRAO_COMPONENTE,
+    LARGURA_MINIMA_COMPONENTE,
+    aplicar_estilo_widget_auto_ajustavel,
+)
+from src.utils.interface import (
+    calcular_valores,
+    copiar,
+    focus_next_entry,
+    focus_previous_entry,
+)
 
 
 @dataclass
 class ConfigLabelResultado:
     """Configuração para criação de labels de resultado."""
+
     layout: Any
     nome_global: str
     pos: Tuple[int, int]
@@ -32,6 +39,7 @@ class ConfigLabelResultado:
 @dataclass
 class ConfigEntry:
     """Configuração para criação de entries de dobra."""
+
     layout: Any
     nome_global: str
     pos: Tuple[int, int]
@@ -53,9 +61,9 @@ def criar_label_header(layout, texto, pos):
     """
     linha, coluna = pos
     header_label = QLabel(texto)
-    header_label.setFixedHeight(WIDGET_HEIGHT)
-    header_label.setMinimumWidth(WIDGET_MIN_WIDTH)
-    header_label.setAlignment(Qt.AlignCenter)
+    header_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
+    header_label.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
+    header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(header_label, linha, coluna)
     return header_label
 
@@ -74,9 +82,9 @@ def criar_label_aba(layout, texto, pos):
     """
     linha, coluna = pos
     aba_label = QLabel(texto)
-    aba_label.setFixedHeight(WIDGET_HEIGHT)
+    aba_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     aba_label.setFixedWidth(50)  # Largura fixa menor para labels de aba
-    aba_label.setAlignment(Qt.AlignCenter)
+    aba_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(aba_label, linha, coluna)
     return aba_label
 
@@ -94,9 +102,9 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
     entry.returnPressed.connect(lambda: focus_next_entry(config.i, config.w))
 
     def custom_key_press_event(event):
-        if event.key() == Qt.Key_Down:
+        if event.key() == Qt.Key.Key_Down:
             focus_next_entry(config.i, config.w)
-        elif event.key() == Qt.Key_Up:
+        elif event.key() == Qt.Key.Key_Up:
             focus_previous_entry(config.i, config.w)
         else:
             QLineEdit.keyPressEvent(entry, event)
@@ -117,17 +125,15 @@ def criar_entry_dobra(config: ConfigEntry):
     """
     linha, coluna = config.pos
     entry = QLineEdit()
-    entry.setAlignment(Qt.AlignCenter)
-    entry.setFixedHeight(WIDGET_HEIGHT)
-    entry.setMinimumWidth(WIDGET_MIN_WIDTH)
+    entry.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    entry.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
+    entry.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
 
-    # Aplicar estilo auto-ajustável
-    aplicar_estilo_widget_auto_ajustavel(entry, 'lineedit')
+    aplicar_estilo_widget_auto_ajustavel(entry, "lineedit")
 
     setattr(g, config.nome_global, entry)
     config.layout.addWidget(entry, linha, coluna)
 
-    # Configurar eventos
     configurar_eventos_entry(entry, config)
 
     return entry
@@ -147,16 +153,18 @@ def criar_label_resultado(config: ConfigLabelResultado):
     label = QLabel()
     label.setFrameShape(QLabel.Shape.Panel)
     label.setFrameShadow(QLabel.Shadow.Sunken)
-    label.setFixedHeight(WIDGET_HEIGHT)
-    label.setMinimumWidth(WIDGET_MIN_WIDTH)
-    label.setAlignment(Qt.AlignCenter)
+    label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
+    label.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     setattr(g, config.nome_global, label)
     config.layout.addWidget(label, linha, coluna)
 
-    # Configurar eventos e tooltip
-    label.mousePressEvent = lambda event: copiar(
-        config.copy_type, config.i, config.w)
+    def mouse_press_handler(_):
+        copiar(config.copy_type, config.i, config.w)
+
+    # Use type ignore para contornar o problema de tipagem
+    label.mousePressEvent = mouse_press_handler  # type: ignore[method-assign]
     label.setToolTip(config.tooltip_text)
 
     return label
@@ -172,21 +180,21 @@ def dobras(w):
     Returns:
         QGroupBox configurado com os campos de dobras auto-ajustáveis.
     """
-    g.FRAME_DOBRA = QGroupBox()
-    g.FRAME_DOBRA.setFlat(True)
-    g.FRAME_DOBRA.setStyleSheet('QGroupBox { margin-top: 0px; }')
-    layout = QGridLayout(g.FRAME_DOBRA)
+    frame_dobra = QGroupBox()
+    frame_dobra.setFlat(True)
+    frame_dobra.setStyleSheet("QGroupBox { margin-top: 0px; }")
+    layout = QGridLayout(frame_dobra)
     layout.setContentsMargins(10, 0, 10, 0)
     layout.setSpacing(5)
 
-    g.FRAME_DOBRA.setLayout(layout)
+    frame_dobra.setLayout(layout)
 
     _configurar_layout_dobra(layout)
     _criar_headers(layout)
     _criar_entradas_e_resultados(layout, w)
     _criar_labels_blank(layout, w)
 
-    return g.FRAME_DOBRA
+    return frame_dobra
 
 
 def _configurar_layout_dobra(layout):
@@ -199,7 +207,7 @@ def _configurar_layout_dobra(layout):
     # Configurar colunas de dados com expansão proporcional
     for col in range(1, 4):
         layout.setColumnStretch(col, 1)
-        layout.setColumnMinimumWidth(col, WIDGET_MIN_WIDTH)
+        layout.setColumnMinimumWidth(col, LARGURA_MINIMA_COMPONENTE)
 
     # Configurar espaçamento
     layout.setHorizontalSpacing(5)
@@ -208,7 +216,7 @@ def _configurar_layout_dobra(layout):
 
 def _criar_headers(layout):
     """Cria os cabeçalhos das colunas com widgets auto-ajustáveis."""
-    headers = ['Medida Ext.:', 'Medida Dobra:', 'Metade Dobra:']
+    headers = ["Medida Ext.:", "Medida Dobra:", "Metade Dobra:"]
 
     for i, label_text in enumerate(headers):
         criar_label_header(layout, label_text, (0, i + 1))
@@ -222,35 +230,31 @@ def _criar_entradas_e_resultados(layout, w):
 
         # Entry para medida externa
         config_entry = ConfigEntry(
-            layout=layout,
-            nome_global=f'aba{i}_entry_{w}',
-            pos=(i, 1),
-            w=w,
-            i=i
+            layout=layout, nome_global=f"aba{i}_entry_{w}", pos=(i, 1), w=w, i=i
         )
         criar_entry_dobra(config_entry)
 
         # Label para medida da dobra
         config_medida = ConfigLabelResultado(
             layout=layout,
-            nome_global=f'medidadobra{i}_label_{w}',
+            nome_global=f"medidadobra{i}_label_{w}",
             pos=(i, 2),
             tooltip_text="Clique para copiar a medida da dobra.",
             i=i,
             w=w,
-            copy_type='medida_dobra'
+            copy_type="medida_dobra",
         )
         criar_label_resultado(config_medida)
 
         # Label para metade da dobra
         config_metade = ConfigLabelResultado(
             layout=layout,
-            nome_global=f'metadedobra{i}_label_{w}',
+            nome_global=f"metadedobra{i}_label_{w}",
             pos=(i, 3),
             tooltip_text="Clique para copiar a metade da dobra.",
             i=i,
             w=w,
-            copy_type='metade_dobra'
+            copy_type="metade_dobra",
         )
         criar_label_resultado(config_metade)
 
@@ -259,30 +263,30 @@ def _criar_labels_blank(layout, w):
     """Cria os labels do blank com widgets auto-ajustáveis."""
     # Label "Medida do Blank:"
     blank_label = QLabel("Medida do Blank:")
-    blank_label.setAlignment(Qt.AlignCenter)
-    blank_label.setFixedHeight(WIDGET_HEIGHT)
+    blank_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    blank_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     layout.addWidget(blank_label, g.N, 0, 1, 2)
 
     # Label da medida do blank
     config_blank = ConfigLabelResultado(
         layout=layout,
-        nome_global=f'medida_blank_label_{w}',
+        nome_global=f"medida_blank_label_{w}",
         pos=(g.N, 2),
         tooltip_text="Clique para copiar a medida do blank.",
         i=g.N,
         w=w,
-        copy_type='blank'
+        copy_type="blank",
     )
     criar_label_resultado(config_blank)
 
     # Label da metade do blank
     config_metade_blank = ConfigLabelResultado(
         layout=layout,
-        nome_global=f'metade_blank_label_{w}',
+        nome_global=f"metade_blank_label_{w}",
         pos=(g.N, 3),
         tooltip_text="Clique para copiar a metade do blank.",
         i=g.N,
         w=w,
-        copy_type='metade_blank'
+        copy_type="metade_blank",
     )
     criar_label_resultado(config_metade_blank)
