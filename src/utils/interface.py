@@ -46,6 +46,7 @@ class UIData:
     raio_interno: float
     comprimento: float
     deducao_espec: float
+    deducao_usada: float = 0.0
 
 
 # --- Classes de Manipulação da Interface (CopyManager, ListManager, etc.) ---
@@ -91,13 +92,17 @@ class CopyManager:
         label.setText(f"{texto_original} Copiado!")
         label.setStyleSheet("QLabel { color: green; }")
 
-        QTimer.singleShot(2000, partial(self._restaurar_label, label, texto_original))
+        QTimer.singleShot(5000, partial(self._restaurar_label, label, texto_original))
 
     def _restaurar_label(self, label, texto):
         """Restaura o texto e estilo original do label."""
+
+        data = _coletar_dados_entrada()
+        estilo = _estilo(data)
+
         if label and hasattr(label, "text") and "Copiado!" in label.text():
             label.setText(texto)
-            label.setStyleSheet("")
+            label.setStyleSheet(estilo)
 
 
 copiar = CopyManager().copiar
@@ -459,10 +464,6 @@ def limpar_dobras():
                 if entry and hasattr(entry, "clear"):
                     entry.clear()
 
-    ded_espec_entry = getattr(g, "DED_ESPEC_ENTRY", None)
-    if ded_espec_entry and hasattr(ded_espec_entry, "clear"):
-        ded_espec_entry.clear()
-
     calcular_valores()
 
     if hasattr(g, "VALORES_W") and g.VALORES_W:
@@ -482,6 +483,10 @@ def limpar_tudo():
     for entry_global in [g.RI_ENTRY, g.COMPR_ENTRY]:
         if entry_global and hasattr(entry_global, "clear"):
             entry_global.clear()
+
+    ded_espec_entry = getattr(g, "DED_ESPEC_ENTRY", None)
+    if ded_espec_entry and hasattr(ded_espec_entry, "clear"):
+        ded_espec_entry.clear()
 
     limpar_dobras()
 
@@ -561,16 +566,36 @@ def _atualizar_deducao_ui(data: UIData) -> float:
     )
 
 
+def _estilo(data: UIData):
+    estilo_k = ""  # Definição padrão
+
+    # Define o estilo do Fator K conforme a origem da dedução
+    if g.K_LBL.text() == "":
+        g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
+        g.K_LBL.setStyleSheet("")
+    elif data.deducao_espec > 0:
+        estilo_k = "QLabel {color: blue;}"
+        g.K_LBL.setToolTip("Fator K calculado com dedução específica.")
+    elif data.canal_str == "":
+        estilo_k = "QLabel {color: orange;}"
+        g.K_LBL.setToolTip("Fator K teórico com base na tabela Raio/Espessura.")
+    else:
+        g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
+
+    return estilo_k
+
+
 def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
     """Calcula e atualiza os campos de Fator K e Offset."""
     res_k = calculos.CalculoFatorK().calcular(
         data.espessura, data.raio_interno, deducao_usada
     )
-    estilo_k = "color: blue;" if data.deducao_espec > 0 else ""
+
+    estilo_k_offset = _estilo(data)
 
     if res_k:
-        _atualizar_label(g.K_LBL, res_k["fator_k"], estilo_sucesso=estilo_k)
-        _atualizar_label(g.OFFSET_LBL, res_k["offset"], estilo_sucesso=estilo_k)
+        _atualizar_label(g.K_LBL, res_k["fator_k"], estilo_sucesso=estilo_k_offset)
+        _atualizar_label(g.OFFSET_LBL, res_k["offset"], estilo_sucesso=estilo_k_offset)
     else:
         _atualizar_label(g.K_LBL, None)
         _atualizar_label(g.OFFSET_LBL, None)
