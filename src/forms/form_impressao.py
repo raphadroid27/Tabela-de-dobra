@@ -5,15 +5,17 @@ Este módulo contém a implementação do formulário de impressão em lote,
 que permite selecionar um diretório e uma lista de arquivos PDF para impressão.
 O formulário é construído usando QGridLayout para melhor organização e controle.
 
-Refatorado para usar uma abordagem baseada em classes, eliminando variáveis globais.
+Refatorado para usar uma abordagem baseada em classes, eliminando variáveis globais
+e adicionando um worker thread para impressão controlada, evitando sobrecarga do spooler.
 """
 
 import os
 import subprocess  # nosec B404
 import sys
+import time
 from typing import List, Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -41,6 +43,7 @@ from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 # --- Constantes de Configuração ---
 TIMEOUT_IMPRESSAO = 30
+PAUSA_ENTRE_IMPRESSOES_SEGUNDOS = 2  # Pausa para não sobrecarregar o spooler
 ALTURA_FORM_IMPRESSAO = 510
 LARGURA_FORM_IMPRESSAO = 500
 MARGEM_LAYOUT_PRINCIPAL = 10
@@ -68,12 +71,11 @@ ADOBE_PATHS = [
 
 
 class PrintManager:
-    """Gerencia as operações de impressão de PDFs."""
+    """Gerencia as operações de busca e validação de arquivos PDF."""
 
     def __init__(self):
         self.arquivos_encontrados: List[str] = []
         self.arquivos_nao_encontrados: List[str] = []
-        self.resultado_impressao: str = ""
 
     def buscar_arquivos(self, diretorio: str, lista_arquivos: List[str]) -> None:
         """Busca os arquivos no diretório especificado."""
@@ -126,17 +128,41 @@ class PrintManager:
             resultado += "Nenhum arquivo para verificar."
         return resultado
 
-    def executar_impressao(self, diretorio: str) -> str:
-        """Executa a impressão dos arquivos encontrados."""
-        if not self.arquivos_encontrados:
-            return "Nenhum arquivo foi encontrado para impressão."
-        self.resultado_impressao = "\n\nTentando imprimir arquivos...\n"
-        for nome_arquivo in self.arquivos_encontrados:
-            caminho_completo = os.path.join(diretorio, nome_arquivo)
-            self._imprimir_arquivo_individual(nome_arquivo, caminho_completo)
-        return self.resultado_impressao
 
-    def _imprimir_arquivo_individual(self, nome_arquivo: str, caminho_completo: str) -> None:
+class PrintWorker(QThread):
+    """
+    Worker thread para executar a impressão em segundo plano,
+    evitando que a GUI congele e controlando a fila de impressão.
+    """
+    progress_update = Signal(str)
+    # CORREÇÃO: Renomeado o sinal para evitar conflito com o QThread.finished
+    processo_finalizado = Signal()
+
+    def __init__(self, diretorio: str, arquivos_para_imprimir: List[str], parent=None):
+        super().__init__(parent)
+        self.diretorio = diretorio
+        self.arquivos = arquivos_para_imprimir
+
+    def run(self):
+        """Executa o processo de impressão em segundo plano."""
+        if not self.arquivos:
+            self.processo_finalizado.emit()
+            return
+
+        self.progress_update.emit("\n--- Iniciando processo de impressão ---\n")
+
+        for nome_arquivo in self.arquivos:
+            caminho_completo = os.path.join(self.diretorio, nome_arquivo)
+            self._imprimir_arquivo_individual(nome_arquivo, caminho_completo)
+
+            time.sleep(PAUSA_ENTRE_IMPRESSOES_SEGUNDOS)
+
+        final_message = "\n--- Processo de impressão finalizado. ---"
+        self.progress_update.emit(final_message)
+        # CORREÇÃO: Emitindo o sinal renomeado
+        self.processo_finalizado.emit()
+
+    def _imprimir_arquivo_individual(self, nome_arquivo: str, caminho_completo: str):
         """Imprime um arquivo individual usando diferentes métodos."""
         if not self._validar_caminho_arquivo(caminho_completo):
             return
@@ -147,7 +173,7 @@ class PrintManager:
         )
         if not sucesso:
             msg = f" ✗ Falha ao imprimir {nome_arquivo} por todos os métodos.\n"
-            self.resultado_impressao += msg
+            self.progress_update.emit(msg)
 
     def _tentar_metodo(self, metodo: str, nome_arquivo: str, caminho: str) -> bool:
         """Tenta imprimir um arquivo com um método específico."""
@@ -166,36 +192,41 @@ class PrintManager:
             caminho_normalizado = os.path.normpath(caminho_completo)
             if not os.path.isfile(caminho_normalizado):
                 msg = f" ✗ Caminho inválido ou não é arquivo: {caminho_completo}\n"
-                self.resultado_impressao += msg
+                self.progress_update.emit(msg)
                 return False
             if not caminho_normalizado.lower().endswith(".pdf"):
-                self.resultado_impressao += f" ✗ Arquivo não é PDF: {caminho_completo}\n"
+                msg = f" ✗ Arquivo não é PDF: {caminho_completo}\n"
+                self.progress_update.emit(msg)
                 return False
             return True
         except (OSError, ValueError):
-            self.resultado_impressao += f" ✗ Erro ao validar caminho: {caminho_completo}\n"
+            msg = f" ✗ Erro ao validar caminho: {caminho_completo}\n"
+            self.progress_update.emit(msg)
             return False
 
     def _tentar_foxit(self, nome_arquivo: str, caminho: str) -> bool:
         """Tenta imprimir usando Foxit PDF Reader."""
         if not os.path.exists(FOXIT_PATH):
             return False
-        self.resultado_impressao += f"Tentando imprimir {nome_arquivo} com Foxit...\n"
+        msg = f"Tentando imprimir {nome_arquivo} com Foxit...\n"
+        self.progress_update.emit(msg)
         try:
             subprocess.run(
                 [FOXIT_PATH, "/p", caminho],
                 check=True,
                 timeout=TIMEOUT_IMPRESSAO,
                 shell=False,
-            )  # nosec B603
-            self.resultado_impressao += " ✓ Sucesso com Foxit\n"
+            )
+            result_msg = " ✓ Sucesso com Foxit\n"
+            self.progress_update.emit(result_msg)
             return True
         except (
             subprocess.TimeoutExpired,
             subprocess.CalledProcessError,
             FileNotFoundError,
         ) as e:
-            self.resultado_impressao += f" ✗ Erro com Foxit: {e}\n"
+            error_msg = f" ✗ Erro com Foxit: {e}\n"
+            self.progress_update.emit(error_msg)
             return False
 
     def _tentar_impressora_padrao(self, nome_arquivo: str, caminho: str) -> bool:
@@ -203,13 +234,15 @@ class PrintManager:
         if not hasattr(os, "startfile"):
             return False
         msg = f"Tentando imprimir {nome_arquivo} com impressora padrão...\n"
-        self.resultado_impressao += msg
+        self.progress_update.emit(msg)
         try:
-            os.startfile(caminho, "print")  # pylint: disable=no-member # nosec B606
-            self.resultado_impressao += " ✓ Sucesso com impressora padrão\n"
+            os.startfile(caminho, "print")
+            result_msg = " ✓ Sucesso com impressora padrão\n"
+            self.progress_update.emit(result_msg)
             return True
         except (OSError, PermissionError, FileNotFoundError) as e:
-            self.resultado_impressao += f" ✗ Erro com impressora padrão: {e}\n"
+            error_msg = f" ✗ Erro com impressora padrão: {e}\n"
+            self.progress_update.emit(error_msg)
             return False
 
     def _tentar_adobe(self, nome_arquivo: str, caminho: str) -> bool:
@@ -218,22 +251,24 @@ class PrintManager:
             if os.path.exists(adobe_path):
                 base_name = os.path.basename(adobe_path)
                 msg = f"Tentando imprimir {nome_arquivo} com Adobe ({base_name})...\n"
-                self.resultado_impressao += msg
+                self.progress_update.emit(msg)
                 try:
                     subprocess.run(
                         [adobe_path, "/p", caminho],
                         check=True,
                         timeout=TIMEOUT_IMPRESSAO,
-                        shell=False,  # nosec B606
+                        shell=False,
                     )
-                    self.resultado_impressao += " ✓ Sucesso com Adobe\n"
+                    result_msg = " ✓ Sucesso com Adobe\n"
+                    self.progress_update.emit(result_msg)
                     return True
                 except (
                     subprocess.TimeoutExpired,
                     subprocess.CalledProcessError,
                     FileNotFoundError,
                 ) as e:
-                    self.resultado_impressao += f" ✗ Erro com Adobe: {e}\n"
+                    error_msg = f" ✗ Erro com Adobe: {e}\n"
+                    self.progress_update.emit(error_msg)
         return False
 
 
@@ -243,12 +278,14 @@ class FormImpressao(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.print_manager = PrintManager()
+        self.print_worker: Optional[PrintWorker] = None
 
-        # Inicializa os widgets que precisam ser acessados em outros métodos
-        self.diretorio_entry = None
-        self.lista_text = None
-        self.lista_arquivos_widget = None
-        self.resultado_text = None
+        # Widgets
+        self.diretorio_entry: Optional[QLineEdit] = None
+        self.lista_text: Optional[QTextEdit] = None
+        self.lista_arquivos_widget: Optional[QListWidget] = None
+        self.resultado_text: Optional[QTextBrowser] = None
+        self.imprimir_btn: Optional[QPushButton] = None
 
         self._inicializar_ui()
 
@@ -274,7 +311,6 @@ class FormImpressao(QDialog):
         layout_principal = QGridLayout(conteudo)
         aplicar_medida_borda_espaco(layout_principal, MARGEM_LAYOUT_PRINCIPAL)
 
-        # Criação e adição das seções ao layout principal
         frame_diretorio = self._criar_secao_diretorio()
         layout_principal.addWidget(frame_diretorio, 0, 0)
 
@@ -311,7 +347,6 @@ class FormImpressao(QDialog):
         layout = QGridLayout(frame)
         aplicar_medida_borda_espaco(layout)
 
-        # --- Subseção: Campo de Texto ---
         label_lista = QLabel("Lista de arquivos (um por linha):")
         label_lista.setStyleSheet(STYLE_LABEL_BOLD)
         layout.addWidget(label_lista, 0, 0, 1, 3)
@@ -332,7 +367,6 @@ class FormImpressao(QDialog):
         aplicar_estilo_botao(limpar_text_btn, "amarelo")
         layout.addWidget(limpar_text_btn, 2, 2)
 
-        # --- Subseção: Lista de Arquivos ---
         label_arquivos = QLabel("Arquivos na lista:")
         label_arquivos.setStyleSheet(STYLE_LABEL_BOLD)
         layout.addWidget(label_arquivos, 3, 0, 1, 3)
@@ -357,10 +391,10 @@ class FormImpressao(QDialog):
         aplicar_estilo_botao(verificar_btn, "cinza")
         layout.addWidget(verificar_btn, 6, 2)
 
-        imprimir_btn = QPushButton("🖨️ Imprimir")
-        imprimir_btn.clicked.connect(self.executar_impressao)
-        aplicar_estilo_botao(imprimir_btn, "verde")
-        layout.addWidget(imprimir_btn, 7, 2)
+        self.imprimir_btn = QPushButton("🖨️ Imprimir")
+        self.imprimir_btn.clicked.connect(self.executar_impressao)
+        aplicar_estilo_botao(self.imprimir_btn, "verde")
+        layout.addWidget(self.imprimir_btn, 7, 2)
 
         return frame
 
@@ -460,7 +494,7 @@ class FormImpressao(QDialog):
             )
 
     def executar_impressao(self):
-        """Executa a impressão dos arquivos selecionados."""
+        """Inicia o processo de impressão em uma thread separada."""
         if not self._validar_entradas():
             return
 
@@ -472,27 +506,44 @@ class FormImpressao(QDialog):
             resultado_busca = self.print_manager.gerar_relatorio_busca()
             self.resultado_text.setText(resultado_busca)
 
-            if self.print_manager.arquivos_encontrados:
-                resultado_impressao = self.print_manager.executar_impressao(diretorio)
-                self.resultado_text.append(resultado_impressao)
-                msg = (
-                    f"Processo de impressão iniciado para "
-                    f"{len(self.print_manager.arquivos_encontrados)} arquivo(s)!\n"
-                    "Verifique os detalhes no campo 'Resultado da Impressão'."
-                )
-                QMessageBox.information(self, "Impressão", msg)
-            else:
+            if not self.print_manager.arquivos_encontrados:
                 QMessageBox.warning(
-                    self, "Aviso", "Nenhum arquivo foi encontrado para impressão."
-                )
+                    self, "Aviso", "Nenhum arquivo válido foi encontrado para impressão.")
+                return
+
+            self.imprimir_btn.setEnabled(False)
+            self.imprimir_btn.setText("Imprimindo...")
+
+            self.print_worker = PrintWorker(
+                diretorio, self.print_manager.arquivos_encontrados)
+            self.print_worker.progress_update.connect(self.atualizar_resultado)
+            # CORREÇÃO: Conectando ao sinal renomeado
+            self.print_worker.processo_finalizado.connect(self.impressao_finalizada)
+            self.print_worker.start()
 
         except (OSError, ValueError) as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao processar impressão: {e}")
+            QMessageBox.critical(self, "Erro", f"Erro ao iniciar impressão: {e}")
+            self.imprimir_btn.setEnabled(True)
+            self.imprimir_btn.setText("🖨️ Imprimir")
+
+    def atualizar_resultado(self, mensagem: str):
+        """Adiciona mensagens de progresso à caixa de texto de resultado."""
+        self.resultado_text.append(mensagem)
+        self.resultado_text.verticalScrollBar().setValue(
+            self.resultado_text.verticalScrollBar().maximum()
+        )
+
+    def impressao_finalizada(self):
+        """Chamado quando a thread de impressão termina."""
+        QMessageBox.information(self, "Processo Concluído",
+                                "A impressão em lote foi finalizada.")
+        self.imprimir_btn.setEnabled(True)
+        self.imprimir_btn.setText("🖨️ Imprimir")
+        self.print_worker = None
 
 
 class FormManager:
     """Gerencia a instância do formulário para garantir que seja um singleton."""
-
     _instance = None
 
     @classmethod
@@ -507,20 +558,15 @@ class FormManager:
 
 
 def main(parent=None):
-    """
-    Ponto de entrada para criar e exibir o formulário de impressão.
-    Utiliza o FormManager para garantir uma única instância.
-    """
+    """Ponto de entrada para criar e exibir o formulário de impressão."""
     FormManager.show_form(parent)
 
 
 if __name__ == "__main__":
-    # Bloco para execução standalone do formulário
     app = QApplication(sys.argv)
     try:
         main()
-    except NameError as e:
-        # Lida com o caso em que as dependências não estão disponíveis
+    except (ImportError, NameError) as e:
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Critical)
         msg_box.setText("Erro de Dependência")
