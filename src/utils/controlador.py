@@ -15,7 +15,18 @@ from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material
 from src.utils import operacoes_crud
 from src.utils.banco_dados import session
-from src.utils.interface import atualizar_widgets, listar, obter_configuracoes
+
+# --- INÍCIO DA ALTERAÇÃO ---
+# A invalidação de cache agora é importada diretamente do gerenciador de cache.
+from src.utils.cache_manager import cache_manager
+from src.utils.interface import (
+    atualizar_comboboxes_formulario,
+    atualizar_widgets,
+    listar,
+    obter_configuracoes,
+)
+
+# --- FIM DA ALTERAÇÃO ---
 from src.utils.usuarios import logado, tem_permissao
 from src.utils.utilitarios import ask_yes_no, show_error, show_info, show_warning
 from src.utils.widget import WidgetManager
@@ -66,10 +77,23 @@ def adicionar(tipo):
 
     if sucesso:
         show_info("Sucesso", mensagem, parent=config.get("form"))
+
+        # --- INÍCIO DA ALTERAÇÃO ---
+        # Invalida o cache chamando diretamente o gerenciador de cache.
+        cache_manager.invalidar_por_tipo(tipo)
+        # --- FIM DA ALTERAÇÃO ---
+
         _limpar_campos(tipo)
         listar(tipo)
         atualizar_widgets(tipo)
         buscar(tipo)
+
+        # Atualiza o formulário de deduções se ele estiver aberto
+        if tipo in ["material", "espessura", "canal"]:
+            if hasattr(g, "DEDUC_FORM") and g.DEDUC_FORM:
+                listar("dedução")
+                atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+
     else:
         show_error("Erro", mensagem, parent=config.get("form"))
 
@@ -111,10 +135,23 @@ def editar(tipo):
 
     if sucesso:
         show_info("Sucesso", mensagem, parent=config.get("form"))
+
+        # --- INÍCIO DA ALTERAÇÃO ---
+        # Invalida o cache chamando diretamente o gerenciador de cache.
+        cache_manager.invalidar_por_tipo(tipo)
+        # --- FIM DA ALTERAÇÃO ---
+
         _limpar_campos(tipo)
         listar(tipo)
         atualizar_widgets(tipo)
         buscar(tipo)
+
+        # Atualiza o formulário de deduções se ele estiver aberto
+        if tipo in ["material", "espessura", "canal"]:
+            if hasattr(g, "DEDUC_FORM") and g.DEDUC_FORM:
+                listar("dedução")
+                atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+
     else:
         show_error("Erro", mensagem, parent=config.get("form"))
 
@@ -128,35 +165,72 @@ def excluir(tipo):
 
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
+    lista_widget = config.get("lista")
 
-    obj = _item_selecionado(tipo)
-    if obj is None:
+    # Capturar o item do widget antes de buscar o objeto no DB
+    selected_items = lista_widget.selectedItems()
+    if not selected_items:
         show_warning(
             "Aviso", f"Nenhum {tipo} selecionado para exclusão.", parent=config["form"]
         )
         return
 
-    aviso = ask_yes_no(
-        "Atenção!",
-        (
-            f"Ao excluir um(a) {tipo}, todas as deduções relacionadas "
-            f"serão excluídas também. Deseja continuar?"
-        ),
-        parent=config["form"],
-    )
-    if not aviso:
+    item_widget_selecionado = selected_items[0]
+    obj = _item_selecionado(tipo)  # Objeto do banco de dados
+
+    if obj is None:
+        show_error(
+            "Erro", "O item selecionado não foi encontrado no banco de dados.",
+            parent=config["form"]
+        )
         return
+
+    # A mensagem de aviso só faz sentido para material, espessura e canal
+    if tipo in ["material", "espessura", "canal"]:
+        aviso = ask_yes_no(
+            "Atenção!",
+            (
+                f"Ao excluir um(a) {tipo}, todas as deduções relacionadas "
+                f"serão excluídas também. Deseja continuar?"
+            ),
+            parent=config["form"],
+        )
+        if not aviso:
+            return
+    else:  # Para deduções, uma confirmação simples
+        aviso = ask_yes_no(
+            "Confirmação",
+            "Tem certeza que deseja excluir esta dedução?",
+            parent=config["form"],
+        )
+        if not aviso:
+            return
 
     sucesso, mensagem = operacoes_crud.excluir_objeto(obj)
 
     if sucesso:
         show_info("Sucesso", mensagem, parent=config["form"])
+
+        # --- INÍCIO DA ALTERAÇÃO ---
+        # Invalida o cache chamando diretamente o gerenciador de cache.
+        cache_manager.invalidar_por_tipo(tipo)
+        # --- FIM DA ALTERAÇÃO ---
+
+        # Remover o item diretamente do QTreeWidget
+        (item_widget_selecionado.parent() or lista_widget.invisibleRootItem()
+         ).removeChild(item_widget_selecionado)
+
         _limpar_campos(tipo)
-        listar(tipo)
         atualizar_widgets(tipo)
-        buscar(tipo)
+
+        # Atualiza o formulário de deduções se ele estiver aberto
+        if tipo in ["material", "espessura", "canal"]:
+            if hasattr(g, "DEDUC_FORM") and g.DEDUC_FORM:
+                listar("dedução")
+                atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+
     else:
-        show_error("Erro", mensagem, parent=config["form"])
+        show_error("Erro", mensagem, parent=config.get("form"))
 
 
 def preencher_campos(tipo):

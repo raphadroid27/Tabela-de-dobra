@@ -69,10 +69,10 @@ def cache_com_ttl(ttl_seconds: int = CACHE_TTL, shared: bool = False):
 
 
 def limpar_cache():
-    """Limpa todo o cache."""
+    """Limpa todo o cache genérico (usado pelo decorator)."""
     _cache_dados.clear()
     _cache_timestamps.clear()
-    logging.info("Cache limpo")
+    logging.info("Cache genérico limpo")
 
 
 def limpar_cache_expirado():
@@ -139,12 +139,32 @@ class CacheManager:
         self._canais_cache = canais
         self._last_update = time.time()
 
-    def invalidar_cache(self):
-        """Invalida todo o cache."""
+    def invalidar_cache_especifico(self):
+        """Invalida todo o cache específico (materiais, espessuras, canais)."""
         self._materiais_cache = None
         self._espessuras_cache = None
         self._canais_cache = None
         self._last_update = 0
+        logging.info("Cache específico (materiais, espessuras, canais) invalidado.")
+
+    # --- INÍCIO DA ALTERAÇÃO ---
+    def invalidar_por_tipo(self, tipo: str):
+        """
+        Invalida o cache para um tipo específico e também o cache genérico,
+        pois alterações em itens básicos (material, etc.) afetam listas compostas (deduções).
+        """
+        if tipo == "material":
+            self.set_materiais(None)
+        elif tipo == "espessura":
+            self.set_espessuras(None)
+        elif tipo == "canal":
+            self.set_canais(None)
+
+        # Como a alteração de um desses tipos pode afetar as deduções,
+        # que usam o cache genérico (`cache_com_ttl`), limpamos ele também.
+        limpar_cache()
+        logging.info("Cache invalidado para o tipo: %s e cache genérico.", tipo)
+    # --- FIM DA ALTERAÇÃO ---
 
 
 # Instância global do gerenciador de cache
