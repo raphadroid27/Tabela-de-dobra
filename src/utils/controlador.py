@@ -93,35 +93,34 @@ def editar(tipo):
             "Aviso", "Nenhum item selecionado para editar.", parent=config.get("form")
         )
         return
-    # ... (código existente) ...
-    # O restante da função permanece o mesmo.
+
     mensagem_confirmacao = f"Tem certeza que deseja editar o(a) {tipo}?"
     if not ask_yes_no("Confirmação", mensagem_confirmacao, parent=config.get("form")):
         return
 
+    # CORREÇÃO: Coleta todos os campos do formulário, incluindo os vazios,
+    # para permitir que a lógica de negócio em 'operacoes_crud' decida o que fazer.
     dados_para_editar = {
         campo: WidgetManager.get_widget_value(widget)
         for campo, widget in config.get("campos", {}).items()
-        if WidgetManager.get_widget_value(widget)
     }
-
-    if not dados_para_editar:
-        show_info("Informação", "Nenhum campo foi alterado.", parent=config.get("form"))
-        return
 
     sucesso, mensagem, _ = operacoes_crud.editar_objeto(obj, dados_para_editar)
 
     if sucesso:
-        show_info("Sucesso", mensagem, parent=config.get("form"))
-        cache_manager.invalidar_por_tipo(tipo)
-        _limpar_campos(tipo)
-        listar(tipo)
-        atualizar_widgets(tipo)
-        buscar(tipo)
-        if tipo in ["material", "espessura", "canal"]:
-            if hasattr(g, "DEDUC_FORM") and g.DEDUC_FORM:
-                listar("dedução")
-                atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+        if mensagem != "Nenhuma alteração detectada.":
+            show_info("Sucesso", mensagem, parent=config.get("form"))
+            cache_manager.invalidar_por_tipo(tipo)
+            _limpar_campos(tipo)
+            listar(tipo)
+            atualizar_widgets(tipo)
+            buscar(tipo)
+            if tipo in ["material", "espessura", "canal"]:
+                if hasattr(g, "DEDUC_FORM") and g.DEDUC_FORM:
+                    listar("dedução")
+                    atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+        else:
+            show_info("Informação", mensagem, parent=config.get("form"))
     else:
         show_error("Erro", mensagem, parent=config.get("form"))
 
@@ -130,8 +129,7 @@ def excluir(tipo):
     """Handler para excluir um item."""
     if not tem_permissao(tipo, "editor"):
         return
-    # ... (código existente) ...
-    # O restante da função permanece o mesmo.
+
     configuracoes = obter_configuracoes()
     config = configuracoes[tipo]
     lista_widget = config.get("lista")

@@ -215,17 +215,16 @@ def excluir_objeto(obj: Any) -> Tuple[bool, str]:
             registrar_log(
                 db_session, g.USUARIO_NOME, "excluir", obj_type, obj_id, log_details
             )
-            return (
-                True,
-                (
-                    (
-                        "A dedução foi excluída com sucesso!"
-                        if obj_type == "deducao"
-                        else f"{obj_type.capitalize()} e suas deduções "
-                        f"relacionadas foram excluídos(as) com sucesso!"
-                    ),
-                ),
+
+            mensagem = (
+                "A dedução foi excluída com sucesso!"
+                if obj_type == "deducao"
+                else (
+                    f"{obj_type.capitalize()} e suas deduções relacionadas "
+                    f"foram excluídos(as) com sucesso!"
+                )
             )
+            return True, mensagem
     except SQLAlchemyError as e:
         return False, f"Erro de banco de dados ao excluir {obj_type}: {e}"
 
@@ -236,16 +235,6 @@ def editar_objeto(obj: Any, dados: Dict[str, Any]) -> Tuple[bool, str, list]:
         return False, "Objeto não encontrado para edição.", []
 
     alteracoes = []
-    campos_numericos = [
-        "largura",
-        "altura",
-        "comprimento_total",
-        "valor",
-        "densidade",
-        "escoamento",
-        "elasticidade",
-        "forca",
-    ]
 
     try:
         with session_scope() as db_session:
@@ -254,15 +243,52 @@ def editar_objeto(obj: Any, dados: Dict[str, Any]) -> Tuple[bool, str, list]:
 
             for campo, valor_novo_str in dados.items():
                 valor_antigo = getattr(obj, campo)
+
+                # CORREÇÃO: Define se um campo deve ser tratado como numérico
+                # de forma mais inteligente, evitando a conversão incorreta para Canal.valor
+                is_numeric = False
+                campos_numericos_gerais = [
+                    "largura",
+                    "altura",
+                    "comprimento_total",
+                    "densidade",
+                    "escoamento",
+                    "elasticidade",
+                    "forca",
+                ]
+                if campo in campos_numericos_gerais:
+                    is_numeric = True
+                # O campo 'valor' só é numérico para Espessura e Deducao
+                if campo == "valor" and not isinstance(obj, Canal):
+                    is_numeric = True
+
                 valor_novo = (
                     _converter_para_float(valor_novo_str)
-                    if campo in campos_numericos
+                    if is_numeric
                     else (
                         valor_novo_str
                         if valor_novo_str and valor_novo_str.strip()
                         else None
                     )
                 )
+
+                if valor_novo is None:
+                    is_required = False
+                    # Verifica se o campo é um identificador principal que não pode ser nulo
+                    if (
+                        isinstance(obj, (Canal, Espessura, Deducao))
+                        and campo == "valor"
+                    ):
+                        is_required = True
+                    if isinstance(obj, Material) and campo == "nome":
+                        is_required = True
+
+                    if is_required:
+                        return (
+                            False,
+                            f"O campo '{campo.capitalize()}' não pode ser vazio.",
+                            [],
+                        )
 
                 if str(valor_antigo) != str(valor_novo):
                     setattr(obj, campo, valor_novo)
