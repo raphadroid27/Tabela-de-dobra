@@ -134,6 +134,29 @@ def salvar_tema_atual(tema):
         logging.error("Erro ao salvar tema: %s", e)
 
 
+def salvar_estado_final():
+    """Salva a geometria da janela e outras configurações antes de fechar."""
+    logging.info("Salvando estado final do aplicativo.")
+    try:
+        if g.PRINC_FORM:
+            pos = g.PRINC_FORM.pos()
+            # Criar a string de geometria
+            geometry_string = f"+{pos.x()}+{pos.y()}"
+
+            # Carregar configuração, atualizar e salvar
+            config = carregar_configuracao()
+            config["geometry"] = geometry_string
+
+            tema_atual = obter_tema_atual()
+            if tema_atual:
+                config["tema"] = tema_atual
+
+            salvar_configuracao(config)
+            logging.info("Estado final salvo com geometria: %s", geometry_string)
+    except (OSError, IOError, json.JSONDecodeError) as e:
+        logging.error("Erro ao salvar o estado final: %s", e, exc_info=True)
+
+
 def _aplicar_e_salvar_tema(tema):
     """Aplica um tema e salva automaticamente a escolha."""
     aplicar_tema_qdarktheme(tema)
@@ -156,6 +179,8 @@ def fechar_aplicativo():
             g.PRINC_FORM.close()
         app = QApplication.instance()
         if app:
+            # Apenas inicia o processo de quit.
+            # O sinal 'aboutToQuit' cuidará de salvar o estado.
             app.quit()
     except (RuntimeError, AttributeError) as e:
         logging.error("Erro durante o fechamento do aplicativo: %s", e)
@@ -415,7 +440,11 @@ def main():
         config = carregar_configuracao()
         tema_salvo = config.get("tema", "dark")
         aplicar_tema_inicial(tema_salvo)
+
+        # CORREÇÃO: Conectar a função de salvar ao sinal aboutToQuit
+        app.aboutToQuit.connect(salvar_estado_final)
         app.aboutToQuit.connect(remover_sessao)
+
         configurar_janela_principal(config)
         menu_custom = configurar_frames()
         configurar_menu(menu_custom)
