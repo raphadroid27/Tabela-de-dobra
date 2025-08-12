@@ -7,6 +7,9 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 - Ler os dados da UI, chamar a lógica de cálculo e atualizar os widgets com os resultados.
 - Gerenciar a aparência (estilos, tooltips) dos widgets.
 - Lidar com ações diretas na interface, como limpeza de campos e cópia de valores.
+
+Versão corrigida para usar o context manager 'session_scope' para
+todas as operações de banco de dados, garantindo segurança em ambiente multi-thread.
 """
 
 import logging
@@ -16,25 +19,24 @@ from functools import partial
 import pyperclip
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QTreeWidgetItem
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload
 
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
-from src.utils.banco_dados import session
+from src.utils.banco_dados import session_scope
 from src.utils.cache_manager import (
     cache_com_ttl,
-    cache_manager,
-    limpar_cache,
     limpar_cache_expirado,
 )
 from src.utils.widget import WidgetManager
 
 # --- Estrutura de Dados para Entradas da UI ---
 
-# pylint: disable=R0902
-
 
 @dataclass
+#  pylint: disable=too-many-instance-attributes
 class UIData:
     """Estrutura para armazenar os dados coletados da interface."""
 
@@ -51,7 +53,7 @@ class UIData:
     deducao_usada: float = 0.0
 
 
-# --- Classes de Manipulação da Interface (CopyManager, ListManager, etc.) ---
+# --- Classes de Manipulação da Interface ---
 
 
 class CopyManager:
@@ -98,7 +100,6 @@ class CopyManager:
 
     def _restaurar_label(self, label, texto):
         """Restaura o texto e estilo original do label."""
-
         data = _coletar_dados_entrada()
         estilo = _estilo(data)
 
@@ -115,63 +116,45 @@ class ListManager:
 
     def __init__(self):
         self.configuracoes = None
-        # Timer para limpeza periódica do cache
         self._setup_cache_cleanup()
 
     def _setup_cache_cleanup(self):
         """Configura timer para limpeza automática do cache."""
-        if hasattr(g, "CACHE_CLEANUP_TIMER"):
-            return
+        if not hasattr(g, "CACHE_CLEANUP_TIMER"):
+            g.CACHE_CLEANUP_TIMER = QTimer()
+            g.CACHE_CLEANUP_TIMER.timeout.connect(limpar_cache_expirado)
+            g.CACHE_CLEANUP_TIMER.start(600000)  # 10 minutos
 
-        g.CACHE_CLEANUP_TIMER = QTimer()
-        g.CACHE_CLEANUP_TIMER.timeout.connect(limpar_cache_expirado)
-        g.CACHE_CLEANUP_TIMER.start(600000)  # 10 minutos para ambiente multi-usuário
-
-    @cache_com_ttl(600, shared=True)  # Cache compartilhado por 10 minutos
-    # pylint: disable=R0911
+    @cache_com_ttl(600, shared=True)
     def _buscar_dados_banco(self, tipo):
-        """Busca dados do banco com cache."""
+        """Busca dados do banco com cache e usando um escopo de sessão seguro."""
         if not self.configuracoes or tipo not in self.configuracoes:
             return []
 
         config = self.configuracoes[tipo]
+        try:
+            with session_scope() as db_session:
+                query = db_session.query(config["modelo"])
 
-        # Usar cache específico para tipos frequentes
-        if tipo == "material":
-            cached_data = cache_manager.get_materiais()
-            if cached_data is not None:
-                return cached_data
+                if tipo == "dedução":
+                    query = query.options(
+                        joinedload(Deducao.material),
+                        joinedload(Deducao.espessura),
+                        joinedload(Deducao.canal),
+                    )
 
-            dados = session.query(config["modelo"]).order_by(config["ordem"]).all()
-            cache_manager.set_materiais(dados)
-            return dados
+                if "ordem" in config:
+                    query = query.order_by(config["ordem"])
 
-        if tipo == "espessura":
-            cached_data = cache_manager.get_espessuras()
-            if cached_data is not None:
-                return cached_data
-
-            dados = session.query(config["modelo"]).order_by(config["ordem"]).all()
-            cache_manager.set_espessuras(dados)
-            return dados
-
-        if tipo == "canal":
-            cached_data = cache_manager.get_canais()
-            if cached_data is not None:
-                return cached_data
-
-            dados = session.query(config["modelo"]).order_by(config["ordem"]).all()
-            cache_manager.set_canais(dados)
-            return dados
-
-        # Para outros tipos, usar cache padrão
-        return session.query(config["modelo"]).order_by(config["ordem"]).all()
+                dados = query.all()
+                db_session.expunge_all()
+                return dados
+        except SQLAlchemyError as e:
+            logging.error("Erro ao buscar dados para listagem de '%s': %s", tipo, e)
+            return []
 
     def listar(self, tipo):
-        """
-        Lista os itens do banco de dados na interface gráfica, de acordo com o tipo informado.
-        Otimizado com cache para melhorar performance em rede.
-        """
+        """Lista os itens do banco de dados na interface gráfica."""
         self.configuracoes = obter_configuracoes()
         if not self.configuracoes or tipo not in self.configuracoes:
             return
@@ -182,8 +165,6 @@ class ListManager:
             return
 
         lista_widget.clear()
-
-        # Usar dados em cache se disponível
         itens = self._buscar_dados_banco(tipo)
 
         for item in itens:
@@ -191,22 +172,11 @@ class ListManager:
                 [item.material, item.espessura, item.canal]
             ):
                 continue
+
             valores = config["valores"](item)
             valores_str = [str(v) if v is not None else "" for v in valores]
             item_widget = QTreeWidgetItem(valores_str)
             lista_widget.addTopLevelItem(item_widget)
-
-    def invalidar_cache_tipo(self, tipo):
-        """Invalida cache para um tipo específico quando há alterações."""
-        if tipo == "material":
-            cache_manager.set_materiais(None)
-        elif tipo == "espessura":
-            cache_manager.set_espessuras(None)
-        elif tipo == "canal":
-            cache_manager.set_canais(None)
-
-        # Força nova busca no banco usando função pública
-        limpar_cache()
 
 
 listar = ListManager().listar
@@ -216,9 +186,7 @@ class LimparBusca:
     """Classe para limpar campos de busca dos formulários."""
 
     def limpar_busca(self, tipo):
-        """
-        Limpa os campos de busca e atualiza a lista correspondente.
-        """
+        """Limpa os campos de busca e atualiza a lista correspondente."""
         try:
             configuracoes = obter_configuracoes()
             if tipo not in configuracoes:
@@ -261,21 +229,15 @@ class WidgetUpdater:
             "material": self._atualizar_material,
             "espessura": self._atualizar_espessura,
             "canal": self._atualizar_canal,
-            "dedução": self._atualizar_deducao,
         }
 
     def atualizar(self, tipo):
-        """
-        Atualiza os widgets da interface conforme o tipo especificado.
-        """
-        if tipo not in self.acoes:
-            return
-
-        valores_preservar = self._preservar_valores(tipo)
-        self.acoes[tipo]()
-        self._restaurar_valores(valores_preservar)
-
-        calcular_valores()
+        """Atualiza os widgets da interface conforme o tipo especificado."""
+        if tipo in self.acoes:
+            valores_preservar = self._preservar_valores(tipo)
+            self.acoes[tipo]()
+            self._restaurar_valores(valores_preservar)
+            calcular_valores()
 
     def _preservar_valores(self, tipo):
         valores = {}
@@ -295,80 +257,80 @@ class WidgetUpdater:
 
     def _atualizar_material(self):
         if hasattr(g, "MAT_COMB") and g.MAT_COMB:
-            current_value = g.MAT_COMB.currentText()
-            g.MAT_COMB.clear()
-            materiais = [
-                m.nome for m in session.query(Material).order_by(Material.nome).all()
-            ]
-            g.MAT_COMB.addItems(materiais)
-            index = g.MAT_COMB.findText(current_value)
-            g.MAT_COMB.setCurrentIndex(index)
+            with session_scope() as db_session:
+                current_value = g.MAT_COMB.currentText()
+                g.MAT_COMB.clear()
+                materiais = [
+                    m.nome
+                    for m in db_session.query(Material).order_by(Material.nome).all()
+                ]
+                g.MAT_COMB.addItems(materiais)
+                index = g.MAT_COMB.findText(current_value)
+                g.MAT_COMB.setCurrentIndex(index)
 
     def _atualizar_espessura(self):
         if hasattr(g, "ESP_COMB") and g.ESP_COMB:
-            current_value = g.ESP_COMB.currentText()
-            g.ESP_COMB.clear()
-            material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
-            if material_nome:
-                material_obj = (
-                    session.query(Material).filter_by(nome=material_nome).first()
-                )
-                if material_obj:
-                    espessuras = (
-                        session.query(Espessura)
-                        .join(Deducao)
-                        .filter(Deducao.material_id == material_obj.id)
-                        .order_by(Espessura.valor)
-                        .distinct()
+            with session_scope() as db_session:
+                current_value = g.ESP_COMB.currentText()
+                g.ESP_COMB.clear()
+                material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
+                if material_nome:
+                    material_obj = (
+                        db_session.query(Material).filter_by(nome=material_nome).first()
                     )
-                    g.ESP_COMB.addItems([str(e.valor) for e in espessuras])
-
-            index = g.ESP_COMB.findText(current_value)
-            g.ESP_COMB.setCurrentIndex(index)
+                    if material_obj:
+                        espessuras = (
+                            db_session.query(Espessura)
+                            .join(Deducao)
+                            .filter(Deducao.material_id == material_obj.id)
+                            .order_by(Espessura.valor)
+                            .distinct()
+                        )
+                        g.ESP_COMB.addItems([str(e.valor) for e in espessuras])
+                index = g.ESP_COMB.findText(current_value)
+                g.ESP_COMB.setCurrentIndex(index)
 
     def _atualizar_canal(self):
         if hasattr(g, "CANAL_COMB") and g.CANAL_COMB:
-            current_value = g.CANAL_COMB.currentText()
-            g.CANAL_COMB.clear()
-            material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
-            espessura_valor = WidgetManager.get_widget_value(g.ESP_COMB)
-            if material_nome and espessura_valor:
-                try:
-                    espessura_obj = (
-                        session.query(Espessura)
-                        .filter_by(valor=float(espessura_valor))
-                        .first()
-                    )
-                    material_obj = (
-                        session.query(Material).filter_by(nome=material_nome).first()
-                    )
-                    if espessura_obj and material_obj:
-                        canais = (
-                            session.query(Canal)
-                            .join(Deducao)
-                            .filter(
-                                Deducao.espessura_id == espessura_obj.id,
-                                Deducao.material_id == material_obj.id,
-                            )
-                            .order_by(Canal.valor)
-                            .distinct()
+            with session_scope() as db_session:
+                current_value = g.CANAL_COMB.currentText()
+                g.CANAL_COMB.clear()
+                material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
+                espessura_valor = WidgetManager.get_widget_value(g.ESP_COMB)
+                if material_nome and espessura_valor:
+                    try:
+                        espessura_obj = (
+                            db_session.query(Espessura)
+                            .filter_by(valor=float(espessura_valor))
+                            .first()
                         )
-                        g.CANAL_COMB.addItems([str(c.valor) for c in canais])
-                except ValueError:
-                    pass
-
-            index = g.CANAL_COMB.findText(current_value)
-            g.CANAL_COMB.setCurrentIndex(index)
-
-    def _atualizar_deducao(self):
-        """Passa a responsabilidade de atualização para o fluxo principal de cálculo."""
+                        material_obj = (
+                            db_session.query(Material)
+                            .filter_by(nome=material_nome)
+                            .first()
+                        )
+                        if espessura_obj and material_obj:
+                            canais = (
+                                db_session.query(Canal)
+                                .join(Deducao)
+                                .filter(
+                                    Deducao.espessura_id == espessura_obj.id,
+                                    Deducao.material_id == material_obj.id,
+                                )
+                                .order_by(Canal.valor)
+                                .distinct()
+                            )
+                            g.CANAL_COMB.addItems([str(c.valor) for c in canais])
+                    except ValueError:
+                        pass
+                index = g.CANAL_COMB.findText(current_value)
+                g.CANAL_COMB.setCurrentIndex(index)
 
 
 class FormWidgetUpdater:
     """Gerencia a atualização de comboboxes APENAS DENTRO DOS FORMULÁRIOS."""
 
     def __init__(self):
-        """Inicializa o despachante de ações."""
         self.acoes = {
             "material": self._atualizar_material_form,
             "espessura": self._atualizar_espessura_form,
@@ -376,60 +338,53 @@ class FormWidgetUpdater:
         }
 
     def atualizar(self, tipos):
-        """Atualiza os comboboxes do formulário para os tipos especificados."""
+        """Atualiza os comboboxes com base nos tipos fornecidos."""
         for tipo in tipos:
             if tipo in self.acoes:
                 self.acoes[tipo]()
 
     def _atualizar_material_form(self):
-        """Atualiza o combobox de material no formulário de dedução."""
         if hasattr(g, "DED_MATER_COMB") and g.DED_MATER_COMB:
-            materiais = [
-                m.nome for m in session.query(Material).order_by(Material.nome).all()
-            ]
-            current_value_form = g.DED_MATER_COMB.currentText()
-            g.DED_MATER_COMB.clear()
-            g.DED_MATER_COMB.addItems(materiais)
-            if current_value_form in materiais:
-                g.DED_MATER_COMB.setCurrentText(current_value_form)
-            else:
+            with session_scope() as db_session:
+                materiais = [
+                    m.nome
+                    for m in db_session.query(Material).order_by(Material.nome).all()
+                ]
+                g.DED_MATER_COMB.clear()
+                g.DED_MATER_COMB.addItems(materiais)
+                # CORREÇÃO: Inicia o combobox sem nenhum item selecionado
                 g.DED_MATER_COMB.setCurrentIndex(-1)
 
     def _atualizar_espessura_form(self):
-        """Atualiza o combobox de espessura no formulário de dedução."""
         if hasattr(g, "DED_ESPES_COMB") and g.DED_ESPES_COMB:
-            espessuras = [
-                str(e.valor)
-                for e in session.query(Espessura).order_by(Espessura.valor).all()
-            ]
-            g.DED_ESPES_COMB.clear()
-            g.DED_ESPES_COMB.addItems(espessuras)
-            g.DED_ESPES_COMB.setCurrentIndex(-1)
+            with session_scope() as db_session:
+                espessuras = [
+                    str(e.valor)
+                    for e in db_session.query(Espessura).order_by(Espessura.valor).all()
+                ]
+                g.DED_ESPES_COMB.clear()
+                g.DED_ESPES_COMB.addItems(espessuras)
+                g.DED_ESPES_COMB.setCurrentIndex(-1)
 
     def _atualizar_canal_form(self):
-        """Atualiza o combobox de canal no formulário de dedução."""
         if hasattr(g, "DED_CANAL_COMB") and g.DED_CANAL_COMB:
-            canais = [
-                str(c.valor) for c in session.query(Canal).order_by(Canal.valor).all()
-            ]
-            g.DED_CANAL_COMB.clear()
-            g.DED_CANAL_COMB.addItems(canais)
-            g.DED_CANAL_COMB.setCurrentIndex(-1)
+            with session_scope() as db_session:
+                canais = [
+                    str(c.valor)
+                    for c in db_session.query(Canal).order_by(Canal.valor).all()
+                ]
+                g.DED_CANAL_COMB.clear()
+                g.DED_CANAL_COMB.addItems(canais)
+                g.DED_CANAL_COMB.setCurrentIndex(-1)
 
 
-# --- OBTER CONFIGURAÇÕES ---
+# --- Funções de Configuração, Limpeza e Cálculo ---
 
 
 def obter_configuracoes():
-    """
-    Retorna um dicionário com as configurações de cada tipo de item.
-    Esta função mapeia os tipos de dados para os widgets da UI correspondentes,
-    sendo essencial para a camada de handlers.
-    """
+    """Retorna um dicionário com as configurações de cada tipo de item."""
     return {
-        "principal": {
-            "form": g.PRINC_FORM,
-        },
+        "principal": {"form": g.PRINC_FORM},
         "dedução": {
             "form": g.DEDUC_FORM,
             "lista": g.LIST_DED,
@@ -448,6 +403,7 @@ def obter_configuracoes():
                 d.observacao,
                 d.forca,
             ),
+            # CORREÇÃO: Ordena a lista de deduções pelo valor
             "ordem": Deducao.valor,
             "entries": {
                 "material_combo": g.DED_MATER_COMB,
@@ -467,7 +423,7 @@ def obter_configuracoes():
             },
             "item_id": Material.id,
             "valores": lambda m: (m.nome, m.densidade, m.escoamento, m.elasticidade),
-            "ordem": Material.id,
+            "ordem": Material.nome,
             "entry": g.MAT_NOME_ENTRY,
             "busca": g.MAT_BUSCA_ENTRY,
             "campo_busca": Material.nome,
@@ -520,9 +476,6 @@ def obter_configuracoes():
     }
 
 
-# --- FUNÇÕES DE LIMPEZA ---
-
-
 def limpar_dobras():
     """Limpa os valores das dobras e a dedução específica."""
     if hasattr(g, "VALORES_W"):
@@ -531,9 +484,7 @@ def limpar_dobras():
                 entry = getattr(g, f"aba{i}_entry_{w}", None)
                 if entry and hasattr(entry, "clear"):
                     entry.clear()
-
     calcular_valores()
-
     if hasattr(g, "VALORES_W") and g.VALORES_W:
         primeiro_entry = getattr(g, f"aba1_entry_{g.VALORES_W[0]}", None)
         if primeiro_entry and hasattr(primeiro_entry, "setFocus"):
@@ -547,41 +498,37 @@ def limpar_tudo():
     for combo_global in [g.ESP_COMB, g.CANAL_COMB]:
         if combo_global and hasattr(combo_global, "clear"):
             combo_global.clear()
-
-    for entry_global in [g.RI_ENTRY, g.COMPR_ENTRY]:
+    for entry_global in [
+        g.RI_ENTRY,
+        g.COMPR_ENTRY,
+        getattr(g, "DED_ESPEC_ENTRY", None),
+    ]:
         if entry_global and hasattr(entry_global, "clear"):
             entry_global.clear()
-
-    ded_espec_entry = getattr(g, "DED_ESPEC_ENTRY", None)
-    if ded_espec_entry and hasattr(ded_espec_entry, "clear"):
-        ded_espec_entry.clear()
-
     limpar_dobras()
-
-
-# --- ORQUESTRADOR DE CÁLCULOS E ATUALIZAÇÕES (REATORADO) ---
 
 
 def _coletar_dados_entrada() -> UIData:
     """Coleta todos os dados de entrada da UI e os retorna em uma estrutura."""
-    material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
-    espessura_str = WidgetManager.get_widget_value(g.ESP_COMB)
-    canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
-    raio_interno_str = WidgetManager.get_widget_value(g.RI_ENTRY)
-    comprimento_str = WidgetManager.get_widget_value(g.COMPR_ENTRY)
-    deducao_espec_str = WidgetManager.get_widget_value(g.DED_ESPEC_ENTRY)
-
     return UIData(
-        material_nome=material_nome,
-        espessura_str=espessura_str,
-        canal_str=canal_str,
-        raio_interno_str=raio_interno_str,
-        comprimento_str=comprimento_str,
-        deducao_espec_str=deducao_espec_str,
-        espessura=calculos.converter_para_float(espessura_str),
-        raio_interno=calculos.converter_para_float(raio_interno_str),
-        comprimento=calculos.converter_para_float(comprimento_str),
-        deducao_espec=calculos.converter_para_float(deducao_espec_str),
+        material_nome=WidgetManager.get_widget_value(g.MAT_COMB),
+        espessura_str=WidgetManager.get_widget_value(g.ESP_COMB),
+        canal_str=WidgetManager.get_widget_value(g.CANAL_COMB),
+        raio_interno_str=WidgetManager.get_widget_value(g.RI_ENTRY),
+        comprimento_str=WidgetManager.get_widget_value(g.COMPR_ENTRY),
+        deducao_espec_str=WidgetManager.get_widget_value(g.DED_ESPEC_ENTRY),
+        espessura=calculos.converter_para_float(
+            WidgetManager.get_widget_value(g.ESP_COMB)
+        ),
+        raio_interno=calculos.converter_para_float(
+            WidgetManager.get_widget_value(g.RI_ENTRY)
+        ),
+        comprimento=calculos.converter_para_float(
+            WidgetManager.get_widget_value(g.COMPR_ENTRY)
+        ),
+        deducao_espec=calculos.converter_para_float(
+            WidgetManager.get_widget_value(g.DED_ESPEC_ENTRY)
+        ),
     )
 
 
@@ -591,17 +538,14 @@ def _atualizar_label(
     """Função genérica para atualizar um QLineEdit ou QLabel."""
     if not WidgetManager.is_widget_valid(label):
         return
-
     if valor is None or valor == "":
         label.setText("")
         label.setStyleSheet(estilo_sucesso)
         return
-
     if isinstance(valor, str) and valor == "N/A":
         label.setText("N/A")
         label.setStyleSheet(estilo_erro)
         return
-
     try:
         label.setText(formato.format(float(valor)))
         label.setStyleSheet(estilo_sucesso)
@@ -616,7 +560,6 @@ def _atualizar_deducao_ui(data: UIData) -> float:
         data.material_nome, data.espessura_str, data.canal_str
     )
     deducao_label_str = ""
-
     if res_db:
         _atualizar_label(g.DED_LBL, res_db.get("valor"), formato="{:.2f}")
         if g.OBS_LBL:
@@ -626,7 +569,6 @@ def _atualizar_deducao_ui(data: UIData) -> float:
         _atualizar_label(g.DED_LBL, None)
         if g.OBS_LBL:
             g.OBS_LBL.setText("")
-
     return (
         data.deducao_espec
         if data.deducao_espec > 0
@@ -635,22 +577,18 @@ def _atualizar_deducao_ui(data: UIData) -> float:
 
 
 def _estilo(data: UIData):
-    estilo_k = ""  # Definição padrão
-
-    # Define o estilo do Fator K conforme a origem da dedução
+    """Define o estilo do Fator K com base na origem da dedução."""
     if g.K_LBL.text() == "":
         g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
-        g.K_LBL.setStyleSheet("")
-    elif data.deducao_espec > 0:
-        estilo_k = "QLabel {color: blue;}"
+        return ""
+    if data.deducao_espec > 0:
         g.K_LBL.setToolTip("Fator K calculado com dedução específica.")
-    elif data.canal_str == "":
-        estilo_k = "QLabel {color: orange;}"
+        return "QLabel {color: blue;}"
+    if data.canal_str == "":
         g.K_LBL.setToolTip("Fator K teórico com base na tabela Raio/Espessura.")
-    else:
-        g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
-
-    return estilo_k
+        return "QLabel {color: orange;}"
+    g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
+    return ""
 
 
 def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
@@ -658,9 +596,7 @@ def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
     res_k = calculos.CalculoFatorK().calcular(
         data.espessura, data.raio_interno, deducao_usada
     )
-
     estilo_k_offset = _estilo(data)
-
     if res_k:
         _atualizar_label(g.K_LBL, res_k["fator_k"], estilo_sucesso=estilo_k_offset)
         _atualizar_label(g.OFFSET_LBL, res_k["offset"], estilo_sucesso=estilo_k_offset)
@@ -673,15 +609,12 @@ def _atualizar_parametros_auxiliares_ui(data: UIData, deducao_usada: float) -> f
     """Calcula e atualiza Aba Mínima, Z Mínimo, Razão RI/E e retorna a aba mínima."""
     aba_min = calculos.CalculoAbaMinima().calcular(data.canal_str, data.espessura)
     _atualizar_label(g.ABA_EXT_LBL, aba_min, formato="{:.0f}")
-
     z_min = calculos.CalculoZMinimo().calcular(
         data.espessura, deducao_usada, data.canal_str
     )
     _atualizar_label(g.Z_EXT_LBL, z_min, formato="{:.0f}")
-
     razao = calculos.CalculoRazaoRIE().calcular(data.espessura, data.raio_interno)
     _atualizar_label(g.RAZAO_RIE_LBL, razao, formato="{:.1f}")
-
     return aba_min
 
 
@@ -696,7 +629,6 @@ def _atualizar_forca_ui(data: UIData):
         comprimento_total = (
             getattr(canal_obj, "comprimento_total", None) if canal_obj else None
         )
-
         is_comprimento_excedido = (
             data.comprimento > 0
             and comprimento_total is not None
@@ -720,9 +652,7 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
         )
         for i in range(1, g.N)
     ]
-
     res_coluna = calculos.CalculoDobra().calcular_coluna(valores_dobras, deducao_usada)
-
     blank_total = 0
     if res_coluna:
         blank_total = res_coluna.get("blank_total", 0)
@@ -734,11 +664,9 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                 getattr(g, f"metadedobra{i}_label_{w}", None), res.get("metade")
             )
     else:
-        # Se res_coluna for None (ex: dedução <= 0), limpa os labels de resultado
         for i in range(1, g.N):
             _atualizar_label(getattr(g, f"medidadobra{i}_label_{w}", None), None)
             _atualizar_label(getattr(g, f"metadedobra{i}_label_{w}", None), None)
-
     _atualizar_label(
         getattr(g, f"medida_blank_label_{w}", None),
         blank_total if blank_total > 0 else None,
@@ -747,42 +675,32 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
         getattr(g, f"metade_blank_label_{w}", None),
         blank_total / 2 if blank_total > 0 else None,
     )
-
     for i, valor_dobra in enumerate(valores_dobras, 1):
         entry = getattr(g, f"aba{i}_entry_{w}", None)
         if WidgetManager.is_widget_valid(entry):
-            is_aba_invalida = (
-                # pylint: disable= R1716:
-                valor_dobra > 0
-                and aba_min is not None
-                and valor_dobra < aba_min
+            # CORREÇÃO: Simplifica a comparação encadeada para resolver o aviso do Pylint.
+            is_aba_invalida = aba_min is not None and 0 < valor_dobra < aba_min
+            entry.setStyleSheet(
+                "color: white; background-color: red;" if is_aba_invalida else ""
             )
-            if is_aba_invalida:
-                entry.setStyleSheet("color: white; background-color: red;")
-                entry.setToolTip(
-                    f"Aba ({valor_dobra}) menor que a mínima ({aba_min:.0f})."
-                )
-            else:
-                entry.setStyleSheet("")
-                entry.setToolTip("Insira o valor da dobra.")
+            entry.setToolTip(
+                f"Aba ({valor_dobra}) menor que a mínima ({aba_min:.0f})."
+                if is_aba_invalida
+                else "Insira o valor da dobra."
+            )
 
 
 def calcular_valores():
-    """
-    Função principal que orquestra todos os cálculos e atualizações da UI.
-    Agora ela delega as tarefas para funções auxiliares menores.
-    """
+    """Função principal que orquestra todos os cálculos e atualizações da UI."""
     try:
         ui_data = _coletar_dados_entrada()
         deducao_usada = _atualizar_deducao_ui(ui_data)
         _atualizar_k_offset_ui(ui_data, deducao_usada)
         aba_min = _atualizar_parametros_auxiliares_ui(ui_data, deducao_usada)
         _atualizar_forca_ui(ui_data)
-
         if hasattr(g, "VALORES_W"):
             for w in g.VALORES_W:
                 _atualizar_coluna_dobras_ui(w, deducao_usada, aba_min)
-
     except (AttributeError, RuntimeError, ValueError, KeyError, TypeError) as e:
         logging.error("Erro inesperado em calcular_valores: %s", e)
         logging.debug("Detalhes do erro:", exc_info=True)
@@ -817,13 +735,18 @@ def canal_tooltip():
     if not canal_str:
         g.CANAL_COMB.setToolTip("Selecione o canal de dobra.")
         return
-    canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
-    if canal_obj:
-        obs = getattr(canal_obj, "observacao", "N/A")
-        comp = getattr(canal_obj, "comprimento_total", "N/A")
-        g.CANAL_COMB.setToolTip(f"Obs: {obs}\nComprimento total: {comp}")
-    else:
-        g.CANAL_COMB.setToolTip("Canal não encontrado.")
+    try:
+        with session_scope() as db_session:
+            canal_obj = db_session.query(Canal).filter_by(valor=canal_str).first()
+            if canal_obj:
+                obs = getattr(canal_obj, "observacao", "N/A")
+                comp = getattr(canal_obj, "comprimento_total", "N/A")
+                g.CANAL_COMB.setToolTip(f"Obs: {obs}\nComprimento total: {comp}")
+            else:
+                g.CANAL_COMB.setToolTip("Canal não encontrado.")
+    except SQLAlchemyError as e:
+        logging.error("Erro ao buscar tooltip do canal: %s", e)
+        g.CANAL_COMB.setToolTip("Erro ao buscar dados.")
 
 
 atualizar_widgets = WidgetUpdater().atualizar

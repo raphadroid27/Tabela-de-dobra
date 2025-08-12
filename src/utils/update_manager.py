@@ -35,7 +35,7 @@ UPDATER_EXECUTABLE_PATH = os.path.join(obter_dir_base(), UPDATER_EXECUTABLE_NAME
 
 def get_installed_version() -> Optional[str]:
     """Lê a versão atualmente instalada a partir do banco de dados."""
-    with session_scope() as (session, _):
+    with session_scope() as session:
         if not session:
             logging.error(
                 "Não foi possível obter uma sessão do banco de dados para ler a versão."
@@ -58,7 +58,7 @@ def get_installed_version() -> Optional[str]:
 
 def set_installed_version(version: str):
     """Grava ou atualiza a versão instalada no banco de dados."""
-    with session_scope() as (session, _):
+    with session_scope() as session:
         if not session:
             logging.error(
                 "Não foi possível obter uma sessão do banco de dados para gravar a versão."

@@ -11,9 +11,11 @@ import re
 from math import pi
 from typing import List
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material
-from src.utils.banco_dados import session
+from src.utils.banco_dados import session_scope
 from src.utils.cache_manager import cache_com_ttl
 
 # --- FUNÇÕES DE CONVERSÃO DE DADOS ---
@@ -61,19 +63,20 @@ class CalculoDeducaoDB:
             espessura_valor = float(espessura_str)
 
             # Consulta otimizada usando JOIN para reduzir queries
-            resultado = (
-                session.query(Deducao, Material, Espessura, Canal)
-                .join(Material, Deducao.material_id == Material.id)
-                .join(Espessura, Deducao.espessura_id == Espessura.id)
-                .join(Canal, Deducao.canal_id == Canal.id)
-                # pylint: disable=R0801
-                .filter(
-                    Material.nome == material_nome,
-                    Espessura.valor == espessura_valor,
-                    Canal.valor == canal_valor,
+            with session_scope() as db_session:
+                resultado = (
+                    db_session.query(Deducao, Material, Espessura, Canal)
+                    .join(Material, Deducao.material_id == Material.id)
+                    .join(Espessura, Deducao.espessura_id == Espessura.id)
+                    .join(Canal, Deducao.canal_id == Canal.id)
+                    # pylint: disable=R0801
+                    .filter(
+                        Material.nome == material_nome,
+                        Espessura.valor == espessura_valor,
+                        Canal.valor == canal_valor,
+                    )
+                    .first()
                 )
-                .first()
-            )
 
             if resultado:
                 deducao_obj = resultado[0]
@@ -165,11 +168,15 @@ class CalculoZMinimo:
         if espessura <= 0 or deducao <= 0 or not canal_str:
             return None
 
-        canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
-        if not canal_obj or canal_obj.largura is None:
+        try:
+            with session_scope() as db_session:
+                canal_obj = db_session.query(Canal).filter_by(valor=canal_str).first()
+                if not canal_obj or canal_obj.largura is None:
+                    return None
+                return espessura + (deducao / 2) + (canal_obj.largura / 2) + 2
+        except SQLAlchemyError as e:
+            print(f"Erro ao calcular Z Mínimo: {e}")
             return None
-
-        return espessura + (deducao / 2) + (canal_obj.largura / 2) + 2
 
 
 class CalculoRazaoRIE:
@@ -193,27 +200,35 @@ class CalculoForca:
     def _obter_forca_db(espessura_valor, material_nome, canal_valor):
         """Busca o valor da força no banco de dados."""
         try:
-            espessura_obj = (
-                session.query(Espessura).filter_by(valor=espessura_valor).first()
-            )
-            material_obj = session.query(Material).filter_by(nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-
-            if not all([espessura_obj, material_obj, canal_obj]):
-                return None, None
-
-            deducao_obj = (
-                session.query(Deducao)
-                .filter(
-                    Deducao.espessura_id == espessura_obj.id,
-                    Deducao.material_id == material_obj.id,
-                    Deducao.canal_id == canal_obj.id,
+            with session_scope() as db_session:
+                espessura_obj = (
+                    db_session.query(Espessura).filter_by(valor=espessura_valor).first()
                 )
-                .first()
-            )
+                material_obj = (
+                    db_session.query(Material).filter_by(nome=material_nome).first()
+                )
+                canal_obj = db_session.query(Canal).filter_by(valor=canal_valor).first()
 
-            return deducao_obj.forca if deducao_obj else None, canal_obj
-        except (AttributeError, TypeError, ValueError):
+                if not all([espessura_obj, material_obj, canal_obj]):
+                    return None, None
+
+                deducao_obj = (
+                    db_session.query(Deducao)
+                    .filter(
+                        Deducao.espessura_id == espessura_obj.id,
+                        Deducao.material_id == material_obj.id,
+                        Deducao.canal_id == canal_obj.id,
+                    )
+                    .first()
+                )
+
+                # Expunge para usar fora da sessão
+                if canal_obj:
+                    db_session.expunge(canal_obj)
+
+                return (deducao_obj.forca if deducao_obj else None), canal_obj
+        except (AttributeError, TypeError, ValueError, SQLAlchemyError) as e:
+            print(f"Erro ao obter força do DB: {e}")
             return None, None
 
     def calcular(self, comprimento: float, espessura: float, material: str, canal: str):

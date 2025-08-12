@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QWidget
 
 import src.config.globals as g
 from src.models.models import Canal, Espessura, Material
-from src.utils.banco_dados import session
+from src.utils.banco_dados import session_scope
 from src.utils.estilo import ALTURA_PADRAO_COMPONENTE
 from src.utils.utilitarios import (
     WIDGET_CABECALHO,
@@ -513,7 +513,10 @@ def create_deducao_material_combo():
     try:
         combo = _create_combo_base()
         # Carregar materiais do banco
-        materiais = [m.nome for m in session.query(Material).order_by(Material.nome)]
+        with session_scope() as db_session:
+            materiais = [
+                m.nome for m in db_session.query(Material).order_by(Material.nome)
+            ]
         combo.addItems(materiais)
         return combo
     except RuntimeError as e:
@@ -526,11 +529,12 @@ def create_deducao_espessura_combo():
     try:
         combo = _create_combo_base()
         # Carregar espessuras do banco
-        valores_espessura = session.query(Espessura.valor).distinct().all()
-        valores_limpos = [
-            float(valor[0]) for valor in valores_espessura if valor[0] is not None
-        ]
-        combo.addItems([str(valor) for valor in sorted(valores_limpos)])
+        with session_scope() as db_session:
+            valores_espessura = db_session.query(Espessura.valor).distinct().all()
+            valores_limpos = [
+                float(valor[0]) for valor in valores_espessura if valor[0] is not None
+            ]
+            combo.addItems([str(valor) for valor in sorted(valores_limpos)])
         return combo
     except RuntimeError as e:
         logger.error("Erro ao criar combobox de espessura: %s", e)
@@ -542,11 +546,12 @@ def create_deducao_canal_combo():
     try:
         combo = _create_combo_base()
         # Carregar canais do banco
-        valores_canal = session.query(Canal.valor).distinct().all()
-        valores_canal_limpos = [
-            str(valor[0]) for valor in valores_canal if valor[0] is not None
-        ]
-        combo.addItems(sorted(valores_canal_limpos))
+        with session_scope() as db_session:
+            valores_canal = db_session.query(Canal.valor).distinct().all()
+            valores_canal_limpos = [
+                str(valor[0]) for valor in valores_canal if valor[0] is not None
+            ]
+            combo.addItems(sorted(valores_canal_limpos))
         return combo
     except RuntimeError as e:
         logger.error("Erro ao criar combobox de canal: %s", e)

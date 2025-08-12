@@ -1,193 +1,181 @@
 """
-Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
+Módulo utilitário para gerenciamento de usuários.
+Versão corrigida para usar o context manager 'session_scope' para
+todas as operações de banco de dados, garantindo segurança em ambiente multi-thread.
 """
 
 import hashlib
 
 from PySide6.QtWidgets import QMessageBox
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
 from src.models.models import Usuario
-from src.utils.banco_dados import (
-    session,
-    tratativa_erro,
-)
+
+# REMOVIDO: session, tratativa_erro
+# ADICIONADO: session_scope
+from src.utils.banco_dados import session_scope
 from src.utils.interface import listar, obter_configuracoes
 from src.utils.janelas import Janela
 from src.utils.utilitarios import ask_string, show_error, show_info, show_warning
 
 
 def novo_usuario():
-    """
-    Cria um novo usuário com o nome e senha fornecidos.
-    """
-    # Verificar se os widgets foram inicializados
+    """Cria um novo usuário com o nome e senha fornecidos."""
     if g.USUARIO_ENTRY is None or g.SENHA_ENTRY is None:
         show_error("Erro", "Interface não inicializada corretamente.")
         return
 
-    novo_usuario_nome = g.USUARIO_ENTRY.text() if g.USUARIO_ENTRY else ""
-    novo_usuario_senha = g.SENHA_ENTRY.text() if g.SENHA_ENTRY else ""
-    senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
+    novo_usuario_nome = g.USUARIO_ENTRY.text() or ""
+    novo_usuario_senha = g.SENHA_ENTRY.text() or ""
 
-    if novo_usuario_nome == "" or novo_usuario_senha == "":
+    if not novo_usuario_nome or not novo_usuario_senha:
         show_error("Erro", "Preencha todos os campos.")
         return
 
-    # Verificar se o usuário já existe
-    usuario_obj = session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
-    if usuario_obj:
-        show_error("Erro", "Usuário já existente.")
-        return
+    senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
+    admin_value = g.ADMIN_VAR or "viewer"
 
-    if g.ADMIN_VAR is None:
-        show_error("Erro", "Variável de administrador não inicializada.")
-        return
+    try:
+        with session_scope() as db_session:
+            usuario_existente = (
+                db_session.query(Usuario).filter_by(nome=novo_usuario_nome).first()
+            )
+            if usuario_existente:
+                show_error("Erro", "Usuário já existente.")
+                return
 
-    admin_value = g.ADMIN_VAR if g.ADMIN_VAR else "viewer"
-    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=admin_value)
-    session.add(usuario)
+            usuario = Usuario(
+                nome=novo_usuario_nome, senha=senha_hash, role=admin_value
+            )
+            db_session.add(usuario)
+            # O commit é feito automaticamente ao sair do 'with'
 
-    # Usar tratativa_erro para tratar erros e confirmar a operação
-    tratativa_erro()  # Chamar a função para tratar erros antes de continuar
-    show_info("Sucesso", "Usuário cadastrado com sucesso.")
+        show_info("Sucesso", "Usuário cadastrado com sucesso.")
+        if g.AUTEN_FORM:
+            g.AUTEN_FORM.close()
+        Janela.estado_janelas(True)
 
-    if g.AUTEN_FORM is not None:
-        g.AUTEN_FORM.close()
-
-    Janela.estado_janelas(True)
+    except SQLAlchemyError as e:
+        show_error("Erro", f"Erro de banco de dados ao criar usuário: {e}")
 
 
 def login():
-    """
-    Realiza o login do usuário com o nome e senha fornecidos.
-    Se o usuário não existir, cria um novo usuário.
-    """
-    # Verificar se os widgets foram inicializados
+    """Realiza o login do usuário com o nome e senha fornecidos."""
     if g.USUARIO_ENTRY is None or g.SENHA_ENTRY is None:
         show_error("Erro", "Interface não inicializada corretamente.")
         return
 
-    g.USUARIO_NOME = g.USUARIO_ENTRY.text() if g.USUARIO_ENTRY else ""
-    usuario_senha = g.SENHA_ENTRY.text() if g.SENHA_ENTRY else ""
+    g.USUARIO_NOME = g.USUARIO_ENTRY.text() or ""
+    usuario_senha = g.SENHA_ENTRY.text() or ""
+    senha_hash_digitada = hashlib.sha256(usuario_senha.encode()).hexdigest()
 
-    usuario_obj = session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
-
-    if usuario_obj:
-        # Usar getattr para acessar o valor da coluna de forma segura
-        senha_db = getattr(usuario_obj, "senha", None)
-        if senha_db == "nova_senha":
-            nova_senha = ask_string(
-                "Nova Senha",
-                "Digite uma nova senha:",
-                parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
+    try:
+        with session_scope() as db_session:
+            usuario_obj = (
+                db_session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
             )
-            if nova_senha:
-                # Usar setattr para atribuir valor à coluna de forma segura
-                senha_hash = hashlib.sha256(nova_senha.encode()).hexdigest()
-                setattr(usuario_obj, "senha", senha_hash)
-                tratativa_erro()
-                show_info(
-                    "Sucesso",
-                    "Senha alterada com sucesso. Faça login novamente.",
-                    parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
-                )
+
+            if not usuario_obj:
+                show_error("Erro", "Usuário ou senha incorretos.")
                 return
-        elif senha_db == hashlib.sha256(usuario_senha.encode()).hexdigest():
-            show_info(
-                "Login",
-                "Login efetuado com sucesso.",
-                parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
-            )
+
+            # Expunge o objeto para que possa ser usado fora da sessão
+            db_session.expunge(usuario_obj)
+
+        # Lógica de verificação de senha fora da sessão do DB
+        senha_db = getattr(usuario_obj, "senha", None)
+
+        if senha_db == "nova_senha":
+            # Esta parte precisa de uma nova sessão para atualizar a senha
+            _atualizar_nova_senha(usuario_obj)
+            return
+
+        if senha_db == senha_hash_digitada:
+            show_info("Login", "Login efetuado com sucesso.")
             g.USUARIO_ID = usuario_obj.id
-            if g.AUTEN_FORM is not None:
+            if g.AUTEN_FORM:
                 g.AUTEN_FORM.close()
-            if g.PRINC_FORM is not None:
+            if g.PRINC_FORM:
                 titulo = f"Cálculo de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
                 g.PRINC_FORM.setWindowTitle(titulo)
-            # Atualiza a barra de título customizada, se existir
             if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
                 g.BARRA_TITULO.titulo.setText(titulo)
         else:
-            show_error(
-                "Erro",
-                "Usuário ou senha incorretos.",
-                parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
-            )
-    else:
-        show_error(
-            "Erro",
-            "Usuário ou senha incorretos.",
-            parent=g.AUTEN_FORM if g.AUTEN_FORM else None,
-        )
+            show_error("Erro", "Usuário ou senha incorretos.")
 
-    Janela.estado_janelas(True)
+    except SQLAlchemyError as e:
+        show_error("Erro", f"Erro de banco de dados durante o login: {e}")
+    finally:
+        Janela.estado_janelas(True)
+
+
+def _atualizar_nova_senha(usuario_obj):
+    """Função auxiliar para solicitar e atualizar uma nova senha."""
+    nova_senha = ask_string("Nova Senha", "Digite uma nova senha:", parent=g.AUTEN_FORM)
+    if not nova_senha:
+        return
+
+    nova_senha_hash = hashlib.sha256(nova_senha.encode()).hexdigest()
+    try:
+        with session_scope() as db_session:
+            db_session.query(Usuario).filter_by(id=usuario_obj.id).update(
+                {"senha": nova_senha_hash}
+            )
+        show_info("Sucesso", "Senha alterada com sucesso. Faça login novamente.")
+    except SQLAlchemyError as e:
+        show_error("Erro", f"Não foi possível atualizar a senha: {e}")
 
 
 def logado(tipo):
-    """
-    Verifica se o usuário está logado antes de permitir ações em formulários específicos.
-    """
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
+    """Verifica se o usuário está logado."""
     if g.USUARIO_ID is None:
-        show_error("Erro", "Login requerido.", parent=config["form"])
+        config = obter_configuracoes()[tipo]
+        show_error("Erro", "Login requerido.", parent=config.get("form"))
         return False
     return True
 
 
 def tem_permissao(tipo, role_requerida, show_message=True):
-    """
-    Verifica se o usuário tem permissão para realizar uma ação específica.
-
-    Args:
-        tipo (str): O tipo de configuração a ser usado.
-        role_requerida (str): O nível de permissão necessário ('viewer', 'editor', 'admin').
-        show_message (bool): Se False, suprime a exibição de mensagens de erro.
-    """
-    configuracoes = obter_configuracoes()
-    config = configuracoes[tipo]
-
-    usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
-    if not usuario_obj:
-        if show_message:
-            show_warning(
-                "Aviso",
-                "Você não tem permissão para acessar esta função.",
-                parent=config["form"],
-            )
+    """Verifica se o usuário tem a permissão necessária."""
+    if not logado(tipo):
         return False
-
-    # Permitir hierarquia de permissões
-    roles_hierarquia = ["viewer", "editor", "admin"]
-    usuario_role = getattr(usuario_obj, "role", "viewer")
 
     try:
-        required_index = roles_hierarquia.index(role_requerida)
-        user_index = roles_hierarquia.index(usuario_role)
-    except ValueError:
-        if show_message:
-            show_error("Erro", "Role de usuário inválida encontrada.")
-        return False
+        with session_scope() as db_session:
+            usuario_obj = db_session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
+            if not usuario_obj:
+                if show_message:
+                    show_warning("Aviso", "Usuário não encontrado ou inválido.")
+                return False
 
-    if user_index < required_index:
+            roles_hierarquia = ["viewer", "editor", "admin"]
+            usuario_role = getattr(usuario_obj, "role", "viewer")
+            required_index = roles_hierarquia.index(role_requerida)
+            user_index = roles_hierarquia.index(usuario_role)
+
+            if user_index < required_index:
+                if show_message:
+                    show_error(
+                        "Erro",
+                        f"Permissão de '{role_requerida}' ou superior requerida.",
+                    )
+                return False
+            return True
+    except (SQLAlchemyError, ValueError) as e:
         if show_message:
-            show_error("Erro", f"Permissão '{role_requerida}' requerida.")
+            show_error("Erro", f"Erro ao verificar permissões: {e}")
         return False
-    return True
 
 
 def logout():
-    """
-    Realiza o logout do usuário atual.
-    """
+    """Realiza o logout do usuário atual."""
     if g.USUARIO_ID is None:
         show_error("Erro", "Nenhum usuário logado.")
         return
 
     g.USUARIO_ID = None
-    if g.PRINC_FORM is not None:
+    if g.PRINC_FORM:
         g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
         if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
             g.BARRA_TITULO.titulo.setText("Cálculo de Dobra")
@@ -195,163 +183,102 @@ def logout():
 
 
 def resetar_senha():
-    """
-    Reseta a senha do usuário selecionado na lista de usuários.
-    """
-    if g.LIST_USUARIO is None:
-        show_error("Erro", "Lista de usuários não inicializada.")
-        return
-
-    # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
+    """Reseta a senha do usuário selecionado para 'nova_senha'."""
     user_id = item_selecionado_usuario()
     if user_id is None:
-        show_warning(
-            "Aviso",
-            "Selecione um usuário para resetar a senha.",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
+        show_warning("Aviso", "Selecione um usuário para resetar a senha.")
         return
 
-    # Gerar senha aleatória de 10 caracteres
-    novo_password = "nova_senha"
-
-    usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-    if usuario_obj:
-        setattr(usuario_obj, "senha", novo_password)
-        tratativa_erro()
-        show_info(
-            "Sucesso",
-            "Senha resetada com sucesso",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
-    else:
-        show_error(
-            "Erro",
-            "Usuário não encontrado.",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
+    try:
+        with session_scope() as db_session:
+            updated_count = (
+                db_session.query(Usuario)
+                .filter_by(id=user_id)
+                .update({"senha": "nova_senha"})
+            )
+            if updated_count > 0:
+                show_info(
+                    "Sucesso",
+                    "Senha resetada. O usuário deverá criar uma nova senha no próximo login.",
+                )
+            else:
+                show_error("Erro", "Usuário não encontrado.")
+    except SQLAlchemyError as e:
+        show_error("Erro", f"Erro de banco de dados ao resetar senha: {e}")
 
 
 def excluir_usuario():
-    """
-    Exclui o usuário selecionado na lista de usuários.
-    """
-    # Validações iniciais
-    if not tem_permissao("usuario", "admin") or g.LIST_USUARIO is None:
+    """Exclui o usuário selecionado na lista."""
+    if not tem_permissao("usuario", "admin"):
         return
 
-    # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
-    obj_id = item_selecionado_usuario()
-    if obj_id is None:
-        show_warning(
-            "Aviso",
-            "Selecione um usuário para excluir.",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
+    user_id = item_selecionado_usuario()
+    if user_id is None:
+        show_warning("Aviso", "Selecione um usuário para excluir.")
         return
 
-    # Obter dados do usuário selecionado
-    obj = session.query(Usuario).filter_by(id=obj_id).first()
+    try:
+        with session_scope() as db_session:
+            usuario_obj = db_session.query(Usuario).filter_by(id=user_id).first()
+            if not usuario_obj:
+                show_error("Erro", "Usuário não encontrado.")
+                return
+            if getattr(usuario_obj, "role", None) == "admin":
+                show_error("Erro", "Não é possível excluir um administrador.")
+                return
 
-    erro_msg = None
-    if obj is None:
-        erro_msg = "Usuário não encontrado."
-    elif getattr(obj, "role", None) == "admin":
-        erro_msg = "Não é possível excluir um administrador."
-
-    if erro_msg:
-        show_error("Erro", erro_msg, parent=g.USUAR_FORM if g.USUAR_FORM else None)
-        return
-
-    # Confirmar exclusão
-    aviso = QMessageBox.question(
-        g.USUAR_FORM if g.USUAR_FORM else None,
-        "Atenção!",
-        "Tem certeza que deseja excluir o usuário?",
-        QMessageBox.Yes | QMessageBox.No,
-    )
-    if aviso == QMessageBox.Yes:
-        session.delete(obj)
-        tratativa_erro()
-        # Atualizar a lista após exclusão
-        listar("usuario")
-        show_info(
-            "Sucesso",
-            "Usuário excluído com sucesso!",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
+            aviso = QMessageBox.question(
+                g.USUAR_FORM,
+                "Atenção!",
+                "Tem certeza que deseja excluir o usuário?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if aviso == QMessageBox.Yes:
+                db_session.delete(usuario_obj)
+                show_info("Sucesso", "Usuário excluído com sucesso!")
+                listar("usuario")
+    except SQLAlchemyError as e:
+        show_error("Erro", f"Erro de banco de dados ao excluir usuário: {e}")
 
 
 def tornar_editor():
-    """
-    Promove o usuário selecionado a editor.
-    """
-    if g.LIST_USUARIO is None:
-        show_error("Erro", "Lista de usuários não disponível.")
+    """Promove o usuário selecionado a editor."""
+    if not tem_permissao("usuario", "admin"):
         return
 
-    # Usar item_selecionado_usuario para obter o item de forma compatível com PySide6
     user_id = item_selecionado_usuario()
     if user_id is None:
-        show_warning(
-            "Aviso",
-            "Selecione um usuário para promover a editor.",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
+        show_warning("Aviso", "Selecione um usuário para promover.")
         return
 
-    usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
+    try:
+        with session_scope() as db_session:
+            usuario_obj = db_session.query(Usuario).filter_by(id=user_id).first()
+            if not usuario_obj:
+                show_error("Erro", "Usuário não encontrado.")
+                return
+            if usuario_obj.role == "admin":
+                show_error("Erro", "O usuário já é um administrador (nível superior).")
+                return
+            if usuario_obj.role == "editor":
+                show_info("Informação", "O usuário já é um editor.")
+                return
 
-    if usuario_obj:
-        # Usar getattr para acessar o valor da coluna de forma segura
-        usuario_role = getattr(usuario_obj, "role", None)
-        if usuario_role == "admin":
-            show_error(
-                "Erro",
-                "O usuário já é um administrador.",
-                parent=g.USUAR_FORM if g.USUAR_FORM else None,
-            )
-            return
-        if usuario_role == "editor":
-            show_info(
-                "Informação",
-                "O usuário já é um editor.",
-                parent=g.USUAR_FORM if g.USUAR_FORM else None,
-            )
-            return
-
-        # Usar setattr para atribuir valor à coluna de forma segura
-        setattr(usuario_obj, "role", "editor")
-        tratativa_erro()
-        show_info(
-            "Sucesso",
-            "Usuário promovido a editor com sucesso.",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
-        listar("usuario")  # Atualiza a lista de usuários na interface
-    else:
-        show_error(
-            "Erro",
-            "Usuário não encontrado.",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
+            usuario_obj.role = "editor"
+            show_info("Sucesso", "Usuário promovido a editor com sucesso.")
+            listar("usuario")
+    except SQLAlchemyError as e:
+        show_error("Erro", f"Erro de banco de dados ao promover usuário: {e}")
 
 
 def item_selecionado_usuario():
-    """
-    Retorna o ID do usuário selecionado na lista de usuários.
-    """
+    """Retorna o ID do usuário selecionado na lista de usuários."""
     if g.LIST_USUARIO is None:
         return None
-
     selected_items = g.LIST_USUARIO.selectedItems()
     if not selected_items:
         return None
-
-    selected_item = selected_items[0]
     try:
-        # Para lista de usuários, o ID está na primeira coluna (ID, Nome, Role)
-        user_id = selected_item.text(0)
-        return int(user_id)
+        return int(selected_items[0].text(0))
     except (ValueError, IndexError):
         return None

@@ -164,6 +164,7 @@ class CacheManager:
         # que usam o cache genérico (`cache_com_ttl`), limpamos ele também.
         limpar_cache()
         logging.info("Cache invalidado para o tipo: %s e cache genérico.", tipo)
+
     # --- FIM DA ALTERAÇÃO ---
 
 

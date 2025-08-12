@@ -14,10 +14,7 @@ from typing import Optional
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import SystemControl
-
-# Removida a importação da sessão global
-# from src.utils.banco_dados import session as db_session
-from src.utils.banco_dados import session_scope  # Importando o session_scope
+from src.utils.banco_dados import session_scope  # Importação correta
 
 
 class SessionManager:
@@ -28,19 +25,17 @@ class SessionManager:
         self.heartbeat_interval = 60  # 60 segundos
         self.last_heartbeat = 0
         self.heartbeat_timer = None
-        self._lock = Lock()  # Adiciona um lock para controle de concorrência no timer
+        self._lock = Lock()
 
     def registrar_sessao(self):
         """Registra a sessão atual no banco de dados."""
         try:
-            with session_scope() as (db_session, _):
-                if not db_session:
-                    return
-
+            with session_scope() as db_session:
                 hostname = socket.gethostname()
                 sessao_existente = (
-                    db_session.query(SystemControl).filter_by(
-                        key=self.session_id).first()
+                    db_session.query(SystemControl)
+                    .filter_by(key=self.session_id)
+                    .first()
                 )
                 if not sessao_existente:
                     logging.info(
@@ -52,30 +47,20 @@ class SessionManager:
                         type="SESSION", key=self.session_id, value=hostname
                     )
                     db_session.add(nova_sessao)
-                    # O commit é tratado pelo session_scope
         except SQLAlchemyError as e:
             logging.error("Erro ao registrar sessão: %s", e)
-            # O rollback é tratado pelo session_scope
 
     def remover_sessao(self):
         """Remove a sessão atual do banco de dados ao fechar."""
         try:
-            with session_scope() as (db_session, _):
-                if not db_session:
-                    return
+            with session_scope() as db_session:
                 logging.info("Removendo sessão: ID %s", self.session_id)
-                sessao_para_remover = (
-                    db_session.query(SystemControl).filter_by(
-                        key=self.session_id).first()
+                db_session.query(SystemControl).filter_by(key=self.session_id).delete(
+                    synchronize_session=False
                 )
-                if sessao_para_remover:
-                    db_session.delete(sessao_para_remover)
-                    # O commit é tratado pelo session_scope
         except SQLAlchemyError as e:
             logging.error("Erro ao remover sessão: %s", e)
-            # O rollback é tratado pelo session_scope
         finally:
-            # Cancelar timer se existir
             if self.heartbeat_timer:
                 self.heartbeat_timer.cancel()
 
@@ -83,36 +68,32 @@ class SessionManager:
         """Atualiza o timestamp da sessão ativa de forma otimizada para múltiplos usuários."""
         current_time = time.time()
 
-        # Só atualizar se passou o intervalo mínimo (evita spam de updates)
         if current_time - self.last_heartbeat < self.heartbeat_interval:
-            # Reagendar o próximo heartbeat mesmo se não atualizar agora
             self._schedule_next_heartbeat()
             return
 
         try:
-            with session_scope() as (db_session, _):
-                if not db_session:
-                    return
-
-                sessao_atual = (
-                    db_session.query(SystemControl).filter_by(
-                        key=self.session_id).first()
+            with session_scope() as db_session:
+                updated_count = (
+                    db_session.query(SystemControl)
+                    .filter_by(key=self.session_id)
+                    .update({"last_updated": datetime.now(timezone.utc)})
                 )
-                if sessao_atual:
-                    sessao_atual.last_updated = datetime.now(timezone.utc)
+                if updated_count > 0:
                     self.last_heartbeat = current_time
-                    logging.debug("Heartbeat atualizado para sessão %s",
-                                  self.session_id)
+                    logging.debug(
+                        "Heartbeat atualizado para sessão %s", self.session_id
+                    )
                 else:
-                    # Se a sessão não existe por algum motivo, registra novamente.
-                    logging.warning("Sessão não encontrada, reregistrando...")
-                    self.registrar_sessao()  # registrar_sessao já usa seu próprio escopo
+                    logging.warning(
+                        "Sessão %s não encontrada para heartbeat, reregistrando...",
+                        self.session_id,
+                    )
+                    self.registrar_sessao()
                     self.last_heartbeat = current_time
-
         except SQLAlchemyError as e:
             logging.error("Erro ao atualizar heartbeat da sessão: %s", e)
         finally:
-            # Agendar próximo heartbeat automaticamente
             self._schedule_next_heartbeat()
 
     def _schedule_next_heartbeat(self):
@@ -120,7 +101,6 @@ class SessionManager:
         with self._lock:
             if self.heartbeat_timer:
                 self.heartbeat_timer.cancel()
-
             self.heartbeat_timer = Timer(
                 self.heartbeat_interval, self.atualizar_heartbeat_sessao
             )
@@ -142,7 +122,7 @@ class SessionManager:
     def obter_comando_sistema() -> Optional[str]:
         """Busca no banco e retorna o comando atual do sistema ('SHUTDOWN', 'NONE', etc.)."""
         try:
-            with session_scope() as (db_session, _):
+            with session_scope() as db_session:
                 if not db_session:
                     return None
                 cmd_entry = (
@@ -157,7 +137,7 @@ class SessionManager:
     def definir_comando_sistema(comando: str):
         """Define um comando do sistema (ex: 'SHUTDOWN', 'UPDATE', etc.)."""
         try:
-            with session_scope() as (db_session, _):
+            with session_scope() as db_session:
                 if not db_session:
                     return
                 cmd_entry = (
@@ -171,7 +151,7 @@ class SessionManager:
                         type="COMMAND",
                         key="SYSTEM_CMD",
                         value=comando,
-                        last_updated=datetime.now(timezone.utc)
+                        last_updated=datetime.now(timezone.utc),
                     )
                     db_session.add(novo_comando)
 
@@ -183,7 +163,7 @@ class SessionManager:
     def obter_sessoes_ativas():
         """Retorna lista de todas as sessões ativas."""
         try:
-            with session_scope() as (db_session, _):
+            with session_scope() as db_session:
                 if not db_session:
                     return []
                 sessoes = (
@@ -195,13 +175,18 @@ class SessionManager:
 
                 resultado = []
                 for sessao in sessoes:
-                    resultado.append({
-                        'session_id': sessao.key,
-                        'usuario': 'Sistema',  # Pode ser expandido para incluir usuário
-                        'hostname': sessao.value,
-                        'last_updated': sessao.last_updated.strftime('%Y-%m-%d %H:%M:%S')
-                        if sessao.last_updated else 'N/A'
-                    })
+                    resultado.append(
+                        {
+                            "session_id": sessao.key,
+                            "usuario": "Sistema",  # Pode ser expandido para incluir usuário
+                            "hostname": sessao.value,
+                            "last_updated": (
+                                sessao.last_updated.strftime("%Y-%m-%d %H:%M:%S")
+                                if sessao.last_updated
+                                else "N/A"
+                            ),
+                        }
+                    )
 
                 return resultado
         except SQLAlchemyError as e:
@@ -213,7 +198,7 @@ class SessionManager:
     def limpar_comando_sistema():
         """Limpa o comando do sistema."""
         try:
-            with session_scope() as (db_session, _):
+            with session_scope() as db_session:
                 if not db_session:
                     return
                 cmd_entry = (
@@ -229,7 +214,7 @@ class SessionManager:
     def verificar_comando_shutdown() -> bool:
         """Verifica se existe comando de shutdown pendente."""
         try:
-            with session_scope() as (db_session, _):
+            with session_scope() as db_session:
                 if not db_session:
                     return False
                 cmd_entry = (

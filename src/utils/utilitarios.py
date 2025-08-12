@@ -170,30 +170,45 @@ def ask_string(
     return text if ok else None
 
 
-def show_error(title: str, message: str, parent: Optional[QWidget] = None) -> None:
+def show_error(
+    title: str, message: Union[str, tuple], parent: Optional[QWidget] = None
+) -> None:
     """Mostra uma mensagem de erro usando QMessageBox."""
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Icon.Critical)
     msg.setWindowTitle(title)
-    msg.setText(message)
+    # CORREÇÃO: Garante que a mensagem seja uma string antes de passá-la.
+    if isinstance(message, (list, tuple)):
+        message = message[0] if message else ""
+    msg.setText(str(message))
     msg.exec()
 
 
-def show_info(title: str, message: str, parent: Optional[QWidget] = None) -> None:
+def show_info(
+    title: str, message: Union[str, tuple], parent: Optional[QWidget] = None
+) -> None:
     """Mostra uma mensagem de informação usando QMessageBox."""
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Icon.Information)
     msg.setWindowTitle(title)
-    msg.setText(message)
+    # CORREÇÃO: Garante que a mensagem seja uma string antes de passá-la.
+    if isinstance(message, (list, tuple)):
+        message = message[0] if message else ""
+    msg.setText(str(message))
     msg.exec()
 
 
-def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> None:
+def show_warning(
+    title: str, message: Union[str, tuple], parent: Optional[QWidget] = None
+) -> None:
     """Mostra uma mensagem de aviso usando QMessageBox."""
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Icon.Warning)
     msg.setWindowTitle(title)
-    msg.setText(message)
+    # CORREÇÃO: Garante que a mensagem seja uma string antes de passá-la.
+    if isinstance(message, (list, tuple)):
+        message = message[0] if message else ""
+    msg.setText(str(message))
     msg.exec()
 
 

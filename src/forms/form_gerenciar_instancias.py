@@ -5,6 +5,7 @@ Este módulo implementa uma interface gráfica para administradores
 visualizarem e gerenciarem instâncias ativas do sistema, incluindo
 a funcionalidade de shutdown remoto de todas as instâncias.
 """
+
 import sys
 from datetime import datetime
 
@@ -179,7 +180,8 @@ class FormGerenciarInstancias(QDialog):
         msg = (
             "⚠️ ATENÇÃO! "
             "Esta ação irá fechar TODAS as instâncias do sistema. "
-            "Deseja continuar?")
+            "Deseja continuar?"
+        )
         resposta = QMessageBox.question(
             self,
             "Confirmar Shutdown",

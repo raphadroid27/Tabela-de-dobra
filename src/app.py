@@ -38,8 +38,7 @@ from src.forms.form_universal import form_deducao_main as FormDeducao
 from src.forms.form_universal import form_espessura_main as FormEspessura
 from src.forms.form_universal import form_material_main as FormMaterial
 from src.models.models import Usuario
-from src.utils.banco_dados import inicializar_banco_dados
-from src.utils.banco_dados import session as db_session
+from src.utils.banco_dados import inicializar_banco_dados, session_scope
 from src.utils.cache_manager import limpar_cache
 from src.utils.estilo import (
     aplicar_tema_inicial,
@@ -92,7 +91,11 @@ UPDATE_CHECK_TIMER = QTimer()
 def verificar_admin_existente():
     """Verifica se existe um administrador cadastrado."""
     logging.info("Verificando se existe um administrador.")
-    admin_existente = db_session.query(Usuario).filter(Usuario.role == "admin").first()
+
+    with session_scope() as db_session:
+        admin_existente = (
+            db_session.query(Usuario).filter(Usuario.role == "admin").first()
+        )
     if not admin_existente:
         logging.warning(
             "Nenhum administrador encontrado. Abrindo formulário de autorização."
@@ -112,10 +115,7 @@ def carregar_configuracao():
         "Arquivo de configuração não encontrado. Usando configuração padrão."
     )
     # Configuração padrão
-    return {
-        "tema": "dark",  # Tema padrão
-        "geometry": None
-    }
+    return {"tema": "dark", "geometry": None}  # Tema padrão
 
 
 def salvar_configuracao(config):
@@ -280,7 +280,10 @@ def configurar_menu(menu_custom):
             ("🔐 Login", partial(_executar_autenticacao, True)),
             ("👥 Novo Usuário", partial(_executar_autenticacao, False)),
             ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
-            ("🖥️ Gerenciar Instâncias", lambda: form_gerenciar_instancias.main(g.PRINC_FORM)),
+            (
+                "🖥️ Gerenciar Instâncias",
+                lambda: form_gerenciar_instancias.main(g.PRINC_FORM),
+            ),
             ("separator", None),
             ("🚪 Sair", logout),
         ],
@@ -459,8 +462,6 @@ def main():
         return 1
     finally:
         logging.info("Aplicação finalizada.")
-        if db_session:
-            db_session.close()
 
 
 if __name__ == "__main__":

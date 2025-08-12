@@ -121,7 +121,9 @@ class PrintManager:
             resultado += f"Arquivos encontrados ({len(self.arquivos_encontrados)}):\n"
             resultado += "".join(f" • {arq}\n" for arq in self.arquivos_encontrados)
         if self.arquivos_nao_encontrados:
-            msg = f"\nArquivos não encontrados ({len(self.arquivos_nao_encontrados)}):\n"
+            msg = (
+                f"\nArquivos não encontrados ({len(self.arquivos_nao_encontrados)}):\n"
+            )
             resultado += msg
             resultado += "".join(f" • {arq}\n" for arq in self.arquivos_nao_encontrados)
         if not self.arquivos_encontrados and not self.arquivos_nao_encontrados:
@@ -134,6 +136,7 @@ class PrintWorker(QThread):
     Worker thread para executar a impressão em segundo plano,
     evitando que a GUI congele e controlando a fila de impressão.
     """
+
     progress_update = Signal(str)
     # CORREÇÃO: Renomeado o sinal para evitar conflito com o QThread.finished
     processo_finalizado = Signal()
@@ -468,7 +471,8 @@ class FormImpressao(QDialog):
         diretorio = self.diretorio_entry.text().strip()
         if not diretorio or not os.path.isdir(diretorio):
             QMessageBox.critical(
-                self, "Erro", "Por favor, selecione um diretório válido.")
+                self, "Erro", "Por favor, selecione um diretório válido."
+            )
             return
 
         lista_arquivos = self._obter_lista_arquivos_da_widget()
@@ -508,14 +512,18 @@ class FormImpressao(QDialog):
 
             if not self.print_manager.arquivos_encontrados:
                 QMessageBox.warning(
-                    self, "Aviso", "Nenhum arquivo válido foi encontrado para impressão.")
+                    self,
+                    "Aviso",
+                    "Nenhum arquivo válido foi encontrado para impressão.",
+                )
                 return
 
             self.imprimir_btn.setEnabled(False)
             self.imprimir_btn.setText("Imprimindo...")
 
             self.print_worker = PrintWorker(
-                diretorio, self.print_manager.arquivos_encontrados)
+                diretorio, self.print_manager.arquivos_encontrados
+            )
             self.print_worker.progress_update.connect(self.atualizar_resultado)
             # CORREÇÃO: Conectando ao sinal renomeado
             self.print_worker.processo_finalizado.connect(self.impressao_finalizada)
@@ -535,8 +543,9 @@ class FormImpressao(QDialog):
 
     def impressao_finalizada(self):
         """Chamado quando a thread de impressão termina."""
-        QMessageBox.information(self, "Processo Concluído",
-                                "A impressão em lote foi finalizada.")
+        QMessageBox.information(
+            self, "Processo Concluído", "A impressão em lote foi finalizada."
+        )
         self.imprimir_btn.setEnabled(True)
         self.imprimir_btn.setText("🖨️ Imprimir")
         self.print_worker = None
@@ -544,6 +553,7 @@ class FormImpressao(QDialog):
 
 class FormManager:
     """Gerencia a instância do formulário para garantir que seja um singleton."""
+
     _instance = None
 
     @classmethod

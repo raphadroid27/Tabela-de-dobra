@@ -1,11 +1,7 @@
 """
 Formulário de Autenticação
-
-Este módulo implementa uma interface gráfica para autenticação de usuários no sistema.
-As funcionalidades incluem login de usuários existentes e criação de novos usuários,
-com a possibilidade de definir permissões administrativas. A interface é construída
-com a biblioteca PySide6, utilizando o módulo globals para variáveis globais e o
-módulo funcoes para operações auxiliares. O banco de dados é gerenciado com SQLAlchemy.
+Versão corrigida para usar o context manager 'session_scope' para
+consultas de banco de dados, garantindo segurança em ambiente multi-thread.
 """
 
 from PySide6.QtCore import Qt
@@ -19,11 +15,15 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models import Usuario
-from src.utils.banco_dados import session
+
+# REMOVIDO: import session
+# ADICIONADO: import session_scope
+from src.utils.banco_dados import session_scope
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.usuarios import login, novo_usuario
@@ -49,9 +49,7 @@ def _configurar_janela_base(root):
     )
 
     def close_event(event):
-
         Janela.estado_janelas(True)
-
         event.accept()
 
     g.AUTEN_FORM.closeEvent = close_event
@@ -67,12 +65,7 @@ def _criar_layout_principal():
 def _criar_barra_titulo(vlayout):
     """Cria e configura a barra de título."""
     barra = BarraTitulo(g.AUTEN_FORM, tema=obter_tema_atual())
-
-    if g.LOGIN:
-        barra.titulo.setText("Login")
-    else:
-        barra.titulo.setText("Novo Usuário")
-
+    barra.titulo.setText("Login" if g.LOGIN else "Novo Usuário")
     vlayout.addWidget(barra)
     return barra
 
@@ -90,8 +83,17 @@ def _criar_campos_usuario_senha(main_layout):
 
 
 def _verificar_admin_existente():
-    """Verifica se já existe um usuário administrador."""
-    return session.query(Usuario).filter(Usuario.role == "admin").first()
+    """Verifica se já existe um usuário administrador, usando um escopo de sessão seguro."""
+    try:
+        with session_scope() as db_session:
+            admin_user = (
+                db_session.query(Usuario).filter(Usuario.role == "admin").first()
+            )
+            return admin_user is not None
+    except SQLAlchemyError as e:
+        # Em caso de erro de DB, é mais seguro assumir que não se pode criar um novo admin.
+        print(f"Erro ao verificar admin existente: {e}")
+        return True
 
 
 def _configurar_modo_login(main_layout):
@@ -139,8 +141,7 @@ def _criar_conteudo_principal(vlayout):
 
     _criar_campos_usuario_senha(main_layout)
 
-    # Inicializar variável admin
-    g.ADMIN_VAR = "viewer"
+    g.ADMIN_VAR = "viewer"  # Valor padrão
 
     if g.LOGIN:
         _configurar_modo_login(main_layout)
@@ -163,12 +164,7 @@ def _finalizar_configuracao():
 
 
 def main(root):
-    """
-    Função principal que cria a janela de autenticação.
-    Se a janela já existir, ela é destruída antes de criar uma nova.
-    A janela é configurada com campos para usuário e senha, e um botão para login ou
-    criação de novo usuário, dependendo do estado atual do sistema.
-    """
+    """Função principal que cria a janela de autenticação."""
     _configurar_janela_base(root)
     vlayout = _criar_layout_principal()
     _criar_barra_titulo(vlayout)
