@@ -1,22 +1,13 @@
-# Ferramentas de análise e formatação de código
+# requirements-dev.txt
 black
 isort
+autoflake
+pylint
 flake8
+pydocstyle
+vulture
 mypy
 bandit
+safety
 radon
-unimport
-vulture
-pyflakes
-autopep8
-rope
-pydocstyle
-mccabe
-pip-check
-pipdeptree
-
-# Extensões para flake8
-flake8-bugbear
-flake8-import-order
-flake8-docstrings
-flake8-comprehensions
+copydetect
