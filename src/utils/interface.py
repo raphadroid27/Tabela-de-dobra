@@ -603,6 +603,7 @@ def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
 
 def _atualizar_parametros_auxiliares_ui(data: UIData, deducao_usada: float) -> float:
     """Calcula e atualiza Aba Mínima, Z Mínimo, Razão RI/E e retorna a aba mínima."""
+    # CORREÇÃO: Passa a string do canal diretamente para a função de cálculo.
     aba_min = calculos.CalculoAbaMinima().calcular(data.canal_str, data.espessura)
     _atualizar_label(g.ABA_EXT_LBL, aba_min, formato="{:.0f}")
 
@@ -683,20 +684,16 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
     for i, valor_dobra in enumerate(valores_dobras, 1):
         entry = getattr(g, f"aba{i}_entry_{w}", None)
         if WidgetManager.is_widget_valid(entry):
-            is_aba_invalida = (
-                # pylint: disable= R1716:
-                valor_dobra > 0
-                and aba_min is not None
-                and valor_dobra < aba_min
+            # CORREÇÃO: Simplifica a comparação encadeada para resolver o aviso do Pylint.
+            is_aba_invalida = aba_min is not None and 0 < valor_dobra < aba_min
+            entry.setStyleSheet(
+                "color: white; background-color: red;" if is_aba_invalida else ""
             )
-            if is_aba_invalida:
-                entry.setStyleSheet("color: white; background-color: red;")
-                entry.setToolTip(
-                    f"Aba ({valor_dobra}) menor que a mínima ({aba_min:.0f})."
-                )
-            else:
-                entry.setStyleSheet("")
-                entry.setToolTip("Insira o valor da dobra.")
+            entry.setToolTip(
+                f"Aba ({valor_dobra}) menor que a mínima ({aba_min:.0f})."
+                if is_aba_invalida
+                else "Insira o valor da dobra."
+            )
 
 
 def calcular_valores():
