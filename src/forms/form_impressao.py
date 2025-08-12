@@ -214,7 +214,7 @@ class PrintWorker(QThread):
         msg = f"Tentando imprimir {nome_arquivo} com Foxit...\n"
         self.progress_update.emit(msg)
         try:
-            subprocess.run(
+            subprocess.run(  # nosec B603
                 [FOXIT_PATH, "/p", caminho],
                 check=True,
                 timeout=TIMEOUT_IMPRESSAO,
@@ -239,7 +239,7 @@ class PrintWorker(QThread):
         msg = f"Tentando imprimir {nome_arquivo} com impressora padrão...\n"
         self.progress_update.emit(msg)
         try:
-            os.startfile(caminho, "print")
+            os.startfile(caminho, "print")  # nosec B606
             result_msg = " ✓ Sucesso com impressora padrão\n"
             self.progress_update.emit(result_msg)
             return True
@@ -256,7 +256,7 @@ class PrintWorker(QThread):
                 msg = f"Tentando imprimir {nome_arquivo} com Adobe ({base_name})...\n"
                 self.progress_update.emit(msg)
                 try:
-                    subprocess.run(
+                    subprocess.run(  # nosec B603
                         [adobe_path, "/p", caminho],
                         check=True,
                         timeout=TIMEOUT_IMPRESSAO,
