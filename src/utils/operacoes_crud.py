@@ -236,21 +236,33 @@ def excluir_objeto(obj: Any) -> Tuple[bool, str]:
     log_details = f"Excluído(a) {obj_type} {obj_identifier}"
 
     try:
+        # CORREÇÃO: Assegurar que a exclusão em cascata seja feita
+        # O SQLAlchemy precisa ser instruído a fazer o flush das deleções pendentes
+        # antes de deletar o objeto principal.
+
         # Se o objeto não for uma dedução, exclui as deduções associadas
         if isinstance(obj, Material):
-            session.query(Deducao).filter_by(material_id=obj_id).delete()
+            session.query(Deducao).filter(Deducao.material_id ==
+                                          obj_id).delete(synchronize_session=False)
         elif isinstance(obj, Espessura):
-            session.query(Deducao).filter_by(espessura_id=obj_id).delete()
+            session.query(Deducao).filter(Deducao.espessura_id ==
+                                          obj_id).delete(synchronize_session=False)
         elif isinstance(obj, Canal):
-            session.query(Deducao).filter_by(canal_id=obj_id).delete()
+            session.query(Deducao).filter(Deducao.canal_id ==
+                                          obj_id).delete(synchronize_session=False)
 
+        # Agora, deleta o objeto principal
         session.delete(obj)
+
+        # Faz o commit de todas as operações de exclusão
         tratativa_erro()
+
         registrar_log(g.USUARIO_NOME, "excluir", obj_type, obj_id, log_details)
-        return True, f"{obj_type.capitalize()} excluído(a) com sucesso!"
+        return (True, f"{obj_type.capitalize()} e suas deduções relacionadas "
+                f"foram excluídos(as) com sucesso!")
     except SQLAlchemyError as e:
         session.rollback()
-        return False, f"Erro de banco de dados ao excluir {obj_type}: {e}"
+        return (False, f"Erro de banco de dados ao excluir {obj_type}: {e}")
 
 
 # --- Operações de Edição ---
