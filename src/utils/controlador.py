@@ -119,39 +119,29 @@ def editar(tipo):
     if not ask_yes_no("Confirmação", mensagem_confirmacao, parent=config.get("form")):
         return
 
-    # 1. Coletar dados dos campos de edição
+    # CORREÇÃO: Coleta todos os campos do formulário, incluindo os vazios,
+    # para permitir que a lógica de negócio em 'operacoes_crud' decida o que fazer.
     dados_para_editar = {
         campo: WidgetManager.get_widget_value(widget)
         for campo, widget in config.get("campos", {}).items()
-        if WidgetManager.get_widget_value(widget)
     }
 
-    if not dados_para_editar:
-        show_info("Informação", "Nenhum campo foi alterado.", parent=config.get("form"))
-        return
-
-    # 2. Chamar a lógica de dados
     sucesso, mensagem, _ = operacoes_crud.editar_objeto(obj, dados_para_editar)
 
     if sucesso:
-        show_info("Sucesso", mensagem, parent=config.get("form"))
-
-        # --- INÍCIO DA ALTERAÇÃO ---
-        # Invalida o cache chamando diretamente o gerenciador de cache.
-        cache_manager.invalidar_por_tipo(tipo)
-        # --- FIM DA ALTERAÇÃO ---
-
-        _limpar_campos(tipo)
-        listar(tipo)
-        atualizar_widgets(tipo)
-        buscar(tipo)
-
-        # Atualiza o formulário de deduções se ele estiver aberto
-        if tipo in ["material", "espessura", "canal"]:
-            if hasattr(g, "DEDUC_FORM") and g.DEDUC_FORM:
-                listar("dedução")
-                atualizar_comboboxes_formulario(["material", "espessura", "canal"])
-
+        if mensagem != "Nenhuma alteração detectada.":
+            show_info("Sucesso", mensagem, parent=config.get("form"))
+            cache_manager.invalidar_por_tipo(tipo)
+            _limpar_campos(tipo)
+            listar(tipo)
+            atualizar_widgets(tipo)
+            buscar(tipo)
+            if tipo in ["material", "espessura", "canal"]:
+                if hasattr(g, "DEDUC_FORM") and g.DEDUC_FORM:
+                    listar("dedução")
+                    atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+        else:
+            show_info("Informação", mensagem, parent=config.get("form"))
     else:
         show_error("Erro", mensagem, parent=config.get("form"))
 

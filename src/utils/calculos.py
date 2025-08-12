@@ -38,6 +38,14 @@ def converter_para_float(valor_str: str, default_value: float = 0.0) -> float:
         return default_value
 
 
+def _extrair_valor_canal(canal_str):
+    """Extrai o valor numérico de uma string de canal."""
+    if not canal_str:
+        return None
+    numeros = re.findall(r"\d+\.?\d*", canal_str)
+    return float(numeros[0]) if numeros else None
+
+
 # --- CLASSES DE CÁLCULO (INDEPENDENTES DA UI) ---
 
 
@@ -134,14 +142,6 @@ class CalculoFatorK:
 class CalculoAbaMinima:
     """Calcula a aba mínima externa."""
 
-    @staticmethod
-    def _extrair_valor_canal(canal_str):
-        """Extrai o valor numérico de uma string de canal."""
-        if not canal_str:
-            return None
-        numeros = re.findall(r"\d+\.?\d*", canal_str)
-        return float(numeros[0]) if numeros else None
-
     def calcular(self, canal_str: str, espessura: float):
         """
         Executa o cálculo da aba mínima externa.
@@ -149,7 +149,8 @@ class CalculoAbaMinima:
         if not canal_str or espessura <= 0:
             return None
 
-        valor_canal = self._extrair_valor_canal(canal_str)
+        # CORREÇÃO: Usa a função _extrair_valor_canal para obter o número
+        valor_canal = _extrair_valor_canal(canal_str)
         if valor_canal is None:
             return None
 
