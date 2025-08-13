@@ -2,19 +2,35 @@
 Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
 """
 
-import hashlib
-
-from PySide6.QtWidgets import QMessageBox
-
-from src.config import globals as g
-from src.models.models import Usuario
+from src.utils.utilitarios import (
+    ask_string,
+    ask_yes_no,
+    show_error,
+    show_info,
+    show_warning,
+)
+from src.utils.janelas import Janela
+from src.utils.interface import listar, obter_configuracoes
+from src.utils.banco_dados import session_scope
+from sqlalchemy.exc import SQLAlchemyError
 from src.utils.banco_dados import (
     session,
     tratativa_erro,
 )
-from src.utils.interface import listar, obter_configuracoes
-from src.utils.janelas import Janela
-from src.utils.utilitarios import ask_string, show_error, show_info, show_warning
+from src.models.models import Usuario
+from src.config import globals as g
+from PySide6.QtWidgets import QMessageBox
+import hashlib
+
+<< << << < HEAD
+
+== == == =
+
+
+# ADICIONADO: session_scope
+>>>>>> > dd43807(refatora: substitui QMessageBox por funções de mensagem centralizadas para melhor consistência e manutenção)
+
+# MODIFICADO: Importação completa das funções de mensagem
 
 
 def novo_usuario():
@@ -253,33 +269,17 @@ def excluir_usuario():
     # Obter dados do usuário selecionado
     obj = session.query(Usuario).filter_by(id=obj_id).first()
 
-    erro_msg = None
-    if obj is None:
-        erro_msg = "Usuário não encontrado."
-    elif getattr(obj, "role", None) == "admin":
-        erro_msg = "Não é possível excluir um administrador."
-
-    if erro_msg:
-        show_error("Erro", erro_msg, parent=g.USUAR_FORM if g.USUAR_FORM else None)
-        return
-
-    # Confirmar exclusão
-    aviso = QMessageBox.question(
-        g.USUAR_FORM if g.USUAR_FORM else None,
+    # MODIFICADO: Uso da função ask_yes_no centralizada
+    if ask_yes_no(
         "Atenção!",
         "Tem certeza que deseja excluir o usuário?",
-        QMessageBox.Yes | QMessageBox.No,
-    )
-    if aviso == QMessageBox.Yes:
-        session.delete(obj)
-        tratativa_erro()
-        # Atualizar a lista após exclusão
+        parent=g.USUAR_FORM,
+    ):
+        session.delete(usuario_obj)
+        show_info("Sucesso", "Usuário excluído com sucesso!")
         listar("usuario")
-        show_info(
-            "Sucesso",
-            "Usuário excluído com sucesso!",
-            parent=g.USUAR_FORM if g.USUAR_FORM else None,
-        )
+    except SQLAlchemyError as e:
+        show_error("Erro", f"Erro de banco de dados ao excluir usuário: {e}")
 
 
 def tornar_editor():

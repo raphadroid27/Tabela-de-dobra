@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QGroupBox,
     QLabel,
-    QMessageBox,
     QPushButton,
     QTreeWidget,
     QTreeWidgetItem,
@@ -29,7 +28,14 @@ from src.utils import session_manager
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.usuarios import tem_permissao
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
+from src.utils.utilitarios import (
+    ICON_PATH,
+    aplicar_medida_borda_espaco,
+    ask_yes_no,
+    show_error,
+    show_info,
+    show_warning,
+)
 
 # Constantes para configuração da interface
 JANELA_LARGURA = 360
@@ -61,7 +67,6 @@ class FormGerenciarInstancias(QDialog):
         self.setWindowTitle(TITULO_FORMULARIO)
         self.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        # self.setModal(True)
 
         # pylint: disable=R0801
         if ICON_PATH:
@@ -172,40 +177,34 @@ class FormGerenciarInstancias(QDialog):
                 )
                 self.tree_sessoes.addTopLevelItem(item)
         except (AttributeError, TypeError, ValueError) as e:
-            QMessageBox.warning(self, "Erro", f"Erro ao carregar sessões: {e}")
+            show_warning("Erro", f"Erro ao carregar sessões: {e}", parent=self)
 
     def _executar_shutdown_geral(self):
         """Executa o shutdown de todas as instâncias após confirmação."""
         msg = (
             "⚠️ ATENÇÃO! "
             "Esta ação irá fechar TODAS as instâncias do sistema. "
-            "Deseja continuar?")
-        resposta = QMessageBox.question(
-            self,
-            "Confirmar Shutdown",
-            msg,
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
+            "Deseja continuar?"
         )
-        if resposta == QMessageBox.StandardButton.Yes:
+        if ask_yes_no("Confirmar Shutdown", msg, parent=self):
             try:
                 session_manager.definir_comando_sistema("SHUTDOWN")
                 info_msg = (
                     "✅ Comando de shutdown enviado para todas as instâncias. "
                     "As instâncias serão fechadas nos próximos segundos."
                 )
-                QMessageBox.information(self, "Comando Enviado", info_msg)
+                show_info("Comando Enviado", info_msg, parent=self)
                 self._carregar_sessoes()
             except (RuntimeError, ConnectionError, ValueError) as e:
-                QMessageBox.critical(self, "Erro", f"Erro ao enviar comando: {e}")
+                show_error("Erro", f"Erro ao enviar comando: {e}", parent=self)
 
     def _gerar_relatorio(self):
         """Gera um relatório textual das instâncias ativas."""
         try:
             sessoes = session_manager.obter_sessoes_ativas()
             if not sessoes:
-                QMessageBox.information(
-                    self, "Relatório", "📊 Nenhuma instância ativa encontrada."
+                show_info(
+                    "Relatório", "📊 Nenhuma instância ativa encontrada.", parent=self
                 )
                 return
 
@@ -215,9 +214,9 @@ class FormGerenciarInstancias(QDialog):
                 relatorio += f"{i}. ID: {sessao.get('session_id', 'N/A')}\n"
                 relatorio += f"   Host: {sessao.get('hostname', 'N/A')}\n"
                 relatorio += f"   Atividade: {sessao.get('last_updated', 'N/A')}\n\n"
-            QMessageBox.information(self, "Relatório de Instâncias", relatorio)
+            show_info("Relatório de Instâncias", relatorio, parent=self)
         except (AttributeError, TypeError, ValueError) as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao gerar relatório: {e}")
+            show_error("Erro", f"Erro ao gerar relatório: {e}", parent=self)
 
     def closeEvent(self, event):  # pylint: disable=invalid-name
         """Garante que o timer pare quando a janela for fechada."""
@@ -252,8 +251,8 @@ def main(parent=None):
     try:
         FormManager.show_form(parent)
     except (RuntimeError, ValueError, ConnectionError) as e:
-        QMessageBox.critical(
-            parent, "Erro", f"Erro ao abrir gerenciamento de instâncias: {e}"
+        show_error(
+            "Erro", f"Erro ao abrir gerenciamento de instâncias: {e}", parent=parent
         )
 
 
