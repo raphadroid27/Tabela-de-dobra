@@ -19,7 +19,7 @@ from src.utils.janelas import Janela
 
 # Constantes para dimensões da interface
 LARGURA_CONTRAIDA = 360
-ALTURA_CONTRAIDA = 510
+ALTURA_CONTRAIDA = 513
 LARGURA_EXPANDIDA = 720
 ALTURA_EXPANDIDA = 650
 COLUNAS_CONTRAIDA = 1
