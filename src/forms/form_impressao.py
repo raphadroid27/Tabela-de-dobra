@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QMessageBox,
     QPushButton,
     QTextBrowser,
     QTextEdit,
@@ -34,12 +33,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-# Supondo que esses módulos existam na estrutura do seu projeto.
-# Se não, você precisará adaptá-los ou remover as chamadas.
 from src.components.barra_titulo import BarraTitulo
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import Janela
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
+from src.utils.utilitarios import (
+    ICON_PATH,
+    aplicar_medida_borda_espaco,
+    show_error,
+    show_info,
+    show_warning,
+)
 
 # --- Constantes de Configuração ---
 TIMEOUT_IMPRESSAO = 30
@@ -138,7 +141,6 @@ class PrintWorker(QThread):
     """
 
     progress_update = Signal(str)
-    # CORREÇÃO: Renomeado o sinal para evitar conflito com o QThread.finished
     processo_finalizado = Signal()
 
     def __init__(self, diretorio: str, arquivos_para_imprimir: List[str], parent=None):
@@ -162,7 +164,6 @@ class PrintWorker(QThread):
 
         final_message = "\n--- Processo de impressão finalizado. ---"
         self.progress_update.emit(final_message)
-        # CORREÇÃO: Emitindo o sinal renomeado
         self.processo_finalizado.emit()
 
     def _imprimir_arquivo_individual(self, nome_arquivo: str, caminho_completo: str):
@@ -432,7 +433,7 @@ class FormImpressao(QDialog):
             self.lista_arquivos_widget.addItems(arquivos)
             self.lista_text.clear()
             msg = f"{len(arquivos)} arquivo(s) adicionado(s) à lista!"
-            QMessageBox.information(self, "Sucesso", msg)
+            show_info("Sucesso", msg, parent=self)
 
     def remover_arquivo_selecionado(self):
         """Remove o arquivo selecionado da lista."""
@@ -452,16 +453,19 @@ class FormImpressao(QDialog):
     def _validar_entradas(self) -> bool:
         """Valida se o diretório e a lista de arquivos estão prontos."""
         if not self.diretorio_entry.text().strip():
-            QMessageBox.critical(self, "Erro", "Por favor, selecione um diretório.")
+
+            show_error("Erro", "Por favor, selecione um diretório.", parent=self)
             return False
         if not os.path.isdir(self.diretorio_entry.text().strip()):
-            QMessageBox.critical(self, "Erro", "O diretório selecionado não existe.")
+
+            show_error("Erro", "O diretório selecionado não existe.", parent=self)
             return False
         if self.lista_arquivos_widget.count() == 0:
-            QMessageBox.warning(
-                self,
+            # MODIFICADO: Uso da função show_warning centralizada
+            show_warning(
                 "Aviso",
                 "A lista de arquivos está vazia. Adicione arquivos para continuar.",
+                parent=self,
             )
             return False
         return True
@@ -470,14 +474,14 @@ class FormImpressao(QDialog):
         """Verifica se os arquivos da lista existem no diretório selecionado."""
         diretorio = self.diretorio_entry.text().strip()
         if not diretorio or not os.path.isdir(diretorio):
-            QMessageBox.critical(
-                self, "Erro", "Por favor, selecione um diretório válido."
-            )
+
+            show_error("Erro", "Por favor, selecione um diretório válido.", parent=self)
             return
 
         lista_arquivos = self._obter_lista_arquivos_da_widget()
         if not lista_arquivos:
-            QMessageBox.warning(self, "Aviso", "A lista de arquivos está vazia.")
+            # MODIFICADO: Uso da função show_warning centralizada
+            show_warning("Aviso", "A lista de arquivos está vazia.", parent=self)
             return
 
         try:
@@ -491,10 +495,12 @@ class FormImpressao(QDialog):
                 f"Arquivos não encontrados: {len(self.print_manager.arquivos_nao_encontrados)}\n\n"
                 "Confira os detalhes no campo 'Resultado da Impressão'."
             )
-            QMessageBox.information(self, "Verificação Concluída", msg)
+            # MODIFICADO: Uso da função show_info centralizada
+            show_info("Verificação Concluída", msg, parent=self)
         except (OSError, ValueError) as e:
-            QMessageBox.critical(
-                self, "Erro", f"Ocorreu um erro durante a verificação: {e}"
+
+            show_error(
+                "Erro", f"Ocorreu um erro durante a verificação: {e}", parent=self
             )
 
     def executar_impressao(self):
@@ -511,10 +517,11 @@ class FormImpressao(QDialog):
             self.resultado_text.setText(resultado_busca)
 
             if not self.print_manager.arquivos_encontrados:
-                QMessageBox.warning(
-                    self,
+                # MODIFICADO: Uso da função show_warning centralizada
+                show_warning(
                     "Aviso",
                     "Nenhum arquivo válido foi encontrado para impressão.",
+                    parent=self,
                 )
                 return
 
@@ -525,12 +532,12 @@ class FormImpressao(QDialog):
                 diretorio, self.print_manager.arquivos_encontrados
             )
             self.print_worker.progress_update.connect(self.atualizar_resultado)
-            # CORREÇÃO: Conectando ao sinal renomeado
             self.print_worker.processo_finalizado.connect(self.impressao_finalizada)
             self.print_worker.start()
 
         except (OSError, ValueError) as e:
-            QMessageBox.critical(self, "Erro", f"Erro ao iniciar impressão: {e}")
+
+            show_error("Erro", f"Erro ao iniciar impressão: {e}", parent=self)
             self.imprimir_btn.setEnabled(True)
             self.imprimir_btn.setText("🖨️ Imprimir")
 
@@ -543,8 +550,9 @@ class FormImpressao(QDialog):
 
     def impressao_finalizada(self):
         """Chamado quando a thread de impressão termina."""
-        QMessageBox.information(
-            self, "Processo Concluído", "A impressão em lote foi finalizada."
+        # MODIFICADO: Uso da função show_info centralizada
+        show_info(
+            "Processo Concluído", "A impressão em lote foi finalizada.", parent=self
         )
         self.imprimir_btn.setEnabled(True)
         self.imprimir_btn.setText("🖨️ Imprimir")
@@ -577,15 +585,12 @@ if __name__ == "__main__":
     try:
         main()
     except (ImportError, NameError) as e:
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Critical)
-        msg_box.setText("Erro de Dependência")
-        msg_box.setInformativeText(
+
+        show_error(
+            "Erro de Dependência",
             f"Não foi possível iniciar o aplicativo: {e}.\n"
-            "Execute este formulário a partir do aplicativo principal."
+            "Execute este formulário a partir do aplicativo principal.",
         )
-        msg_box.setWindowTitle("Erro")
-        msg_box.exec()
         sys.exit(1)
 
     sys.exit(app.exec())

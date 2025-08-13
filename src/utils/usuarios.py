@@ -6,18 +6,24 @@ todas as operações de banco de dados, garantindo segurança em ambiente multi-
 
 import hashlib
 
-from PySide6.QtWidgets import QMessageBox
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
 from src.models.models import Usuario
 
-# REMOVIDO: session, tratativa_erro
 # ADICIONADO: session_scope
 from src.utils.banco_dados import session_scope
 from src.utils.interface import listar, obter_configuracoes
 from src.utils.janelas import Janela
-from src.utils.utilitarios import ask_string, show_error, show_info, show_warning
+
+# MODIFICADO: Importação completa das funções de mensagem
+from src.utils.utilitarios import (
+    ask_string,
+    ask_yes_no,
+    show_error,
+    show_info,
+    show_warning,
+)
 
 
 def novo_usuario():
@@ -227,13 +233,12 @@ def excluir_usuario():
                 show_error("Erro", "Não é possível excluir um administrador.")
                 return
 
-            aviso = QMessageBox.question(
-                g.USUAR_FORM,
+            # MODIFICADO: Uso da função ask_yes_no centralizada
+            if ask_yes_no(
                 "Atenção!",
                 "Tem certeza que deseja excluir o usuário?",
-                QMessageBox.Yes | QMessageBox.No,
-            )
-            if aviso == QMessageBox.Yes:
+                parent=g.USUAR_FORM,
+            ):
                 db_session.delete(usuario_obj)
                 show_info("Sucesso", "Usuário excluído com sucesso!")
                 listar("usuario")
