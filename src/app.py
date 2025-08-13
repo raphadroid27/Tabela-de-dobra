@@ -74,7 +74,7 @@ from src.utils.utilitarios import (
 # Constantes para configuração da aplicação - OTIMIZADAS PARA REDE
 APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
-JANELA_PRINCIPAL_ALTURA = 510
+JANELA_PRINCIPAL_ALTURA = 513
 # Timers otimizados para reduzir tráfego de rede e overhead
 TIMER_SISTEMA_INTERVALO = 15000  # 15s para comandos críticos (balanceado)
 TIMER_UPDATE_INTERVALO = 1800000  # 30min
