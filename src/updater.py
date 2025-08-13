@@ -2,13 +2,37 @@
 Updater Gráfico para a Aplicação de Cálculo de Dobra.
 """
 
+from src.utils.utilitarios import (
+    APP_EXECUTABLE_PATH,
+    ICON_PATH,
+    UPDATE_TEMP_DIR,
+    aplicar_medida_borda_espaco,
+    ask_yes_no,
+    setup_logging,
+    show_error,
+    show_info,
+)
+from src.utils.update_manager import (
+    checar_updates,
+    download_update,
+    get_installed_version,
+)
+from src.utils.estilo import (
+    aplicar_estilo_botao,
+    aplicar_estilo_widget_auto_ajustavel,
+    aplicar_tema_inicial,
+    obter_estilo_progress_bar,
+    obter_tema_atual,
+)
+from src.utils.banco_dados import session_scope
+from src.models.models import Usuario
+from src.models.models import SystemControl as SystemControlModel
+from src.components.barra_titulo import BarraTitulo
 import hashlib
 import logging
 import os
 import shutil
 import subprocess  # nosec B404
-
-# --- Importações da Biblioteca Padrão ---
 import sys
 import time
 import zipfile
@@ -17,8 +41,6 @@ from typing import Any, Type
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
-
-# --- Importações de Terceiros ---
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -26,7 +48,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMainWindow,
-    QMessageBox,
     QProgressBar,
     QPushButton,
     QSizePolicy,
@@ -36,7 +57,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+<< << << < HEAD
 # --- LÓGICA DE BOOTSTRAP: Encontrar o diretório base ANTES de outras importações ---
+== == == =
+
+# --- Constantes de Configuração ---
+SHUTDOWN_WAIT_SECONDS = 3  # Tempo de espera após comando de shutdown
+>>>>>> > b17fe5f(refatora: substitui QMessageBox por funções de mensagem centralizadas para melhor consistência e manutenção)
 
 
 def obter_dir_base_local():
@@ -55,52 +82,6 @@ def obter_dir_base_local():
 BASE_DIR = obter_dir_base_local()
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
-# --- FIM DO BOOTSTRAP ---
-
-try:
-    # --- Importações da Aplicação Local (Agora funcionam) ---
-    from src.components.barra_titulo import BarraTitulo
-    from src.models.models import SystemControl as SystemControlModel
-    from src.models.models import Usuario
-    from src.utils.banco_dados import session_scope
-    from src.utils.estilo import (
-        aplicar_estilo_botao,
-        aplicar_estilo_widget_auto_ajustavel,
-        aplicar_tema_inicial,
-        obter_estilo_progress_bar,
-        obter_tema_atual,
-    )
-    from src.utils.update_manager import (
-        checar_updates,
-        download_update,
-        get_installed_version,
-    )
-    from src.utils.utilitarios import (
-        APP_EXECUTABLE_PATH,
-        ICON_PATH,
-        UPDATE_TEMP_DIR,
-        aplicar_medida_borda_espaco,
-        setup_logging,
-        show_error,
-    )
-
-except ImportError as e:
-    # Fallback de emergência
-    logging.basicConfig(
-        level=logging.CRITICAL, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
-    logging.critical("Erro de Importação: %s. BASE_DIR: %s", e, BASE_DIR)
-    QApplication(sys.argv)
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Icon.Critical)
-    msg.setText(
-        "Erro Crítico de Inicialização:\n"
-        f"Não foi possível encontrar os módulos da aplicação.\n\n{e}\n\n"
-        "Verifique se o updater.exe está na pasta correta."
-    )
-    msg.setWindowTitle("Erro de Módulo")
-    msg.exec()
-    sys.exit(1)
 
 
 class AdminAuthWidget(QWidget):
@@ -436,26 +417,29 @@ class UpdaterWindow(QMainWindow):
                     "Nenhuma atualização encontrada após a nova verificação."
                 )
                 self.show_no_update(current_version)
-                QMessageBox.information(
-                    self,
+                show_info(
                     "Atualizado",
                     "O aplicativo já está na versão mais recente. "
                     "Nenhuma atualização é necessária.",
+                    parent=self,
                 )
         finally:
             QApplication.restoreOverrideCursor()
 
     def on_login_success(self):
-        """Inicia o processo de atualização após o login bem-sucedido."""
-        reply = QMessageBox.question(
-            self,
+        """
+        Inicia o processo de atualização após o ADMIN fazer login com sucesso.
+
+        Hierarquia clara:
+        - ADMIN: Tem controle total, pode iniciar atualizações
+        - USUÁRIOS: Não veem esta tela, apenas recebem notificações
+        """
+        if not ask_yes_no(
             "Confirmar Atualização",
             "O aplicativo principal e todas as suas instâncias serão "
             "fechadas para continuar.\n\nDeseja prosseguir?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
-        )
-        if reply == QMessageBox.No:
+            parent=self,
+        ):
             self.stacked_widget.setCurrentWidget(self.status_view)
             return
 
@@ -489,6 +473,10 @@ class UpdaterWindow(QMainWindow):
 
         self.progress_status_label.setText("A fechar a aplicação principal...")
         QApplication.processEvents()
+
+        # Aguarda um pouco para que as instâncias detectem o sinal
+        time.sleep(SHUTDOWN_WAIT_SECONDS)
+
         with session_scope() as (db_session, model):
             if not db_session or not model:
                 raise ConnectionError("Não foi possível ligar à base de dados.")
