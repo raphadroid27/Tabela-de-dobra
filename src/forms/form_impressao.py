@@ -237,6 +237,7 @@ class PrintWorker(QThread):
         msg = f"Tentando imprimir {nome_arquivo} com impressora padrão...\n"
         self.progress_update.emit(msg)
         try:
+            # pylint: disable=E1101
             os.startfile(caminho, "print")  # nosec B606
             result_msg = " ✓ Sucesso com impressora padrão\n"
             self.progress_update.emit(result_msg)
