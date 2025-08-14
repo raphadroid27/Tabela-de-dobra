@@ -173,5 +173,5 @@ def main(_):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    main(app)
+    main(None)
     sys.exit(app.exec())
