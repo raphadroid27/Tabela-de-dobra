@@ -170,31 +170,55 @@ def ask_string(
     return text if ok else None
 
 
-def show_error(title: str, message: str, parent: Optional[QWidget] = None) -> None:
-    """Mostra uma mensagem de erro usando QMessageBox."""
+def _show_message_box(
+    icon: QMessageBox.Icon,
+    title: str,
+    message: Union[str, tuple],
+    parent: Optional[QWidget] = None,
+) -> None:
+    """
+    Cria e exibe uma QMessageBox, dividindo a mensagem em texto principal e informativo.
+    """
     msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Icon.Critical)
+    msg.setIcon(icon)
     msg.setWindowTitle(title)
-    msg.setText(message)
+
+    main_text = ""
+    informative_text = ""
+
+    if isinstance(message, (list, tuple)):
+        # Se for uma tupla/lista, assume-se (principal, informativo)
+        main_text = str(message[0]) if message else ""
+        informative_text = str(message[1]) if len(message) > 1 else ""
+    else:
+        # Se for uma string, divide na primeira quebra de linha
+        parts = str(message).split("\n", 1)
+        main_text = parts[0]
+        if len(parts) > 1:
+            informative_text = parts[1].strip()
+
+    msg.setText(f"{main_text}")
+    if informative_text:
+        msg.setInformativeText(informative_text)
+
     msg.exec()
+
+
+def show_error(
+    title: str, message: Union[str, tuple], parent: Optional[QWidget] = None
+) -> None:
+    """Mostra uma mensagem de erro usando QMessageBox."""
+    _show_message_box(QMessageBox.Icon.Critical, title, message, parent)
 
 
 def show_info(title: str, message: str, parent: Optional[QWidget] = None) -> None:
     """Mostra uma mensagem de informação usando QMessageBox."""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Icon.Information)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
+    _show_message_box(QMessageBox.Icon.Information, title, message, parent)
 
 
 def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> None:
     """Mostra uma mensagem de aviso usando QMessageBox."""
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Icon.Warning)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec()
+    _show_message_box(QMessageBox.Icon.Warning, title, message, parent)
 
 
 def ask_yes_no(title: str, message: str, parent: Optional[QWidget] = None) -> bool:
