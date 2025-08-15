@@ -221,15 +221,39 @@ def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> 
     _show_message_box(QMessageBox.Icon.Warning, title, message, parent)
 
 
-def ask_yes_no(title: str, message: str, parent: Optional[QWidget] = None) -> bool:
+def ask_yes_no(title: str, message: Union[str, tuple], parent: Optional[QWidget] = None) -> bool:
     """Pergunta sim/não usando QMessageBox."""
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Icon.Question)
     msg.setWindowTitle(title)
-    msg.setText(message)
+
+    # Aplicar a mesma lógica de _show_message_box para tratar a mensagem
+    main_text = ""
+    informative_text = ""
+
+    if isinstance(message, (list, tuple)):
+        # Se for uma tupla/lista, assume-se (principal, informativo)
+        main_text = str(message[0]) if message else ""
+        informative_text = str(message[1]) if len(message) > 1 else ""
+    else:
+        # Se for uma string, divide na primeira quebra de linha
+        parts = str(message).split("\n", 1)
+        main_text = parts[0]
+        if len(parts) > 1:
+            informative_text = parts[1].strip()
+
+    msg.setText(f"{main_text}")
+    if informative_text:
+        msg.setInformativeText(informative_text)
+
     msg.setStandardButtons(
         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
     )
+
+    # Renomeia botões
+    msg.button(QMessageBox.StandardButton.Yes).setText("Sim")
+    msg.button(QMessageBox.StandardButton.No).setText("Não")
+
     msg.setDefaultButton(QMessageBox.StandardButton.No)
     return msg.exec() == QMessageBox.StandardButton.Yes
 
