@@ -3,7 +3,6 @@ Este módulo define variáveis globais para uso em diferentes partes da aplicaç
 """
 
 # Variáveis globais
-NO_TOPO_VAR = None
 VALORES_W = [1, 2]
 EXP_V = None
 EXP_H = None
