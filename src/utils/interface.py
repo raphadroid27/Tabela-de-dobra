@@ -378,7 +378,7 @@ def obter_configuracoes():
                 d.canal.valor,
                 d.valor,
                 d.observacao,
-                d.forca,
+                d.forca if d.forca is not None else "N/A",
             ),
             "ordem": Deducao.valor,
             "entries": {
@@ -518,7 +518,11 @@ def _coletar_dados_entrada() -> UIData:
 
 
 def _atualizar_label(
-    label, valor, formato="{:.2f}", estilo_sucesso="", estilo_erro="color: red;"
+    label,
+    valor,
+    formato="{:.2f}",
+    estilo_sucesso="",
+    estilo_erro="QLabel {color: red;}",
 ):
     """Função genérica para atualizar um QLineEdit ou QLabel."""
     if not WidgetManager.is_widget_valid(label):
@@ -587,15 +591,21 @@ def _estilo(data: UIData):
 
 def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
     """Calcula e atualiza os campos de Fator K e Offset."""
-    res_k = calculos.CalculoFatorK().calcular(
-        data.espessura, data.raio_interno, deducao_usada
-    )
-
-    estilo_k_offset = _estilo(data)
-
-    if res_k:
-        _atualizar_label(g.K_LBL, res_k["fator_k"], estilo_sucesso=estilo_k_offset)
-        _atualizar_label(g.OFFSET_LBL, res_k["offset"], estilo_sucesso=estilo_k_offset)
+    if data.espessura > 0 and data.raio_interno > 0:
+        res_k = calculos.CalculoFatorK().calcular(
+            data.espessura, data.raio_interno, deducao_usada
+        )
+        estilo_k_offset = _estilo(data)
+        if res_k:
+            _atualizar_label(
+                g.K_LBL, res_k.get("fator_k"), estilo_sucesso=estilo_k_offset
+            )
+            _atualizar_label(
+                g.OFFSET_LBL, res_k.get("offset"), estilo_sucesso=estilo_k_offset
+            )
+        else:
+            _atualizar_label(g.K_LBL, "N/A")
+            _atualizar_label(g.OFFSET_LBL, "N/A")
     else:
         _atualizar_label(g.K_LBL, None)
         _atualizar_label(g.OFFSET_LBL, None)
@@ -603,42 +613,64 @@ def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
 
 def _atualizar_parametros_auxiliares_ui(data: UIData, deducao_usada: float) -> float:
     """Calcula e atualiza Aba Mínima, Z Mínimo, Razão RI/E e retorna a aba mínima."""
-    # CORREÇÃO: Passa a string do canal diretamente para a função de cálculo.
     aba_min = calculos.CalculoAbaMinima().calcular(data.canal_str, data.espessura)
-    _atualizar_label(g.ABA_EXT_LBL, aba_min, formato="{:.0f}")
+    if data.canal_str and data.espessura > 0:
+        _atualizar_label(
+            g.ABA_EXT_LBL, aba_min if aba_min is not None else "N/A", formato="{:.0f}"
+        )
+    else:
+        _atualizar_label(g.ABA_EXT_LBL, None)
 
     z_min = calculos.CalculoZMinimo().calcular(
         data.espessura, deducao_usada, data.canal_str
     )
-    _atualizar_label(g.Z_EXT_LBL, z_min, formato="{:.0f}")
+    if data.espessura > 0 and data.canal_str:
+        _atualizar_label(
+            g.Z_EXT_LBL, z_min if z_min is not None else "N/A", formato="{:.0f}"
+        )
+    else:
+        _atualizar_label(g.Z_EXT_LBL, None)
 
     razao = calculos.CalculoRazaoRIE().calcular(data.espessura, data.raio_interno)
-    _atualizar_label(g.RAZAO_RIE_LBL, razao, formato="{:.1f}")
+    if data.espessura > 0 and data.raio_interno > 0:
+        _atualizar_label(
+            g.RAZAO_RIE_LBL, razao if razao is not None else "N/A", formato="{:.1f}"
+        )
+    else:
+        _atualizar_label(g.RAZAO_RIE_LBL, None)
 
     return aba_min
 
 
 def _atualizar_forca_ui(data: UIData):
     """Calcula e atualiza o campo de Força."""
-    res_forca = calculos.CalculoForca().calcular(
-        data.comprimento, data.espessura, data.material_nome, data.canal_str
-    )
-    if res_forca:
-        _atualizar_label(g.FORCA_LBL, res_forca.get("forca"), formato="{:.0f}")
-        canal_obj = res_forca.get("canal_obj")
-        comprimento_total = (
-            getattr(canal_obj, "comprimento_total", None) if canal_obj else None
+    if data.material_nome and data.espessura_str and data.canal_str:
+        res_forca = calculos.CalculoForca().calcular(
+            data.comprimento, data.espessura, data.material_nome, data.canal_str
         )
 
-        is_comprimento_excedido = (
-            data.comprimento > 0
-            and comprimento_total is not None
-            and data.comprimento >= comprimento_total
-        )
-        if g.COMPR_ENTRY:
-            g.COMPR_ENTRY.setStyleSheet(
-                "color: red;" if is_comprimento_excedido else ""
+        forca_valor = "N/A"
+        if res_forca and res_forca.get("forca") is not None:
+            forca_valor = res_forca.get("forca")
+        _atualizar_label(g.FORCA_LBL, forca_valor, formato="{:.0f}")
+
+        if res_forca:
+            canal_obj = res_forca.get("canal_obj")
+            comprimento_total = (
+                getattr(canal_obj, "comprimento_total", None) if canal_obj else None
             )
+            is_comprimento_excedido = (
+                data.comprimento > 0
+                and comprimento_total is not None
+                and data.comprimento >= comprimento_total
+            )
+            if g.COMPR_ENTRY:
+                g.COMPR_ENTRY.setStyleSheet(
+                    "QLineEdit {color: red;}" if is_comprimento_excedido else ""
+                )
+        else:
+            if g.COMPR_ENTRY:
+                g.COMPR_ENTRY.setStyleSheet("")
     else:
         _atualizar_label(g.FORCA_LBL, None)
         if g.COMPR_ENTRY:
