@@ -5,6 +5,8 @@ Este módulo implementa uma interface gráfica para administradores
 visualizarem e gerenciarem instâncias ativas do sistema, incluindo
 a funcionalidade de shutdown remoto de todas as instâncias.
 """
+
+import logging
 import sys
 from datetime import datetime
 
@@ -45,6 +47,8 @@ COLUNA_HOSTNAME_LARGURA = 110
 COLUNA_ATIVIDADE_LARGURA = 150
 TITULO_FORMULARIO = "Gerenciar Instâncias do Sistema"
 TIMER_ATUALIZACAO_MS = 60000  # 60 segundos
+# Delay para limpar o comando. Deve ser maior que o intervalo de verificação do cliente (15s)
+DELAY_LIMPEZA_CMD_MS = 20000  # 20 segundos
 
 
 class FormGerenciarInstancias(QDialog):
@@ -188,6 +192,7 @@ class FormGerenciarInstancias(QDialog):
         )
         if ask_yes_no("Confirmar Shutdown", msg, parent=self):
             try:
+                # 1. Define o comando no banco de dados
                 session_manager.definir_comando_sistema("SHUTDOWN")
                 info_msg = (
                     "✅ Comando de shutdown enviado para todas as instâncias.\n"
@@ -195,8 +200,28 @@ class FormGerenciarInstancias(QDialog):
                 )
                 show_info("Comando Enviado", info_msg, parent=self)
                 self._carregar_sessoes()
+
+                # 2. Agenda a limpeza do comando para daqui a 20 segundos.
+                # Isto garante que todas as instâncias tenham tempo de ler o comando.
+                logging.info(
+                    "Agendando limpeza do comando SHUTDOWN em %.1fs.",
+                    DELAY_LIMPEZA_CMD_MS / 1000,
+                )
+                QTimer.singleShot(DELAY_LIMPEZA_CMD_MS, self._limpar_comando_shutdown)
+
             except (RuntimeError, ConnectionError, ValueError) as e:
                 show_error("Erro", f"Erro ao enviar comando: {e}", parent=self)
+
+    def _limpar_comando_shutdown(self):
+        """
+        Limpa o comando de shutdown do sistema. Esta função é chamada pelo QTimer
+        para garantir que novas instâncias não fechem sozinhas.
+        """
+        try:
+            logging.info("Executando limpeza agendada do comando SHUTDOWN.")
+            session_manager.limpar_comando_sistema()
+        except (RuntimeError, ConnectionError, ValueError) as e:
+            logging.error("Erro ao limpar comando de shutdown: %s", e)
 
     def _gerar_relatorio(self):
         """Gera um relatório textual das instâncias ativas."""
@@ -218,26 +243,35 @@ class FormGerenciarInstancias(QDialog):
         except (AttributeError, TypeError, ValueError) as e:
             show_error("Erro", f"Erro ao gerar relatório: {e}", parent=self)
 
-    def closeEvent(self, event):  # pylint: disable=invalid-name
-        """Garante que o timer pare quando a janela for fechada."""
-        self.timer_atualizacao.stop()
-        event.accept()
+    def closeEvent(self, event):  # pylint: disable=C0103
+        """
+        Sobrescreve o evento de fechamento para apenas esconder a janela.
+        Isto é CRUCIAL para que o timer agendado (QTimer.singleShot) não seja
+        destruído se o administrador fechar a janela antes do tempo.
+        """
+        self.hide()
+        event.ignore()
 
 
 class FormManager:
-    """Gerencia a instância do formulário para garantir que seja um singleton."""
+    """
+    Gerencia a instância do formulário para garantir que seja um singleton.
+    A instância agora é criada uma vez e reutilizada para não perder o estado
+    e garantir que os timers agendados não sejam perdidos.
+    """
 
     _instance = None
 
     @classmethod
     def show_form(cls, parent=None):
-        """Cria e exibe o formulário, garantindo uma única instância visível."""
-        if cls._instance is None or not cls._instance.isVisible():
+        """Cria (se necessário) e sempre reutiliza a mesma instância do formulário."""
+        if cls._instance is None:
             cls._instance = FormGerenciarInstancias(parent)
-            cls._instance.show()
-        else:
-            cls._instance.activateWindow()
-            cls._instance.raise_()
+
+        # Sempre mostra, ativa e traz para frente a mesma instância
+        cls._instance.show()
+        cls._instance.activateWindow()
+        cls._instance.raise_()
 
 
 def main(parent=None):
@@ -258,6 +292,6 @@ def main(parent=None):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # para rodar o mockup é necessário desativar a função tem_permissao
+    # Para rodar o mockup é necessário desativar a função tem_permissao
     main()
     sys.exit(app.exec())

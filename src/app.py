@@ -412,8 +412,9 @@ def processar_verificacao_sistema():
     # Verifica comando de shutdown do sistema
     if verificar_comando_shutdown():
         logging.info("Comando SHUTDOWN detectado. Fechando aplicativo...")
-        # Limpar comando para evitar loops
-        limpar_comando_sistema()
+        # ATENÇÃO: A linha que limpava o comando foi REMOVIDA daqui.
+        # A aplicação agora apenas obedece ao comando, sem modificá-lo.
+        # A responsabilidade de limpar o comando é do form_gerenciar_instancias.
         fechar_aplicativo()
 
 
@@ -434,6 +435,15 @@ def main():
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
+
+        # CORREÇÃO: Se um comando de shutdown existe ao iniciar, ele é obsoleto.
+        # Limpa o comando para permitir a operação normal do aplicativo.
+        if verificar_comando_shutdown():
+            logging.warning(
+                "Comando de SHUTDOWN obsoleto detectado na inicialização. Limpando..."
+            )
+            limpar_comando_sistema()
+
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
         app = QApplication(sys.argv)
@@ -441,7 +451,7 @@ def main():
         tema_salvo = config.get("tema", "dark")
         aplicar_tema_inicial(tema_salvo)
 
-        # CORREÇÃO: Conectar a função de salvar ao sinal aboutToQuit
+        # Conectar a função de salvar ao sinal aboutToQuit
         app.aboutToQuit.connect(salvar_estado_final)
         app.aboutToQuit.connect(remover_sessao)
 
