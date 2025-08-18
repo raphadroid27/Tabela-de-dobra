@@ -221,7 +221,9 @@ def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> 
     _show_message_box(QMessageBox.Icon.Warning, title, message, parent)
 
 
-def ask_yes_no(title: str, message: Union[str, tuple], parent: Optional[QWidget] = None) -> bool:
+def ask_yes_no(
+    title: str, message: Union[str, tuple], parent: Optional[QWidget] = None
+) -> bool:
     """Pergunta sim/não usando QMessageBox."""
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Icon.Question)
