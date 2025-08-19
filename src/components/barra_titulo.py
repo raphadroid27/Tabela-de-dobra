@@ -109,9 +109,9 @@ class BarraTitulo(QWidget):
         self._is_updating_style = True
         try:
             if tema_real == "dark":
-                self.setStyleSheet("background-color: #232629; color: #fff;")
+                self.setStyleSheet("background-color: transparent; color: #fff;")
             else:
-                self.setStyleSheet("background-color: #f0f0f0; color: #222;")
+                self.setStyleSheet("background-color: transparent; color: #222;")
 
             self.real_theme_applied = tema_real
         finally:
