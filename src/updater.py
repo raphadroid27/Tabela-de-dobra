@@ -1,5 +1,5 @@
 """
-Updater Gráfico para a Aplicação de Cálculo de Dobra.
+Updater Gráfico para a Aplicação de Calculadora de Dobra.
 """
 
 from src.utils.utilitarios import (

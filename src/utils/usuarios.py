@@ -118,8 +118,13 @@ def login():
             g.USUARIO_ID = usuario_obj.id
             if g.AUTEN_FORM is not None:
                 g.AUTEN_FORM.close()
+<<<<<<< HEAD
             if g.PRINC_FORM is not None:
                 titulo = f"Cálculo de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
+=======
+            if g.PRINC_FORM:
+                titulo = f"Calculadora de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
+>>>>>>> fdd9935 (refatora: renomeia o aplicativo de "Cálculo de Dobra" para "Calculadora de Dobra" em diversos arquivos)
                 g.PRINC_FORM.setWindowTitle(titulo)
             # Atualiza a barra de título customizada, se existir
             if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
@@ -203,10 +208,15 @@ def logout():
         return
 
     g.USUARIO_ID = None
+<<<<<<< HEAD
     if g.PRINC_FORM is not None:
         g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
+=======
+    if g.PRINC_FORM:
+        g.PRINC_FORM.setWindowTitle("Calculadora de Dobra")
+>>>>>>> fdd9935 (refatora: renomeia o aplicativo de "Cálculo de Dobra" para "Calculadora de Dobra" em diversos arquivos)
         if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
-            g.BARRA_TITULO.titulo.setText("Cálculo de Dobra")
+            g.BARRA_TITULO.titulo.setText("Calculadora de Dobra")
     show_info("Logout", "Logout efetuado com sucesso.")
 
 

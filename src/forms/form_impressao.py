@@ -531,7 +531,7 @@ class FormImpressao(QDialog):
                 return
 
             self.imprimir_btn.setEnabled(False)
-            self.imprimir_btn.setText("Imprimindo...")
+            self.imprimir_btn.setText("🖨️ Imprimindo...")
 
             self.print_worker = PrintWorker(
                 diretorio, self.print_manager.arquivos_encontrados)
