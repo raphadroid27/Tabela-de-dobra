@@ -112,12 +112,12 @@ UPDATE_TEMP_DIR = os.path.join(BASE_DIR, "update_temp")
 VERSION_FILE_PATH = os.path.join(UPDATES_DIR, "versao.json")
 
 # Arquivo executável da aplicação principal
-APP_EXECUTABLE_NAME = "Cálculo de Dobra.exe"
+APP_EXECUTABLE_NAME = "Calculadora de Dobra.exe"
 APP_EXECUTABLE_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE_NAME)
 
 # Arquivos de configuração do usuário
 DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
-CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Cálculo de Dobra")
+CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Calculadora de Dobra")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 

@@ -1,5 +1,5 @@
 """
-Formulário Principal do Aplicativo de Cálculo de Dobra.
+Formulário Principal do Aplicativo de Calculadora de Dobra.
 """
 
 import json
@@ -200,7 +200,7 @@ def configurar_janela_principal(config):
             pass
 
     g.PRINC_FORM = QMainWindow()
-    g.PRINC_FORM.setWindowTitle(f"Cálculo de Dobra - v{APP_VERSION}")
+    g.PRINC_FORM.setWindowTitle(f"Calculadora de Dobra - v{APP_VERSION}")
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(
