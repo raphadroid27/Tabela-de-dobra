@@ -2,3 +2,5 @@
 *.pyc
 build/
 __pycache__/
+database/tabela_de_dobra.db-shm
+database/tabela_de_dobra.db-wal
