@@ -81,26 +81,6 @@ class Janela:
             )
 
     @staticmethod
-    def aplicar_no_topo(form: Optional[QWidget]) -> None:
-        """
-        Aplica o estado atual de 'no topo' a uma janela específica.
-        """
-        if not form:
-            return
-
-        current_state = Janela._on_top_state
-        current_flags = form.windowFlags()
-
-        if current_state:
-            new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
-        else:
-            new_flags = current_flags & ~Qt.WindowType.WindowStaysOnTopHint
-
-        essential_flags = Janela.janela_flags()
-        form.setWindowFlags(new_flags | essential_flags)
-        form.show()
-
-    @staticmethod
     def posicionar_janela(
         form: Optional[QWidget], posicao: Optional[str] = None
     ) -> None:

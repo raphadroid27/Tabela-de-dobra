@@ -55,7 +55,6 @@ def _configurar_janela_base(root):
 
     g.USUAR_FORM.setWindowIcon(QIcon(ICON_PATH))
 
-    Janela.aplicar_no_topo(g.USUAR_FORM)
     Janela.posicionar_janela(g.USUAR_FORM, "centro")
 
 

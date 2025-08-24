@@ -60,7 +60,6 @@ class FormRazaoRIE:
         self.rie_form.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
         self.rie_form.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
         self.rie_form.setWindowIcon(QIcon(ICON_PATH))
-        Janela.aplicar_no_topo(self.rie_form)
         Janela.posicionar_janela(self.rie_form, None)
 
     def _criar_layout_principal(self, parent):
