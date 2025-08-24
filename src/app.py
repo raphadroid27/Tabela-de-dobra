@@ -242,6 +242,11 @@ def _on_toggle_no_topo(checked: bool):
     Janela.set_on_top_state(checked)
 
 
+def _on_toggle_transparencia(checked: bool):
+    """Define o estado de 'transparência' com base na ação do menu."""
+    Janela.set_transparency_state(checked)
+
+
 def configurar_menu(menu_custom):
     """Configura o menu superior da janela principal."""
     if menu_custom is None:
@@ -324,12 +329,23 @@ def _criar_menu_opcoes(menu_bar):
     """Cria o menu Opções."""
     opcoes_menu = menu_bar.addMenu("⚙️ Opções")
 
+    # Ação "No Topo"
     no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
     no_topo_action.setCheckable(True)
     no_topo_action.setChecked(Janela.get_on_top_state())
     no_topo_action.triggered.connect(_on_toggle_no_topo)
     opcoes_menu.addAction(no_topo_action)
 
+    opcoes_menu.addSeparator()
+
+    # Ação "Transparência"
+    transparencia_action = QAction("👻 Transparência", g.PRINC_FORM)
+    transparencia_action.setCheckable(True)
+    transparencia_action.setChecked(Janela.get_transparency_state())
+    transparencia_action.triggered.connect(_on_toggle_transparencia)
+    opcoes_menu.addAction(transparencia_action)
+
+    # Menu de Temas
     temas_menu = opcoes_menu.addMenu("🎨 Temas")
     temas_actions = {}
     for tema in obter_temas_disponiveis():
