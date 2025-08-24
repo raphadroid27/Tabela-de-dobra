@@ -1,5 +1,6 @@
 """
-Módulo utilitário para manipulação de banco de dados no aplicativo de cálculo de dobras.
+Módulo utilitário para manipulação de banco de dados no aplicativo de Calculadora de Dobras.
+Versão corrigida para centralizar o gerenciamento de conexões e sessões.
 """
 
 import logging
