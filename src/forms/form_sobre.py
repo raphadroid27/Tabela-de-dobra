@@ -49,7 +49,7 @@ def main(root: Optional[QWidget]) -> None:
     aplicar_medida_borda_espaco(conteudo_layout, 10, 10)
 
     # Título
-    label_titulo = QLabel("Cálculo de Dobra")
+    label_titulo = QLabel("Calculadora de Dobra")
     font_titulo = QFont("Arial", 16)
     font_titulo.setBold(True)
     label_titulo.setFont(font_titulo)

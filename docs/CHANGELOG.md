@@ -1,6 +1,6 @@
 # Changelog
 
-Histórico de mudanças do aplicativo Cálculo de Dobras
+Histórico de mudanças do aplicativo Calculadora de Dobras
 
 ## 2.3.1 (31/07/2025)
 
@@ -131,7 +131,7 @@ Histórico de mudanças do aplicativo Cálculo de Dobras
 
 ## v0.6.0 - Renovação de Funcionalidades (22/04/2025)
 
-- Renomeado diretório de configuração para "Cálculo de Dobra"
+- Renomeado diretório de configuração para "Calculadora de Dobra"
 - Atualizada descrição do projeto no README.md
 - Modificada configuração de widgets Treeview para melhor exibição de dados
 - Atualizado título e versão no formulário "Sobre"
@@ -148,7 +148,7 @@ Histórico de mudanças do aplicativo Cálculo de Dobras
 - Refatorada a classe ToolTip para melhor comportamento visual
 - Melhorado sistema de associação de eventos em widgets
 - Adicionada funcionalidade de expansão vertical e horizontal da interface
-- Implementado sistema de verificação de aba mínima no cálculo de dobras
+- Implementado sistema de verificação de aba mínima no Calculadora de Dobras
 - Ajuste na largura das colunas de dobra para melhor visualização
 
 ## v0.4.0 - Refatoração e UX (02/04/2025)
@@ -184,7 +184,7 @@ Histórico de mudanças do aplicativo Cálculo de Dobras
 
 ## v0.1.0 - Lançamento Inicial (18/12/2024)
 
-- Commit inicial do projeto de cálculo de dobras
+- Commit inicial do projeto de Calculadora de Dobras
 - Configuração básica de diretórios e arquivos
 - Implementação inicial do banco de dados SQLite
 - Estruturação de módulos para funcionamento básico da aplicação

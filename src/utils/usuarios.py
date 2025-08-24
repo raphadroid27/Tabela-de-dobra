@@ -103,7 +103,7 @@ def login():
             if g.AUTEN_FORM:
                 g.AUTEN_FORM.close()
             if g.PRINC_FORM:
-                titulo = f"Cálculo de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
+                titulo = f"Calculadora de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
                 g.PRINC_FORM.setWindowTitle(titulo)
             if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
                 g.BARRA_TITULO.titulo.setText(titulo)
@@ -182,9 +182,9 @@ def logout():
 
     g.USUARIO_ID = None
     if g.PRINC_FORM:
-        g.PRINC_FORM.setWindowTitle("Cálculo de Dobra")
+        g.PRINC_FORM.setWindowTitle("Calculadora de Dobra")
         if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
-            g.BARRA_TITULO.titulo.setText("Cálculo de Dobra")
+            g.BARRA_TITULO.titulo.setText("Calculadora de Dobra")
     show_info("Logout", "Logout efetuado com sucesso.")
 
 
