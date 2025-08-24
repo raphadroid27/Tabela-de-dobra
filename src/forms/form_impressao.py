@@ -298,7 +298,6 @@ class FormImpressao(QDialog):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
         self.setWindowIcon(QIcon(ICON_PATH))
 
-        Janela.aplicar_no_topo(self)
         Janela.posicionar_janela(self, None)
 
         vlayout = QVBoxLayout(self)

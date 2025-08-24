@@ -388,7 +388,6 @@ class FormManager:
         # Guardar referência para uso posterior
         new_form.conteudo_layout = grid_layout
 
-        Janela.aplicar_no_topo(new_form)
         Janela.posicionar_janela(new_form, None)
 
         return new_form
