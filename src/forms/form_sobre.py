@@ -30,7 +30,6 @@ def main(root: Optional[QWidget]) -> None:
 
     sobre_form.setWindowIcon(QIcon(ICON_PATH))
 
-    Janela.aplicar_no_topo(sobre_form)
     Janela.posicionar_janela(sobre_form, "centro")
 
     # Layout principal vertical: barra de título + conteúdo
