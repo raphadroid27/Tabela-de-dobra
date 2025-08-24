@@ -12,21 +12,60 @@ from src.config import globals as g
 
 
 class TransparencyEventFilter(QObject):
-    """Filtro de eventos para gerenciar a opacidade da janela com base no mouse."""
+    """
+    Filtro de eventos para gerenciar a opacidade da janela com base no mouse
+    e no estado de foco da janela, usando um temporizador para evitar problemas
+    com menus e pop-ups.
+    """
+
+    def __init__(self, parent: QWidget):
+        """Inicializa o filtro e o temporizador."""
+        super().__init__(parent)
+        self.watched_window = parent
+        self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.setInterval(50)  # Atraso de 50ms para verificar o estado
+        self.timer.timeout.connect(self.make_transparent)
 
     def eventFilter(  # pylint: disable=C0103
         self, watched: QObject, event: QEvent
     ) -> bool:
-        """Monitora eventos de entrada e saída do mouse para ajustar a opacidade."""
-        if not isinstance(watched, QWidget):
+        """Monitora eventos de mouse e foco para ajustar a opacidade."""
+        if watched is not self.watched_window:
             return super().eventFilter(watched, event)
 
-        if event.type() == QEvent.Type.Enter:
-            watched.setWindowOpacity(1.0)
-        elif event.type() == QEvent.Type.Leave:
-            watched.setWindowOpacity(0.5)
+        event_type = event.type()
+
+        if event_type in [QEvent.Type.Enter, QEvent.Type.WindowActivate]:
+            # Para o temporizador e torna a janela opaca quando o mouse entra
+            # ou a janela é ativada.
+            self.timer.stop()
+            self.watched_window.setWindowOpacity(1.0)
+        elif event_type in [QEvent.Type.Leave, QEvent.Type.WindowDeactivate]:
+            # Inicia o temporizador para aplicar a transparência quando o mouse sai
+            # ou a janela é desativada.
+            self.timer.start()
 
         return super().eventFilter(watched, event)
+
+    def make_transparent(self):
+        """
+        Verifica se a janela deve se tornar transparente.
+        Esta função é chamada pelo temporizador.
+        """
+        # Condições para NÃO tornar transparente:
+        # 1. O mouse voltou para a janela.
+        # 2. A janela ainda é a janela ativa.
+        # 3. Um menu, submenu ou combobox está ativo.
+        if (
+            self.watched_window.underMouse()
+            or self.watched_window.isActiveWindow()
+            or QApplication.activePopupWidget()
+            or QWidget.mouseGrabber()
+        ):
+            return
+
+        self.watched_window.setWindowOpacity(0.5)
 
 
 class Janela:
@@ -179,10 +218,8 @@ class Janela:
                 filter_obj = TransparencyEventFilter(window)
                 window.installEventFilter(filter_obj)
                 Janela._event_filters[id(window)] = filter_obj
-            if window.underMouse():
-                window.setWindowOpacity(1.0)
-            else:
-                window.setWindowOpacity(0.5)
+            # Garante que a janela esteja opaca ao ativar o filtro
+            window.setWindowOpacity(1.0)
         else:
             if filter_obj:
                 window.removeEventFilter(filter_obj)
