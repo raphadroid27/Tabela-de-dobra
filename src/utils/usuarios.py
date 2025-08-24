@@ -119,7 +119,9 @@ def login():
             if g.AUTEN_FORM is not None:
                 g.AUTEN_FORM.close()
             if g.PRINC_FORM:
-                titulo = f"Calculadora de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
+                titulo = (
+                    f"Calculadora de Dobra - {getattr(usuario_obj, 'nome', 'Usuário')}"
+                )
                 g.PRINC_FORM.setWindowTitle(titulo)
             # Atualiza a barra de título customizada, se existir
             if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
