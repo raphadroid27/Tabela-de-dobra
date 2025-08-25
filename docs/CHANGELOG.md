@@ -2,6 +2,21 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.4.0 (15/08/2025)
+
+- Adiciona suporte à transparência das janelas quando "No topo" está ativo.
+- Renomeia o aplicativo de "Cálculo de Dobra" para "Calculadora de Dobra" em diversos arquivos.
+- Adicionado novo formulário para gerenciamento de instâncias, permitindo visualizar, controlar e encerrar sessões ativas do aplicativo.
+- Incluído botão "Verificar Arquivos" no formulário de impressão, facilitando a checagem e validação dos arquivos antes da impressão.
+- Refatoração geral para remoção de variáveis, funções, métodos e comentários não utilizados, simplificando e organizando o código.
+- Centralização de configurações, estilos, mensagens e gerenciamento de janelas para maior consistência e manutenção.
+- Encapsulamento de lógicas em classes e funções, com melhorias na tipagem, validação, segurança e documentação.
+- Otimizações para ambiente multi-usuário, cache, sessões e desempenho da interface e banco de dados.
+- Adição de suporte a argumentos de linha de comando, relatórios, logging e ferramentas de análise de código.
+- Ajustes visuais em janelas, formulários e componentes, com padronização de dimensões e estilos.
+- Melhoria na gestão de temas, autenticação, impressão, controle de instâncias e permissões.
+- Atualização de dependências, arquivos de configuração e estrutura de diretórios.
+
 ## 2.3.1 (31/07/2025)
 
 - Melhorada a lógica de verificação de atualizações e gerencia a versão instalada no banco de dados
