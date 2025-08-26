@@ -161,6 +161,8 @@ def main(root):
     conteudo.setLayout(main_layout)
     vlayout.addWidget(conteudo)
 
+    g.USUAR_FORM.exec()
+
 
 if __name__ == "__main__":
     main(None)
