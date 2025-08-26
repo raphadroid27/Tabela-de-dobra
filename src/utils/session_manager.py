@@ -72,9 +72,6 @@ def atualizar_heartbeat_sessao():
         db_session.rollback()
 
 
-<< << << < HEAD
-
-
 def obter_comando_sistema() -> str | None:
     """Busca no banco e retorna o comando atual do sistema ('SHUTDOWN', 'NONE', etc.)."""
     try:
@@ -84,36 +81,3 @@ def obter_comando_sistema() -> str | None:
         logging.error("Erro ao obter comando do sistema: %s", e)
         db_session.rollback()
         return None
-
-
-== == == =
-
-
-def obter_comando_sistema() -> Optional[str]:
-    """Busca no banco e retorna o comando atual do sistema."""
-    return SessionManager.obter_comando_sistema()
-
-
-def definir_comando_sistema(comando: str):
-    """Define um comando do sistema (ex: 'SHUTDOWN', 'UPDATE', etc.)."""
-    return SessionManager.definir_comando_sistema(comando)
-
-
-def obter_sessoes_ativas():
-    """Retorna lista de todas as sessões ativas."""
-    return SessionManager.obter_sessoes_ativas()
-
-
-def limpar_comando_sistema():
-    """Limpa o comando do sistema."""
-    return SessionManager.limpar_comando_sistema()
-
-
-def verificar_comando_shutdown() -> bool:
-    """Verifica se existe comando de shutdown pendente."""
-    return SessionManager.verificar_comando_shutdown()
-
-
-# Variáveis de compatibilidade
-SESSION_ID = session_manager.session_id
->>>>>> > 9d25552(refatora: substitui importação de sessão global por session_scope e adiciona controle de concorrência)
