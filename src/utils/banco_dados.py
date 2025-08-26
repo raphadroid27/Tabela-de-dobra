@@ -4,7 +4,7 @@ Versão corrigida para centralizar o gerenciamento de conexões e sessões.
 """
 
 import logging
-import os
+import os  # Importa o módulo 'os' para interagir com o sistema de arquivos
 from contextlib import contextmanager
 from typing import Iterator, Optional, Tuple, Type
 
