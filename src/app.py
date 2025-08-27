@@ -55,7 +55,6 @@ from src.utils.session_manager import (
     verificar_comando_sistema,
 )
 from src.utils.update_manager import (
-    checagem_periodica_update,
     manipular_clique_update,
     set_installed_version,
 )
@@ -72,15 +71,12 @@ APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
 JANELA_PRINCIPAL_ALTURA = 510
 TIMER_SISTEMA_INTERVALO = 30000  # 30s
-TIMER_UPDATE_INTERVALO = 1800000  # 30min
-TIMER_UPDATE_DELAY_INICIAL = 1800000  # 30min
 LAYOUT_ESPACAMENTO = 0
 LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
 
 
 TIMER_SISTEMA = QTimer()
-UPDATE_CHECK_TIMER = QTimer()
 
 
 def verificar_admin_existente():
@@ -396,33 +392,23 @@ def configurar_sinais_excecoes():
     signal.signal(signal.SIGTERM, signal_handler)
 
 
-# --- FUNÇÃO MODIFICADA ---
 def system_tick():
     """
     Função chamada periodicamente pelo timer do sistema.
     Executa tarefas de manutenção como verificar comandos e atualizar heartbeat.
     """
-    # Primeiro, verifica se um comando de shutdown foi emitido.
     if verificar_comando_sistema():
         logging.info("Comando de encerramento recebido. Fechando a aplicação.")
-        # A função fechar_aplicativo já lida com salvar o estado e sair.
         fechar_aplicativo()
-        return  # Impede a execução do heartbeat se o app estiver fechando
+        return
 
-    # Se não houver comando de shutdown, a aplicação continua funcionando normalmente.
     atualizar_heartbeat_sessao()
 
 
-# --- MODIFICADO ---
 def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g'."""
-    # Conecta o timer do sistema à função de tick que verifica comandos e atualiza o heartbeat
     TIMER_SISTEMA.timeout.connect(system_tick)
     TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
-
-    UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
-    UPDATE_CHECK_TIMER.start(TIMER_UPDATE_INTERVALO)
-    QTimer.singleShot(TIMER_UPDATE_DELAY_INICIAL, checagem_periodica_update)
 
 
 def main():
@@ -433,7 +419,6 @@ def main():
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
 
-        # Limpa sessões órfãs de execuções anteriores que travaram
         limpar_sessoes_inativas()
 
         set_installed_version(APP_VERSION)
