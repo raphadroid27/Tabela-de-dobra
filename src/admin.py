@@ -4,7 +4,7 @@ Módulo de Administração Centralizado.
 Este módulo fornece uma interface gráfica unificada para administradores
 gerenciarem a aplicação, combinando as funcionalidades de:
 - Gerenciamento de instâncias ativas (visualização e encerramento forçado).
-- Atualização da aplicação (verificação, download e aplicação de updates).
+- Atualização da aplicação (seleção manual de arquivo e instalação).
 - Gerenciamento de usuários (redefinir senhas, alterar permissões e excluir).
 
 O acesso à ferramenta requer autenticação de administrador.
@@ -24,6 +24,7 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -56,11 +57,7 @@ from src.utils.session_manager import (
     force_shutdown_all_instances,
     obter_sessoes_ativas,
 )
-from src.utils.update_manager import (
-    checar_updates,
-    download_update,
-    get_installed_version,
-)
+from src.utils.update_manager import get_installed_version
 from src.utils.utilitarios import (
     APP_EXECUTABLE_PATH,
     ICON_PATH,
@@ -312,52 +309,77 @@ class UpdaterWidget(QWidget):
     def __init__(self, parent=None):
         """Inicializa o widget de atualização."""
         super().__init__(parent)
-        self.update_info = None
-        self.status_label = QLabel("Verificando atualizações...")
+        self.selected_file_path = None
+        self.file_path_entry = QLineEdit()
         self.version_label = QLabel("")
-        self.update_button = QPushButton("Atualizar Agora")
+        self.update_button = QPushButton("Instalar Atualização")
         self.progress_bar = QProgressBar()
         self.progress_view = self._create_progress_view()
-        self.status_view = self._create_status_view()
+        self.main_view = self._create_main_view()
         self.stacked_widget = QStackedWidget()
         self._setup_ui()
-        QTimer.singleShot(100, self.force_check_for_updates)
+        self._load_current_version()
 
     def _setup_ui(self):
         """Configura a interface do usuário para o widget de atualização."""
         main_layout = QVBoxLayout(self)
-        self.stacked_widget.addWidget(self.status_view)
+        self.stacked_widget.addWidget(self.main_view)
         self.stacked_widget.addWidget(self.progress_view)
         main_layout.addWidget(self.stacked_widget)
 
-    def _create_status_view(self):
-        """Cria a view de status da atualização."""
+    def _load_current_version(self):
+        """Carrega e exibe a versão atualmente instalada."""
+        current_version = get_installed_version()
+        if current_version:
+            self.version_label.setText(f"Versão Instalada: {current_version}")
+        else:
+            self.version_label.setText("Versão Instalada: Desconhecida")
+
+    def _create_main_view(self):
+        """Cria a view principal para seleção de arquivo."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         aplicar_medida_borda_espaco(layout, 10, 10)
         layout.setAlignment(Qt.AlignCenter)
 
-        self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         self.version_label.setAlignment(Qt.AlignCenter)
-        self.version_label.setStyleSheet(
-            "font-size: 16px; font-weight: bold; color: #55aaff;"
-        )
-        layout.addWidget(self.status_label)
+        self.version_label.setStyleSheet("font-size: 14px; margin-bottom: 15px;")
         layout.addWidget(self.version_label)
-        layout.addStretch()
 
-        button_layout = QHBoxLayout()
-        refresh_button = QPushButton("🔄 Verificar Novamente")
-        aplicar_estilo_botao(refresh_button, "azul")
-        refresh_button.clicked.connect(self.force_check_for_updates)
-        button_layout.addWidget(refresh_button)
+        # Frame para seleção de arquivo
+        file_group = QGroupBox("Selecionar Pacote de Atualização (.zip)")
+        file_layout = QHBoxLayout(file_group)
+        self.file_path_entry.setPlaceholderText("Nenhum arquivo selecionado")
+        self.file_path_entry.setReadOnly(True)
+        file_layout.addWidget(self.file_path_entry)
+
+        select_button = QPushButton("Selecionar...")
+        aplicar_estilo_botao(select_button, "azul")
+        select_button.clicked.connect(self._select_file)
+        file_layout.addWidget(select_button)
+        layout.addWidget(file_group)
+
+        layout.addStretch()
 
         self.update_button.setEnabled(False)
         self.update_button.clicked.connect(self.start_update_process)
-        button_layout.addWidget(self.update_button)
-        layout.addLayout(button_layout)
+        aplicar_estilo_botao(self.update_button, "verde")
+        layout.addWidget(self.update_button)
         return widget
+
+    def _select_file(self):
+        """Abre um diálogo para o usuário selecionar o arquivo de atualização."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Selecionar Arquivo de Atualização", "", "Arquivos Zip (*.zip)"
+        )
+        if file_path:
+            self.selected_file_path = file_path
+            self.file_path_entry.setText(file_path)
+            self.update_button.setEnabled(True)
+        else:
+            self.selected_file_path = None
+            self.file_path_entry.clear()
+            self.update_button.setEnabled(False)
 
     def _create_progress_view(self):
         """Cria a view de progresso da atualização."""
@@ -376,39 +398,14 @@ class UpdaterWidget(QWidget):
         layout.addStretch(2)
         return widget
 
-    def force_check_for_updates(self):
-        """Força a verificação por novas atualizações."""
-        logging.info("Verificação de atualização forçada.")
-        self.status_label.setText("Verificando atualizações...")
-        self.version_label.setText("")
-        self.update_button.setEnabled(False)
-        self.update_button.setStyleSheet("")
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        QTimer.singleShot(100, self._check_and_update_ui)
-
-    def _check_and_update_ui(self):
-        """Verifica por atualizações e atualiza a UI de acordo."""
-        try:
-            current_version = get_installed_version()
-            if not current_version:
-                self.status_label.setText("Erro ao ler a versão local.")
-                return
-            self.update_info = checar_updates(current_version)
-            if self.update_info:
-                latest_version = self.update_info.get("ultima_versao", "N/A")
-                self.status_label.setText("Nova versão disponível!")
-                self.version_label.setText(f"Versão {latest_version}")
-                self.update_button.setEnabled(True)
-                aplicar_estilo_botao(self.update_button, "verde")
-            else:
-                self.status_label.setText("O seu aplicativo está atualizado.")
-                self.version_label.setText(f"Versão atual: {current_version}")
-                self.update_button.setEnabled(False)
-        finally:
-            QApplication.restoreOverrideCursor()
-
     def start_update_process(self):
         """Inicia o processo de atualização da aplicação."""
+        if not self.selected_file_path:
+            show_error(
+                "Erro", "Nenhum arquivo de atualização selecionado.", parent=self
+            )
+            return
+
         msg = "A aplicação e suas instâncias serão fechadas. Deseja prosseguir?"
         if not ask_yes_no("Confirmar Atualização", msg, parent=self):
             return
@@ -419,7 +416,7 @@ class UpdaterWidget(QWidget):
         except (ValueError, ConnectionError, RuntimeError, IOError) as e:
             logging.error("Erro no processo de atualização: %s", e)
             show_error("Erro de Atualização", f"Ocorreu um erro: {e}", parent=self)
-            self.stacked_widget.setCurrentWidget(self.status_view)
+            self.stacked_widget.setCurrentWidget(self.main_view)
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -432,13 +429,20 @@ class UpdaterWidget(QWidget):
 
     def run_update_steps(self):
         """Executa os passos da atualização."""
-        self.progress_status_label.setText("Baixando arquivos...")
+        zip_filename = os.path.basename(self.selected_file_path)
+
+        self.progress_status_label.setText("Copiando arquivo de atualização...")
         self.progress_bar.setValue(10)
         QApplication.processEvents()
-        zip_filename = self.update_info.get("nome_arquivo")
-        if not zip_filename:
-            raise ValueError("Nome do arquivo de atualização não encontrado.")
-        download_update(zip_filename)
+
+        try:
+            if os.path.exists(UPDATE_TEMP_DIR):
+                shutil.rmtree(UPDATE_TEMP_DIR)
+            os.makedirs(UPDATE_TEMP_DIR, exist_ok=True)
+            shutil.copy(self.selected_file_path, UPDATE_TEMP_DIR)
+        except (IOError, OSError) as e:
+            raise IOError(f"Falha ao copiar o arquivo de atualização: {e}") from e
+
         self.progress_bar.setValue(40)
 
         self.progress_status_label.setText("Fechando a aplicação principal...")
@@ -531,13 +535,11 @@ class UserManagementWidget(QWidget):
         self.usuario_busca_entry = QLineEdit()
         self.list_usuario = QTreeWidget()
 
-        # Atribui os widgets desta instância às variáveis globais
-        # para que as funções de interface.py e controlador.py funcionem
         g.USUARIO_BUSCA_ENTRY = self.usuario_busca_entry
         g.LIST_USUARIO = self.list_usuario
 
         self._setup_ui()
-        listar("usuario")  # Popula a lista inicial
+        listar("usuario")
 
     def _setup_ui(self):
         """Configura a interface do usuário para o widget."""
@@ -567,7 +569,6 @@ class UserManagementWidget(QWidget):
 
     def _create_tree_widget(self, main_layout):
         """Cria o TreeWidget para listar usuários."""
-        # Usa a variável global que foi configurada
         g.LIST_USUARIO.setHeaderLabels(["Id", "Nome", "Permissões", "Senha Resetada"])
         g.LIST_USUARIO.setColumnHidden(0, True)
         g.LIST_USUARIO.setColumnWidth(1, 120)
@@ -617,7 +618,7 @@ class UserManagementWidget(QWidget):
                 usuario_obj.senha = "nova_senha"
                 session.commit()
                 show_info("Sucesso", "Senha resetada com sucesso.", parent=self)
-                listar("usuario")  # Atualiza a lista
+                listar("usuario")
             else:
                 show_error("Erro", "Usuário não encontrado.", parent=self)
 
@@ -640,7 +641,7 @@ class UserManagementWidget(QWidget):
                     session.delete(usuario_obj)
                     session.commit()
                     show_info("Sucesso", "Usuário excluído com sucesso!", parent=self)
-                    listar("usuario")  # Atualiza a lista
+                    listar("usuario")
         except SQLAlchemyError as e:
             show_error(
                 "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=self
@@ -671,7 +672,7 @@ class UserManagementWidget(QWidget):
             usuario_obj.role = "editor"
             session.commit()
             show_info("Sucesso", "Usuário promovido a editor com sucesso.", parent=self)
-            listar("usuario")  # Atualiza a lista
+            listar("usuario")
 
 
 class AdminTool(QMainWindow):
