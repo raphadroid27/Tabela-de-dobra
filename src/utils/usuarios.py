@@ -263,14 +263,15 @@ def excluir_usuario():
     obj = session.query(Usuario).filter_by(id=obj_id).first()
 
     # MODIFICADO: Uso da função ask_yes_no centralizada
-    if ask_yes_no(
-        "Atenção!",
-        "Tem certeza que deseja excluir o usuário?",
-        parent=g.USUAR_FORM,
-    ):
-        session.delete(usuario_obj)
-        show_info("Sucesso", "Usuário excluído com sucesso!")
-        listar("usuario")
+    try:
+        if ask_yes_no(
+            "Atenção!",
+            "Tem certeza que deseja excluir o usuário?",
+            parent=g.USUAR_FORM,
+        ):
+            session.delete(obj)
+            show_info("Sucesso", "Usuário excluído com sucesso!")
+            listar("usuario")
     except SQLAlchemyError as e:
         show_error("Erro", f"Erro de banco de dados ao excluir usuário: {e}")
 

@@ -18,7 +18,6 @@ from src.utils.banco_dados import session
 
 # --- INÍCIO DA ALTERAÇÃO ---
 # A invalidação de cache agora é importada diretamente do gerenciador de cache.
-from src.utils.cache_manager import cache_manager
 from src.utils.interface import (
     atualizar_comboboxes_formulario,
     atualizar_widgets,
