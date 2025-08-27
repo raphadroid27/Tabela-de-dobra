@@ -76,7 +76,6 @@ class CalculoDeducaoDB:
                 .join(Material, Deducao.material_id == Material.id)
                 .join(Espessura, Deducao.espessura_id == Espessura.id)
                 .join(Canal, Deducao.canal_id == Canal.id)
-                # pylint: disable=R0801
                 .filter(
                     Deducao.espessura_id == espessura_obj.id,
                     Deducao.material_id == material_obj.id,
@@ -85,9 +84,9 @@ class CalculoDeducaoDB:
                 .first()
             )
 
-            if deducao_obj:
+            if resultado:
+                deducao_obj = resultado[0]  # Deducao é o primeiro da tupla
                 return {"valor": deducao_obj.valor, "obs": deducao_obj.observacao or ""}
-
             return {"valor": "N/A", "obs": "Dedução não encontrada."}
 
         except (ValueError, TypeError):

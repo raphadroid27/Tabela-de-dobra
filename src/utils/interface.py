@@ -9,8 +9,8 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 - Lidar com ações diretas na interface, como limpeza de campos e cópia de valores.
 """
 
-from src.utils.widget import WidgetManager
 import logging
+import traceback
 from dataclasses import dataclass
 from functools import partial
 
@@ -22,6 +22,7 @@ from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import session
+from src.utils.widget import WidgetManager
 
 # pylint: disable=R0902
 
@@ -738,9 +739,9 @@ def calcular_valores():
             for w in g.VALORES_W:
                 _atualizar_coluna_dobras_ui(w, deducao_usada, aba_min)
 
-    except (AttributeError, RuntimeError, ValueError, KeyError, TypeError) as e:
+    except (ValueError, AttributeError, TypeError) as e:
         logging.error("Erro inesperado em calcular_valores: %s", e)
-        logging.debug("Detalhes do erro:", exc_info=True)
+        logging.error(traceback.format_exc())
 
 
 def todas_funcoes():

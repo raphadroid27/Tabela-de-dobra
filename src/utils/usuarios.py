@@ -2,6 +2,18 @@
 Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
 """
 
+import hashlib
+
+from sqlalchemy.exc import SQLAlchemyError
+
+from src.config import globals as g
+from src.models.models import Usuario
+from src.utils.banco_dados import (
+    session,
+    tratativa_erro,
+)
+from src.utils.interface import listar, obter_configuracoes
+from src.utils.janelas import Janela
 from src.utils.utilitarios import (
     ask_string,
     ask_yes_no,
@@ -9,18 +21,6 @@ from src.utils.utilitarios import (
     show_info,
     show_warning,
 )
-from src.utils.janelas import Janela
-from src.utils.interface import listar, obter_configuracoes
-from src.utils.banco_dados import session_scope
-from sqlalchemy.exc import SQLAlchemyError
-from src.utils.banco_dados import (
-    session,
-    tratativa_erro,
-)
-from src.models.models import Usuario
-from src.config import globals as g
-from PySide6.QtWidgets import QMessageBox
-import hashlib
 
 
 def novo_usuario():

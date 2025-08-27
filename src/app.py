@@ -43,7 +43,6 @@ from src.utils.banco_dados import session as db_session
 from src.utils.estilo import (
     aplicar_tema_inicial,
     aplicar_tema_qdarktheme,
-    limpar_barras_titulo_inativas,
     obter_tema_atual,
     obter_temas_disponiveis,
     registrar_tema_actions,
@@ -52,10 +51,8 @@ from src.utils.interface_manager import carregar_interface
 from src.utils.janelas import Janela
 from src.utils.session_manager import (
     atualizar_heartbeat_sessao,
-    limpar_comando_sistema,
     registrar_sessao,
     remover_sessao,
-    verificar_comando_shutdown,
 )
 from src.utils.update_manager import (
     checagem_periodica_update,
@@ -110,10 +107,7 @@ def carregar_configuracao():
         "Arquivo de configuração não encontrado. Usando configuração padrão."
     )
     # Configuração padrão
-    return {
-        "tema": "dark",  # Tema padrão
-        "geometry": None
-    }
+    return {"tema": "dark", "geometry": None}  # Tema padrão
 
 
 def salvar_configuracao(config):
@@ -204,7 +198,8 @@ def configurar_janela_principal(config):
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(
-        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
+    )
 
     if "geometry" in config and isinstance(config["geometry"], str):
         parts = config["geometry"].split("+")
@@ -306,7 +301,10 @@ def configurar_menu(menu_custom):
             ("🔐 Login", partial(_executar_autenticacao, True)),
             ("👥 Novo Usuário", partial(_executar_autenticacao, False)),
             ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
-            ("🖥️ Gerenciar Instâncias", lambda: form_gerenciar_instancias.main(g.PRINC_FORM)),
+            (
+                "🖥️ Gerenciar Instâncias",
+                lambda: form_gerenciar_instancias.main(g.PRINC_FORM),
+            ),
             ("separator", None),
             ("🚪 Sair", logout),
         ],
@@ -435,22 +433,8 @@ def configurar_sinais_excecoes():
     signal.signal(signal.SIGTERM, signal_handler)
 
 
-def processar_verificacao_sistema():
-    """Função chamada pelo timer para verificar o estado do sistema."""
-    atualizar_heartbeat_sessao()
-
-    # Verifica comando de shutdown do sistema
-    if verificar_comando_shutdown():
-        logging.info("Comando SHUTDOWN detectado. Fechando aplicativo...")
-        # ATENÇÃO: A linha que limpava o comando foi REMOVIDA daqui.
-        # A aplicação agora apenas obedece ao comando, sem modificá-lo.
-        # A responsabilidade de limpar o comando é do form_gerenciar_instancias.
-        fechar_aplicativo()
-
-
 def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g'."""
-    TIMER_SISTEMA.timeout.connect(processar_verificacao_sistema)
     TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
 
     UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
@@ -465,14 +449,6 @@ def main():
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
-
-        # CORREÇÃO: Se um comando de shutdown existe ao iniciar, ele é obsoleto.
-        # Limpa o comando para permitir a operação normal do aplicativo.
-        if verificar_comando_shutdown():
-            logging.warning(
-                "Comando de SHUTDOWN obsoleto detectado na inicialização. Limpando..."
-            )
-            limpar_comando_sistema()
 
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
