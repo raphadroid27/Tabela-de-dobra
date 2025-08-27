@@ -472,14 +472,7 @@ class FormImpressao(QDialog):
         diretorio = self.diretorio_entry.text().strip()
         if not diretorio or not os.path.isdir(diretorio):
 
-
-<< << << < HEAD
-            QMessageBox.critical(
-                self, "Erro", "Por favor, selecione um diretório válido.")
-== == == =
-
             show_error("Erro", "Por favor, selecione um diretório válido.", parent=self)
->>>>>> > dd43807(refatora: substitui QMessageBox por funções de mensagem centralizadas para melhor consistência e manutenção)
             return
 
         lista_arquivos = self._obter_lista_arquivos_da_widget()
