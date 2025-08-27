@@ -10,12 +10,6 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 """
 
 from src.utils.widget import WidgetManager
-from src.utils.cache_manager import (
-    cache_com_ttl,
-    cache_manager,
-    limpar_cache_expirado,
-    limpar_cache,
-)
 import logging
 from dataclasses import dataclass
 from functools import partial
