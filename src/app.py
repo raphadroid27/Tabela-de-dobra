@@ -30,7 +30,6 @@ from src.forms import (
     form_impressao,
     form_razao_rie,
     form_sobre,
-    form_usuario,
 )
 from src.forms.form_universal import form_canal_main as FormCanal
 from src.forms.form_universal import form_deducao_main as FormDeducao
@@ -282,7 +281,6 @@ def configurar_menu(menu_custom):
         "👤 Usuário": [
             ("🔐 Login", partial(_executar_autenticacao, True)),
             ("👥 Novo Usuário", partial(_executar_autenticacao, False)),
-            ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
             ("separator", None),
             ("🚪 Sair", logout),
         ],
