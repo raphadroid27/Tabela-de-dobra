@@ -124,7 +124,9 @@ class PrintManager:
             resultado += f"Arquivos encontrados ({len(self.arquivos_encontrados)}):\n"
             resultado += "".join(f" • {arq}\n" for arq in self.arquivos_encontrados)
         if self.arquivos_nao_encontrados:
-            msg = f"\nArquivos não encontrados ({len(self.arquivos_nao_encontrados)}):\n"
+            msg = (
+                f"\nArquivos não encontrados ({len(self.arquivos_nao_encontrados)}):\n"
+            )
             resultado += msg
             resultado += "".join(f" • {arq}\n" for arq in self.arquivos_nao_encontrados)
         if not self.arquivos_encontrados and not self.arquivos_nao_encontrados:
@@ -137,6 +139,7 @@ class PrintWorker(QThread):
     Worker thread para executar a impressão em segundo plano,
     evitando que a GUI congele e controlando a fila de impressão.
     """
+
     progress_update = Signal(str)
     processo_finalizado = Signal()
 
@@ -526,7 +529,8 @@ class FormImpressao(QDialog):
             self.imprimir_btn.setText("🖨️ Imprimindo...")
 
             self.print_worker = PrintWorker(
-                diretorio, self.print_manager.arquivos_encontrados)
+                diretorio, self.print_manager.arquivos_encontrados
+            )
             self.print_worker.progress_update.connect(self.atualizar_resultado)
             self.print_worker.processo_finalizado.connect(self.impressao_finalizada)
             self.print_worker.start()
@@ -557,6 +561,7 @@ class FormImpressao(QDialog):
 
 class FormManager:
     """Gerencia a instância do formulário para garantir que seja um singleton."""
+
     _instance = None
 
     @classmethod

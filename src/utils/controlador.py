@@ -169,8 +169,9 @@ def excluir(tipo):
 
     if obj is None:
         show_error(
-            "Erro", "O item selecionado não foi encontrado no banco de dados.",
-            parent=config["form"]
+            "Erro",
+            "O item selecionado não foi encontrado no banco de dados.",
+            parent=config["form"],
         )
         return
 
@@ -206,8 +207,9 @@ def excluir(tipo):
         # --- FIM DA ALTERAÇÃO ---
 
         # Remover o item diretamente do QTreeWidget
-        (item_widget_selecionado.parent() or lista_widget.invisibleRootItem()
-         ).removeChild(item_widget_selecionado)
+        (
+            item_widget_selecionado.parent() or lista_widget.invisibleRootItem()
+        ).removeChild(item_widget_selecionado)
 
         _limpar_campos(tipo)
         atualizar_widgets(tipo)
