@@ -57,13 +57,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-<< << << < HEAD
-# --- LÓGICA DE BOOTSTRAP: Encontrar o diretório base ANTES de outras importações ---
-== == == =
-
-# --- Constantes de Configuração ---
 SHUTDOWN_WAIT_SECONDS = 3  # Tempo de espera após comando de shutdown
->>>>>> > b17fe5f(refatora: substitui QMessageBox por funções de mensagem centralizadas para melhor consistência e manutenção)
 
 
 def obter_dir_base_local():

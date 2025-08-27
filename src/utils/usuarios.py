@@ -22,16 +22,6 @@ from src.config import globals as g
 from PySide6.QtWidgets import QMessageBox
 import hashlib
 
-<< << << < HEAD
-
-== == == =
-
-
-# ADICIONADO: session_scope
->>>>>> > dd43807(refatora: substitui QMessageBox por funções de mensagem centralizadas para melhor consistência e manutenção)
-
-# MODIFICADO: Importação completa das funções de mensagem
-
 
 def novo_usuario():
     """
