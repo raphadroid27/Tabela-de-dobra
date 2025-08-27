@@ -3,7 +3,7 @@ Módulo para Gerenciamento de Atualizações da Aplicação.
 
 Responsável por:
 - Verificar a existência de novas versões.
-- Orquestrar o lançamento do updater.exe para lidar com o processo de atualização.
+- Orquestrar o lançamento do admin.exe para lidar com o processo de atualização.
 - Gerenciar a versão instalada no banco de dados.
 """
 
@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import shutil
-import subprocess  # nosec B404 - subprocess necessário para execução controlada do updater
+import subprocess  # nosec B404 - subprocess necessário para execução controlada do admin
 from typing import Any, Dict, Optional
 
 from semantic_version import Version
@@ -27,10 +27,9 @@ from src.utils.utilitarios import (
     show_error,
 )
 
-UPDATER_EXECUTABLE_NAME = "updater.exe"
-UPDATER_EXECUTABLE_PATH = os.path.join(obter_dir_base(), UPDATER_EXECUTABLE_NAME)
-
-# --- NOVA FUNÇÃO ---
+# --- MODIFICADO ---
+ADMIN_EXECUTABLE_NAME = "admin.exe"  # Anteriormente UPDATER_EXECUTABLE_NAME
+ADMIN_EXECUTABLE_PATH = os.path.join(obter_dir_base(), ADMIN_EXECUTABLE_NAME)
 
 
 def get_installed_version() -> Optional[str]:
@@ -51,9 +50,6 @@ def get_installed_version() -> Optional[str]:
             "Nenhuma entrada 'INSTALLED_VERSION' encontrada no banco de dados."
         )
         return None
-
-
-# --- NOVA FUNÇÃO ---
 
 
 def set_installed_version(version: str):
@@ -124,7 +120,7 @@ def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
 def download_update(nome_arquivo: str) -> None:
     """
     Copia o arquivo de atualização para a pasta temporária.
-    Esta função é chamada pelo updater.py, que importa este módulo.
+    Esta função é chamada pelo admin.py, que importa este módulo.
     """
     source_path = os.path.join(UPDATES_DIR, nome_arquivo)
     if not os.path.exists(source_path):
@@ -136,9 +132,6 @@ def download_update(nome_arquivo: str) -> None:
     destination_path = os.path.join(UPDATE_TEMP_DIR, nome_arquivo)
     shutil.copy(source_path, destination_path)
     logging.info("Arquivo '%s' copiado para '%s'.", nome_arquivo, UPDATE_TEMP_DIR)
-
-
-# --- FUNÇÃO MODIFICADA ---
 
 
 def checagem_periodica_update():
@@ -161,33 +154,33 @@ def checagem_periodica_update():
 
 def manipular_clique_update():
     """
-    Gerencia o clique no botão de atualização, lançando o updater.exe.
+    Gerencia o clique no botão de atualização, lançando o admin.exe.
     """
-    if not os.path.exists(UPDATER_EXECUTABLE_PATH):
+    # --- MODIFICADO ---
+    if not os.path.exists(ADMIN_EXECUTABLE_PATH):
         show_error(
             "Erro",
-            f"O atualizador ({UPDATER_EXECUTABLE_NAME}) não foi "
-            "encontrado na pasta do aplicativo.",
+            f"A ferramenta de administração ({ADMIN_EXECUTABLE_NAME}) não foi "
+            "encontrada na pasta do aplicativo.",
             parent=g.PRINC_FORM,
         )
         return
 
-    argumento = "--apply" if g.UPDATE_INFO else "--check"
-
+    # O admin.exe sempre abre na tela de status do updater, então não precisa de argumento
     try:
         logging.info(
-            "Lançando o atualizador: %s %s", UPDATER_EXECUTABLE_PATH, argumento
+            "Lançando a ferramenta de administração: %s", ADMIN_EXECUTABLE_PATH
         )
         # pylint: disable=consider-using-with
         subprocess.Popen(
-            [UPDATER_EXECUTABLE_PATH, argumento]
-        )  # nosec B603 - executável validado do updater
+            [ADMIN_EXECUTABLE_PATH]
+        )  # nosec B603 - executável validado do admin
 
     except OSError as e:
-        logging.error("Falha ao iniciar o updater.exe: %s", e)
+        logging.error("Falha ao iniciar o admin.exe: %s", e)
         show_error(
             "Erro ao Lançar",
-            f"Não foi possível iniciar o processo de atualização.\n\nErro: {e}",
+            f"Não foi possível iniciar a ferramenta de administração.\n\nErro: {e}",
             parent=g.PRINC_FORM,
         )
 
@@ -198,12 +191,12 @@ def _atualizar_ui_conforme_status(update_available: bool):
         return
 
     if update_available:
-        g.UPDATE_ACTION.setText("⬇️ Aplicar Atualização")
+        g.UPDATE_ACTION.setText("⬇️ Abrir Ferramenta Admin")
         tooltip_msg = (
             f"Versão {g.UPDATE_INFO.get('ultima_versao', '')} "
-            "disponível! Clique para atualizar."
+            "disponível! Clique para abrir a ferramenta de admin e atualizar."
         )
         g.UPDATE_ACTION.setToolTip(tooltip_msg)
     else:
-        g.UPDATE_ACTION.setText("🔄 Verificar Atualizações")
-        g.UPDATE_ACTION.setToolTip("Verificar se há uma nova versão do aplicativo.")
+        g.UPDATE_ACTION.setText("⚙️ Abrir Ferramenta Admin")
+        g.UPDATE_ACTION.setToolTip("Abrir a ferramenta de administração.")
