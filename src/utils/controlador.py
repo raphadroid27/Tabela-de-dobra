@@ -77,11 +77,6 @@ def adicionar(tipo):
     if sucesso:
         show_info("Sucesso", mensagem, parent=config.get("form"))
 
-        # --- INÍCIO DA ALTERAÇÃO ---
-        # Invalida o cache chamando diretamente o gerenciador de cache.
-        cache_manager.invalidar_por_tipo(tipo)
-        # --- FIM DA ALTERAÇÃO ---
-
         _limpar_campos(tipo)
         listar(tipo)
         atualizar_widgets(tipo)
@@ -130,7 +125,6 @@ def editar(tipo):
     if sucesso:
         if mensagem != "Nenhuma alteração detectada.":
             show_info("Sucesso", mensagem, parent=config.get("form"))
-            cache_manager.invalidar_por_tipo(tipo)
             _limpar_campos(tipo)
             listar(tipo)
             atualizar_widgets(tipo)
@@ -201,12 +195,6 @@ def excluir(tipo):
     if sucesso:
         show_info("Sucesso", mensagem, parent=config["form"])
 
-        # --- INÍCIO DA ALTERAÇÃO ---
-        # Invalida o cache chamando diretamente o gerenciador de cache.
-        cache_manager.invalidar_por_tipo(tipo)
-        # --- FIM DA ALTERAÇÃO ---
-
-        # Remover o item diretamente do QTreeWidget
         (
             item_widget_selecionado.parent() or lista_widget.invisibleRootItem()
         ).removeChild(item_widget_selecionado)
