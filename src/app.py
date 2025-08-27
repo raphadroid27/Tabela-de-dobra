@@ -27,7 +27,6 @@ from src.components.menu_custom import MenuCustom
 from src.config import globals as g
 from src.forms import (
     form_aut,
-    form_gerenciar_instancias,
     form_impressao,
     form_razao_rie,
     form_sobre,
@@ -51,8 +50,10 @@ from src.utils.interface_manager import carregar_interface
 from src.utils.janelas import Janela
 from src.utils.session_manager import (
     atualizar_heartbeat_sessao,
+    limpar_sessoes_inativas,
     registrar_sessao,
     remover_sessao,
+    verificar_comando_sistema,
 )
 from src.utils.update_manager import (
     checagem_periodica_update,
@@ -71,7 +72,6 @@ from src.utils.utilitarios import (
 APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
 JANELA_PRINCIPAL_ALTURA = 510
-# Timers otimizados para reduzir tráfego de rede
 TIMER_SISTEMA_INTERVALO = 30000  # 30s
 TIMER_UPDATE_INTERVALO = 1800000  # 30min
 TIMER_UPDATE_DELAY_INICIAL = 1800000  # 30min
@@ -106,8 +106,7 @@ def carregar_configuracao():
     logging.warning(
         "Arquivo de configuração não encontrado. Usando configuração padrão."
     )
-    # Configuração padrão
-    return {"tema": "dark", "geometry": None}  # Tema padrão
+    return {"tema": "dark", "geometry": None}
 
 
 def salvar_configuracao(config):
@@ -134,17 +133,12 @@ def salvar_estado_final():
     try:
         if g.PRINC_FORM:
             pos = g.PRINC_FORM.pos()
-            # Criar a string de geometria
             geometry_string = f"+{pos.x()}+{pos.y()}"
-
-            # Carregar configuração, atualizar e salvar
             config = carregar_configuracao()
             config["geometry"] = geometry_string
-
             tema_atual = obter_tema_atual()
             if tema_atual:
                 config["tema"] = tema_atual
-
             salvar_configuracao(config)
             logging.info("Estado final salvo com geometria: %s", geometry_string)
     except (OSError, IOError, json.JSONDecodeError) as e:
@@ -162,19 +156,10 @@ def fechar_aplicativo():
     logging.info("Iniciando o processo de fechamento do aplicativo.")
     try:
         if g.PRINC_FORM:
-            pos = g.PRINC_FORM.pos()
-            config = carregar_configuracao()
-            config["geometry"] = f"+{pos.x()}+{pos.y()}"
-            # Preservar o tema atual na configuração
-            tema_atual = obter_tema_atual()
-            if tema_atual:
-                config["tema"] = tema_atual
-            salvar_configuracao(config)
+            salvar_estado_final()
             g.PRINC_FORM.close()
         app = QApplication.instance()
         if app:
-            # Apenas inicia o processo de quit.
-            # O sinal 'aboutToQuit' cuidará de salvar o estado.
             app.quit()
     except (RuntimeError, AttributeError) as e:
         logging.error("Erro durante o fechamento do aplicativo: %s", e)
@@ -207,7 +192,6 @@ def configurar_janela_principal(config):
             try:
                 x, y = int(parts[1]), int(parts[2])
                 g.PRINC_FORM.move(x, y)
-                logging.info("Janela movida para a posição salva: %d, %d", x, y)
             except (ValueError, IndexError):
                 logging.warning("Geometria salva inválida: %s", config["geometry"])
 
@@ -233,18 +217,16 @@ def _executar_autenticacao(is_login):
 
 
 def _on_toggle_no_topo(checked: bool, transparencia_action: QAction):
-    """Define o estado 'sempre no topo' e atualiza a visibilidade da ação de transparência."""
+    """Define o estado 'sempre no topo'."""
     Janela.set_on_top_state(checked)
     transparencia_action.setVisible(checked)
-    if not checked:
-        # Desativa a transparência se "no topo" for desativado
-        if transparencia_action.isChecked():
-            transparencia_action.setChecked(False)
-            _on_toggle_transparencia(False)
+    if not checked and transparencia_action.isChecked():
+        transparencia_action.setChecked(False)
+        _on_toggle_transparencia(False)
 
 
 def _on_toggle_transparencia(checked: bool):
-    """Define o estado de 'transparência' com base na ação do menu."""
+    """Define o estado de 'transparência'."""
     Janela.set_transparency_state(checked)
 
 
@@ -301,10 +283,6 @@ def configurar_menu(menu_custom):
             ("🔐 Login", partial(_executar_autenticacao, True)),
             ("👥 Novo Usuário", partial(_executar_autenticacao, False)),
             ("⚙️ Gerenciar Usuários", lambda: form_usuario.main(g.PRINC_FORM)),
-            (
-                "🖥️ Gerenciar Instâncias",
-                lambda: form_gerenciar_instancias.main(g.PRINC_FORM),
-            ),
             ("separator", None),
             ("🚪 Sair", logout),
         ],
@@ -332,37 +310,24 @@ def _adicionar_acoes_ao_menu(menu, acoes):
 def _criar_menu_opcoes(menu_bar):
     """Cria o menu Opções."""
     opcoes_menu = menu_bar.addMenu("⚙️ Opções")
-
-    # Ação "Transparência"
-    transparencia_action = QAction("👻 Transparência", g.PRINC_FORM)
-    transparencia_action.setCheckable(True)
+    transparencia_action = QAction("👻 Transparência", g.PRINC_FORM, checkable=True)
     transparencia_action.setChecked(Janela.get_transparency_state())
     transparencia_action.triggered.connect(_on_toggle_transparencia)
 
-    # Ação "No Topo"
-    no_topo_action = QAction("📌 No topo", g.PRINC_FORM)
-    no_topo_action.setCheckable(True)
+    no_topo_action = QAction("📌 No topo", g.PRINC_FORM, checkable=True)
     no_topo_action.setChecked(Janela.get_on_top_state())
-    # Conecta a ação passando a ação de transparência como argumento
     no_topo_action.triggered.connect(
         lambda checked: _on_toggle_no_topo(checked, transparencia_action)
     )
     opcoes_menu.addAction(no_topo_action)
-
-    # Adiciona a ação de transparência ao menu de opções
     opcoes_menu.addAction(transparencia_action)
-
-    # Define a visibilidade inicial da ação de transparência
     transparencia_action.setVisible(no_topo_action.isChecked())
-
     opcoes_menu.addSeparator()
 
-    # Menu de Temas
     temas_menu = opcoes_menu.addMenu("🎨 Temas")
     temas_actions = {}
     for tema in obter_temas_disponiveis():
-        action = QAction(tema.capitalize(), g.PRINC_FORM)
-        action.setCheckable(True)
+        action = QAction(tema.capitalize(), g.PRINC_FORM, checkable=True)
         action.setChecked(tema == getattr(g, "TEMA_ATUAL", "dark"))
         action.triggered.connect(lambda checked, t=tema: _aplicar_e_salvar_tema(t))
         temas_menu.addAction(action)
@@ -418,7 +383,7 @@ def configurar_sinais_excecoes():
     """Configura handlers para exceções não tratadas e sinais do sistema."""
 
     def handle_exception(exc_type, exc_value, exc_traceback):
-        if exc_type != KeyboardInterrupt:
+        if exc_type is not KeyboardInterrupt:
             error_msg = "".join(
                 traceback.format_exception(exc_type, exc_value, exc_traceback)
             )
@@ -433,8 +398,28 @@ def configurar_sinais_excecoes():
     signal.signal(signal.SIGTERM, signal_handler)
 
 
+# --- FUNÇÃO MODIFICADA ---
+def system_tick():
+    """
+    Função chamada periodicamente pelo timer do sistema.
+    Executa tarefas de manutenção como verificar comandos e atualizar heartbeat.
+    """
+    # Primeiro, verifica se um comando de shutdown foi emitido.
+    if verificar_comando_sistema():
+        logging.info("Comando de encerramento recebido. Fechando a aplicação.")
+        # A função fechar_aplicativo já lida com salvar o estado e sair.
+        fechar_aplicativo()
+        return  # Impede a execução do heartbeat se o app estiver fechando
+
+    # Se não houver comando de shutdown, a aplicação continua funcionando normalmente.
+    atualizar_heartbeat_sessao()
+
+
+# --- MODIFICADO ---
 def iniciar_timers():
     """Inicializa e armazena os QTimers no objeto global 'g'."""
+    # Conecta o timer do sistema à função de tick que verifica comandos e atualiza o heartbeat
+    TIMER_SISTEMA.timeout.connect(system_tick)
     TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
 
     UPDATE_CHECK_TIMER.timeout.connect(checagem_periodica_update)
@@ -450,6 +435,9 @@ def main():
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
         inicializar_banco_dados()
 
+        # Limpa sessões órfãs de execuções anteriores que travaram
+        limpar_sessoes_inativas()
+
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
         app = QApplication(sys.argv)
@@ -457,7 +445,6 @@ def main():
         tema_salvo = config.get("tema", "dark")
         aplicar_tema_inicial(tema_salvo)
 
-        # Conectar a função de salvar ao sinal aboutToQuit
         app.aboutToQuit.connect(salvar_estado_final)
         app.aboutToQuit.connect(remover_sessao)
 
