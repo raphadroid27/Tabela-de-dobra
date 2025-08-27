@@ -168,8 +168,9 @@ def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
     """
     try:
         material_obj = (
-            db_session.query(Material).filter_by(
-                nome=dados.get("material_nome")).first()
+            db_session.query(Material)
+            .filter_by(nome=dados.get("material_nome"))
+            .first()
         )
         espessura_obj = (
             db_session.query(Espessura)
@@ -256,9 +257,7 @@ def excluir_objeto(obj: Any) -> Tuple[bool, str]:
             )
 
         db_session.delete(obj)
-        registrar_log(
-            g.USUARIO_NOME, "excluir", obj_type, obj_id, log_details
-        )
+        registrar_log(g.USUARIO_NOME, "excluir", obj_type, obj_id, log_details)
 
         mensagem = (
             "A dedução foi excluída com sucesso!"
