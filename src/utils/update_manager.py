@@ -2,8 +2,8 @@
 Módulo para Gerenciamento de Atualizações da Aplicação.
 
 Responsável por:
-- Verificar a existência de novas versões.
-- Orquestrar o lançamento do admin.exe para lidar com o processo de atualização.
+- Verificar a existência de novas versões através de uma ação manual.
+- Exibir notificações sobre atualizações disponíveis com feedback de erro detalhado.
 - Gerenciar a versão instalada no banco de dados.
 """
 
@@ -11,8 +11,7 @@ import json
 import logging
 import os
 import shutil
-import subprocess  # nosec B404 - subprocess necessário para execução controlada do admin
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from semantic_version import Version
 
@@ -23,13 +22,9 @@ from src.utils.utilitarios import (
     UPDATE_TEMP_DIR,
     UPDATES_DIR,
     VERSION_FILE_PATH,
-    obter_dir_base,
     show_error,
+    show_info,
 )
-
-# --- MODIFICADO ---
-ADMIN_EXECUTABLE_NAME = "admin.exe"  # Anteriormente UPDATER_EXECUTABLE_NAME
-ADMIN_EXECUTABLE_PATH = os.path.join(obter_dir_base(), ADMIN_EXECUTABLE_NAME)
 
 
 def get_installed_version() -> Optional[str]:
@@ -80,7 +75,30 @@ def set_installed_version(version: str):
         session.commit()
 
 
-def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
+def _ensure_version_file_exists() -> bool:
+    """
+    Garante que o arquivo versao.json exista. Se não existir, cria um com valores padrão.
+    """
+    if not os.path.exists(VERSION_FILE_PATH):
+        logging.warning("Arquivo 'versao.json' não encontrado. Criando um novo.")
+        try:
+            # Garante que o diretório 'updates' exista
+            os.makedirs(UPDATES_DIR, exist_ok=True)
+            default_data = {
+                "ultima_versao": "1.0.0",
+                "nome_arquivo": "update-1.0.0.zip",
+                "notas_versao": "Versão inicial.",
+            }
+            with open(VERSION_FILE_PATH, "w", encoding="utf-8") as f:
+                json.dump(default_data, f, indent=4)
+            logging.info("Arquivo 'versao.json' criado com sucesso com a versão 1.0.0.")
+        except (IOError, OSError) as e:
+            logging.error("Não foi possível criar o arquivo 'versao.json': %s", e)
+            return False
+    return True
+
+
+def checar_updates(current_version_str: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     """
     Verifica se há uma nova versão comparando com o arquivo versao.json.
 
@@ -88,15 +106,20 @@ def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
         current_version_str: A versão atual da aplicação (ex: "2.2.0").
 
     Returns:
-        Um dicionário com informações da nova versão se houver uma, caso contrário None.
+        Uma tupla (status, data), onde status pode ser:
+        'success': Nova versão encontrada, data contém as informações.
+        'no_update': Nenhuma nova versão, data é None.
+        'not_found': Arquivo de versão não encontrado (obsoleto, mas mantido por segurança).
+        'error': Ocorreu um erro, data contém a mensagem de erro.
     """
     if not current_version_str:
         logging.error("Versão atual não fornecida para checagem.")
-        return None
+        return "error", {"message": "Versão atual não fornecida."}
 
-    if not os.path.exists(VERSION_FILE_PATH):
-        logging.warning("Arquivo 'versao.json' não encontrado. Pulando verificação.")
-        return None
+    if not _ensure_version_file_exists():
+        return "error", {
+            "message": "Não foi possível criar ou acessar o arquivo de versão."
+        }
 
     try:
         with open(VERSION_FILE_PATH, "r", encoding="utf-8") as f:
@@ -105,16 +128,16 @@ def checar_updates(current_version_str: str) -> Optional[Dict[str, Any]]:
         latest_version_str = server_info.get("ultima_versao")
         if not latest_version_str:
             logging.error("Chave 'ultima_versao' não encontrada no versao.json.")
-            return None
+            return "error", {"message": "Arquivo de versão malformado."}
 
         if Version(latest_version_str) > Version(current_version_str):
             logging.info("Nova versão encontrada: %s", latest_version_str)
-            return dict(server_info)
+            return "success", dict(server_info)
 
-        return None
+        return "no_update", None
     except (json.JSONDecodeError, KeyError, ValueError, IOError, OSError) as e:
         logging.error("Erro ao ler ou processar o arquivo de versão: %s", e)
-        return None
+        return "error", {"message": f"Erro ao processar o arquivo de versão: {e}"}
 
 
 def download_update(nome_arquivo: str) -> None:
@@ -134,69 +157,50 @@ def download_update(nome_arquivo: str) -> None:
     logging.info("Arquivo '%s' copiado para '%s'.", nome_arquivo, UPDATE_TEMP_DIR)
 
 
-def checagem_periodica_update():
-    """Verifica periodicamente se há atualizações e atualiza a UI."""
-    logging.info("Verificando atualizações em segundo plano...")
-    versao_atual = get_installed_version()  # Lê do DB
-    if not versao_atual:
-        return  # Não faz nada se não conseguir ler a versão
-
-    update_info = checar_updates(versao_atual)
-    if update_info:
-        logging.info("Nova versão encontrada: %s", update_info.get("ultima_versao"))
-        g.UPDATE_INFO = dict(update_info)
-        _atualizar_ui_conforme_status(True)
-    else:
-        logging.info("Nenhuma nova atualização encontrada.")
-        g.UPDATE_INFO = None
-        _atualizar_ui_conforme_status(False)
-
-
 def manipular_clique_update():
     """
-    Gerencia o clique no botão de atualização, lançando o admin.exe.
+    Gerencia o clique no botão de atualização, executando uma verificação
+    manual e exibindo o resultado em um pop-up com feedback detalhado.
     """
-    # --- MODIFICADO ---
-    if not os.path.exists(ADMIN_EXECUTABLE_PATH):
+    logging.info("Verificação manual de atualização iniciada pelo usuário.")
+
+    current_version = get_installed_version()
+    if not current_version:
         show_error(
-            "Erro",
-            f"A ferramenta de administração ({ADMIN_EXECUTABLE_NAME}) não foi "
-            "encontrada na pasta do aplicativo.",
+            "Erro de Versão",
+            "Não foi possível determinar a versão atual.",
             parent=g.PRINC_FORM,
         )
         return
 
-    # O admin.exe sempre abre na tela de status do updater, então não precisa de argumento
-    try:
-        logging.info(
-            "Lançando a ferramenta de administração: %s", ADMIN_EXECUTABLE_PATH
-        )
-        # pylint: disable=consider-using-with
-        subprocess.Popen(
-            [ADMIN_EXECUTABLE_PATH]
-        )  # nosec B603 - executável validado do admin
+    status, data = checar_updates(current_version)
 
-    except OSError as e:
-        logging.error("Falha ao iniciar o admin.exe: %s", e)
-        show_error(
-            "Erro ao Lançar",
-            f"Não foi possível iniciar a ferramenta de administração.\n\nErro: {e}",
+    if status == "success":
+        latest_version = data.get("ultima_versao", "desconhecida")
+        show_info(
+            "Atualização Disponível",
+            f"Uma nova versão ({latest_version}) está disponível!\n"
+            "Use a ferramenta de administração para atualizar.",
             parent=g.PRINC_FORM,
         )
-
-
-def _atualizar_ui_conforme_status(update_available: bool):
-    """Atualiza o texto e o estado do botão de atualização na UI principal."""
-    if not hasattr(g, "UPDATE_ACTION") or not g.UPDATE_ACTION:
-        return
-
-    if update_available:
-        g.UPDATE_ACTION.setText("⬇️ Abrir Ferramenta Admin")
-        tooltip_msg = (
-            f"Versão {g.UPDATE_INFO.get('ultima_versao', '')} "
-            "disponível! Clique para abrir a ferramenta de admin e atualizar."
+    elif status == "no_update":
+        show_info(
+            "Nenhuma Atualização",
+            "O seu aplicativo já está atualizado.",
+            parent=g.PRINC_FORM,
         )
-        g.UPDATE_ACTION.setToolTip(tooltip_msg)
-    else:
-        g.UPDATE_ACTION.setText("⚙️ Abrir Ferramenta Admin")
-        g.UPDATE_ACTION.setToolTip("Abrir a ferramenta de administração.")
+    elif status == "not_found":
+        # Este caso agora é menos provável, mas mantido por segurança.
+        show_error(
+            "Erro de Conexão",
+            "Não foi possível conectar ao servidor de atualizações.\n"
+            "Verifique sua conexão ou tente mais tarde.",
+            parent=g.PRINC_FORM,
+        )
+    elif status == "error":
+        error_message = data.get("message", "Ocorreu um erro desconhecido.")
+        show_error(
+            "Erro na Verificação",
+            f"Ocorreu um erro ao verificar as atualizações:\n{error_message}",
+            parent=g.PRINC_FORM,
+        )
