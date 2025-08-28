@@ -8,6 +8,8 @@ gerenciarem a aplicação, combinando as funcionalidades de:
 - Gerenciamento de usuários (redefinir senhas, alterar permissões e excluir).
 
 O acesso à ferramenta requer autenticação de administrador.
+
+Versão revisada para padronização visual conforme form_universal.py.
 """
 
 import hashlib
@@ -39,6 +41,7 @@ from PySide6.QtWidgets import (
 )
 from sqlalchemy.exc import SQLAlchemyError
 
+from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models.models import Usuario
 from src.utils.banco_dados import session_scope
@@ -48,6 +51,7 @@ from src.utils.estilo import (
     aplicar_estilo_widget_auto_ajustavel,
     aplicar_tema_inicial,
     obter_estilo_progress_bar,
+    obter_tema_atual,
 )
 from src.utils.interface import limpar_busca, listar
 from src.utils.session_manager import (
@@ -93,13 +97,13 @@ class AdminAuthWidget(QWidget):
     def _setup_ui(self):
         """Configura a interface do usuário para o widget de autenticação."""
         main_layout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 20, 10)
-        main_layout.setAlignment(Qt.AlignCenter)
+        aplicar_medida_borda_espaco(main_layout, 10, 10)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         title_label = QLabel("Ferramenta de Administração")
         title_label.setStyleSheet(
             "font-size: 18px; font-weight: bold; margin-bottom: 10px;")
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title_label)
 
         grid_layout = QGridLayout()
@@ -112,7 +116,7 @@ class AdminAuthWidget(QWidget):
 
         grid_layout.addWidget(QLabel("Senha:"), 1, 0)
         self.senha_entry.setPlaceholderText("Digite a senha")
-        self.senha_entry.setEchoMode(QLineEdit.Password)
+        self.senha_entry.setEchoMode(QLineEdit.EchoMode.Password)
         aplicar_estilo_widget_auto_ajustavel(self.senha_entry, "lineedit")
         grid_layout.addWidget(self.senha_entry, 1, 1)
         main_layout.addLayout(grid_layout)
@@ -165,25 +169,32 @@ class InstancesWidget(QWidget):
 
     def _setup_ui(self):
         """Configura a interface do usuário para o widget."""
-        main_layout = QGridLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 5)
+        main_layout = QVBoxLayout(self)
+        aplicar_medida_borda_espaco(main_layout, 10, 10)
 
         frame_info = self._create_info_frame()
-        main_layout.addWidget(frame_info, 0, 0, 1, 3)
+        main_layout.addWidget(frame_info)
 
-        frame_sessoes = self._create_sessions_frame()
-        main_layout.addWidget(frame_sessoes, 1, 0, 1, 3)
+        # Configura e adiciona o tree widget
+        self.tree_sessoes.setHeaderLabels(["ID Sessão", "Hostname", "Última Atividade"])
+        self.tree_sessoes.setColumnWidth(0, 80)
+        self.tree_sessoes.setColumnWidth(1, 130)
+        self.tree_sessoes.setColumnWidth(2, 150)
+        main_layout.addWidget(self.tree_sessoes)
 
-        self._create_action_buttons(main_layout)
+        # Adiciona botões de ação
+        action_buttons = self._create_action_buttons()
+        main_layout.addWidget(action_buttons)
 
-        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setStyleSheet("color: #0078d4; margin-top: 5px;")
-        main_layout.addWidget(self.status_label, 3, 0, 1, 3)
+        main_layout.addWidget(self.status_label)
 
     def _create_info_frame(self):
         """Cria o frame de informações do sistema."""
-        frame = QGroupBox("ℹ️ Informações do Sistema")
+        frame = QGroupBox("Informações do Sistema")
         layout = QGridLayout(frame)
+        aplicar_medida_borda_espaco(layout)  # Padronização
         layout.addWidget(QLabel("Total de Instâncias Ativas:"), 0, 0)
         self.label_total_instancias.setStyleSheet("font-weight: bold; color: #0078d4;")
         layout.addWidget(self.label_total_instancias, 0, 1)
@@ -191,28 +202,24 @@ class InstancesWidget(QWidget):
         layout.addWidget(self.label_ultima_atualizacao, 1, 1)
         return frame
 
-    def _create_sessions_frame(self):
-        """Cria o frame que exibe as instâncias ativas."""
-        frame = QGroupBox("🖥️ Instâncias Ativas")
-        layout = QVBoxLayout(frame)
-        self.tree_sessoes.setHeaderLabels(["ID Sessão", "Hostname", "Última Atividade"])
-        self.tree_sessoes.setColumnWidth(0, 80)
-        self.tree_sessoes.setColumnWidth(1, 130)
-        self.tree_sessoes.setColumnWidth(2, 150)
-        layout.addWidget(self.tree_sessoes)
-        return frame
+    def _create_action_buttons(self):
+        """Cria o container com os botões de ação."""
+        container = QWidget()
+        buttons_layout = QHBoxLayout(container)
+        aplicar_medida_borda_espaco(buttons_layout, 0)  # Remove margens do container
+        buttons_layout.setSpacing(10)  # Espaçamento entre botões
 
-    def _create_action_buttons(self, layout):
-        """Cria os botões de ação (Atualizar, Shutdown Geral)."""
         atualizar_btn = QPushButton("🔄 Atualizar")
         aplicar_estilo_botao(atualizar_btn, "azul")
         atualizar_btn.clicked.connect(self._load_sessions)
-        layout.addWidget(atualizar_btn, 2, 0)
+        buttons_layout.addWidget(atualizar_btn)
 
         shutdown_btn = QPushButton("⚠️ Shutdown Geral")
         aplicar_estilo_botao(shutdown_btn, "vermelho")
         shutdown_btn.clicked.connect(self._start_global_shutdown)
-        layout.addWidget(shutdown_btn, 2, 1, 1, 2)
+        buttons_layout.addWidget(shutdown_btn)
+
+        return container
 
     def _initialize_data(self):
         """Inicializa os dados e o timer de atualização."""
@@ -297,6 +304,7 @@ class UpdaterWidget(QWidget):
     def _setup_ui(self):
         """Configura a interface do usuário para o widget de atualização."""
         main_layout = QVBoxLayout(self)
+        aplicar_medida_borda_espaco(main_layout, 0, 0)  # Sem margem no layout principal
         self.stacked_widget.addWidget(self.main_view)
         self.stacked_widget.addWidget(self.progress_view)
         main_layout.addWidget(self.stacked_widget)
@@ -314,14 +322,15 @@ class UpdaterWidget(QWidget):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         aplicar_medida_borda_espaco(layout, 10, 10)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.version_label.setAlignment(Qt.AlignCenter)
+        self.version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.version_label.setStyleSheet("font-size: 14px; margin-bottom: 15px;")
         layout.addWidget(self.version_label)
 
         file_group = QGroupBox("Selecionar Pacote de Atualização (.zip)")
         file_layout = QHBoxLayout(file_group)
+        aplicar_medida_borda_espaco(file_layout)  # Padronização
         self.file_path_entry.setPlaceholderText("Nenhum arquivo selecionado")
         self.file_path_entry.setReadOnly(True)
         file_layout.addWidget(self.file_path_entry)
@@ -359,9 +368,9 @@ class UpdaterWidget(QWidget):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         aplicar_medida_borda_espaco(layout, 10, 10)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progress_status_label = QLabel("Iniciando atualização...")
-        self.progress_status_label.setAlignment(Qt.AlignCenter)
+        self.progress_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progress_status_label.setStyleSheet("font-size: 16px;")
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setStyleSheet(obter_estilo_progress_bar())
@@ -391,9 +400,7 @@ class UpdaterWidget(QWidget):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             run_update_process(self.selected_file_path, self._update_progress_ui)
-            # A aplicação será reiniciada pela função de atualização
-            # e esta instância do admin será fechada.
-            time.sleep(2)  # Dá tempo para o usuário ler a mensagem final
+            time.sleep(2)
             QApplication.instance().quit()
         except (ValueError, ConnectionError, RuntimeError, IOError) as e:
             logging.error("Erro no processo de atualização: %s", e)
@@ -420,8 +427,8 @@ class UserManagementWidget(QWidget):
 
     def _setup_ui(self):
         """Configura a interface do usuário para o widget."""
-        main_layout = QGridLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 10)
+        main_layout = QVBoxLayout(self)
+        aplicar_medida_borda_espaco(main_layout, 10, 10)
 
         self._create_search_frame(main_layout)
         self._create_tree_widget(main_layout)
@@ -431,6 +438,7 @@ class UserManagementWidget(QWidget):
         """Cria o frame de busca de usuários."""
         frame_busca = QGroupBox("Filtrar Usuários")
         busca_layout = QGridLayout(frame_busca)
+        aplicar_medida_borda_espaco(busca_layout)  # Padronização
 
         busca_layout.addWidget(QLabel("Usuário:"), 0, 0)
 
@@ -442,7 +450,7 @@ class UserManagementWidget(QWidget):
         limpar_btn.clicked.connect(lambda: limpar_busca("usuario"))
         busca_layout.addWidget(limpar_btn, 0, 2)
 
-        main_layout.addWidget(frame_busca, 0, 0, 1, 3)
+        main_layout.addWidget(frame_busca)
 
     def _create_tree_widget(self, main_layout):
         """Cria o TreeWidget para listar usuários."""
@@ -451,24 +459,31 @@ class UserManagementWidget(QWidget):
         g.LIST_USUARIO.setColumnWidth(1, 120)
         g.LIST_USUARIO.setColumnWidth(2, 80)
         g.LIST_USUARIO.setColumnWidth(3, 100)
-        main_layout.addWidget(g.LIST_USUARIO, 1, 0, 1, 3)
+        main_layout.addWidget(g.LIST_USUARIO)
 
     def _create_action_buttons(self, main_layout):
         """Cria os botões de ação."""
+        container = QWidget()
+        buttons_layout = QHBoxLayout(container)
+        aplicar_medida_borda_espaco(buttons_layout, 0)
+        buttons_layout.setSpacing(10)
+
         tornar_editor_btn = QPushButton("👤 Tornar Editor")
         aplicar_estilo_botao(tornar_editor_btn, "verde")
         tornar_editor_btn.clicked.connect(self._tornar_editor)
-        main_layout.addWidget(tornar_editor_btn, 2, 0)
+        buttons_layout.addWidget(tornar_editor_btn)
 
         resetar_senha_btn = QPushButton("🔄 Resetar Senha")
         aplicar_estilo_botao(resetar_senha_btn, "amarelo")
         resetar_senha_btn.clicked.connect(self._resetar_senha)
-        main_layout.addWidget(resetar_senha_btn, 2, 1)
+        buttons_layout.addWidget(resetar_senha_btn)
 
         excluir_btn = QPushButton("🗑️ Excluir")
         aplicar_estilo_botao(excluir_btn, "vermelho")
         excluir_btn.clicked.connect(self._excluir_usuario)
-        main_layout.addWidget(excluir_btn, 2, 2)
+        buttons_layout.addWidget(excluir_btn)
+
+        main_layout.addWidget(container)
 
     def _item_selecionado_usuario(self):
         """Retorna o ID do usuário selecionado na lista."""
@@ -554,12 +569,28 @@ class AdminTool(QMainWindow):
         """Inicializa a janela principal."""
         super().__init__()
         self.setWindowTitle("Ferramenta de Administração")
-        self.setFixedSize(450, 450)
+        # Tamanho ajustado para melhor acomodar o conteúdo
+        self.setFixedSize(480, 520)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
+        # Remove a barra de título padrão
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+
+        # Cria o widget central e o layout principal
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+        aplicar_medida_borda_espaco(main_layout, 0, 0)
+
+        # Adiciona a barra de título customizada
+        self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
+        self.barra_titulo.titulo.setText("Ferramenta de Administração")
+        main_layout.addWidget(self.barra_titulo)
+
         self.stacked_widget = QStackedWidget()
-        self.setCentralWidget(self.stacked_widget)
+        # Adiciona o stacked_widget ao layout principal
+        main_layout.addWidget(self.stacked_widget)
 
         self.auth_widget = AdminAuthWidget()
         self.auth_widget.login_successful.connect(self.show_main_tool)
@@ -575,10 +606,14 @@ class AdminTool(QMainWindow):
     def _setup_main_tool_ui(self):
         """Configura a UI principal da ferramenta com abas."""
         layout = QVBoxLayout(self.main_tool_widget)
+        aplicar_medida_borda_espaco(layout, 0, 0)  # Remove margem para a tab se ajustar
         tab_widget = QTabWidget()
+        # Remove a borda ao redor do conteúdo da aba para um visual mais limpo
+        tab_widget.setStyleSheet("QTabWidget::pane { border: 0; }")
         tab_widget.addTab(self.instances_tab, "🔧 Gerenciar Instâncias")
-        tab_widget.addTab(self.updater_tab, "🔄 Atualizador")
         tab_widget.addTab(self.user_management_tab, "👥 Gerenciar Usuários")
+        tab_widget.addTab(self.updater_tab, "🔄 Atualizador")
+
         layout.addWidget(tab_widget)
 
     def show_main_tool(self):
