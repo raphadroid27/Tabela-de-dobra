@@ -5,16 +5,12 @@ Versão corrigida para centralizar o gerenciamento de conexões e sessões.
 
 import logging
 import os  # Importa o módulo 'os' para interagir com o sistema de arquivos
-from contextlib import contextmanager
-from typing import Iterator, Optional, Tuple, Type
 
 from sqlalchemy import create_engine
-from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
-from sqlalchemy.orm import Session as SQLAlchemySession
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
 from src.models.models import Base, Log, SystemControl
-from src.utils.utilitarios import DB_PATH
 
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
@@ -57,36 +53,12 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
         logging.error("Erro de banco de dados ao criar log: %s", e)
 
 
-@contextmanager
-def session_scope() -> (
-    Iterator[Tuple[Optional[SQLAlchemySession], Optional[Type[SystemControl]]]]
-):
-    """Fornece um escopo transacional para operações de banco de dados."""
-    if not os.path.exists(DB_PATH):
-        logging.error("Banco de dados não encontrado em: %s", DB_PATH)
-        yield None, None
-        return
-
-    db_session: Optional[SQLAlchemySession] = None
-    try:
-        db_session = Session()
-        yield db_session, SystemControl
-        db_session.commit()
-    except SQLAlchemyError as e:
-        logging.error("Erro na sessão do banco de dados: %s", e)
-        if db_session:
-            db_session.rollback()
-        raise
-    finally:
-        if db_session:
-            db_session.close()
-
-
 def inicializar_banco_dados():
     """Cria as tabelas do banco de dados e registros iniciais, se necessário."""
     logging.info("Inicializando o banco de dados e criando tabelas.")
     Base.metadata.create_all(engine)
 
+    # Usa uma sessão local para garantir a inicialização segura
     db_session = Session()
     try:
         if not db_session.query(SystemControl).filter_by(key="UPDATE_CMD").first():
