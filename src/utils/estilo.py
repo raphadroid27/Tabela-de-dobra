@@ -163,6 +163,8 @@ def obter_css_correcao_widgets():
     QGroupBox::title {{
         font-size: 10pt;
         padding: 2px;
+        top: -5px;
+        margin-bottom: 10px;
     }}
 
     QToolTip {{
