@@ -2,28 +2,26 @@
 Módulo para Gerenciamento de Atualizações da Aplicação.
 
 Responsável por:
-- Verificar a existência de novas versões através de uma ação manual.
-- Exibir notificações sobre atualizações disponíveis com feedback de erro detalhado.
 - Gerenciar a versão instalada no banco de dados.
+- Conter a lógica para aplicar um pacote de atualização.
 """
 
-import json
 import logging
 import os
 import shutil
-from typing import Any, Dict, Optional, Tuple
+import subprocess  # nosec B404
+import time
+import zipfile
+from typing import Callable, Optional
 
-from semantic_version import Version
-
-from src.config import globals as g
 from src.models.models import SystemControl
 from src.utils.banco_dados import session_scope
+from src.utils.session_manager import force_shutdown_all_instances
 from src.utils.utilitarios import (
+    APP_EXECUTABLE_PATH,
     UPDATE_TEMP_DIR,
-    UPDATES_DIR,
-    VERSION_FILE_PATH,
+    obter_dir_base,
     show_error,
-    show_info,
 )
 
 
@@ -75,132 +73,96 @@ def set_installed_version(version: str):
         session.commit()
 
 
-def _ensure_version_file_exists() -> bool:
-    """
-    Garante que o arquivo versao.json exista. Se não existir, cria um com valores padrão.
-    """
-    if not os.path.exists(VERSION_FILE_PATH):
-        logging.warning("Arquivo 'versao.json' não encontrado. Criando um novo.")
-        try:
-            # Garante que o diretório 'updates' exista
-            os.makedirs(UPDATES_DIR, exist_ok=True)
-            default_data = {
-                "ultima_versao": "1.0.0",
-                "nome_arquivo": "update-1.0.0.zip",
-                "notas_versao": "Versão inicial.",
-            }
-            with open(VERSION_FILE_PATH, "w", encoding="utf-8") as f:
-                json.dump(default_data, f, indent=4)
-            logging.info("Arquivo 'versao.json' criado com sucesso com a versão 1.0.0.")
-        except (IOError, OSError) as e:
-            logging.error("Não foi possível criar o arquivo 'versao.json': %s", e)
-            return False
-    return True
+def _apply_update(zip_filename: str) -> bool:
+    """Aplica a atualização extraindo os arquivos."""
+    zip_filepath = os.path.join(UPDATE_TEMP_DIR, zip_filename)
+    if not os.path.exists(zip_filepath):
+        return False
+    app_dir = obter_dir_base()
+    try:
+        with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
+            extract_path = os.path.join(UPDATE_TEMP_DIR, "extracted")
+            if os.path.exists(extract_path):
+                shutil.rmtree(extract_path)
+            os.makedirs(extract_path, exist_ok=True)
+            zip_ref.extractall(extract_path)
+        for item in os.listdir(extract_path):
+            src = os.path.join(extract_path, item)
+            dst = os.path.join(app_dir, item)
+            try:
+                if os.path.isdir(dst):
+                    shutil.rmtree(dst)
+                elif os.path.isfile(dst):
+                    os.remove(dst)
+                shutil.move(src, dst)
+            except OSError as e:
+                logging.warning("Não foi possível substituir '%s': %s.", item, e)
+        return True
+    except (IOError, OSError, zipfile.BadZipFile) as e:
+        logging.error("Erro ao aplicar a atualização: %s", e)
+        return False
+    finally:
+        if os.path.isdir(UPDATE_TEMP_DIR):
+            try:
+                shutil.rmtree(UPDATE_TEMP_DIR)
+            except OSError as e:
+                logging.error(
+                    "Não foi possível remover o diretório temporário: %s", e
+                )
 
 
-def checar_updates(current_version_str: str) -> Tuple[str, Optional[Dict[str, Any]]]:
+def _start_application():
+    """Inicia a aplicação principal após a atualização."""
+    if not os.path.exists(APP_EXECUTABLE_PATH):
+        show_error("Erro Crítico",
+                   f"Executável principal não encontrado:\n{APP_EXECUTABLE_PATH}")
+        return
+    logging.info("Iniciando a aplicação: %s", APP_EXECUTABLE_PATH)
+    try:
+        subprocess.Popen(  # pylint: disable=R1732
+            [APP_EXECUTABLE_PATH])
+    except OSError as e:
+        show_error("Erro ao Reiniciar",
+                   f"Não foi possível reiniciar a aplicação:\n{e}")
+
+
+def run_update_process(selected_file_path: str, progress_callback: Callable[[str, int], None]):
     """
-    Verifica se há uma nova versão comparando com o arquivo versao.json.
+    Executa o processo completo de atualização.
 
     Args:
-        current_version_str: A versão atual da aplicação (ex: "2.2.0").
-
-    Returns:
-        Uma tupla (status, data), onde status pode ser:
-        'success': Nova versão encontrada, data contém as informações.
-        'no_update': Nenhuma nova versão, data é None.
-        'not_found': Arquivo de versão não encontrado (obsoleto, mas mantido por segurança).
-        'error': Ocorreu um erro, data contém a mensagem de erro.
+        selected_file_path: O caminho para o arquivo .zip da atualização.
+        progress_callback: Uma função para reportar o progresso (mensagem, valor).
     """
-    if not current_version_str:
-        logging.error("Versão atual não fornecida para checagem.")
-        return "error", {"message": "Versão atual não fornecida."}
+    zip_filename = os.path.basename(selected_file_path)
 
-    if not _ensure_version_file_exists():
-        return "error", {
-            "message": "Não foi possível criar ou acessar o arquivo de versão."
-        }
-
+    progress_callback("Copiando arquivo de atualização...", 10)
     try:
-        with open(VERSION_FILE_PATH, "r", encoding="utf-8") as f:
-            server_info = json.load(f)
+        if os.path.exists(UPDATE_TEMP_DIR):
+            shutil.rmtree(UPDATE_TEMP_DIR)
+        os.makedirs(UPDATE_TEMP_DIR, exist_ok=True)
+        shutil.copy(selected_file_path, UPDATE_TEMP_DIR)
+    except (IOError, OSError) as e:
+        raise IOError(f"Falha ao copiar o arquivo de atualização: {e}") from e
 
-        latest_version_str = server_info.get("ultima_versao")
-        if not latest_version_str:
-            logging.error("Chave 'ultima_versao' não encontrada no versao.json.")
-            return "error", {"message": "Arquivo de versão malformado."}
+    progress_callback("Fechando a aplicação principal...", 40)
+    time.sleep(3)
+    with session_scope() as (db_session, model):
+        if not db_session:
+            raise ConnectionError("Não foi possível conectar ao DB.")
 
-        if Version(latest_version_str) > Version(current_version_str):
-            logging.info("Nova versão encontrada: %s", latest_version_str)
-            return "success", dict(server_info)
+        # Wrapper para o callback de shutdown
+        def shutdown_progress_wrapper(active_sessions: int):
+            progress_callback(f"Aguardando {active_sessions} instância(s)...", 50)
 
-        return "no_update", None
-    except (json.JSONDecodeError, KeyError, ValueError, IOError, OSError) as e:
-        logging.error("Erro ao ler ou processar o arquivo de versão: %s", e)
-        return "error", {"message": f"Erro ao processar o arquivo de versão: {e}"}
+        if not force_shutdown_all_instances(db_session, model, shutdown_progress_wrapper):
+            raise RuntimeError("Não foi possível fechar as instâncias da aplicação.")
 
+    progress_callback("Aplicando a atualização...", 70)
+    if not _apply_update(zip_filename):
+        raise IOError("Falha ao aplicar os arquivos de atualização.")
 
-def download_update(nome_arquivo: str) -> None:
-    """
-    Copia o arquivo de atualização para a pasta temporária.
-    Esta função é chamada pelo admin.py, que importa este módulo.
-    """
-    source_path = os.path.join(UPDATES_DIR, nome_arquivo)
-    if not os.path.exists(source_path):
-        raise FileNotFoundError(
-            f"Arquivo de atualização '{nome_arquivo}' não encontrado."
-        )
-
-    os.makedirs(UPDATE_TEMP_DIR, exist_ok=True)
-    destination_path = os.path.join(UPDATE_TEMP_DIR, nome_arquivo)
-    shutil.copy(source_path, destination_path)
-    logging.info("Arquivo '%s' copiado para '%s'.", nome_arquivo, UPDATE_TEMP_DIR)
-
-
-def manipular_clique_update():
-    """
-    Gerencia o clique no botão de atualização, executando uma verificação
-    manual e exibindo o resultado em um pop-up com feedback detalhado.
-    """
-    logging.info("Verificação manual de atualização iniciada pelo usuário.")
-
-    current_version = get_installed_version()
-    if not current_version:
-        show_error(
-            "Erro de Versão",
-            "Não foi possível determinar a versão atual.",
-            parent=g.PRINC_FORM,
-        )
-        return
-
-    status, data = checar_updates(current_version)
-
-    if status == "success":
-        latest_version = data.get("ultima_versao", "desconhecida")
-        show_info(
-            "Atualização Disponível",
-            f"Uma nova versão ({latest_version}) está disponível!\n"
-            "Use a ferramenta de administração para atualizar.",
-            parent=g.PRINC_FORM,
-        )
-    elif status == "no_update":
-        show_info(
-            "Nenhuma Atualização",
-            "O seu aplicativo já está atualizado.",
-            parent=g.PRINC_FORM,
-        )
-    elif status == "not_found":
-        # Este caso agora é menos provável, mas mantido por segurança.
-        show_error(
-            "Erro de Conexão",
-            "Não foi possível conectar ao servidor de atualizações.\n"
-            "Verifique sua conexão ou tente mais tarde.",
-            parent=g.PRINC_FORM,
-        )
-    elif status == "error":
-        error_message = data.get("message", "Ocorreu um erro desconhecido.")
-        show_error(
-            "Erro na Verificação",
-            f"Ocorreu um erro ao verificar as atualizações:\n{error_message}",
-            parent=g.PRINC_FORM,
-        )
+    progress_callback("Atualização concluída! Reiniciando...", 90)
+    time.sleep(2)
+    _start_application()
+    progress_callback("Concluído!", 100)
