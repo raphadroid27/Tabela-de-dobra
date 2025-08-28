@@ -54,10 +54,7 @@ from src.utils.session_manager import (
     remover_sessao,
     verificar_comando_sistema,
 )
-from src.utils.update_manager import (
-    manipular_clique_update,
-    set_installed_version,
-)
+from src.utils.update_manager import set_installed_version
 from src.utils.usuarios import logout
 from src.utils.utilitarios import (
     CONFIG_FILE,
@@ -335,10 +332,6 @@ def _criar_menu_ajuda(menu_bar):
     sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
     help_menu.addAction(sobre_action)
-    help_menu.addSeparator()
-    g.UPDATE_ACTION = QAction("🔄 Verificar Atualizações", g.PRINC_FORM)
-    g.UPDATE_ACTION.triggered.connect(manipular_clique_update)
-    help_menu.addAction(g.UPDATE_ACTION)
 
 
 def configurar_frames():
