@@ -13,11 +13,8 @@ O acesso à ferramenta requer autenticação de administrador.
 import hashlib
 import logging
 import os
-import shutil
-import subprocess  # nosec B404
 import sys
 import time
-import zipfile
 from datetime import datetime
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -57,11 +54,9 @@ from src.utils.session_manager import (
     force_shutdown_all_instances,
     obter_sessoes_ativas,
 )
-from src.utils.update_manager import get_installed_version
+from src.utils.update_manager import get_installed_version, run_update_process
 from src.utils.utilitarios import (
-    APP_EXECUTABLE_PATH,
     ICON_PATH,
-    UPDATE_TEMP_DIR,
     aplicar_medida_borda_espaco,
     ask_yes_no,
     setup_logging,
@@ -85,7 +80,6 @@ if BASE_DIR not in sys.path:
 
 class AdminAuthWidget(QWidget):
     """Widget para autenticação de administrador."""
-
     login_successful = Signal()
 
     def __init__(self, parent=None):
@@ -104,8 +98,7 @@ class AdminAuthWidget(QWidget):
 
         title_label = QLabel("Ferramenta de Administração")
         title_label.setStyleSheet(
-            "font-size: 18px; font-weight: bold; margin-bottom: 10px;"
-        )
+            "font-size: 18px; font-weight: bold; margin-bottom: 10px;")
         title_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title_label)
 
@@ -136,31 +129,23 @@ class AdminAuthWidget(QWidget):
         username = self.usuario_entry.text()
         password = self.senha_entry.text()
         if not username or not password:
-            show_error(
-                "Campos Vazios", "Por favor, preencha usuário e senha.", parent=self
-            )
+            show_error("Campos Vazios",
+                       "Por favor, preencha usuário e senha.", parent=self)
             return
 
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         with session_scope() as (db_session, _):
             if not db_session:
-                show_error(
-                    "Erro de Banco de Dados", "Não foi possível conectar.", parent=self
-                )
+                show_error("Erro de Banco de Dados",
+                           "Não foi possível conectar.", parent=self)
                 return
-            user = (
-                db_session.query(Usuario)
-                .filter_by(nome=username, senha=hashed_password)
-                .first()
-            )
+            user = db_session.query(Usuario).filter_by(
+                nome=username, senha=hashed_password).first()
             if user and user.role == "admin":
                 self.login_successful.emit()
             else:
-                show_error(
-                    "Falha na Autenticação",
-                    "Credenciais inválidas ou sem permissão.",
-                    parent=self,
-                )
+                show_error("Falha na Autenticação",
+                           "Credenciais inválidas ou sem permissão.", parent=self)
                 self.senha_entry.clear()
 
 
@@ -181,7 +166,7 @@ class InstancesWidget(QWidget):
     def _setup_ui(self):
         """Configura a interface do usuário para o widget."""
         main_layout = QGridLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 10)
+        aplicar_medida_borda_espaco(main_layout, 5)
 
         frame_info = self._create_info_frame()
         main_layout.addWidget(frame_info, 0, 0, 1, 3)
@@ -243,13 +228,11 @@ class InstancesWidget(QWidget):
             self.label_total_instancias.setText(str(len(sessoes)))
             self.label_ultima_atualizacao.setText(datetime.now().strftime("%H:%M:%S"))
             for sessao in sessoes:
-                item = QTreeWidgetItem(
-                    [
-                        sessao.get("session_id", "N/A")[:8],
-                        sessao.get("hostname", "N/A"),
-                        sessao.get("last_updated", "N/A"),
-                    ]
-                )
+                item = QTreeWidgetItem([
+                    sessao.get("session_id", "N/A")[:8],
+                    sessao.get("hostname", "N/A"),
+                    sessao.get("last_updated", "N/A"),
+                ])
                 self.tree_sessoes.addTopLevelItem(item)
         except (KeyError, AttributeError, TypeError) as e:
             logging.error("Erro ao carregar sessões: %s", e)
@@ -258,8 +241,7 @@ class InstancesWidget(QWidget):
     def _update_shutdown_status(self, active_sessions: int):
         """Atualiza a mensagem de status durante o shutdown."""
         self.status_label.setText(
-            f"Aguardando {active_sessions} instância(s) fechar..."
-        )
+            f"Aguardando {active_sessions} instância(s) fechar...")
         QApplication.processEvents()
 
     def _start_global_shutdown(self):
@@ -272,21 +254,14 @@ class InstancesWidget(QWidget):
         with session_scope() as (db_session, model):
             if not db_session:
                 show_error(
-                    "Erro de DB",
-                    "Não foi possível conectar ao banco de dados.",
-                    parent=self,
-                )
+                    "Erro de DB", "Não foi possível conectar ao banco de dados.", parent=self)
                 return
             success = force_shutdown_all_instances(
-                db_session, model, self._update_shutdown_status
-            )
+                db_session, model, self._update_shutdown_status)
 
         if success:
             show_info(
-                "Sucesso",
-                "Todas as instâncias foram encerradas com sucesso.",
-                parent=self,
-            )
+                "Sucesso", "Todas as instâncias foram encerradas com sucesso.", parent=self)
             self.status_label.setText("Encerramento concluído com sucesso.")
         else:
             show_error("Timeout", "As instâncias não fecharam a tempo.", parent=self)
@@ -298,7 +273,6 @@ class InstancesWidget(QWidget):
     def stop_timer(self):
         """Para o timer de atualização."""
         self.timer_atualizacao.stop()
-
 
 # pylint: disable=R0902
 
@@ -346,7 +320,6 @@ class UpdaterWidget(QWidget):
         self.version_label.setStyleSheet("font-size: 14px; margin-bottom: 15px;")
         layout.addWidget(self.version_label)
 
-        # Frame para seleção de arquivo
         file_group = QGroupBox("Selecionar Pacote de Atualização (.zip)")
         file_layout = QHBoxLayout(file_group)
         self.file_path_entry.setPlaceholderText("Nenhum arquivo selecionado")
@@ -398,132 +371,36 @@ class UpdaterWidget(QWidget):
         layout.addStretch(2)
         return widget
 
+    def _update_progress_ui(self, message: str, value: int):
+        """Callback para atualizar a UI de progresso."""
+        self.progress_status_label.setText(message)
+        self.progress_bar.setValue(value)
+        QApplication.processEvents()
+
     def start_update_process(self):
         """Inicia o processo de atualização da aplicação."""
         if not self.selected_file_path:
-            show_error(
-                "Erro", "Nenhum arquivo de atualização selecionado.", parent=self
-            )
+            show_error("Erro", "Nenhum arquivo de atualização selecionado.", parent=self)
             return
 
         msg = "A aplicação e suas instâncias serão fechadas. Deseja prosseguir?"
         if not ask_yes_no("Confirmar Atualização", msg, parent=self):
             return
+
         self.stacked_widget.setCurrentWidget(self.progress_view)
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            self.run_update_steps()
+            run_update_process(self.selected_file_path, self._update_progress_ui)
+            # A aplicação será reiniciada pela função de atualização
+            # e esta instância do admin será fechada.
+            time.sleep(2)  # Dá tempo para o usuário ler a mensagem final
+            QApplication.instance().quit()
         except (ValueError, ConnectionError, RuntimeError, IOError) as e:
             logging.error("Erro no processo de atualização: %s", e)
             show_error("Erro de Atualização", f"Ocorreu um erro: {e}", parent=self)
             self.stacked_widget.setCurrentWidget(self.main_view)
         finally:
             QApplication.restoreOverrideCursor()
-
-    def _update_progress_label(self, active_sessions: int):
-        """Atualiza o label de progresso durante o shutdown."""
-        self.progress_status_label.setText(
-            f"Aguardando {active_sessions} instância(s)..."
-        )
-        QApplication.processEvents()
-
-    def run_update_steps(self):
-        """Executa os passos da atualização."""
-        zip_filename = os.path.basename(self.selected_file_path)
-
-        self.progress_status_label.setText("Copiando arquivo de atualização...")
-        self.progress_bar.setValue(10)
-        QApplication.processEvents()
-
-        try:
-            if os.path.exists(UPDATE_TEMP_DIR):
-                shutil.rmtree(UPDATE_TEMP_DIR)
-            os.makedirs(UPDATE_TEMP_DIR, exist_ok=True)
-            shutil.copy(self.selected_file_path, UPDATE_TEMP_DIR)
-        except (IOError, OSError) as e:
-            raise IOError(f"Falha ao copiar o arquivo de atualização: {e}") from e
-
-        self.progress_bar.setValue(40)
-
-        self.progress_status_label.setText("Fechando a aplicação principal...")
-        QApplication.processEvents()
-        time.sleep(3)
-        with session_scope() as (db_session, model):
-            if not db_session:
-                raise ConnectionError("Não foi possível conectar ao DB.")
-            if not force_shutdown_all_instances(
-                db_session, model, self._update_progress_label
-            ):
-                raise RuntimeError(
-                    "Não foi possível fechar as instâncias da aplicação."
-                )
-        self.progress_bar.setValue(70)
-
-        self.progress_status_label.setText("Aplicando a atualização...")
-        QApplication.processEvents()
-        if not self.apply_update(zip_filename):
-            raise IOError("Falha ao aplicar os arquivos de atualização.")
-        self.progress_bar.setValue(90)
-
-        self.progress_status_label.setText("Atualização concluída! Reiniciando...")
-        self.progress_bar.setValue(100)
-        QApplication.processEvents()
-        time.sleep(2)
-        self.start_application()
-        QApplication.instance().quit()
-
-    def apply_update(self, zip_filename: str) -> bool:
-        """Aplica a atualização extraindo os arquivos."""
-        zip_filepath = os.path.join(UPDATE_TEMP_DIR, zip_filename)
-        if not os.path.exists(zip_filepath):
-            return False
-        app_dir = BASE_DIR
-        try:
-            with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
-                extract_path = os.path.join(UPDATE_TEMP_DIR, "extracted")
-                if os.path.exists(extract_path):
-                    shutil.rmtree(extract_path)
-                os.makedirs(extract_path, exist_ok=True)
-                zip_ref.extractall(extract_path)
-            for item in os.listdir(extract_path):
-                src = os.path.join(extract_path, item)
-                dst = os.path.join(app_dir, item)
-                try:
-                    if os.path.isdir(dst):
-                        shutil.rmtree(dst)
-                    elif os.path.isfile(dst):
-                        os.remove(dst)
-                    shutil.move(src, dst)
-                except OSError as e:
-                    logging.warning("Não foi possível substituir '%s': %s.", item, e)
-            return True
-        except (IOError, OSError, zipfile.BadZipFile) as e:
-            logging.error("Erro ao aplicar a atualização: %s", e)
-            return False
-        finally:
-            if os.path.isdir(UPDATE_TEMP_DIR):
-                try:
-                    shutil.rmtree(UPDATE_TEMP_DIR)
-                except OSError as e:
-                    logging.error(
-                        "Não foi possível remover o diretório temporário: %s", e
-                    )
-
-    def start_application(self):
-        """Inicia a aplicação principal após a atualização."""
-        if not os.path.exists(APP_EXECUTABLE_PATH):
-            show_error(
-                "Erro Crítico",
-                f"Executável principal não encontrado:\n{APP_EXECUTABLE_PATH}",
-            )
-            return
-        logging.info("Iniciando a aplicação: %s", APP_EXECUTABLE_PATH)
-        try:
-            subprocess.Popen([APP_EXECUTABLE_PATH])  # pylint: disable=R1732
-        except OSError as e:
-            show_error(
-                "Erro ao Reiniciar", f"Não foi possível reiniciar a aplicação:\n{e}"
-            )
 
 
 class UserManagementWidget(QWidget):
@@ -608,8 +485,7 @@ class UserManagementWidget(QWidget):
         user_id = self._item_selecionado_usuario()
         if user_id is None:
             show_warning(
-                "Aviso", "Selecione um usuário para resetar a senha.", parent=self
-            )
+                "Aviso", "Selecione um usuário para resetar a senha.", parent=self)
             return
 
         with session_scope() as (session, _):
@@ -629,9 +505,7 @@ class UserManagementWidget(QWidget):
             show_warning("Aviso", "Selecione um usuário para excluir.", parent=self)
             return
 
-        if not ask_yes_no(
-            "Atenção!", "Tem certeza que deseja excluir o usuário?", parent=self
-        ):
+        if not ask_yes_no("Atenção!", "Tem certeza que deseja excluir o usuário?", parent=self):
             return
 
         try:
@@ -644,16 +518,14 @@ class UserManagementWidget(QWidget):
                     listar("usuario")
         except SQLAlchemyError as e:
             show_error(
-                "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=self
-            )
+                "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=self)
 
     def _tornar_editor(self):
         """Promove o usuário selecionado a editor."""
         user_id = self._item_selecionado_usuario()
         if user_id is None:
             show_warning(
-                "Aviso", "Selecione um usuário para promover a editor.", parent=self
-            )
+                "Aviso", "Selecione um usuário para promover a editor.", parent=self)
             return
 
         with session_scope() as (session, _):
