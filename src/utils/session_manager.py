@@ -13,8 +13,8 @@ from typing import Any, Callable, Optional, Type
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import SystemControl as SystemControlModel
+from src.utils.banco_dados import Session
 from src.utils.banco_dados import session as db_session
-from src.utils.banco_dados import session_scope
 
 SESSION_ID = str(uuid.uuid4())
 
@@ -42,24 +42,22 @@ def registrar_sessao():
 
 def remover_sessao():
     """Remove a sessão atual do banco de dados de forma segura ao fechar."""
-    with session_scope() as (scoped_session, _):
-        if not scoped_session:
-            logging.error(
-                "Não foi possível obter uma sessão de DB para remover a sessão."
-            )
-            return
-        try:
-            logging.info("Removendo sessão: ID %s", SESSION_ID)
-            sessao_para_remover = (
-                scoped_session.query(SystemControlModel)
-                .filter_by(key=SESSION_ID)
-                .first()
-            )
-            if sessao_para_remover:
-                scoped_session.delete(sessao_para_remover)
-                logging.info("Sessão %s marcada para remoção.", SESSION_ID)
-        except SQLAlchemyError as e:
-            logging.error("Erro ao remover sessão: %s", e)
+    # Usa uma nova sessão para garantir que a operação seja concluída mesmo se a global for fechada
+    scoped_session = Session()
+    try:
+        logging.info("Removendo sessão: ID %s", SESSION_ID)
+        sessao_para_remover = (
+            scoped_session.query(SystemControlModel).filter_by(key=SESSION_ID).first()
+        )
+        if sessao_para_remover:
+            scoped_session.delete(sessao_para_remover)
+            scoped_session.commit()
+            logging.info("Sessão %s removida com sucesso.", SESSION_ID)
+    except SQLAlchemyError as e:
+        logging.error("Erro ao remover sessão: %s", e)
+        scoped_session.rollback()
+    finally:
+        scoped_session.close()
 
 
 def limpar_sessoes_inativas(timeout_minutos: int = 2):
@@ -67,53 +65,45 @@ def limpar_sessoes_inativas(timeout_minutos: int = 2):
     Verifica e remove sessões que não foram atualizadas (heartbeat)
     dentro do tempo limite especificado.
     """
+    # Usa uma nova sessão para operações em background seguras
+    scoped_session = Session()
     try:
-        with session_scope() as (scoped_session, _):
-            if not scoped_session:
-                logging.error(
-                    "Não foi possível obter uma sessão de DB para limpar sessões inativas."
-                )
-                return
+        limite_tempo = datetime.now(timezone.utc) - timedelta(minutes=timeout_minutos)
+        logging.info(
+            "Limpando sessões inativas mais antigas que %s",
+            limite_tempo.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
-            # Define o tempo limite para considerar uma sessão inativa
-            limite_tempo = datetime.now(timezone.utc) - timedelta(
-                minutes=timeout_minutos
+        sessoes_inativas = (
+            scoped_session.query(SystemControlModel)
+            .filter(
+                SystemControlModel.type == "SESSION",
+                SystemControlModel.last_updated < limite_tempo,
             )
-            logging.info(
-                "Limpando sessões inativas mais antigas que %s",
-                limite_tempo.strftime("%Y-%m-%d %H:%M:%S"),
+            .all()
+        )
+
+        if not sessoes_inativas:
+            logging.info("Nenhuma sessão inativa encontrada.")
+            return
+
+        for sessao in sessoes_inativas:
+            logging.warning(
+                "Removendo sessão inativa: ID %s, Host: %s, Última atualização: %s",
+                sessao.key,
+                sessao.value,
+                sessao.last_updated,
             )
+            scoped_session.delete(sessao)
 
-            # Encontra todas as sessões inativas
-            sessoes_inativas = (
-                scoped_session.query(SystemControlModel)
-                .filter(
-                    SystemControlModel.type == "SESSION",
-                    SystemControlModel.last_updated < limite_tempo,
-                )
-                .all()
-            )
-
-            if not sessoes_inativas:
-                logging.info("Nenhuma sessão inativa encontrada.")
-                return
-
-            # Remove as sessões encontradas
-            for sessao in sessoes_inativas:
-                logging.warning(
-                    "Removendo sessão inativa: ID %s, Host: %s, Última atualização: %s",
-                    sessao.key,
-                    sessao.value,
-                    sessao.last_updated,
-                )
-                scoped_session.delete(sessao)
-
-            logging.info(
-                "%d sessão(ões) inativa(s) removida(s).", len(sessoes_inativas)
-            )
+        scoped_session.commit()
+        logging.info("%d sessão(ões) inativa(s) removida(s).", len(sessoes_inativas))
 
     except SQLAlchemyError as e:
         logging.error("Erro ao limpar sessões inativas: %s", e)
+        scoped_session.rollback()
+    finally:
+        scoped_session.close()
 
 
 def atualizar_heartbeat_sessao():
@@ -157,6 +147,7 @@ def obter_sessoes_ativas():
         return resultado
     except SQLAlchemyError as e:
         logging.error("Erro ao obter sessões ativas: %s", e)
+        db_session.rollback()
         return []
 
 
@@ -166,27 +157,22 @@ def verificar_comando_sistema() -> bool:
     Retorna True se o comando 'SHUTDOWN' for encontrado, False caso contrário.
     Esta função não modifica o comando, apenas o lê.
     """
+    # Usa uma nova sessão para garantir leitura isolada e segura
+    scoped_session = Session()
     try:
-        # Usar uma sessão com escopo para garantir que a conexão seja fechada
-        with session_scope() as (scoped_session, _):
-            if not scoped_session:
-                logging.error(
-                    "Não foi possível obter uma sessão de DB para verificar comando."
-                )
-                return False
+        cmd_entry = (
+            scoped_session.query(SystemControlModel).filter_by(key="UPDATE_CMD").first()
+        )
 
-            cmd_entry = (
-                scoped_session.query(SystemControlModel)
-                .filter_by(key="UPDATE_CMD")
-                .first()
-            )
-
-            if cmd_entry and cmd_entry.value == "SHUTDOWN":
-                logging.warning("Comando SHUTDOWN recebido. Sinalizando para encerrar.")
-                return True  # Sinaliza que a aplicação deve fechar
+        if cmd_entry and cmd_entry.value == "SHUTDOWN":
+            logging.warning("Comando SHUTDOWN recebido. Sinalizando para encerrar.")
+            return True
 
     except SQLAlchemyError as e:
         logging.error("Erro ao verificar comando do sistema: %s", e)
+        scoped_session.rollback()
+    finally:
+        scoped_session.close()
 
     return False  # Nenhum comando de shutdown encontrado
 

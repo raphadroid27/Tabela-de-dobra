@@ -43,8 +43,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.models.models import Usuario
-from src.utils.banco_dados import session_scope
+from src.models.models import SystemControl, Usuario
+from src.utils.banco_dados import session, tratativa_erro
 from src.utils.controlador import buscar
 from src.utils.estilo import (
     aplicar_estilo_botao,
@@ -84,6 +84,7 @@ if BASE_DIR not in sys.path:
 
 class AdminAuthWidget(QWidget):
     """Widget para autenticação de administrador."""
+
     login_successful = Signal()
 
     def __init__(self, parent=None):
@@ -102,7 +103,8 @@ class AdminAuthWidget(QWidget):
 
         title_label = QLabel("Ferramenta de Administração")
         title_label.setStyleSheet(
-            "font-size: 18px; font-weight: bold; margin-bottom: 10px;")
+            "font-size: 18px; font-weight: bold; margin-bottom: 10px;"
+        )
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title_label)
 
@@ -133,24 +135,33 @@ class AdminAuthWidget(QWidget):
         username = self.usuario_entry.text()
         password = self.senha_entry.text()
         if not username or not password:
-            show_error("Campos Vazios",
-                       "Por favor, preencha usuário e senha.", parent=self)
+            show_error(
+                "Campos Vazios", "Por favor, preencha usuário e senha.", parent=self
+            )
             return
 
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        with session_scope() as (db_session, _):
-            if not db_session:
-                show_error("Erro de Banco de Dados",
-                           "Não foi possível conectar.", parent=self)
-                return
-            user = db_session.query(Usuario).filter_by(
-                nome=username, senha=hashed_password).first()
+        try:
+            user = (
+                session.query(Usuario)
+                .filter_by(nome=username, senha=hashed_password)
+                .first()
+            )
             if user and user.role == "admin":
                 self.login_successful.emit()
             else:
-                show_error("Falha na Autenticação",
-                           "Credenciais inválidas ou sem permissão.", parent=self)
+                show_error(
+                    "Falha na Autenticação",
+                    "Credenciais inválidas ou sem permissão.",
+                    parent=self,
+                )
                 self.senha_entry.clear()
+        except SQLAlchemyError as e:
+            logging.error("Erro de banco de dados no login: %s", e)
+            session.rollback()
+            show_error(
+                "Erro de Banco de Dados", "Não foi possível conectar.", parent=self
+            )
 
 
 class InstancesWidget(QWidget):
@@ -235,11 +246,13 @@ class InstancesWidget(QWidget):
             self.label_total_instancias.setText(str(len(sessoes)))
             self.label_ultima_atualizacao.setText(datetime.now().strftime("%H:%M:%S"))
             for sessao in sessoes:
-                item = QTreeWidgetItem([
-                    sessao.get("session_id", "N/A")[:8],
-                    sessao.get("hostname", "N/A"),
-                    sessao.get("last_updated", "N/A"),
-                ])
+                item = QTreeWidgetItem(
+                    [
+                        sessao.get("session_id", "N/A")[:8],
+                        sessao.get("hostname", "N/A"),
+                        sessao.get("last_updated", "N/A"),
+                    ]
+                )
                 self.tree_sessoes.addTopLevelItem(item)
         except (KeyError, AttributeError, TypeError) as e:
             logging.error("Erro ao carregar sessões: %s", e)
@@ -248,7 +261,8 @@ class InstancesWidget(QWidget):
     def _update_shutdown_status(self, active_sessions: int):
         """Atualiza a mensagem de status durante o shutdown."""
         self.status_label.setText(
-            f"Aguardando {active_sessions} instância(s) fechar...")
+            f"Aguardando {active_sessions} instância(s) fechar..."
+        )
         QApplication.processEvents()
 
     def _start_global_shutdown(self):
@@ -258,17 +272,27 @@ class InstancesWidget(QWidget):
             return
         self.status_label.setText("Enviando comando de encerramento...")
         QApplication.processEvents()
-        with session_scope() as (db_session, model):
-            if not db_session:
-                show_error(
-                    "Erro de DB", "Não foi possível conectar ao banco de dados.", parent=self)
-                return
+
+        success = False
+        try:
             success = force_shutdown_all_instances(
-                db_session, model, self._update_shutdown_status)
+                session, SystemControl, self._update_shutdown_status
+            )
+        except SQLAlchemyError as e:
+            logging.error("Erro de DB no shutdown: %s", e)
+            session.rollback()
+            show_error(
+                "Erro de DB",
+                "Não foi possível conectar ao banco de dados.",
+                parent=self,
+            )
 
         if success:
             show_info(
-                "Sucesso", "Todas as instâncias foram encerradas com sucesso.", parent=self)
+                "Sucesso",
+                "Todas as instâncias foram encerradas com sucesso.",
+                parent=self,
+            )
             self.status_label.setText("Encerramento concluído com sucesso.")
         else:
             show_error("Timeout", "As instâncias não fecharam a tempo.", parent=self)
@@ -280,6 +304,7 @@ class InstancesWidget(QWidget):
     def stop_timer(self):
         """Para o timer de atualização."""
         self.timer_atualizacao.stop()
+
 
 # pylint: disable=R0902
 
@@ -389,7 +414,9 @@ class UpdaterWidget(QWidget):
     def start_update_process(self):
         """Inicia o processo de atualização da aplicação."""
         if not self.selected_file_path:
-            show_error("Erro", "Nenhum arquivo de atualização selecionado.", parent=self)
+            show_error(
+                "Erro", "Nenhum arquivo de atualização selecionado.", parent=self
+            )
             return
 
         msg = "A aplicação e suas instâncias serão fechadas. Deseja prosseguir?"
@@ -500,18 +527,22 @@ class UserManagementWidget(QWidget):
         user_id = self._item_selecionado_usuario()
         if user_id is None:
             show_warning(
-                "Aviso", "Selecione um usuário para resetar a senha.", parent=self)
+                "Aviso", "Selecione um usuário para resetar a senha.", parent=self
+            )
             return
 
-        with session_scope() as (session, _):
+        try:
             usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
             if usuario_obj:
                 usuario_obj.senha = "nova_senha"
-                session.commit()
+                tratativa_erro()
                 show_info("Sucesso", "Senha resetada com sucesso.", parent=self)
                 listar("usuario")
             else:
                 show_error("Erro", "Usuário não encontrado.", parent=self)
+        except SQLAlchemyError as e:
+            session.rollback()
+            show_error("Erro", f"Erro de banco de dados: {e}", parent=self)
 
     def _excluir_usuario(self):
         """Exclui o usuário selecionado."""
@@ -520,30 +551,34 @@ class UserManagementWidget(QWidget):
             show_warning("Aviso", "Selecione um usuário para excluir.", parent=self)
             return
 
-        if not ask_yes_no("Atenção!", "Tem certeza que deseja excluir o usuário?", parent=self):
+        if not ask_yes_no(
+            "Atenção!", "Tem certeza que deseja excluir o usuário?", parent=self
+        ):
             return
 
         try:
-            with session_scope() as (session, _):
-                usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-                if usuario_obj:
-                    session.delete(usuario_obj)
-                    session.commit()
-                    show_info("Sucesso", "Usuário excluído com sucesso!", parent=self)
-                    listar("usuario")
+            usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
+            if usuario_obj:
+                session.delete(usuario_obj)
+                tratativa_erro()
+                show_info("Sucesso", "Usuário excluído com sucesso!", parent=self)
+                listar("usuario")
         except SQLAlchemyError as e:
+            session.rollback()
             show_error(
-                "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=self)
+                "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=self
+            )
 
     def _tornar_editor(self):
         """Promove o usuário selecionado a editor."""
         user_id = self._item_selecionado_usuario()
         if user_id is None:
             show_warning(
-                "Aviso", "Selecione um usuário para promover a editor.", parent=self)
+                "Aviso", "Selecione um usuário para promover a editor.", parent=self
+            )
             return
 
-        with session_scope() as (session, _):
+        try:
             usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
             if not usuario_obj:
                 show_error("Erro", "Usuário não encontrado.", parent=self)
@@ -557,9 +592,12 @@ class UserManagementWidget(QWidget):
                 return
 
             usuario_obj.role = "editor"
-            session.commit()
+            tratativa_erro()
             show_info("Sucesso", "Usuário promovido a editor com sucesso.", parent=self)
             listar("usuario")
+        except SQLAlchemyError as e:
+            session.rollback()
+            show_error("Erro", f"Erro de banco de dados: {e}", parent=self)
 
 
 class AdminTool(QMainWindow):

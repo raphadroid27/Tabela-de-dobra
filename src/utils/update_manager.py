@@ -14,8 +14,10 @@ import time
 import zipfile
 from typing import Callable, Optional
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.models.models import SystemControl
-from src.utils.banco_dados import session_scope
+from src.utils.banco_dados import session, tratativa_erro
 from src.utils.session_manager import force_shutdown_all_instances
 from src.utils.utilitarios import (
     APP_EXECUTABLE_PATH,
@@ -27,12 +29,7 @@ from src.utils.utilitarios import (
 
 def get_installed_version() -> Optional[str]:
     """Lê a versão atualmente instalada a partir do banco de dados."""
-    with session_scope() as (session, _):
-        if not session:
-            logging.error(
-                "Não foi possível obter uma sessão do banco de dados para ler a versão."
-            )
-            return None
+    try:
         version_entry = (
             session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
         )
@@ -43,16 +40,15 @@ def get_installed_version() -> Optional[str]:
             "Nenhuma entrada 'INSTALLED_VERSION' encontrada no banco de dados."
         )
         return None
+    except SQLAlchemyError as e:
+        logging.error("Não foi possível ler a versão do DB: %s", e)
+        session.rollback()
+        return None
 
 
 def set_installed_version(version: str):
     """Grava ou atualiza a versão instalada no banco de dados."""
-    with session_scope() as (session, _):
-        if not session:
-            logging.error(
-                "Não foi possível obter uma sessão do banco de dados para gravar a versão."
-            )
-            return
+    try:
         version_entry = (
             session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
         )
@@ -70,7 +66,10 @@ def set_installed_version(version: str):
                 key="INSTALLED_VERSION", value=str(version), type="CONFIG"
             )
             session.add(new_entry)
-        session.commit()
+        tratativa_erro()
+    except SQLAlchemyError as e:
+        logging.error("Não foi possível gravar a versão no DB: %s", e)
+        session.rollback()
 
 
 def _apply_update(zip_filename: str) -> bool:
@@ -106,27 +105,27 @@ def _apply_update(zip_filename: str) -> bool:
             try:
                 shutil.rmtree(UPDATE_TEMP_DIR)
             except OSError as e:
-                logging.error(
-                    "Não foi possível remover o diretório temporário: %s", e
-                )
+                logging.error("Não foi possível remover o diretório temporário: %s", e)
 
 
 def _start_application():
     """Inicia a aplicação principal após a atualização."""
     if not os.path.exists(APP_EXECUTABLE_PATH):
-        show_error("Erro Crítico",
-                   f"Executável principal não encontrado:\n{APP_EXECUTABLE_PATH}")
+        show_error(
+            "Erro Crítico",
+            f"Executável principal não encontrado:\n{APP_EXECUTABLE_PATH}",
+        )
         return
     logging.info("Iniciando a aplicação: %s", APP_EXECUTABLE_PATH)
     try:
-        subprocess.Popen(  # pylint: disable=R1732
-            [APP_EXECUTABLE_PATH])
+        subprocess.Popen([APP_EXECUTABLE_PATH])  # pylint: disable=R1732
     except OSError as e:
-        show_error("Erro ao Reiniciar",
-                   f"Não foi possível reiniciar a aplicação:\n{e}")
+        show_error("Erro ao Reiniciar", f"Não foi possível reiniciar a aplicação:\n{e}")
 
 
-def run_update_process(selected_file_path: str, progress_callback: Callable[[str, int], None]):
+def run_update_process(
+    selected_file_path: str, progress_callback: Callable[[str, int], None]
+):
     """
     Executa o processo completo de atualização.
 
@@ -147,16 +146,18 @@ def run_update_process(selected_file_path: str, progress_callback: Callable[[str
 
     progress_callback("Fechando a aplicação principal...", 40)
     time.sleep(3)
-    with session_scope() as (db_session, model):
-        if not db_session:
-            raise ConnectionError("Não foi possível conectar ao DB.")
-
+    try:
         # Wrapper para o callback de shutdown
         def shutdown_progress_wrapper(active_sessions: int):
             progress_callback(f"Aguardando {active_sessions} instância(s)...", 50)
 
-        if not force_shutdown_all_instances(db_session, model, shutdown_progress_wrapper):
+        if not force_shutdown_all_instances(
+            session, SystemControl, shutdown_progress_wrapper
+        ):
             raise RuntimeError("Não foi possível fechar as instâncias da aplicação.")
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise ConnectionError(f"Não foi possível conectar ao DB: {e}") from e
 
     progress_callback("Aplicando a atualização...", 70)
     if not _apply_update(zip_filename):
