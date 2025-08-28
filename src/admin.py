@@ -98,12 +98,12 @@ class AdminAuthWidget(QWidget):
     def _setup_ui(self):
         """Configura a interface do usuário para o widget de autenticação."""
         main_layout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 10, 10)
+        aplicar_medida_borda_espaco(main_layout, 10)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        title_label = QLabel("Ferramenta de Administração")
+        title_label = QLabel("Autenticação de Administrador")
         title_label.setStyleSheet(
-            "font-size: 18px; font-weight: bold; margin-bottom: 10px;"
+            "font-size: 16px; font-weight: bold; margin-bottom: 5px;"
         )
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title_label)
@@ -111,7 +111,7 @@ class AdminAuthWidget(QWidget):
         grid_layout = QGridLayout()
         grid_layout.setVerticalSpacing(10)
         grid_layout.setHorizontalSpacing(10)
-        grid_layout.addWidget(QLabel("Usuário Admin:"), 0, 0)
+        grid_layout.addWidget(QLabel("Usuário:"), 0, 0)
         self.usuario_entry.setPlaceholderText("Digite o usuário")
         aplicar_estilo_widget_auto_ajustavel(self.usuario_entry, "lineedit")
         grid_layout.addWidget(self.usuario_entry, 0, 1)
@@ -606,9 +606,8 @@ class AdminTool(QMainWindow):
     def __init__(self):
         """Inicializa a janela principal."""
         super().__init__()
-        self.setWindowTitle("Ferramenta de Administração")
-        # Tamanho ajustado para melhor acomodar o conteúdo
-        self.setFixedSize(480, 520)
+        # Tamanho inicial menor para a janela de login
+        self.setFixedSize(380, 185)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
@@ -656,6 +655,8 @@ class AdminTool(QMainWindow):
 
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
+        # Redimensiona a janela para o tamanho da ferramenta principal
+        self.setFixedSize(380, 400)
         self.stacked_widget.setCurrentWidget(self.main_tool_widget)
 
     def closeEvent(self, event):  # pylint: disable=C0103
