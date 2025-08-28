@@ -107,9 +107,7 @@ WIDGETS_DOBRAS = [
 ]
 
 # Diretórios e arquivos de atualização
-UPDATES_DIR = os.path.join(BASE_DIR, "updates")
 UPDATE_TEMP_DIR = os.path.join(BASE_DIR, "update_temp")
-VERSION_FILE_PATH = os.path.join(UPDATES_DIR, "versao.json")
 
 # Arquivo executável da aplicação principal
 APP_EXECUTABLE_NAME = "Calculadora de Dobra.exe"
