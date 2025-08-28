@@ -8,8 +8,6 @@ gerenciarem a aplicação, combinando as funcionalidades de:
 - Gerenciamento de usuários (redefinir senhas, alterar permissões e excluir).
 
 O acesso à ferramenta requer autenticação de administrador.
-
-Versão revisada para padronização visual conforme form_universal.py.
 """
 
 import hashlib
@@ -44,7 +42,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models.models import SystemControl, Usuario
-from src.utils.banco_dados import session, tratativa_erro
+from src.utils.banco_dados import session
 from src.utils.controlador import buscar
 from src.utils.estilo import (
     aplicar_estilo_botao,
@@ -53,12 +51,18 @@ from src.utils.estilo import (
     obter_estilo_progress_bar,
     obter_tema_atual,
 )
-from src.utils.interface import limpar_busca, listar
 from src.utils.session_manager import (
     force_shutdown_all_instances,
     obter_sessoes_ativas,
 )
 from src.utils.update_manager import get_installed_version, run_update_process
+
+# Importa as funções refatoradas de gerenciamento de usuário
+from src.utils.usuarios import (
+    alternar_permissao_editor,
+    excluir_usuario,
+    resetar_senha,
+)
 from src.utils.utilitarios import (
     ICON_PATH,
     aplicar_medida_borda_espaco,
@@ -66,7 +70,6 @@ from src.utils.utilitarios import (
     setup_logging,
     show_error,
     show_info,
-    show_warning,
 )
 
 
@@ -148,6 +151,7 @@ class AdminAuthWidget(QWidget):
                 .first()
             )
             if user and user.role == "admin":
+                g.USUARIO_ID = user.id
                 self.login_successful.emit()
             else:
                 show_error(
@@ -186,26 +190,25 @@ class InstancesWidget(QWidget):
         frame_info = self._create_info_frame()
         main_layout.addWidget(frame_info)
 
-        # Configura e adiciona o tree widget
         self.tree_sessoes.setHeaderLabels(["ID Sessão", "Hostname", "Última Atividade"])
         self.tree_sessoes.setColumnWidth(0, 80)
         self.tree_sessoes.setColumnWidth(1, 130)
         self.tree_sessoes.setColumnWidth(2, 150)
         main_layout.addWidget(self.tree_sessoes)
 
-        # Adiciona botões de ação
         action_buttons = self._create_action_buttons()
         main_layout.addWidget(action_buttons)
 
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setStyleSheet("color: #0078d4; margin-top: 5px;")
+        self.status_label.setVisible(False)  # Começa invisível
         main_layout.addWidget(self.status_label)
 
     def _create_info_frame(self):
         """Cria o frame de informações do sistema."""
         frame = QGroupBox("Informações do Sistema")
         layout = QGridLayout(frame)
-        aplicar_medida_borda_espaco(layout)  # Padronização
+        aplicar_medida_borda_espaco(layout)
         layout.addWidget(QLabel("Total de Instâncias Ativas:"), 0, 0)
         self.label_total_instancias.setStyleSheet("font-weight: bold; color: #0078d4;")
         layout.addWidget(self.label_total_instancias, 0, 1)
@@ -217,8 +220,8 @@ class InstancesWidget(QWidget):
         """Cria o container com os botões de ação."""
         container = QWidget()
         buttons_layout = QHBoxLayout(container)
-        aplicar_medida_borda_espaco(buttons_layout, 0)  # Remove margens do container
-        buttons_layout.setSpacing(10)  # Espaçamento entre botões
+        aplicar_medida_borda_espaco(buttons_layout, 0)
+        buttons_layout.setSpacing(10)
 
         atualizar_btn = QPushButton("🔄 Atualizar")
         aplicar_estilo_botao(atualizar_btn, "azul")
@@ -236,7 +239,7 @@ class InstancesWidget(QWidget):
         """Inicializa os dados e o timer de atualização."""
         self._load_sessions()
         self.timer_atualizacao.timeout.connect(self._load_sessions)
-        self.timer_atualizacao.start(60000)  # 60 segundos
+        self.timer_atualizacao.start(60000)
 
     def _load_sessions(self):
         """Carrega e exibe as sessões ativas."""
@@ -256,13 +259,11 @@ class InstancesWidget(QWidget):
                 self.tree_sessoes.addTopLevelItem(item)
         except (KeyError, AttributeError, TypeError) as e:
             logging.error("Erro ao carregar sessões: %s", e)
-            self.status_label.setText("Erro ao carregar sessões.")
+            self._set_status_message("Erro ao carregar sessões.")
 
     def _update_shutdown_status(self, active_sessions: int):
         """Atualiza a mensagem de status durante o shutdown."""
-        self.status_label.setText(
-            f"Aguardando {active_sessions} instância(s) fechar..."
-        )
+        self._set_status_message(f"Aguardando {active_sessions} instância(s) fechar...")
         QApplication.processEvents()
 
     def _start_global_shutdown(self):
@@ -270,7 +271,7 @@ class InstancesWidget(QWidget):
         msg = "Todas as instâncias da aplicação serão fechadas. Deseja continuar?"
         if not ask_yes_no("Confirmar Shutdown", msg, parent=self):
             return
-        self.status_label.setText("Enviando comando de encerramento...")
+        self._set_status_message("Enviando comando de encerramento...")
         QApplication.processEvents()
 
         success = False
@@ -293,13 +294,21 @@ class InstancesWidget(QWidget):
                 "Todas as instâncias foram encerradas com sucesso.",
                 parent=self,
             )
-            self.status_label.setText("Encerramento concluído com sucesso.")
+            self._set_status_message("Encerramento concluído com sucesso.")
         else:
             show_error("Timeout", "As instâncias não fecharam a tempo.", parent=self)
-            self.status_label.setText("Falha no encerramento (timeout).")
+            self._set_status_message("Falha no encerramento (timeout).")
 
         self._load_sessions()
-        QTimer.singleShot(5000, self.status_label.clear)
+        QTimer.singleShot(5000, lambda: self._set_status_message(""))
+
+    def _set_status_message(self, message: str):
+        """Define a mensagem de status e controla a visibilidade do label."""
+        if message:
+            self.status_label.setText(message)
+            self.status_label.setVisible(True)
+        else:
+            self.status_label.setVisible(False)
 
     def stop_timer(self):
         """Para o timer de atualização."""
@@ -329,7 +338,7 @@ class UpdaterWidget(QWidget):
     def _setup_ui(self):
         """Configura a interface do usuário para o widget de atualização."""
         main_layout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 0, 0)  # Sem margem no layout principal
+        aplicar_medida_borda_espaco(main_layout, 0, 0)
         self.stacked_widget.addWidget(self.main_view)
         self.stacked_widget.addWidget(self.progress_view)
         main_layout.addWidget(self.stacked_widget)
@@ -337,10 +346,12 @@ class UpdaterWidget(QWidget):
     def _load_current_version(self):
         """Carrega e exibe a versão atualmente instalada."""
         current_version = get_installed_version()
-        if current_version:
-            self.version_label.setText(f"Versão Instalada: {current_version}")
-        else:
-            self.version_label.setText("Versão Instalada: Desconhecida")
+        self.version_label.setText(
+            f"Versão Instalada: {current_version or 'Desconhecida'}"
+        )
+        self.version_label.setStyleSheet(
+            "font-size: 16px; font-weight: bold; color: #0078d4;"
+        )
 
     def _create_main_view(self):
         """Cria a view principal para seleção de arquivo."""
@@ -355,7 +366,7 @@ class UpdaterWidget(QWidget):
 
         file_group = QGroupBox("Selecionar Pacote de Atualização (.zip)")
         file_layout = QHBoxLayout(file_group)
-        aplicar_medida_borda_espaco(file_layout)  # Padronização
+        aplicar_medida_borda_espaco(file_layout)
         self.file_path_entry.setPlaceholderText("Nenhum arquivo selecionado")
         self.file_path_entry.setReadOnly(True)
         file_layout.addWidget(self.file_path_entry)
@@ -446,11 +457,18 @@ class UserManagementWidget(QWidget):
         self.usuario_busca_entry = QLineEdit()
         self.list_usuario = QTreeWidget()
 
+        # Declara os atributos dos botões para resolver o aviso W0201 do Pylint.
+        self.toggle_role_btn = None
+        self.resetar_senha_btn = None
+        self.excluir_btn = None
+
         g.USUARIO_BUSCA_ENTRY = self.usuario_busca_entry
         g.LIST_USUARIO = self.list_usuario
 
         self._setup_ui()
-        listar("usuario")
+        self._listar_usuarios()
+        self.list_usuario.itemSelectionChanged.connect(self._update_buttons_state)
+        self._update_buttons_state()
 
     def _setup_ui(self):
         """Configura a interface do usuário para o widget."""
@@ -461,23 +479,53 @@ class UserManagementWidget(QWidget):
         self._create_tree_widget(main_layout)
         self._create_action_buttons(main_layout)
 
+    def _listar_usuarios(self):
+        """Busca os usuários no banco de dados e atualiza a lista na interface."""
+        try:
+            self.list_usuario.clear()
+            usuarios = session.query(Usuario).order_by(Usuario.nome).all()
+            for usuario in usuarios:
+                senha_resetada = "Sim" if usuario.senha == "nova_senha" else "Não"
+                item = QTreeWidgetItem(
+                    [str(usuario.id), usuario.nome, usuario.role, senha_resetada]
+                )
+                self.list_usuario.addTopLevelItem(item)
+        except SQLAlchemyError as e:
+            logging.error("Erro ao listar usuários: %s", e)
+            show_error(
+                "Erro de Banco de Dados",
+                "Não foi possível carregar a lista de usuários.",
+                parent=self,
+            )
+
     def _create_search_frame(self, main_layout):
         """Cria o frame de busca de usuários."""
         frame_busca = QGroupBox("Filtrar Usuários")
         busca_layout = QGridLayout(frame_busca)
-        aplicar_medida_borda_espaco(busca_layout)  # Padronização
+        aplicar_medida_borda_espaco(busca_layout)
 
         busca_layout.addWidget(QLabel("Usuário:"), 0, 0)
-
         self.usuario_busca_entry.textChanged.connect(lambda: buscar("usuario"))
         busca_layout.addWidget(self.usuario_busca_entry, 0, 1)
 
         limpar_btn = QPushButton("🧹 Limpar")
         aplicar_estilo_botao(limpar_btn, "amarelo")
-        limpar_btn.clicked.connect(lambda: limpar_busca("usuario"))
+        limpar_btn.clicked.connect(self._limpar_busca_action)
         busca_layout.addWidget(limpar_btn, 0, 2)
 
+        atualizar_btn = QPushButton("🔄")
+        atualizar_btn.setToolTip("Atualizar lista de usuários")
+        atualizar_btn.setFixedWidth(40)
+        aplicar_estilo_botao(atualizar_btn, "azul")
+        atualizar_btn.clicked.connect(self._listar_usuarios)
+        busca_layout.addWidget(atualizar_btn, 0, 3)
+
         main_layout.addWidget(frame_busca)
+
+    def _limpar_busca_action(self):
+        """Limpa o campo de busca e recarrega a lista completa de usuários."""
+        self.usuario_busca_entry.clear()
+        self._listar_usuarios()
 
     def _create_tree_widget(self, main_layout):
         """Cria o TreeWidget para listar usuários."""
@@ -495,138 +543,86 @@ class UserManagementWidget(QWidget):
         aplicar_medida_borda_espaco(buttons_layout, 0)
         buttons_layout.setSpacing(10)
 
-        tornar_editor_btn = QPushButton("👤 Tornar Editor")
-        aplicar_estilo_botao(tornar_editor_btn, "verde")
-        tornar_editor_btn.clicked.connect(self._tornar_editor)
-        buttons_layout.addWidget(tornar_editor_btn)
+        self.toggle_role_btn = QPushButton("👤 Alterar Permissão")
+        aplicar_estilo_botao(self.toggle_role_btn, "verde")
+        self.toggle_role_btn.clicked.connect(self._toggle_role_action)
+        buttons_layout.addWidget(self.toggle_role_btn)
 
-        resetar_senha_btn = QPushButton("🔄 Resetar Senha")
-        aplicar_estilo_botao(resetar_senha_btn, "amarelo")
-        resetar_senha_btn.clicked.connect(self._resetar_senha)
-        buttons_layout.addWidget(resetar_senha_btn)
+        self.resetar_senha_btn = QPushButton("🔄 Resetar Senha")
+        aplicar_estilo_botao(self.resetar_senha_btn, "amarelo")
+        self.resetar_senha_btn.clicked.connect(self._resetar_senha_action)
+        buttons_layout.addWidget(self.resetar_senha_btn)
 
-        excluir_btn = QPushButton("🗑️ Excluir")
-        aplicar_estilo_botao(excluir_btn, "vermelho")
-        excluir_btn.clicked.connect(self._excluir_usuario)
-        buttons_layout.addWidget(excluir_btn)
+        self.excluir_btn = QPushButton("🗑️ Excluir")
+        aplicar_estilo_botao(self.excluir_btn, "vermelho")
+        self.excluir_btn.clicked.connect(self._excluir_usuario_action)
+        buttons_layout.addWidget(self.excluir_btn)
 
         main_layout.addWidget(container)
 
-    def _item_selecionado_usuario(self):
-        """Retorna o ID do usuário selecionado na lista."""
-        selected_items = g.LIST_USUARIO.selectedItems()
-        if not selected_items:
-            return None
-        try:
-            return int(selected_items[0].text(0))
-        except (ValueError, IndexError):
-            return None
+    def _update_buttons_state(self):
+        """Atualiza o estado dos botões de ação com base no item selecionado."""
+        selected_items = self.list_usuario.selectedItems()
+        has_selection = bool(selected_items)
 
-    def _resetar_senha(self):
-        """Reseta a senha do usuário selecionado."""
-        user_id = self._item_selecionado_usuario()
-        if user_id is None:
-            show_warning(
-                "Aviso", "Selecione um usuário para resetar a senha.", parent=self
-            )
+        self.resetar_senha_btn.setEnabled(has_selection)
+        self.excluir_btn.setEnabled(has_selection)
+        self.toggle_role_btn.setEnabled(has_selection)
+
+        if not has_selection:
+            self.toggle_role_btn.setText("👤 Alterar Permissão")
             return
 
-        try:
-            usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-            if usuario_obj:
-                usuario_obj.senha = "nova_senha"
-                tratativa_erro()
-                show_info("Sucesso", "Senha resetada com sucesso.", parent=self)
-                listar("usuario")
-            else:
-                show_error("Erro", "Usuário não encontrado.", parent=self)
-        except SQLAlchemyError as e:
-            session.rollback()
-            show_error("Erro", f"Erro de banco de dados: {e}", parent=self)
+        selected_item = selected_items[0]
+        role = selected_item.text(2)
 
-    def _excluir_usuario(self):
-        """Exclui o usuário selecionado."""
-        user_id = self._item_selecionado_usuario()
-        if user_id is None:
-            show_warning("Aviso", "Selecione um usuário para excluir.", parent=self)
-            return
+        if role == "admin":
+            self.toggle_role_btn.setEnabled(False)
+            self.excluir_btn.setEnabled(False)
+            self.toggle_role_btn.setText("👤 Alterar Permissão")
+        elif role == "editor":
+            self.toggle_role_btn.setText("👤 Tornar Viewer")
+        else:
+            self.toggle_role_btn.setText("👤 Tornar Editor")
 
-        if not ask_yes_no(
-            "Atenção!", "Tem certeza que deseja excluir o usuário?", parent=self
-        ):
-            return
+    def _resetar_senha_action(self):
+        """Chama a função centralizada para resetar a senha e atualiza a lista."""
+        if resetar_senha(parent=self):
+            self._listar_usuarios()
 
-        try:
-            usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-            if usuario_obj:
-                session.delete(usuario_obj)
-                tratativa_erro()
-                show_info("Sucesso", "Usuário excluído com sucesso!", parent=self)
-                listar("usuario")
-        except SQLAlchemyError as e:
-            session.rollback()
-            show_error(
-                "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=self
-            )
+    def _excluir_usuario_action(self):
+        """Chama a função centralizada para excluir o usuário e atualiza a lista."""
+        if excluir_usuario(parent=self):
+            self._listar_usuarios()
 
-    def _tornar_editor(self):
-        """Promove o usuário selecionado a editor."""
-        user_id = self._item_selecionado_usuario()
-        if user_id is None:
-            show_warning(
-                "Aviso", "Selecione um usuário para promover a editor.", parent=self
-            )
-            return
-
-        try:
-            usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-            if not usuario_obj:
-                show_error("Erro", "Usuário não encontrado.", parent=self)
-                return
-
-            if usuario_obj.role == "admin":
-                show_error("Erro", "O usuário já é um administrador.", parent=self)
-                return
-            if usuario_obj.role == "editor":
-                show_info("Informação", "O usuário já é um editor.", parent=self)
-                return
-
-            usuario_obj.role = "editor"
-            tratativa_erro()
-            show_info("Sucesso", "Usuário promovido a editor com sucesso.", parent=self)
-            listar("usuario")
-        except SQLAlchemyError as e:
-            session.rollback()
-            show_error("Erro", f"Erro de banco de dados: {e}", parent=self)
+    def _toggle_role_action(self):
+        """Chama a função centralizada para alterar a permissão e atualiza a lista."""
+        if alternar_permissao_editor(parent=self):
+            self._listar_usuarios()
 
 
 class AdminTool(QMainWindow):
-    """Janela principal da Ferramenta de Administração."""
+    """Janela principal da Ferramenta Administrativa."""
 
     def __init__(self):
         """Inicializa a janela principal."""
         super().__init__()
-        # Tamanho inicial menor para a janela de login
         self.setFixedSize(380, 185)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
-        # Remove a barra de título padrão
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
-        # Cria o widget central e o layout principal
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         aplicar_medida_borda_espaco(main_layout, 0, 0)
 
-        # Adiciona a barra de título customizada
         self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
-        self.barra_titulo.titulo.setText("Ferramenta de Administração")
+        self.barra_titulo.titulo.setText("Ferramenta Administrativa")
         main_layout.addWidget(self.barra_titulo)
 
         self.stacked_widget = QStackedWidget()
-        # Adiciona o stacked_widget ao layout principal
         main_layout.addWidget(self.stacked_widget)
 
         self.auth_widget = AdminAuthWidget()
@@ -643,19 +639,16 @@ class AdminTool(QMainWindow):
     def _setup_main_tool_ui(self):
         """Configura a UI principal da ferramenta com abas."""
         layout = QVBoxLayout(self.main_tool_widget)
-        aplicar_medida_borda_espaco(layout, 0, 0)  # Remove margem para a tab se ajustar
+        aplicar_medida_borda_espaco(layout, 0, 0)
         tab_widget = QTabWidget()
-        # Remove a borda ao redor do conteúdo da aba para um visual mais limpo
         tab_widget.setStyleSheet("QTabWidget::pane { border: 0; }")
         tab_widget.addTab(self.instances_tab, "🔧 Gerenciar Instâncias")
         tab_widget.addTab(self.user_management_tab, "👥 Gerenciar Usuários")
         tab_widget.addTab(self.updater_tab, "🔄 Atualizador")
-
         layout.addWidget(tab_widget)
 
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
-        # Redimensiona a janela para o tamanho da ferramenta principal
         self.setFixedSize(380, 400)
         self.stacked_widget.setCurrentWidget(self.main_tool_widget)
 
@@ -668,7 +661,7 @@ class AdminTool(QMainWindow):
 def main():
     """Função principal para iniciar a aplicação."""
     setup_logging("admin.log", log_to_console=True)
-    logging.info("Ferramenta de Administração iniciada.")
+    logging.info("Ferramenta Administrativa iniciada.")
     app = QApplication(sys.argv)
     aplicar_tema_inicial()
     window = AdminTool()
