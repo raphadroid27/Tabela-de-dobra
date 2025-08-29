@@ -7,11 +7,11 @@ arquivos relevantes com a nova versão e gera um changelog formatado.
 Além disso, permite ao usuário criar uma nova tag Git para a versão
 atualizada.
 """
-import subprocess
-import re
-import os
+
 import datetime
-import json
+import os
+import re
+import subprocess
 from pathlib import Path
 
 
@@ -24,7 +24,7 @@ def get_latest_tag():
         if not tags_raw:
             return "v0.0.0"  # Se não existir tag, começa do zero
 
-        tags = tags_raw.split('\n')
+        tags = tags_raw.split("\n")
         latest_tag = tags[0]
         print(f"Tag mais recente encontrada: {latest_tag}")
         return latest_tag
@@ -35,7 +35,7 @@ def get_latest_tag():
 
 def parse_version(version_str):
     """Converte uma string de versão em tupla (major, minor, patch)."""
-    match = re.search(r'v?(\d+)\.(\d+)\.(\d+)(?:-.*)?', version_str)
+    match = re.search(r"v?(\d+)\.(\d+)\.(\d+)(?:-.*)?", version_str)
     if match:
         return tuple(map(int, match.groups()))
     return (0, 0, 0)
@@ -45,7 +45,7 @@ def generate_next_version(auto_increment="patch"):
     """
     Gera a próxima versão com base na tag mais recente.
 
-    Parâmetro auto_increment pode ser "major", "minor" ou "patch" para 
+    Parâmetro auto_increment pode ser "major", "minor" ou "patch" para
     definir qual número incrementar automaticamente.
     """
     latest_tag = get_latest_tag()
@@ -75,33 +75,10 @@ def get_commit_messages_since_last_tag():
         if not output:
             return ["Não há commits desde a última tag."]
 
-        return output.split('\n')
+        return output.split("\n")
     except ValueError as e:
         print(f"Erro ao obter mensagens de commit: {e}")
         return ["Erro ao obter mensagens de commit."]
-
-
-def create_git_tag(version, message=None):
-    """Cria uma nova tag Git com a versão especificada."""
-    if not message:
-        message = f"Versão {version}"
-
-    version_tag = f"v{version}"
-    try:
-        subprocess.run(["git", "tag", "-a", version_tag,
-                       "-m", message], check=True)
-        print(f"Tag {version_tag} criada com sucesso!")
-
-        # Perguntar se deseja enviar a tag para o repositório remoto
-        push = input("Deseja enviar a tag para o repositório remoto? (s/n): ")
-        if push.lower() == 's':
-            subprocess.run(["git", "push", "origin", version_tag], check=True)
-            print(f"Tag {version_tag} enviada para o repositório remoto.")
-
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"Erro ao criar tag Git: {e}")
-        return False
 
 
 def update_version_info(version):
@@ -159,7 +136,7 @@ def generate_changelog(version):
 
     # Corrigir caracteres especiais nos commits
     def corrigir_caracteres_especiais(texto):
-        return texto.encode('latin1').decode('utf-8')
+        return texto.encode("latin1").decode("utf-8")
 
     # Cabeçalho da nova versão
     new_version_content = f"## {version} ({today})\n\n"
@@ -178,25 +155,29 @@ def generate_changelog(version):
         # Verifica se o arquivo tem o cabeçalho principal
         if "# Changelog" in existing_content:
             # Verifica se já tem a descrição
-            if "Histórico de mudanças do aplicativo Calculadora de Dobras" in existing_content:
+            if (
+                "Histórico de mudanças do aplicativo Calculadora de Dobras"
+                in existing_content
+            ):
                 # Adiciona a nova versão após o cabeçalho com descrição
                 replacement = (
-                    f'# Changelog\n\n'
-                    f'Histórico de mudanças do aplicativo Calculadora de Dobras\n\n'
-                    f'{new_version_content}')
-                replacement = replacement.replace('\\', r'\\')
+                    f"# Changelog\n\n"
+                    f"Histórico de mudanças do aplicativo Calculadora de Dobras\n\n"
+                    f"{new_version_content}"
+                )
+                replacement = replacement.replace("\\", r"\\")
                 updated_content = re.sub(
-                    r'# Changelog\n\nHistórico de mudanças do aplicativo Calculadora de Dobras\n\n',
+                    r"# Changelog\n\nHistórico de mudanças do aplicativo Calculadora de Dobras\n\n",
                     replacement,
-                    existing_content
+                    existing_content,
                 )
             else:
                 # Adiciona descrição e nova versão após o cabeçalho
                 updated_content = re.sub(
-                    r'# Changelog\n\n',
-                    f'# Changelog\n\nHistórico de mudanças do aplicativo Calculadora de Dobras\n\n'
-                    f'{new_version_content}',
-                    existing_content
+                    r"# Changelog\n\n",
+                    f"# Changelog\n\nHistórico de mudanças do aplicativo Calculadora de Dobras\n\n"
+                    f"{new_version_content}",
+                    existing_content,
                 )
         else:
             # Adiciona cabeçalho, descrição e a nova versão
@@ -221,42 +202,16 @@ def generate_changelog(version):
         return False
 
 
-def update_versao_json(version, nome_arquivo=None):
-    """Atualiza o arquivo versao.json com a nova versão e nome do arquivo de atualização."""
-    versao_json_path = os.path.join("updates", "versao.json")
-    try:
-        # Carrega o conteúdo existente
-        if os.path.exists(versao_json_path):
-            with open(versao_json_path, "r", encoding="utf-8") as f:
-                data = f.read()
-            versao_data = json.loads(data)
-        else:
-            versao_data = {}
-
-        versao_data["ultima_versao"] = version
-        if nome_arquivo:
-            versao_data["nome_arquivo"] = nome_arquivo
-
-        with open(versao_json_path, "w", encoding="utf-8") as f:
-            json.dump(versao_data, f, indent=4, ensure_ascii=False)
-        print(f"Arquivo versao.json atualizado para versão {version}")
-        return True
-    except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
-        print(f"Erro ao atualizar versao.json: {e}")
-        return False
-
-
 def main():
     """Função principal que executa todo o processo de atualização de versão."""
     print("=== Atualizador de Versão ===")
 
     # Obtém a próxima versão
-    auto_increment = input(
-        "Incrementar [p]atch, [m]inor ou [M]ajor? (p/m/M) [p]: ").lower()
+    auto_increment = input("Incrementar [p]atch, [m]inor ou [M]ajor? (p/m/M) [p]: ")
 
-    if auto_increment == 'm':
+    if auto_increment == "m":
         increment_type = "minor"
-    elif auto_increment == 'M':
+    elif auto_increment == "M":
         increment_type = "major"
     else:
         increment_type = "patch"
@@ -274,9 +229,8 @@ def main():
         version = next_version
 
     # Confirma se deseja continuar
-    confirm = input(
-        f"Confirma atualização para versão {version}? (s/n): ").lower()
-    if confirm != 's':
+    confirm = input(f"Confirma atualização para versão {version}? (s/n): ").lower()
+    if confirm != "s":
         print("Atualização de versão cancelada.")
         return
 
@@ -308,20 +262,7 @@ def main():
     # Gera o changelog
     generate_changelog(version)
 
-    # Atualiza versao.json
-    nome_arquivo = input(
-        "Digite o nome do arquivo de atualização (opcional): ").strip()
-    update_versao_json(version, nome_arquivo if nome_arquivo else None)
-
-    # Pergunta se deseja criar uma tag git
-    create_tag = input(
-        "Deseja criar uma tag Git para esta versão? (s/n): ").lower()
-    if create_tag == 's':
-        tag_message = input("Digite uma mensagem para a tag (opcional): ")
-        create_git_tag(version, tag_message if tag_message else None)
-
-    print(
-        f"\n✅ Processo de atualização para versão {version} concluído com sucesso!")
+    print(f"\n✅ Processo de atualização para versão {version} concluído com sucesso!")
 
 
 if __name__ == "__main__":
