@@ -422,6 +422,20 @@ class UpdaterWidget(QWidget):
         self.progress_bar.setValue(value)
         QApplication.processEvents()
 
+    # --- NOVO MÉTODO PARA RESETAR A ABA ---
+    def _reset_widget_state(self):
+        """Reseta a interface do widget para o estado inicial após uma atualização."""
+        # 1. Recarrega a versão do banco de dados (que deve ter sido atualizada)
+        self._load_current_version()
+
+        # 2. Limpa a seleção de arquivo e desabilita o botão
+        self.selected_file_path = None
+        self.file_path_entry.clear()
+        self.update_button.setEnabled(False)
+
+        # 3. Volta para a tela principal de seleção de arquivo
+        self.stacked_widget.setCurrentWidget(self.main_view)
+
     def start_update_process(self):
         """Inicia o processo de atualização da aplicação."""
         if not self.selected_file_path:
@@ -437,13 +451,22 @@ class UpdaterWidget(QWidget):
         self.stacked_widget.setCurrentWidget(self.progress_view)
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
+            # Executa o processo de atualização
             run_update_process(self.selected_file_path, self._update_progress_ui)
+
+            # --- LÓGICA MODIFICADA ---
+            # Mostra a mensagem "Concluído!" por 2 segundos
+            self._update_progress_ui("Concluído!", 100)
             time.sleep(2)
-            QApplication.instance().quit()
+
+            # Chama o novo método para resetar a aba
+            self._reset_widget_state()
+
         except (ValueError, ConnectionError, RuntimeError, IOError) as e:
             logging.error("Erro no processo de atualização: %s", e)
             show_error("Erro de Atualização", f"Ocorreu um erro: {e}", parent=self)
-            self.stacked_widget.setCurrentWidget(self.main_view)
+            # Em caso de erro, também reseta a aba para o estado inicial
+            self._reset_widget_state()
         finally:
             QApplication.restoreOverrideCursor()
 
