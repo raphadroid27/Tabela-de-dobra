@@ -1,5 +1,8 @@
+# -*- mode: python ; coding: utf-8 -*-
+
+
 a = Analysis(
-    ['src\\app.py'],
+    ['src\\admin.py'],
     pathex=[],
     binaries=[],
     datas=[('assets\\icone_2.ico', 'assets'), ('src\\__init__.py', 'src')],
@@ -19,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Calculadora de Dobra',
+    name='admin',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -32,6 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='assets\\icone_2.ico',
-    version='version_info.txt', # Adicionando o arquivo de versão (gerado dinamicamente)
+    icon=['assets\\icone_2.ico'],
 )
