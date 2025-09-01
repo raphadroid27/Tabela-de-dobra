@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models import Usuario
-from src.utils.banco_dados import session
+from src.utils.banco_dados import Session
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.usuarios import login, novo_usuario
@@ -91,7 +91,7 @@ def _criar_campos_usuario_senha(main_layout):
 
 def _verificar_admin_existente():
     """Verifica se já existe um usuário administrador."""
-    return session.query(Usuario).filter(Usuario.role == "admin").first()
+    return Session.query(Usuario).filter(Usuario.role == "admin").first()
 
 
 def _configurar_modo_login(main_layout):

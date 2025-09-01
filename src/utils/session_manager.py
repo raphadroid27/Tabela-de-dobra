@@ -14,7 +14,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import SystemControl as SystemControlModel
 from src.utils.banco_dados import Session
-from src.utils.banco_dados import session as db_session
+from src.utils.banco_dados import Session as db_session
+from src.utils.banco_dados import verificar_integridade_banco
 
 SESSION_ID = str(uuid.uuid4())
 
@@ -109,6 +110,12 @@ def limpar_sessoes_inativas(timeout_minutos: int = 2):
 def atualizar_heartbeat_sessao():
     """Atualiza o timestamp da sessão ativa para indicar que está online."""
     try:
+        # Verificar integridade antes de usar
+        if not verificar_integridade_banco():
+            logging.warning("Banco corrompido detectado, tentando recuperar...")
+            # Implementar lógica de recuperação automática
+            return
+
         sessao_atual = (
             db_session.query(SystemControlModel).filter_by(key=SESSION_ID).first()
         )
@@ -120,6 +127,9 @@ def atualizar_heartbeat_sessao():
     except SQLAlchemyError as e:
         logging.error("Erro ao atualizar heartbeat da sessão: %s", e)
         db_session.rollback()
+        # Tentar recuperação automática em caso de corrupção
+        if "database disk image is malformed" in str(e):
+            logging.critical("Corrupção detectada, banco precisa ser reparado!")
 
 
 def obter_sessoes_ativas():
@@ -178,25 +188,25 @@ def verificar_comando_sistema() -> bool:
 
 
 def force_shutdown_all_instances(
-    session: Any,
+    Session: Any,
     model: Type[SystemControlModel],
     progress_callback: Optional[Callable[[int], None]] = None,
 ) -> bool:
     """Força o encerramento de todas as instâncias da aplicação."""
     logging.info("A enviar comando de encerramento...")
     try:
-        cmd_entry = session.query(model).filter_by(key="UPDATE_CMD").first()
+        cmd_entry = Session.query(model).filter_by(key="UPDATE_CMD").first()
         if cmd_entry:
             cmd_entry.value = "SHUTDOWN"
             cmd_entry.last_updated = datetime.now(timezone.utc)
         else:
             new_cmd = model(key="UPDATE_CMD", value="SHUTDOWN", type="COMMAND")
-            session.add(new_cmd)
-        session.commit()
+            Session.add(new_cmd)
+        Session.commit()
 
         start_time = time.time()
         while (time.time() - start_time) < 60:
-            active_sessions = session.query(model).filter_by(type="SESSION").count()
+            active_sessions = Session.query(model).filter_by(type="SESSION").count()
             if progress_callback:
                 progress_callback(active_sessions)
             if active_sessions == 0:
@@ -208,7 +218,7 @@ def force_shutdown_all_instances(
         logging.error("Timeout! As instâncias não fecharam a tempo.")
         return False
     finally:
-        cmd_entry = session.query(model).filter_by(key="UPDATE_CMD").first()
+        cmd_entry = Session.query(model).filter_by(key="UPDATE_CMD").first()
         if cmd_entry and cmd_entry.value == "SHUTDOWN":
             cmd_entry.value = "NONE"
-            session.commit()
+            Session.commit()

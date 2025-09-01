@@ -13,7 +13,7 @@ from typing import List
 
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material
-from src.utils.banco_dados import session
+from src.utils.banco_dados import Session
 
 # --- FUNÇÕES DE CONVERSÃO DE DADOS ---
 
@@ -65,14 +65,14 @@ class CalculoDeducaoDB:
         try:
             espessura_valor = float(espessura_str)
             espessura_obj = (
-                session.query(Espessura).filter_by(valor=espessura_valor).first()
+                Session.query(Espessura).filter_by(valor=espessura_valor).first()
             )
-            material_obj = session.query(Material).filter_by(nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+            material_obj = Session.query(Material).filter_by(nome=material_nome).first()
+            canal_obj = Session.query(Canal).filter_by(valor=canal_valor).first()
 
             # Consulta otimizada usando JOIN para reduzir queries
             resultado = (
-                session.query(Deducao, Material, Espessura, Canal)
+                Session.query(Deducao, Material, Espessura, Canal)
                 .join(Material, Deducao.material_id == Material.id)
                 .join(Espessura, Deducao.espessura_id == Espessura.id)
                 .join(Canal, Deducao.canal_id == Canal.id)
@@ -166,7 +166,7 @@ class CalculoZMinimo:
         if espessura <= 0 or deducao <= 0 or not canal_str:
             return None
 
-        canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
+        canal_obj = Session.query(Canal).filter_by(valor=canal_str).first()
         if not canal_obj or canal_obj.largura is None:
             return None
 
@@ -195,16 +195,16 @@ class CalculoForca:
         """Busca o valor da força no banco de dados."""
         try:
             espessura_obj = (
-                session.query(Espessura).filter_by(valor=espessura_valor).first()
+                Session.query(Espessura).filter_by(valor=espessura_valor).first()
             )
-            material_obj = session.query(Material).filter_by(nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+            material_obj = Session.query(Material).filter_by(nome=material_nome).first()
+            canal_obj = Session.query(Canal).filter_by(valor=canal_valor).first()
 
             if not all([espessura_obj, material_obj, canal_obj]):
                 return None, None
 
             deducao_obj = (
-                session.query(Deducao)
+                Session.query(Deducao)
                 .filter(
                     Deducao.espessura_id == espessura_obj.id,
                     Deducao.material_id == material_obj.id,

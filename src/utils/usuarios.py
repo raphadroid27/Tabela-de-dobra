@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
 from src.models.models import Usuario
-from src.utils.banco_dados import session, tratativa_erro
+from src.utils.banco_dados import Session, tratativa_erro
 from src.utils.interface import obter_configuracoes
 from src.utils.janelas import Janela
 from src.utils.utilitarios import (
@@ -35,14 +35,14 @@ def novo_usuario():
         show_error("Erro", "Preencha todos os campos.")
         return
 
-    if session.query(Usuario).filter_by(nome=novo_usuario_nome).first():
+    if Session.query(Usuario).filter_by(nome=novo_usuario_nome).first():
         show_error("Erro", "Usuário já existente.")
         return
 
     senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
     role = g.ADMIN_VAR or "viewer"
     usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=role)
-    session.add(usuario)
+    Session.add(usuario)
 
     tratativa_erro()
     show_info("Sucesso", "Usuário cadastrado com sucesso.")
@@ -63,7 +63,7 @@ def login():
     usuario_senha = g.SENHA_ENTRY.text()
     parent_form = g.AUTEN_FORM
 
-    usuario_obj = session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
+    usuario_obj = Session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
 
     if not usuario_obj:
         show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
@@ -107,7 +107,7 @@ def logado(tipo):
 def tem_permissao(tipo, role_requerida, show_message=True):
     """Verifica se o usuário tem a permissão necessária."""
     config = obter_configuracoes()[tipo]
-    usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
+    usuario_obj = Session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
 
     if not usuario_obj:
         if show_message:
@@ -168,7 +168,7 @@ def resetar_senha(parent=None):
         return False
 
     try:
-        usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
+        usuario_obj = Session.query(Usuario).filter_by(id=user_id).first()
         if usuario_obj:
             usuario_obj.senha = "nova_senha"
             tratativa_erro()
@@ -178,7 +178,7 @@ def resetar_senha(parent=None):
         show_error("Erro", "Usuário não encontrado.", parent=parent)
         return False
     except SQLAlchemyError as e:
-        session.rollback()
+        Session.rollback()
         logging.error("Erro de DB ao resetar senha: %s", e)
         show_error("Erro", f"Erro de banco de dados: {e}", parent=parent)
         return False
@@ -201,9 +201,9 @@ def excluir_usuario(parent=None):
         return False
 
     try:
-        usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
+        usuario_obj = Session.query(Usuario).filter_by(id=user_id).first()
         if usuario_obj:
-            session.delete(usuario_obj)
+            Session.delete(usuario_obj)
             tratativa_erro()
             show_info("Sucesso", "Usuário excluído com sucesso!", parent=parent)
             return True
@@ -211,7 +211,7 @@ def excluir_usuario(parent=None):
         show_error("Erro", "Usuário não encontrado para exclusão.", parent=parent)
         return False
     except SQLAlchemyError as e:
-        session.rollback()
+        Session.rollback()
         logging.error("Erro de DB ao excluir usuário: %s", e)
         show_error(
             "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=parent
@@ -233,7 +233,7 @@ def alternar_permissao_editor(parent=None):
         return False
 
     try:
-        usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
+        usuario_obj = Session.query(Usuario).filter_by(id=user_id).first()
         if not usuario_obj:
             show_error("Erro", "Usuário não encontrado.", parent=parent)
             return False
@@ -260,7 +260,7 @@ def alternar_permissao_editor(parent=None):
         show_info("Sucesso", mensagem, parent=parent)
         return True
     except SQLAlchemyError as e:
-        session.rollback()
+        Session.rollback()
         logging.error("Erro de DB ao alterar permissão: %s", e)
         show_error("Erro", f"Erro de banco de dados: {e}", parent=parent)
         return False

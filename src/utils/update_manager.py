@@ -17,7 +17,7 @@ from typing import Callable, Optional
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import SystemControl
-from src.utils.banco_dados import session, tratativa_erro
+from src.utils.banco_dados import Session, tratativa_erro
 from src.utils.session_manager import force_shutdown_all_instances
 from src.utils.utilitarios import (
     APP_EXECUTABLE_PATH,
@@ -31,7 +31,7 @@ def get_installed_version() -> Optional[str]:
     """Lê a versão atualmente instalada a partir do banco de dados."""
     try:
         version_entry = (
-            session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
+            Session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
         )
         if version_entry:
             logging.info("Versão instalada encontrada no DB: %s", version_entry.value)
@@ -42,7 +42,7 @@ def get_installed_version() -> Optional[str]:
         return None
     except SQLAlchemyError as e:
         logging.error("Não foi possível ler a versão do DB: %s", e)
-        session.rollback()
+        Session.rollback()
         return None
 
 
@@ -50,7 +50,7 @@ def set_installed_version(version: str):
     """Grava ou atualiza a versão instalada no banco de dados."""
     try:
         version_entry = (
-            session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
+            Session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
         )
         if version_entry:
             if version_entry.value != version:
@@ -65,11 +65,11 @@ def set_installed_version(version: str):
             new_entry = SystemControl(
                 key="INSTALLED_VERSION", value=str(version), type="CONFIG"
             )
-            session.add(new_entry)
+            Session.add(new_entry)
         tratativa_erro()
     except SQLAlchemyError as e:
         logging.error("Não foi possível gravar a versão no DB: %s", e)
-        session.rollback()
+        Session.rollback()
 
 
 def _apply_update(zip_filename: str) -> bool:
@@ -152,11 +152,11 @@ def run_update_process(
             progress_callback(f"Aguardando {active_sessions} instância(s)...", 50)
 
         if not force_shutdown_all_instances(
-            session, SystemControl, shutdown_progress_wrapper
+            Session, SystemControl, shutdown_progress_wrapper
         ):
             raise RuntimeError("Não foi possível fechar as instâncias da aplicação.")
     except SQLAlchemyError as e:
-        session.rollback()
+        Session.rollback()
         raise ConnectionError(f"Não foi possível conectar ao DB: {e}") from e
 
     progress_callback("Aplicando a atualização...", 70)

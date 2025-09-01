@@ -1,0 +1,34 @@
+2025-09-01 08:25:09 - [INFO] - utilitarios.py:288 - ==================================================
+2025-09-01 08:25:09 - [INFO] - utilitarios.py:289 - Logging configurado. Arquivo de log em: C:\Users\Luma\Documents\GitHub\Tabela-de-dobra\logs\app.log
+2025-09-01 08:25:09 - [INFO] - app.py:412 - Iniciando a aplicação v2.4.0...
+2025-09-01 08:25:09 - [INFO] - banco_dados.py:122 - Inicializando o banco de dados e criando tabelas.
+2025-09-01 08:25:09 - [INFO] - session_manager.py:73 - Limpando sessões inativas mais antigas que 2025-09-01 11:23:09
+2025-09-01 08:25:09 - [INFO] - session_manager.py:88 - Nenhuma sessão inativa encontrada.
+2025-09-01 08:25:09 - [INFO] - update_manager.py:57 - Atualizando a versão no DB de 2.3.1 para 2.4.0
+2025-09-01 08:25:09 - [INFO] - app.py:94 - Carregando configurações de C:\Users\Luma\Documents\Calculadora de Dobra\config.json
+2025-09-01 08:25:09 - [INFO] - estilo.py:127 - Tema inicial 'dark' aplicado com correções de CSS.
+2025-09-01 08:25:09 - [INFO] - app.py:163 - Configurando a janela principal.
+2025-09-01 08:25:09 - [INFO] - app.py:196 - Configuração da janela principal concluída.
+2025-09-01 08:25:09 - [INFO] - app.py:339 - Configurando os frames da UI.
+2025-09-01 08:25:09 - [INFO] - interface_manager.py:92 - Iniciando carregamento da interface: EXP_V=False, EXP_H=False
+2025-09-01 08:25:09 - [INFO] - interface_manager.py:125 - Primeira execução - não há widgets para capturar
+2025-09-01 08:25:09 - [INFO] - interface_manager.py:128 - Limpando layout anterior...
+2025-09-01 08:25:09 - [INFO] - interface_manager.py:131 - Limpando referências globais...
+2025-09-01 08:25:09 - [INFO] - interface_manager.py:139 - Criando novos widgets...
+2025-09-01 08:25:10 - [INFO] - interface_manager.py:163 - Configurando layout...
+2025-09-01 08:25:10 - [INFO] - interface_manager.py:179 - Executando todas as funções de preenchimento...
+2025-09-01 08:25:10 - [INFO] - interface_manager.py:189 - Restaurando estado dos widgets...
+2025-09-01 08:25:10 - [INFO] - interface_manager.py:193 - Recalculando valores finais...
+2025-09-01 08:25:10 - [INFO] - interface_manager.py:196 - Interface carregada com sucesso!
+2025-09-01 08:25:10 - [INFO] - app.py:365 - Configuração dos frames concluída.
+2025-09-01 08:25:10 - [INFO] - session_manager.py:31 - Registrando nova sessão: ID eb687964-a53f-4dec-a407-bcfe5b7437fe para host LL21
+2025-09-01 08:25:10 - [INFO] - app.py:81 - Verificando se existe um administrador.
+2025-09-01 08:25:10 - [INFO] - app.py:89 - Administrador encontrado.
+2025-09-01 08:25:10 - [INFO] - app.py:436 - Aplicativo iniciado. Entrando no loop de eventos.
+2025-09-01 08:25:19 - [INFO] - app.py:124 - Salvando estado final do aplicativo.
+2025-09-01 08:25:19 - [INFO] - app.py:94 - Carregando configurações de C:\Users\Luma\Documents\Calculadora de Dobra\config.json
+2025-09-01 08:25:19 - [INFO] - app.py:106 - Salvando configurações em C:\Users\Luma\Documents\Calculadora de Dobra\config.json
+2025-09-01 08:25:19 - [INFO] - app.py:135 - Estado final salvo com geometria: +-1294+158
+2025-09-01 08:25:19 - [INFO] - session_manager.py:49 - Removendo sessão: ID eb687964-a53f-4dec-a407-bcfe5b7437fe
+2025-09-01 08:25:19 - [INFO] - session_manager.py:56 - Sessão eb687964-a53f-4dec-a407-bcfe5b7437fe removida com sucesso.
+2025-09-01 08:25:19 - [INFO] - app.py:453 - Aplicação finalizada.

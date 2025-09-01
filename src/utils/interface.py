@@ -21,7 +21,7 @@ from PySide6.QtWidgets import QTreeWidgetItem
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
-from src.utils.banco_dados import session
+from src.utils.banco_dados import Session
 from src.utils.widget import WidgetManager
 
 # pylint: disable=R0902
@@ -123,7 +123,7 @@ class ListManager:
             return
 
         lista_widget.clear()
-        itens = session.query(config["modelo"]).order_by(config["ordem"]).all()
+        itens = Session.query(config["modelo"]).order_by(config["ordem"]).all()
 
         for item in itens:
             if tipo == "dedução" and not all(
@@ -225,7 +225,7 @@ class WidgetUpdater:
             current_value = g.MAT_COMB.currentText()
             g.MAT_COMB.clear()
             materiais = [
-                m.nome for m in session.query(Material).order_by(Material.nome).all()
+                m.nome for m in Session.query(Material).order_by(Material.nome).all()
             ]
             g.MAT_COMB.addItems(materiais)
             index = g.MAT_COMB.findText(current_value)
@@ -238,11 +238,11 @@ class WidgetUpdater:
             material_nome = WidgetManager.get_widget_value(g.MAT_COMB)
             if material_nome:
                 material_obj = (
-                    session.query(Material).filter_by(nome=material_nome).first()
+                    Session.query(Material).filter_by(nome=material_nome).first()
                 )
                 if material_obj:
                     espessuras = (
-                        session.query(Espessura)
+                        Session.query(Espessura)
                         .join(Deducao)
                         .filter(Deducao.material_id == material_obj.id)
                         .order_by(Espessura.valor)
@@ -262,16 +262,16 @@ class WidgetUpdater:
             if material_nome and espessura_valor:
                 try:
                     espessura_obj = (
-                        session.query(Espessura)
+                        Session.query(Espessura)
                         .filter_by(valor=float(espessura_valor))
                         .first()
                     )
                     material_obj = (
-                        session.query(Material).filter_by(nome=material_nome).first()
+                        Session.query(Material).filter_by(nome=material_nome).first()
                     )
                     if espessura_obj and material_obj:
                         canais = (
-                            session.query(Canal)
+                            Session.query(Canal)
                             .join(Deducao)
                             .filter(
                                 Deducao.espessura_id == espessura_obj.id,
@@ -312,7 +312,7 @@ class FormWidgetUpdater:
         """Atualiza o combobox de material no formulário de dedução."""
         if hasattr(g, "DED_MATER_COMB") and g.DED_MATER_COMB:
             materiais = [
-                m.nome for m in session.query(Material).order_by(Material.nome).all()
+                m.nome for m in Session.query(Material).order_by(Material.nome).all()
             ]
             current_value_form = g.DED_MATER_COMB.currentText()
             g.DED_MATER_COMB.clear()
@@ -327,7 +327,7 @@ class FormWidgetUpdater:
         if hasattr(g, "DED_ESPES_COMB") and g.DED_ESPES_COMB:
             espessuras = [
                 str(e.valor)
-                for e in session.query(Espessura).order_by(Espessura.valor).all()
+                for e in Session.query(Espessura).order_by(Espessura.valor).all()
             ]
             g.DED_ESPES_COMB.clear()
             g.DED_ESPES_COMB.addItems(espessuras)
@@ -337,7 +337,7 @@ class FormWidgetUpdater:
         """Atualiza o combobox de canal no formulário de dedução."""
         if hasattr(g, "DED_CANAL_COMB") and g.DED_CANAL_COMB:
             canais = [
-                str(c.valor) for c in session.query(Canal).order_by(Canal.valor).all()
+                str(c.valor) for c in Session.query(Canal).order_by(Canal.valor).all()
             ]
             g.DED_CANAL_COMB.clear()
             g.DED_CANAL_COMB.addItems(canais)
@@ -773,7 +773,7 @@ def canal_tooltip():
     if not canal_str:
         g.CANAL_COMB.setToolTip("Selecione o canal de dobra.")
         return
-    canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
+    canal_obj = Session.query(Canal).filter_by(valor=canal_str).first()
     if canal_obj:
         obs = getattr(canal_obj, "observacao", "N/A")
         comp = getattr(canal_obj, "comprimento_total", "N/A")

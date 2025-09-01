@@ -18,7 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material
 from src.utils.banco_dados import registrar_log
-from src.utils.banco_dados import session as db_session
+from src.utils.banco_dados import Session as db_session
 from src.utils.banco_dados import tratativa_erro
 
 

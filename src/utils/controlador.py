@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QTreeWidgetItem
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material
 from src.utils import operacoes_crud
-from src.utils.banco_dados import session
+from src.utils.banco_dados import Session
 
 # --- INÍCIO DA ALTERAÇÃO ---
 # A invalidação de cache agora é importada diretamente do gerenciador de cache.
@@ -265,7 +265,7 @@ def _item_selecionado(tipo):
             espessura_valor = float(selected_item.text(1))
             canal_valor = selected_item.text(2)
             obj = (
-                session.query(Deducao)
+                Session.query(Deducao)
                 .join(Material)
                 .join(Espessura)
                 .join(Canal)
@@ -278,15 +278,15 @@ def _item_selecionado(tipo):
             )
         elif tipo == "material":
             nome = selected_item.text(0)
-            obj = session.query(Material).filter_by(nome=nome).first()
+            obj = Session.query(Material).filter_by(nome=nome).first()
 
         elif tipo == "canal":
             valor = selected_item.text(0)
-            obj = session.query(Canal).filter_by(valor=valor).first()
+            obj = Session.query(Canal).filter_by(valor=valor).first()
 
         elif tipo == "espessura":
             valor = float(selected_item.text(0))
-            obj = session.query(Espessura).filter_by(valor=valor).first()
+            obj = Session.query(Espessura).filter_by(valor=valor).first()
 
     except (AttributeError, ValueError, TypeError, IndexError) as e:
         show_error("Erro", f"Erro ao buscar item selecionado: {str(e)}")
@@ -304,7 +304,7 @@ def _buscar_deducoes(config):
         ),
         "canal": WidgetManager.get_widget_value(config["entries"]["canal_combo"]),
     }
-    query = session.query(Deducao).join(Material).join(Espessura).join(Canal)
+    query = Session.query(Deducao).join(Material).join(Espessura).join(Canal)
     if criterios["material"]:
         query = query.filter(Material.nome == criterios["material"])
     if criterios["espessura"]:
@@ -342,7 +342,7 @@ def buscar(tipo):
 
         campo_busca = config.get("campo_busca")
         itens = (
-            session.query(config["modelo"]).filter(campo_busca.like(f"{termo}%")).all()
+            Session.query(config["modelo"]).filter(campo_busca.like(f"{termo}%")).all()
         )
 
     # Preencher a lista com os resultados

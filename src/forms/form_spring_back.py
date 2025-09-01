@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models.models import Material
-from src.utils.banco_dados import session
+from src.utils.banco_dados import Session
 from src.utils.estilo import obter_tema_atual
 
 
@@ -42,7 +42,7 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     conteudo = QWidget()
     layout = QGridLayout(conteudo)
 
-    materiais = [str(material.nome) for material in session.query(Material).all()]
+    materiais = [str(material.nome) for material in Session.query(Material).all()]
 
     layout.addWidget(QLabel("Material:"), 0, 0)
     g.MAT_COMB = QComboBox()

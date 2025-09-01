@@ -42,7 +42,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models.models import SystemControl, Usuario
-from src.utils.banco_dados import session
+from src.utils.banco_dados import Session
 from src.utils.controlador import buscar
 from src.utils.estilo import (
     aplicar_estilo_botao,
@@ -146,7 +146,7 @@ class AdminAuthWidget(QWidget):
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         try:
             user = (
-                session.query(Usuario)
+                Session.query(Usuario)
                 .filter_by(nome=username, senha=hashed_password)
                 .first()
             )
@@ -162,7 +162,7 @@ class AdminAuthWidget(QWidget):
                 self.senha_entry.clear()
         except SQLAlchemyError as e:
             logging.error("Erro de banco de dados no login: %s", e)
-            session.rollback()
+            Session.rollback()
             show_error(
                 "Erro de Banco de Dados", "Não foi possível conectar.", parent=self
             )
@@ -277,11 +277,11 @@ class InstancesWidget(QWidget):
         success = False
         try:
             success = force_shutdown_all_instances(
-                session, SystemControl, self._update_shutdown_status
+                Session, SystemControl, self._update_shutdown_status
             )
         except SQLAlchemyError as e:
             logging.error("Erro de DB no shutdown: %s", e)
-            session.rollback()
+            Session.rollback()
             show_error(
                 "Erro de DB",
                 "Não foi possível conectar ao banco de dados.",
@@ -506,7 +506,7 @@ class UserManagementWidget(QWidget):
         """Busca os usuários no banco de dados e atualiza a lista na interface."""
         try:
             self.list_usuario.clear()
-            usuarios = session.query(Usuario).order_by(Usuario.nome).all()
+            usuarios = Session.query(Usuario).order_by(Usuario.nome).all()
             for usuario in usuarios:
                 senha_resetada = "Sim" if usuario.senha == "nova_senha" else "Não"
                 item = QTreeWidgetItem(

@@ -37,7 +37,7 @@ from src.forms.form_universal import form_espessura_main as FormEspessura
 from src.forms.form_universal import form_material_main as FormMaterial
 from src.models.models import Usuario
 from src.utils.banco_dados import inicializar_banco_dados
-from src.utils.banco_dados import session as db_session
+from src.utils.banco_dados import Session as db_session
 from src.utils.estilo import (
     aplicar_tema_inicial,
     aplicar_tema_qdarktheme,
