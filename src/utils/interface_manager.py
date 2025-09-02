@@ -25,23 +25,16 @@ def safe_process_events():
 
 
 def safe_clear_layout(layout):
-    """
-    Limpa um layout de forma segura, deletando widgets adequadamente.
-
-    Args:
-        layout: Layout a ser limpo
-    """
+    """Limpa um layout de forma segura, deletando widgets adequadamente."""
     if not hasattr(layout, "count"):
         return
 
-    # Primeiro, remover todos os itens do layout
     items_to_remove = []
     while layout.count():
         item = layout.takeAt(0)
         if item:
             items_to_remove.append(item)
 
-    # Depois, deletar os widgets
     for item in items_to_remove:
         if item:
             widget = item.widget()
@@ -49,19 +42,15 @@ def safe_clear_layout(layout):
                 widget.setParent(None)
                 widget.hide()
                 widget.deleteLater()
-
-    # Forçar processamento para garantir limpeza
     safe_process_events()
 
 
 def clear_global_widget_references():
     """Limpa referências globais de widgets antes da recriação."""
     widget_names = WIDGET_CABECALHO.copy()
-
-    # Limpar widgets de dobras dinamicamente
     if tem_configuracao_dobras_valida():
         for w in g.VALORES_W:
-            for i in range(1, 11):  # Limpar até o máximo de abas possível
+            for i in range(1, 11):
                 widget_names.extend(
                     [
                         f"aba{i}_entry_{w}",
@@ -77,38 +66,25 @@ def clear_global_widget_references():
 
 
 def carregar_interface(var, layout):
-    """
-    Atualiza o cabeçalho e recria os widgets no layout com base no valor de var.
-    A atualização da interface é bloqueada para acelerar o processo.
-    """
+    """Atualiza e recria os widgets no layout com base no valor de var."""
     if not g.PRINC_FORM:
         return
 
     try:
-        # OTIMIZAÇÃO: Desabilita a atualização da UI para evitar repinturas custosas
         g.PRINC_FORM.setUpdatesEnabled(False)
         g.INTERFACE_RELOADING = True
 
-        logging.info(
-            "Iniciando carregamento da interface: EXP_V=%s, EXP_H=%s", g.EXP_V, g.EXP_H
-        )
-
-        # 1. Capturar e limpar estado anterior
         _preparar_interface_reload(layout)
-
         _criar_widgets_interface(var, layout)
-
         _configurar_layout_interface(layout)
-
         _finalizar_interface_reload()
 
     except RuntimeError as e:
         _tratar_erro_interface_reload(e)
     finally:
-        # OTIMIZAÇÃO: Reabilita a atualização da UI e força uma repintura imediata
         if g.PRINC_FORM:
             g.PRINC_FORM.setUpdatesEnabled(True)
-            g.PRINC_FORM.repaint()  # Força a repintura imediata dos widgets
+            g.PRINC_FORM.repaint()
             app = QApplication.instance()
             if app:
                 app.processEvents()
@@ -117,89 +93,56 @@ def carregar_interface(var, layout):
 
 def _preparar_interface_reload(layout):
     """Prepara a interface para recarregamento."""
-    # Capturar estado atual dos widgets
     if hasattr(g, "MAT_COMB") and g.MAT_COMB is not None:
-        logging.info("Capturando estado atual dos widgets...")
         widget_state_manager.capture_current_state()
-    else:
-        logging.info("Primeira execução - não há widgets para capturar")
 
-    # Limpar widgets antigos
-    logging.info("Limpando layout anterior...")
     safe_clear_layout(layout)
-
-    logging.info("Limpando referências globais...")
     clear_global_widget_references()
-
     safe_process_events()
 
 
 def _criar_widgets_interface(var, layout):
     """Cria os widgets da interface."""
-    logging.info("Criando novos widgets...")
-
-    # Cabeçalho principal
-    cabecalho_widget = cabecalho()
-    layout.addWidget(cabecalho_widget, 0, 0)
-
-    # Avisos se necessário (expandido horizontalmente)
+    layout.addWidget(cabecalho(), 0, 0)
     if var == 2:
-        avisos_widget = avisos()
-        layout.addWidget(avisos_widget, 0, 1)
+        layout.addWidget(avisos(), 0, 1)
 
     num_abas = 10 if g.EXP_V else 5
     g.N = num_abas + 1
 
     for i, w_val in enumerate(g.VALORES_W):
-        dobras_widget = dobras(w_val)
-        layout.addWidget(dobras_widget, 1, i)
+        layout.addWidget(dobras(w_val), 1, i)
 
-    botoes_widget = botoes.criar_botoes()
-    layout.addWidget(botoes_widget, 2, 0, 1, len(g.VALORES_W))
+    layout.addWidget(botoes.criar_botoes(), 2, 0, 1, len(g.VALORES_W))
 
 
 def _configurar_layout_interface(layout):
     """Configura o layout da interface."""
-    logging.info("Configurando layout...")
-    layout.setRowStretch(0, 0)  # Cabeçalho: tamanho fixo
-    layout.setRowStretch(1, 1)  # Dobras: expansível
-    layout.setRowStretch(2, 0)  # Botões: tamanho fixo
+    layout.setRowStretch(0, 0)
+    layout.setRowStretch(1, 1)
+    layout.setRowStretch(2, 0)
     layout.setSpacing(0)
     layout.setContentsMargins(0, 0, 0, 0)
-
-    # Configurar colunas
     for col in range(layout.columnCount()):
         layout.setColumnStretch(col, 0 if col > len(g.VALORES_W) - 1 else 1)
 
 
 def _finalizar_interface_reload():
     """Finaliza o recarregamento da interface."""
-    # Desabilitar gerenciamento de estado durante `todas_funcoes` para evitar loops
     widget_state_manager.disable()
-    logging.info("Executando todas as funções de preenchimento...")
     try:
         todas_funcoes()
     except RuntimeError as e:
-        logging.error("Erro ao executar todas as funções: %s", e)
-        logging.debug("Detalhes do erro:", exc_info=True)
+        logging.error("Erro ao executar todas as funções: %s", e, exc_info=True)
     finally:
         widget_state_manager.enable()
 
-    # Restaurar estado dos widgets
-    logging.info("Restaurando estado dos widgets...")
     widget_state_manager.restore_widget_state()
-
-    # Recalcular todos os valores com base no estado restaurado
-    logging.info("Recalculando valores finais...")
     calcular_valores()
-
-    logging.info("Interface carregada com sucesso!")
-    logging.debug("Cache info: %s", widget_state_manager.get_cache_info())
 
 
 def _tratar_erro_interface_reload(e):
     """Trata erros durante o recarregamento da interface."""
     widget_state_manager.enable()
     g.INTERFACE_RELOADING = False
-    logging.critical("ERRO CRÍTICO no carregamento da interface: %s", e)
-    logging.debug("Detalhes do erro:", exc_info=True)
+    logging.critical("ERRO CRÍTICO no carregamento da interface: %s", e, exc_info=True)

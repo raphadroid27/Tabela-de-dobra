@@ -37,8 +37,7 @@ from src.forms.form_universal import form_espessura_main as FormEspessura
 from src.forms.form_universal import form_material_main as FormMaterial
 from src.models.models import Usuario
 from src.utils import ipc_manager
-from src.utils.banco_dados import inicializar_banco_dados
-from src.utils.banco_dados import session as db_session
+from src.utils.banco_dados import get_session, inicializar_banco_dados
 from src.utils.estilo import (
     aplicar_tema_inicial,
     aplicar_tema_qdarktheme,
@@ -80,14 +79,21 @@ TIMER_SISTEMA = QTimer()
 def verificar_admin_existente():
     """Verifica se existe um administrador cadastrado."""
     logging.info("Verificando se existe um administrador.")
-    admin_existente = db_session.query(Usuario).filter(Usuario.role == "admin").first()
-    if not admin_existente:
-        logging.warning(
-            "Nenhum administrador encontrado. Abrindo formulário de autorização."
-        )
-        form_aut.main(g.PRINC_FORM)
-    else:
-        logging.info("Administrador encontrado.")
+    try:
+        with get_session() as session:
+            admin_existente = (
+                session.query(Usuario).filter(Usuario.role == "admin").first()
+            )
+            if not admin_existente:
+                logging.warning(
+                    "Nenhum administrador encontrado. Abrindo formulário de autorização."
+                )
+                form_aut.main(g.PRINC_FORM)
+            else:
+                logging.info("Administrador encontrado.")
+    except SQLAlchemyError as e:
+        logging.critical("Não foi possível verificar administrador no DB: %s", e)
+        fechar_aplicativo()
 
 
 def carregar_configuracao():
@@ -412,12 +418,8 @@ def main():
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
 
-        # Garante que os diretórios de IPC existam antes de qualquer operação
         ipc_manager.ensure_ipc_dirs_exist()
-
         inicializar_banco_dados()
-
-        # Limpa sessões antigas e comandos pendentes de execuções anteriores
         limpar_sessoes_inativas()
         ipc_manager.clear_all_commands()
 
@@ -445,21 +447,14 @@ def main():
 
         logging.critical("ERRO FATAL: A janela principal não foi criada!")
         return 1
-    except (
-        RuntimeError,
-        SQLAlchemyError,
-        ImportError,
-        FileNotFoundError,
-        OSError,
-    ) as e:
+    except SQLAlchemyError as e:
+        logging.critical("ERRO CRÍTICO na inicialização (DB): %s", e, exc_info=True)
+    except (OSError, IOError, json.JSONDecodeError, RuntimeError) as e:
         logging.critical("ERRO CRÍTICO na inicialização: %s", e, exc_info=True)
-        if app:
-            app.quit()
-        return 1
-    finally:
-        logging.info("Aplicação finalizada.")
-        if db_session:
-            db_session.close()
+
+    if app:
+        app.quit()
+    return 1
 
 
 if __name__ == "__main__":

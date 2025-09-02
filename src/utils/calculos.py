@@ -11,28 +11,18 @@ import re
 from math import pi
 from typing import List
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material
-from src.utils.banco_dados import session
-
-# --- FUNÇÕES DE CONVERSÃO DE DADOS ---
+from src.utils.banco_dados import get_session
 
 
 def converter_para_float(valor_str: str, default_value: float = 0.0) -> float:
-    """
-    Converte uma string para float, tratando vírgulas e valores vazios.
-
-    Args:
-        valor_str (str): A string a ser convertida.
-        default_value (float): Valor padrão em caso de falha na conversão.
-
-    Returns:
-        float: O valor convertido.
-    """
+    """Converte uma string para float, tratando vírgulas e valores vazios."""
     if not isinstance(valor_str, str) or not valor_str.strip():
         return default_value
     try:
-        # Remove " Copiado!" e substitui vírgula por ponto
         return float(valor_str.replace(" Copiado!", "").replace(",", "."))
     except (ValueError, TypeError):
         return default_value
@@ -46,50 +36,35 @@ def _extrair_valor_canal(canal_str):
     return float(numeros[0]) if numeros else None
 
 
-# --- CLASSES DE CÁLCULO (INDEPENDENTES DA UI) ---
-
-
 class CalculoDeducaoDB:
     """Busca a dedução e observação do banco de dados."""
 
     def buscar(self, material_nome: str, espessura_str: str, canal_valor: str):
-        """
-        Busca a dedução no banco de dados com base nos valores fornecidos.
-
-        Returns:
-            dict: {'valor': float/str, 'obs': str} ou None
-        """
+        """Busca a dedução no banco de dados."""
         if not all([material_nome, espessura_str, canal_valor]):
             return None
 
         try:
-            espessura_valor = float(espessura_str)
-            espessura_obj = (
-                session.query(Espessura).filter_by(valor=espessura_valor).first()
-            )
-            material_obj = session.query(Material).filter_by(nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-
-            # Consulta otimizada usando JOIN para reduzir queries
-            resultado = (
-                session.query(Deducao, Material, Espessura, Canal)
-                .join(Material, Deducao.material_id == Material.id)
-                .join(Espessura, Deducao.espessura_id == Espessura.id)
-                .join(Canal, Deducao.canal_id == Canal.id)
-                .filter(
-                    Deducao.espessura_id == espessura_obj.id,
-                    Deducao.material_id == material_obj.id,
-                    Deducao.canal_id == canal_obj.id,
+            with get_session() as session:
+                espessura_valor_float = float(espessura_str)
+                resultado = (
+                    session.query(Deducao)
+                    .join(Material)
+                    .join(Espessura)
+                    .join(Canal)
+                    .filter(
+                        Material.nome == material_nome,
+                        Espessura.valor == espessura_valor_float,
+                        Canal.valor == canal_valor,
+                    )
+                    .first()
                 )
-                .first()
-            )
 
-            if resultado:
-                deducao_obj = resultado[0]  # Deducao é o primeiro da tupla
-                return {"valor": deducao_obj.valor, "obs": deducao_obj.observacao or ""}
-            return {"valor": "N/A", "obs": "Dedução não encontrada."}
+                if resultado:
+                    return {"valor": resultado.valor, "obs": resultado.observacao or ""}
+                return {"valor": "N/A", "obs": "Dedução não encontrada."}
 
-        except (ValueError, TypeError):
+        except (SQLAlchemyError, ValueError, TypeError):
             return None
 
 
@@ -122,9 +97,7 @@ class CalculoFatorK:
         return g.RAIO_K[razoes[-1]]
 
     def calcular(self, espessura: float, raio_interno: float, deducao_usada: float):
-        """
-        Executa o cálculo do Fator K e Offset.
-        """
+        """Executa o cálculo do Fator K e Offset."""
         if raio_interno <= 0 or espessura <= 0:
             return None
 
@@ -142,17 +115,12 @@ class CalculoAbaMinima:
     """Calcula a aba mínima externa."""
 
     def calcular(self, canal_str: str, espessura: float):
-        """
-        Executa o cálculo da aba mínima externa.
-        """
+        """Executa o cálculo da aba mínima externa."""
         if not canal_str or espessura <= 0:
             return None
-
-        # CORREÇÃO: Usa a função _extrair_valor_canal para obter o número
         valor_canal = _extrair_valor_canal(canal_str)
         if valor_canal is None:
             return None
-
         return (valor_canal / 2) + espessura + 2
 
 
@@ -160,29 +128,26 @@ class CalculoZMinimo:
     """Calcula o Z mínimo externo."""
 
     def calcular(self, espessura: float, deducao: float, canal_str: str):
-        """
-        Executa o cálculo do Z mínimo externo.
-        """
+        """Executa o cálculo do Z mínimo externo."""
         if espessura <= 0 or deducao <= 0 or not canal_str:
             return None
-
-        canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
-        if not canal_obj or canal_obj.largura is None:
+        try:
+            with get_session() as session:
+                canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
+                if not canal_obj or canal_obj.largura is None:
+                    return None
+                return espessura + (deducao / 2) + (canal_obj.largura / 2) + 2
+        except SQLAlchemyError:
             return None
-
-        return espessura + (deducao / 2) + (canal_obj.largura / 2) + 2
 
 
 class CalculoRazaoRIE:
     """Calcula a razão entre Raio Interno e Espessura."""
 
     def calcular(self, espessura: float, raio_interno: float):
-        """
-        Executa o cálculo da razão RI/E.
-        """
+        """Executa o cálculo da razão RI/E."""
         if espessura <= 0 or raio_interno <= 0:
             return None
-
         razao = raio_interno / espessura
         return min(razao, 10.0)
 
@@ -191,48 +156,48 @@ class CalculoForca:
     """Calcula a força de dobra necessária."""
 
     @staticmethod
-    def _obter_forca_db(espessura_valor, material_nome, canal_valor):
+    def _obter_forca_db(session, espessura_valor, material_nome, canal_valor):
         """Busca o valor da força no banco de dados."""
-        try:
-            espessura_obj = (
-                session.query(Espessura).filter_by(valor=espessura_valor).first()
+
+        deducao_obj = (
+            # pylint: disable=R0801
+            session.query(Deducao)
+            .join(Material)
+            .join(Espessura)
+            .join(Canal)
+            .filter(
+                Material.nome == material_nome,
+                Espessura.valor == espessura_valor,
+                Canal.valor == canal_valor,
             )
-            material_obj = session.query(Material).filter_by(nome=material_nome).first()
-            canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
-
-            if not all([espessura_obj, material_obj, canal_obj]):
-                return None, None
-
-            deducao_obj = (
-                session.query(Deducao)
-                .filter(
-                    Deducao.espessura_id == espessura_obj.id,
-                    Deducao.material_id == material_obj.id,
-                    Deducao.canal_id == canal_obj.id,
-                )
-                .first()
-            )
-
-            return deducao_obj.forca if deducao_obj else None, canal_obj
-        except (AttributeError, TypeError, ValueError):
-            return None, None
+            .first()
+        )
+        canal_obj = session.query(Canal).filter_by(valor=canal_valor).first()
+        return (deducao_obj.forca if deducao_obj else None), canal_obj
 
     def calcular(self, comprimento: float, espessura: float, material: str, canal: str):
-        """
-        Executa o cálculo da força em toneladas/m.
-        """
+        """Executa o cálculo da força em toneladas/m."""
         if not all([espessura, material, canal]):
             return None
-
-        forca_base, canal_obj = self._obter_forca_db(espessura, material, canal)
-
-        if forca_base is None:
-            return {"forca": None, "canal_obj": canal_obj}
-
-        toneladas_m = (
-            (forca_base * comprimento) / 1000 if comprimento > 0 else forca_base
-        )
-        return {"forca": toneladas_m, "canal_obj": canal_obj}
+        try:
+            with get_session() as session:
+                forca_base, canal_obj = self._obter_forca_db(
+                    session, espessura, material, canal
+                )
+                if forca_base is None:
+                    return {"forca": None, "canal_obj": None, "comprimento_total": None}
+                toneladas_m = (
+                    (forca_base * comprimento) / 1000 if comprimento > 0 else forca_base
+                )
+                # Extrair o valor do comprimento_total antes de fechar a sessão
+                comprimento_total = canal_obj.comprimento_total if canal_obj else None
+                return {
+                    "forca": toneladas_m,
+                    "canal_obj": canal_obj,
+                    "comprimento_total": comprimento_total,
+                }
+        except SQLAlchemyError:
+            return {"forca": None, "canal_obj": None, "comprimento_total": None}
 
 
 class CalculoDobra:
@@ -242,36 +207,22 @@ class CalculoDobra:
     def _calcular_medida_individual(
         valor_dobra, deducao, pos_atual, blocos_preenchidos
     ):
-        """
-        Calcula a medida de uma única dobra, considerando sua posição no bloco.
-        """
-        bloco_encontrado = None
+        """Calcula a medida de uma única dobra."""
         for bloco in blocos_preenchidos:
             if pos_atual in bloco:
-                bloco_encontrado = bloco
-                break
-
-        if bloco_encontrado is None:
-            return 0.0
-
-        pos_no_bloco = bloco_encontrado.index(pos_atual)
-
-        # PYLINT R1714: Corrigido para usar 'in'
-        if len(bloco_encontrado) == 1 or pos_no_bloco in (0, len(bloco_encontrado) - 1):
-            return valor_dobra - deducao / 2
-
-        return valor_dobra - deducao
+                pos_no_bloco = bloco.index(pos_atual)
+                if len(bloco) == 1 or pos_no_bloco in (0, len(bloco) - 1):
+                    return valor_dobra - deducao / 2
+                return valor_dobra - deducao
+        return 0.0
 
     def calcular_coluna(self, valores_dobras: List[float], deducao: float):
-        """
-        Calcula todas as dobras e o blank para uma coluna específica.
-        """
+        """Calcula todas as dobras e o blank para uma coluna."""
         if deducao <= 0:
             return None
 
         preenchidos = [v > 0 for v in valores_dobras]
-        blocos = []
-        bloco_atual = []
+        blocos, bloco_atual = [], []
         for i, preenchido in enumerate(preenchidos):
             if preenchido:
                 bloco_atual.append(i)
@@ -281,16 +232,13 @@ class CalculoDobra:
         if bloco_atual:
             blocos.append(bloco_atual)
 
-        resultados = []
-        blank_total = 0
+        resultados, blank_total = [], 0
         for i, dobra_valor in enumerate(valores_dobras):
             if dobra_valor <= 0:
                 resultados.append({"medida": None, "metade": None})
                 continue
-
             medida = self._calcular_medida_individual(dobra_valor, deducao, i, blocos)
             metade = medida / 2
             blank_total += medida
             resultados.append({"medida": medida, "metade": metade})
-
         return {"resultados": resultados, "blank_total": blank_total}

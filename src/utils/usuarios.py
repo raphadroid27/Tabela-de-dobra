@@ -1,6 +1,6 @@
 """
-Módulo utilitário para gerenciamento de usuários no aplicativo de cálculo de dobras.
-Contém a lógica centralizada para criação, autenticação e manipulação de usuários.
+Módulo utilitário para gerenciamento de usuários (Refatorado)
+Atualizado para usar o padrão de sessão por operação.
 """
 
 import hashlib
@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
 from src.models.models import Usuario
-from src.utils.banco_dados import session, tratativa_erro
+from src.utils.banco_dados import get_session
 from src.utils.interface import obter_configuracoes
 from src.utils.janelas import Janela
 from src.utils.utilitarios import (
@@ -35,22 +35,25 @@ def novo_usuario():
         show_error("Erro", "Preencha todos os campos.")
         return
 
-    if session.query(Usuario).filter_by(nome=novo_usuario_nome).first():
-        show_error("Erro", "Usuário já existente.")
-        return
+    try:
+        with get_session() as session:
+            if session.query(Usuario).filter_by(nome=novo_usuario_nome).first():
+                show_error("Erro", "Usuário já existente.")
+                return
 
-    senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
-    role = g.ADMIN_VAR or "viewer"
-    usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=role)
-    session.add(usuario)
+            senha_hash = hashlib.sha256(novo_usuario_senha.encode()).hexdigest()
+            role = g.ADMIN_VAR or "viewer"
+            usuario = Usuario(nome=novo_usuario_nome, senha=senha_hash, role=role)
+            session.add(usuario)
 
-    tratativa_erro()
-    show_info("Sucesso", "Usuário cadastrado com sucesso.")
+        show_info("Sucesso", "Usuário cadastrado com sucesso.")
+        if g.AUTEN_FORM:
+            g.AUTEN_FORM.close()
+        Janela.estado_janelas(True)
 
-    if g.AUTEN_FORM:
-        g.AUTEN_FORM.close()
-
-    Janela.estado_janelas(True)
+    except SQLAlchemyError as e:
+        logging.error("Erro de DB ao criar usuário: %s", e)
+        show_error("Erro", "Não foi possível criar o usuário.")
 
 
 def login():
@@ -63,34 +66,43 @@ def login():
     usuario_senha = g.SENHA_ENTRY.text()
     parent_form = g.AUTEN_FORM
 
-    usuario_obj = session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
+    try:
+        with get_session() as session:
+            usuario_obj = session.query(Usuario).filter_by(nome=g.USUARIO_NOME).first()
 
-    if not usuario_obj:
-        show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
-        return
+            if not usuario_obj:
+                show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
+                return
 
-    if usuario_obj.senha == "nova_senha":
-        nova_senha = ask_string(
-            "Nova Senha", "Digite uma nova senha:", parent=parent_form
-        )
-        if nova_senha:
-            usuario_obj.senha = hashlib.sha256(nova_senha.encode()).hexdigest()
-            tratativa_erro()
-            show_info(
-                "Sucesso", "Senha alterada. Faça login novamente.", parent=parent_form
-            )
-    elif usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest():
-        show_info("Login", "Login efetuado com sucesso.", parent=parent_form)
-        g.USUARIO_ID = usuario_obj.id
-        if parent_form:
-            parent_form.close()
-        if g.PRINC_FORM:
-            titulo = f"Calculadora de Dobra - {usuario_obj.nome}"
-            g.PRINC_FORM.setWindowTitle(titulo)
-            if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
-                g.BARRA_TITULO.titulo.setText(titulo)
-    else:
-        show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
+            if usuario_obj.senha == "nova_senha":
+                nova_senha = ask_string(
+                    "Nova Senha", "Digite uma nova senha:", parent=parent_form
+                )
+                if nova_senha:
+                    usuario_obj.senha = hashlib.sha256(nova_senha.encode()).hexdigest()
+                    show_info(
+                        "Sucesso",
+                        "Senha alterada. Faça login novamente.",
+                        parent=parent_form,
+                    )
+            elif (
+                usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest()
+            ):
+                show_info("Login", "Login efetuado com sucesso.", parent=parent_form)
+                g.USUARIO_ID = usuario_obj.id
+                if parent_form:
+                    parent_form.close()
+                if g.PRINC_FORM:
+                    titulo = f"Calculadora de Dobra - {usuario_obj.nome}"
+                    g.PRINC_FORM.setWindowTitle(titulo)
+                    if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
+                        g.BARRA_TITULO.titulo.setText(titulo)
+            else:
+                show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
+
+    except SQLAlchemyError as e:
+        logging.error("Erro de DB no login: %s", e)
+        show_error("Erro", "Não foi possível realizar o login.", parent=parent_form)
 
     Janela.estado_janelas(True)
 
@@ -107,27 +119,29 @@ def logado(tipo):
 def tem_permissao(tipo, role_requerida, show_message=True):
     """Verifica se o usuário tem a permissão necessária."""
     config = obter_configuracoes()[tipo]
-    usuario_obj = session.query(Usuario).filter_by(id=g.USUARIO_ID).first()
-
-    if not usuario_obj:
-        if show_message:
-            show_warning("Aviso", "Você não tem permissão.", parent=config["form"])
-        return False
-
-    roles_hierarquia = ["viewer", "editor", "admin"]
     try:
-        required_index = roles_hierarquia.index(role_requerida)
-        user_index = roles_hierarquia.index(usuario_obj.role)
-    except ValueError:
-        if show_message:
-            show_error("Erro", "Role de usuário inválida encontrada.")
-        return False
+        with get_session() as session:
+            usuario_obj = session.get(Usuario, g.USUARIO_ID)
+            if not usuario_obj:
+                if show_message:
+                    show_warning(
+                        "Aviso", "Você não tem permissão.", parent=config["form"]
+                    )
+                return False
 
-    if user_index < required_index:
+            roles_hierarquia = ["viewer", "editor", "admin"]
+            required_index = roles_hierarquia.index(role_requerida)
+            user_index = roles_hierarquia.index(usuario_obj.role)
+
+            if user_index < required_index:
+                if show_message:
+                    show_error("Erro", f"Permissão '{role_requerida}' requerida.")
+                return False
+            return True
+    except (SQLAlchemyError, ValueError) as e:
         if show_message:
-            show_error("Erro", f"Permissão '{role_requerida}' requerida.")
+            show_error("Erro", f"Erro ao verificar permissão: {e}")
         return False
-    return True
 
 
 def logout():
@@ -168,17 +182,15 @@ def resetar_senha(parent=None):
         return False
 
     try:
-        usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-        if usuario_obj:
-            usuario_obj.senha = "nova_senha"
-            tratativa_erro()
-            show_info("Sucesso", "Senha resetada com sucesso.", parent=parent)
-            return True
-
-        show_error("Erro", "Usuário não encontrado.", parent=parent)
-        return False
+        with get_session() as session:
+            usuario_obj = session.get(Usuario, user_id)
+            if usuario_obj:
+                usuario_obj.senha = "nova_senha"
+                show_info("Sucesso", "Senha resetada com sucesso.", parent=parent)
+                return True
+            show_error("Erro", "Usuário não encontrado.", parent=parent)
+            return False
     except SQLAlchemyError as e:
-        session.rollback()
         logging.error("Erro de DB ao resetar senha: %s", e)
         show_error("Erro", f"Erro de banco de dados: {e}", parent=parent)
         return False
@@ -201,17 +213,15 @@ def excluir_usuario(parent=None):
         return False
 
     try:
-        usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-        if usuario_obj:
-            session.delete(usuario_obj)
-            tratativa_erro()
-            show_info("Sucesso", "Usuário excluído com sucesso!", parent=parent)
-            return True
-
-        show_error("Erro", "Usuário não encontrado para exclusão.", parent=parent)
-        return False
+        with get_session() as session:
+            usuario_obj = session.get(Usuario, user_id)
+            if usuario_obj:
+                session.delete(usuario_obj)
+                show_info("Sucesso", "Usuário excluído com sucesso!", parent=parent)
+                return True
+            show_error("Erro", "Usuário não encontrado para exclusão.", parent=parent)
+            return False
     except SQLAlchemyError as e:
-        session.rollback()
         logging.error("Erro de DB ao excluir usuário: %s", e)
         show_error(
             "Erro", f"Erro de banco de dados ao excluir usuário: {e}", parent=parent
@@ -233,34 +243,33 @@ def alternar_permissao_editor(parent=None):
         return False
 
     try:
-        usuario_obj = session.query(Usuario).filter_by(id=user_id).first()
-        if not usuario_obj:
-            show_error("Erro", "Usuário não encontrado.", parent=parent)
-            return False
+        with get_session() as session:
+            usuario_obj = session.get(Usuario, user_id)
+            if not usuario_obj:
+                show_error("Erro", "Usuário não encontrado.", parent=parent)
+                return False
 
-        if usuario_obj.role == "admin":
-            show_error(
-                "Erro",
-                "Não é possível alterar a permissão de um administrador.",
-                parent=parent,
-            )
-            return False
+            if usuario_obj.role == "admin":
+                show_error(
+                    "Erro",
+                    "Não é possível alterar a permissão de um administrador.",
+                    parent=parent,
+                )
+                return False
 
-        if usuario_obj.role == "editor":
-            nova_permissao = "viewer"
-            mensagem = (
-                f"Permissão do usuário '{usuario_obj.nome}' alterada para 'viewer'."
-            )
-        else:
-            nova_permissao = "editor"
-            mensagem = f"Usuário '{usuario_obj.nome}' promovido a 'editor'."
+            if usuario_obj.role == "editor":
+                nova_permissao = "viewer"
+                mensagem = (
+                    f"Permissão do usuário '{usuario_obj.nome}' alterada para 'viewer'."
+                )
+            else:
+                nova_permissao = "editor"
+                mensagem = f"Usuário '{usuario_obj.nome}' promovido a 'editor'."
 
-        usuario_obj.role = nova_permissao
-        tratativa_erro()
-        show_info("Sucesso", mensagem, parent=parent)
-        return True
+            usuario_obj.role = nova_permissao
+            show_info("Sucesso", mensagem, parent=parent)
+            return True
     except SQLAlchemyError as e:
-        session.rollback()
         logging.error("Erro de DB ao alterar permissão: %s", e)
         show_error("Erro", f"Erro de banco de dados: {e}", parent=parent)
         return False
