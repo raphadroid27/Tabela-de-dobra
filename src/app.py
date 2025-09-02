@@ -36,6 +36,7 @@ from src.forms.form_universal import form_deducao_main as FormDeducao
 from src.forms.form_universal import form_espessura_main as FormEspessura
 from src.forms.form_universal import form_material_main as FormMaterial
 from src.models.models import Usuario
+from src.utils import ipc_manager
 from src.utils.banco_dados import inicializar_banco_dados
 from src.utils.banco_dados import session as db_session
 from src.utils.estilo import (
@@ -67,7 +68,7 @@ from src.utils.utilitarios import (
 APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
 JANELA_PRINCIPAL_ALTURA = 513
-TIMER_SISTEMA_INTERVALO = 30000  # 30s
+TIMER_SISTEMA_INTERVALO = 10000  # 10s para verificação mais rápida de comandos
 LAYOUT_ESPACAMENTO = 0
 LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
@@ -410,9 +411,15 @@ def main():
     app = None
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
+
+        # Garante que os diretórios de IPC existam antes de qualquer operação
+        ipc_manager.ensure_ipc_dirs_exist()
+
         inicializar_banco_dados()
 
+        # Limpa sessões antigas e comandos pendentes de execuções anteriores
         limpar_sessoes_inativas()
+        ipc_manager.clear_all_commands()
 
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
