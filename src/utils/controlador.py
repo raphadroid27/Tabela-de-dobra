@@ -13,9 +13,10 @@ from PySide6.QtWidgets import QTreeWidgetItem
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
-from src.models.models import Canal, Deducao, Espessura, Material
+from src.models.models import Canal, Espessura, Material
 from src.utils import operacoes_crud
 from src.utils.banco_dados import get_session
+from src.utils.calculos import buscar_deducao_por_parametros
 from src.utils.interface import (
     atualizar_comboboxes_formulario,
     atualizar_widgets,
@@ -232,17 +233,8 @@ def _obter_item_selecionado_info(tipo):
                     float(selected_item.text(1)),
                     selected_item.text(2),
                 )
-                obj = (  # pylint: disable=R0801
-                    session.query(Deducao)
-                    .join(Material)
-                    .join(Espessura)
-                    .join(Canal)
-                    .filter(
-                        Material.nome == material_nome,
-                        Espessura.valor == espessura_valor,
-                        Canal.valor == canal_valor,
-                    )
-                    .first()
+                obj = buscar_deducao_por_parametros(
+                    session, material_nome, espessura_valor, canal_valor
                 )
             else:
                 identifier_val = selected_item.text(0)
