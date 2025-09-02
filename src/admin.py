@@ -192,6 +192,11 @@ class InstancesWidget(QWidget):
         self.tree_sessoes.setColumnWidth(0, 80)
         self.tree_sessoes.setColumnWidth(1, 130)
         self.tree_sessoes.setColumnWidth(2, 150)
+
+        # Habilitar ordenação por coluna e cores alternadas
+        self.tree_sessoes.setSortingEnabled(True)
+        self.tree_sessoes.setAlternatingRowColors(True)
+
         main_layout.addWidget(self.tree_sessoes)
 
         action_buttons = self._create_action_buttons()
@@ -530,6 +535,11 @@ class UserManagementWidget(QWidget):
         g.LIST_USUARIO.setColumnWidth(1, 120)
         g.LIST_USUARIO.setColumnWidth(2, 80)
         g.LIST_USUARIO.setColumnWidth(3, 100)
+
+        # Habilitar ordenação por coluna e cores alternadas
+        g.LIST_USUARIO.setSortingEnabled(True)
+        g.LIST_USUARIO.setAlternatingRowColors(True)
+
         main_layout.addWidget(g.LIST_USUARIO)
 
     def _create_action_buttons(self, main_layout):
