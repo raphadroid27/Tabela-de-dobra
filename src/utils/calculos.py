@@ -18,6 +18,35 @@ from src.models.models import Canal, Deducao, Espessura, Material
 from src.utils.banco_dados import get_session
 
 
+def buscar_deducao_por_parametros(
+    session, material_nome: str, espessura_valor: float, canal_valor: str
+):
+    """
+    Busca uma dedução no banco de dados usando os parâmetros fornecidos.
+
+    Args:
+        session: Sessão do SQLAlchemy
+        material_nome: Nome do material
+        espessura_valor: Valor da espessura (float)
+        canal_valor: Valor do canal
+
+    Returns:
+        Objeto Deducao ou None se não encontrado
+    """
+    return (
+        session.query(Deducao)
+        .join(Material)
+        .join(Espessura)
+        .join(Canal)
+        .filter(
+            Material.nome == material_nome,
+            Espessura.valor == espessura_valor,
+            Canal.valor == canal_valor,
+        )
+        .first()
+    )
+
+
 def converter_para_float(valor_str: str, default_value: float = 0.0) -> float:
     """Converte uma string para float, tratando vírgulas e valores vazios."""
     if not isinstance(valor_str, str) or not valor_str.strip():
@@ -47,17 +76,8 @@ class CalculoDeducaoDB:
         try:
             with get_session() as session:
                 espessura_valor_float = float(espessura_str)
-                resultado = (
-                    session.query(Deducao)
-                    .join(Material)
-                    .join(Espessura)
-                    .join(Canal)
-                    .filter(
-                        Material.nome == material_nome,
-                        Espessura.valor == espessura_valor_float,
-                        Canal.valor == canal_valor,
-                    )
-                    .first()
+                resultado = buscar_deducao_por_parametros(
+                    session, material_nome, espessura_valor_float, canal_valor
                 )
 
                 if resultado:
