@@ -9,7 +9,7 @@ Responsável por:
 import logging
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404 B603
 import time
 import zipfile
 from typing import Callable, Optional
@@ -120,7 +120,7 @@ def _start_application():
         return
     logging.info("Iniciando a aplicação: %s", APP_EXECUTABLE_PATH)
     try:
-        subprocess.Popen([APP_EXECUTABLE_PATH])  # pylint: disable=R1732
+        subprocess.Popen([APP_EXECUTABLE_PATH])  # nosec B603  # pylint: disable=R1732
     except OSError as e:
         show_error("Erro ao Reiniciar", f"Não foi possível reiniciar a aplicação:\n{e}")
 
