@@ -63,6 +63,11 @@ ICON_PATH = obter_dir_icone()
 # Diretório de logs
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 
+# Diretórios para comunicação entre processos (IPC)
+RUNTIME_DIR = os.path.join(BASE_DIR, ".runtime")
+SESSION_DIR = os.path.join(RUNTIME_DIR, "sessions")
+COMMAND_DIR = os.path.join(RUNTIME_DIR, "commands")
+
 
 # Margens e espaçamentos padrão para layouts
 MARGEM_PADRAO = 5
@@ -126,6 +131,7 @@ def ensure_dirs_exist() -> None:
     os.makedirs(DATABASE_DIR, exist_ok=True)
     os.makedirs(LOG_DIR, exist_ok=True)
     os.makedirs(CONFIG_DIR, exist_ok=True)
+    # Diretórios de IPC são criados pelo ipc_manager
 
 
 # Garante a criação dos diretórios na importação do módulo.

@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
-from src.models.models import Base, Log, SystemControl
+from src.models.models import Base, Log
 
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
@@ -54,19 +54,9 @@ def registrar_log(usuario_nome, acao, tabela, registro_id, detalhes=None):
 
 
 def inicializar_banco_dados():
-    """Cria as tabelas do banco de dados e registros iniciais, se necessário."""
+    """Cria as tabelas do banco de dados, se necessário."""
     logging.info("Inicializando o banco de dados e criando tabelas.")
     Base.metadata.create_all(engine)
 
-    # Usa uma sessão local para garantir a inicialização segura
-    db_session = Session()
-    try:
-        if not db_session.query(SystemControl).filter_by(key="UPDATE_CMD").first():
-            logging.info("Inicializando o comando de atualização (UPDATE_CMD) no DB.")
-            initial_command = SystemControl(
-                type="COMMAND", key="UPDATE_CMD", value="NONE"
-            )
-            db_session.add(initial_command)
-            db_session.commit()
-    finally:
-        db_session.close()
+    # Lógica de inicialização de SystemControl para comandos foi removida
+    # pois agora é gerenciada por arquivos.

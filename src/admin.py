@@ -41,7 +41,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.models.models import SystemControl, Usuario
+from src.models.models import Usuario
 from src.utils.banco_dados import session
 from src.utils.controlador import buscar
 from src.utils.estilo import (
@@ -239,7 +239,7 @@ class InstancesWidget(QWidget):
         """Inicializa os dados e o timer de atualização."""
         self._load_sessions()
         self.timer_atualizacao.timeout.connect(self._load_sessions)
-        self.timer_atualizacao.start(60000)
+        self.timer_atualizacao.start(10000)  # Atualiza a cada 10 segundos
 
     def _load_sessions(self):
         """Carrega e exibe as sessões ativas."""
@@ -276,15 +276,13 @@ class InstancesWidget(QWidget):
 
         success = False
         try:
-            success = force_shutdown_all_instances(
-                session, SystemControl, self._update_shutdown_status
-            )
-        except SQLAlchemyError as e:
-            logging.error("Erro de DB no shutdown: %s", e)
-            session.rollback()
+            # A chamada foi simplificada para não precisar mais de 'session' e 'SystemControl'
+            success = force_shutdown_all_instances(self._update_shutdown_status)
+        except (RuntimeError, ConnectionError, TimeoutError) as e:
+            logging.error("Erro no shutdown: %s", e)
             show_error(
-                "Erro de DB",
-                "Não foi possível conectar ao banco de dados.",
+                "Erro no Encerramento",
+                f"Não foi possível executar o encerramento: {e}",
                 parent=self,
             )
 

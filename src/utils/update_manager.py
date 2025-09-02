@@ -151,13 +151,11 @@ def run_update_process(
         def shutdown_progress_wrapper(active_sessions: int):
             progress_callback(f"Aguardando {active_sessions} instância(s)...", 50)
 
-        if not force_shutdown_all_instances(
-            session, SystemControl, shutdown_progress_wrapper
-        ):
+        # A chamada foi simplificada para não precisar mais do 'session' e 'SystemControl'
+        if not force_shutdown_all_instances(shutdown_progress_wrapper):
             raise RuntimeError("Não foi possível fechar as instâncias da aplicação.")
-    except SQLAlchemyError as e:
-        session.rollback()
-        raise ConnectionError(f"Não foi possível conectar ao DB: {e}") from e
+    except Exception as e:
+        raise ConnectionError(f"Falha ao tentar fechar as instâncias: {e}") from e
 
     progress_callback("Aplicando a atualização...", 70)
     if not _apply_update(zip_filename):
