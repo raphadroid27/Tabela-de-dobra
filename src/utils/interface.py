@@ -626,7 +626,7 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                 "color: white; background-color: red;" if invalida else ""
             )
             entry.setToolTip(
-                f"Aba ({valores[i-1]}) menor que a mínima ({aba_min:.0f})."
+                f"Aba ({valores[i - 1]}) menor que a mínima ({aba_min:.0f})."
                 if invalida
                 else "Insira o valor da dobra."
             )
