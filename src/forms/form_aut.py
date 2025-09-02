@@ -19,15 +19,16 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.models import Usuario
-from src.utils.banco_dados import session
+from src.models.models import Usuario
+from src.utils.banco_dados import get_session
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.usuarios import login, novo_usuario
-from src.utils.utilitarios import aplicar_medida_borda_espaco
+from src.utils.utilitarios import aplicar_medida_borda_espaco, show_error
 
 # Constantes para configuração da interface
 JANELA_LARGURA = 200
@@ -49,9 +50,7 @@ def _configurar_janela_base(root):
     )
 
     def close_event(event):
-
         Janela.estado_janelas(True)
-
         event.accept()
 
     g.AUTEN_FORM.closeEvent = close_event
@@ -91,7 +90,14 @@ def _criar_campos_usuario_senha(main_layout):
 
 def _verificar_admin_existente():
     """Verifica se já existe um usuário administrador."""
-    return session.query(Usuario).filter(Usuario.role == "admin").first()
+    try:
+        with get_session() as session:
+            return session.query(Usuario).filter(Usuario.role == "admin").first()
+    except SQLAlchemyError as e:
+        show_error("Erro de DB", f"Não foi possível verificar admin: {e}")
+        return (
+            True  # Assume que admin existe para prevenir novos admins em caso de erro
+        )
 
 
 def _configurar_modo_login(main_layout):
@@ -139,7 +145,6 @@ def _criar_conteudo_principal(vlayout):
 
     _criar_campos_usuario_senha(main_layout)
 
-    # Inicializar variável admin
     g.ADMIN_VAR = "viewer"
 
     if g.LOGIN:
@@ -163,18 +168,9 @@ def _finalizar_configuracao():
 
 
 def main(root):
-    """
-    Função principal que cria a janela de autenticação.
-    Se a janela já existir, ela é destruída antes de criar uma nova.
-    A janela é configurada com campos para usuário e senha, e um botão para login ou
-    criação de novo usuário, dependendo do estado atual do sistema.
-    """
+    """Função principal que cria a janela de autenticação."""
     _configurar_janela_base(root)
     vlayout = _criar_layout_principal()
     _criar_barra_titulo(vlayout)
     _criar_conteudo_principal(vlayout)
     _finalizar_configuracao()
-
-
-if __name__ == "__main__":
-    main(None)

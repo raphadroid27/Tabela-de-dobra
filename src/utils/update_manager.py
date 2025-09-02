@@ -9,7 +9,7 @@ Responsável por:
 import logging
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import time
 import zipfile
 from typing import Callable, Optional
@@ -17,7 +17,7 @@ from typing import Callable, Optional
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import SystemControl
-from src.utils.banco_dados import session, tratativa_erro
+from src.utils.banco_dados import get_session
 from src.utils.session_manager import force_shutdown_all_instances
 from src.utils.utilitarios import (
     APP_EXECUTABLE_PATH,
@@ -30,46 +30,47 @@ from src.utils.utilitarios import (
 def get_installed_version() -> Optional[str]:
     """Lê a versão atualmente instalada a partir do banco de dados."""
     try:
-        version_entry = (
-            session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
-        )
-        if version_entry:
-            logging.info("Versão instalada encontrada no DB: %s", version_entry.value)
-            return str(version_entry.value) if version_entry.value else None
+        with get_session() as session:
+            version_entry = (
+                session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
+            )
+            if version_entry:
+                logging.info(
+                    "Versão instalada encontrada no DB: %s", version_entry.value
+                )
+                return str(version_entry.value) if version_entry.value else None
         logging.warning(
             "Nenhuma entrada 'INSTALLED_VERSION' encontrada no banco de dados."
         )
         return None
     except SQLAlchemyError as e:
         logging.error("Não foi possível ler a versão do DB: %s", e)
-        session.rollback()
         return None
 
 
 def set_installed_version(version: str):
     """Grava ou atualiza a versão instalada no banco de dados."""
     try:
-        version_entry = (
-            session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
-        )
-        if version_entry:
-            if version_entry.value != version:
-                logging.info(
-                    "Atualizando a versão no DB de %s para %s",
-                    version_entry.value,
-                    version,
-                )
-                version_entry.value = str(version)
-        else:
-            logging.info("Gravando a versão inicial no DB: %s", version)
-            new_entry = SystemControl(
-                key="INSTALLED_VERSION", value=str(version), type="CONFIG"
+        with get_session() as session:
+            version_entry = (
+                session.query(SystemControl).filter_by(key="INSTALLED_VERSION").first()
             )
-            session.add(new_entry)
-        tratativa_erro()
+            if version_entry:
+                if version_entry.value != version:
+                    logging.info(
+                        "Atualizando a versão no DB de %s para %s",
+                        version_entry.value,
+                        version,
+                    )
+                    version_entry.value = str(version)
+            else:
+                logging.info("Gravando a versão inicial no DB: %s", version)
+                new_entry = SystemControl(
+                    key="INSTALLED_VERSION", value=str(version), type="CONFIG"
+                )
+                session.add(new_entry)
     except SQLAlchemyError as e:
         logging.error("Não foi possível gravar a versão no DB: %s", e)
-        session.rollback()
 
 
 def _apply_update(zip_filename: str) -> bool:
@@ -79,12 +80,13 @@ def _apply_update(zip_filename: str) -> bool:
         return False
     app_dir = obter_dir_base()
     try:
+        extract_path = os.path.join(UPDATE_TEMP_DIR, "extracted")
+        if os.path.exists(extract_path):
+            shutil.rmtree(extract_path)
+        os.makedirs(extract_path, exist_ok=True)
         with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
-            extract_path = os.path.join(UPDATE_TEMP_DIR, "extracted")
-            if os.path.exists(extract_path):
-                shutil.rmtree(extract_path)
-            os.makedirs(extract_path, exist_ok=True)
             zip_ref.extractall(extract_path)
+
         for item in os.listdir(extract_path):
             src = os.path.join(extract_path, item)
             dst = os.path.join(app_dir, item)
@@ -126,13 +128,7 @@ def _start_application():
 def run_update_process(
     selected_file_path: str, progress_callback: Callable[[str, int], None]
 ):
-    """
-    Executa o processo completo de atualização.
-
-    Args:
-        selected_file_path: O caminho para o arquivo .zip da atualização.
-        progress_callback: Uma função para reportar o progresso (mensagem, valor).
-    """
+    """Executa o processo completo de atualização."""
     zip_filename = os.path.basename(selected_file_path)
 
     progress_callback("Copiando arquivo de atualização...", 10)
@@ -146,12 +142,12 @@ def run_update_process(
 
     progress_callback("Fechando a aplicação principal...", 40)
     time.sleep(3)
+
     try:
-        # Wrapper para o callback de shutdown
+
         def shutdown_progress_wrapper(active_sessions: int):
             progress_callback(f"Aguardando {active_sessions} instância(s)...", 50)
 
-        # A chamada foi simplificada para não precisar mais do 'session' e 'SystemControl'
         if not force_shutdown_all_instances(shutdown_progress_wrapper):
             raise RuntimeError("Não foi possível fechar as instâncias da aplicação.")
     except Exception as e:
