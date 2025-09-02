@@ -511,6 +511,10 @@ def criar_lista(config, tipo):
     tree_widget.header().setDefaultAlignment(Qt.AlignCenter)
     tree_widget.setRootIsDecorated(False)
 
+    # Habilitar ordenação por coluna e cores alternadas
+    tree_widget.setSortingEnabled(True)
+    tree_widget.setAlternatingRowColors(True)
+
     # Configurar larguras das colunas
     for i, width in enumerate(config["lista"]["widths"]):
         tree_widget.setColumnWidth(i, width)

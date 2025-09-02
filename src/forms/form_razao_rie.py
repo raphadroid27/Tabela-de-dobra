@@ -118,6 +118,11 @@ class FormRazaoRIE:
         tree.setRootIsDecorated(False)
         tree.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
         tree.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
+
+        # Habilitar ordenação por coluna e cores alternadas
+        tree.setSortingEnabled(True)
+        tree.setAlternatingRowColors(True)
+
         try:
             if isinstance(data, dict):
                 for razao, k in data.items():
