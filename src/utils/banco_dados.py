@@ -26,7 +26,7 @@ engine = create_engine(
 
 
 @event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):  # pylint: disable=W0613
+def set_sqlite_pragma(dbapi_connection, _connection_record):
     """
     Ativa o modo WAL (Write-Ahead Logging) ao estabelecer uma nova conexão.
     Isso melhora a concorrência, permitindo leituras enquanto ocorrem escritas.
