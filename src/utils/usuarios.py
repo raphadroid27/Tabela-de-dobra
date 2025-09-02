@@ -22,6 +22,18 @@ from src.utils.utilitarios import (
 )
 
 
+def _obter_usuario_logado(session):
+    """
+    Obtém o usuário logado com verificação de segurança.
+
+    Returns:
+        Usuario ou None: O objeto usuario se logado e válido, None caso contrário.
+    """
+    if g.USUARIO_ID is None:
+        return None
+    return session.get(Usuario, g.USUARIO_ID)
+
+
 def novo_usuario():
     """Cria um novo usuário com o nome e senha fornecidos."""
     if g.USUARIO_ENTRY is None or g.SENHA_ENTRY is None:
@@ -121,7 +133,7 @@ def tem_permissao(tipo, role_requerida, show_message=True):
     config = obter_configuracoes()[tipo]
     try:
         with get_session() as session:
-            usuario_obj = session.get(Usuario, g.USUARIO_ID)
+            usuario_obj = _obter_usuario_logado(session)
             if not usuario_obj:
                 if show_message:
                     show_warning(
