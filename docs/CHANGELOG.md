@@ -1,6 +1,18 @@
 # Changelog
 
-Histórico de mudanças do aplicativo Cálculo de Dobras
+Histórico de mudanças do aplicativo Calculadora de Dobras
+
+## 2.4.0 (29/08/2025)
+
+- Implementado gerenciamento de IPC e simplificado o registro de sessões, removendo dependências do banco de dados
+- Refatoração geral para simplificação e padronização do código, incluindo melhorias na lógica de autenticação, gerenciamento de usuários, interface, layout e estilo dos widgets.
+- Remoção de funções, módulos, variáveis e arquivos obsoletos para facilitar manutenção e reduzir complexidade.
+- Adição de funcionalidades: gerenciamento de usuários, módulo de administração, suporte à transparência de janelas, gerenciamento de instâncias e argumentos de linha de comando.
+- Centralização e aprimoramento de mensagens, logs, estilos de botões e configurações de interface.
+- Otimização de timers, importações, tipagem, validações de segurança e tratamento de erros.
+- Atualização de documentação, instruções de execução e arquivos de configuração.
+- Renomeação do aplicativo para "Calculadora de Dobra" e ajustes visuais em diversos componentes.
+- Melhoria na organização do código, legibilidade, consistência e desempenho geral do sistema.
 
 ## 2.3.1 (31/07/2025)
 
