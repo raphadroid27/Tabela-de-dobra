@@ -23,16 +23,16 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self._cache: Dict[str, Any] = {}
         self._cache_timestamps: Dict[str, datetime] = {}
-        self._cache_timeout = timedelta(minutes=5)  # Cache válido por 5 minutos
         self._lock = threading.RLock()
         self._initialized = False
+        self._dirty = False  # Flag para controle de persistência
 
-        # Configurações de cache por tipo de dado
-        self._cache_strategies = {
-            "materiais": {"ttl_minutes": 60, "priority": "high"},  # 1 hora
-            "espessuras": {"ttl_minutes": 60, "priority": "high"},  # 1 hora
-            "canais": {"ttl_minutes": 60, "priority": "high"},  # 1 hora
-            "deducoes": {"ttl_minutes": 5, "priority": "medium"},  # 5 minutos
+        # Configurações simplificadas de TTL por tipo de dado
+        self._cache_ttl = {
+            "materiais": 60,  # 1 hora para dados estáticos
+            "espessuras": 60,  # 1 hora para dados estáticos
+            "canais": 60,  # 1 hora para dados estáticos
+            "deducoes": 5,  # 5 minutos para dados dinâmicos
         }
 
         # Arquivo para persistir cache entre sessões
@@ -68,8 +68,11 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
             self._cache = {}
             self._cache_timestamps = {}
 
-    def _save_persistent_cache(self):
+    def _save_persistent_cache(self, force=False):
         """Salva cache no disco para persistência."""
+        if not force and not self._dirty:
+            return  # Só salva se houve mudanças
+
         try:
             cache_data = {
                 "data": self._cache,
@@ -83,178 +86,119 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
             with open(self.cache_file, "w", encoding="utf-8") as f:
                 json.dump(cache_data, f, indent=2, ensure_ascii=False)
 
+            self._dirty = False  # Reset flag após salvar
+
         except (OSError, json.JSONDecodeError, ValueError) as e:
             logging.error("Erro ao salvar cache persistido: %s", e)
 
     def _is_cache_valid(self, key: str) -> bool:
-        """Verifica se o cache ainda é válido baseado na estratégia."""
+        """Verifica se o cache ainda é válido baseado no TTL."""
         if key not in self._cache_timestamps:
             return False
 
         # Determina TTL baseado no tipo de dado
         cache_type = key.split("_")[0]  # ex: 'materiais' de 'materiais_list'
-        strategy = self._cache_strategies.get(cache_type, {"ttl_minutes": 5})
-        ttl = timedelta(minutes=strategy["ttl_minutes"])
+        ttl_minutes = self._cache_ttl.get(cache_type, 5)  # Default 5 minutos
+        ttl = timedelta(minutes=ttl_minutes)
 
         return datetime.now() - self._cache_timestamps[key] < ttl
 
     def _update_cache_timestamp(self, key: str):
         """Atualiza o timestamp do cache."""
         self._cache_timestamps[key] = datetime.now()
+        self._dirty = True  # Marca cache como modificado
+
+    def _get_cached_data(self, cache_key: str, query_func, result_processor=None):
+        """Método genérico para buscar dados com cache."""
+        with self._lock:
+            if self._is_cache_valid(cache_key):
+                self.cache_logger.debug("Usando dados do cache: %s", cache_key)
+                return self._cache[cache_key]
+
+            try:
+                with get_session() as session:
+                    data = query_func(session)
+
+                    if result_processor:
+                        result = result_processor(data)
+                    else:
+                        result = data
+
+                    self._cache[cache_key] = result
+                    self._update_cache_timestamp(cache_key)
+
+                    # Salvar cache apenas se necessário
+                    if self._dirty:
+                        self._save_persistent_cache()
+
+                    self.cache_logger.info("Cache atualizado: %s", cache_key)
+                    return result
+
+            except SQLAlchemyError as e:
+                self.cache_logger.warning("Banco bloqueado, usando cache: %s", e)
+                cached_data = self._cache.get(
+                    cache_key, [] if "list" in cache_key else None
+                )
+
+                if not cached_data and "list" in cache_key:
+                    self.cache_logger.error("Nenhum dado em cache para: %s", cache_key)
+
+                return cached_data
 
     def get_materiais(self) -> List[Dict]:
         """Retorna lista de materiais do cache ou banco."""
-        with self._lock:
-            cache_key = "materiais_list"
-
-            if self._is_cache_valid(cache_key):
-                self.cache_logger.debug("Usando materiais do cache")
-                return self._cache[cache_key]
-
-            try:
-                with get_session() as session:
-                    materiais = session.query(Material).all()
-                    result = [{"id": m.id, "nome": m.nome} for m in materiais]
-
-                    self._cache[cache_key] = result
-                    self._update_cache_timestamp(cache_key)
-                    self._save_persistent_cache()
-
-                    self.cache_logger.info(
-                        "Cache atualizado: %d materiais", len(result)
-                    )
-                    return result
-
-            except SQLAlchemyError as e:
-                self.cache_logger.warning("Banco bloqueado, usando cache: %s", e)
-                cached_data = self._cache.get(cache_key, [])
-
-                if not cached_data:
-                    self.cache_logger.error("Nenhum dado em cache para materiais!")
-
-                return cached_data
+        return self._get_cached_data(
+            "materiais_list",
+            lambda session: session.query(Material).all(),
+            lambda materiais: [{"id": m.id, "nome": m.nome} for m in materiais],
+        )
 
     def get_espessuras(self) -> List[Dict]:
         """Retorna lista de espessuras do cache ou banco."""
-        with self._lock:
-            cache_key = "espessuras_list"
-
-            if self._is_cache_valid(cache_key):
-                self.cache_logger.debug("Usando espessuras do cache")
-                return self._cache[cache_key]
-
-            try:
-                with get_session() as session:
-                    espessuras = (
-                        session.query(Espessura).order_by(Espessura.valor).all()
-                    )
-                    result = [{"id": e.id, "valor": e.valor} for e in espessuras]
-
-                    self._cache[cache_key] = result
-                    self._update_cache_timestamp(cache_key)
-                    self._save_persistent_cache()
-
-                    self.cache_logger.info(
-                        "Cache atualizado: %d espessuras", len(result)
-                    )
-                    return result
-
-            except SQLAlchemyError as e:
-                self.cache_logger.warning("Banco bloqueado, usando cache: %s", e)
-                cached_data = self._cache.get(cache_key, [])
-
-                if not cached_data:
-                    self.cache_logger.error("Nenhum dado em cache para espessuras!")
-
-                return cached_data
+        return self._get_cached_data(
+            "espessuras_list",
+            lambda session: session.query(Espessura).order_by(Espessura.valor).all(),
+            lambda espessuras: [{"id": e.id, "valor": e.valor} for e in espessuras],
+        )
 
     def get_canais(self) -> List[Dict]:
         """Retorna lista de canais do cache ou banco."""
-        with self._lock:
-            cache_key = "canais_list"
-
-            if self._is_cache_valid(cache_key):
-                self.cache_logger.debug("Usando canais do cache")
-                return self._cache[cache_key]
-
-            try:
-                with get_session() as session:
-                    canais = session.query(Canal).all()
-                    result = [{"id": c.id, "valor": c.valor} for c in canais]
-
-                    self._cache[cache_key] = result
-                    self._update_cache_timestamp(cache_key)
-                    self._save_persistent_cache()
-
-                    self.cache_logger.info("Cache atualizado: %d canais", len(result))
-                    return result
-
-            except SQLAlchemyError as e:
-                self.cache_logger.warning("Banco bloqueado, usando cache: %s", e)
-                cached_data = self._cache.get(cache_key, [])
-
-                if not cached_data:
-                    self.cache_logger.error("Nenhum dado em cache para canais!")
-
-                return cached_data
+        return self._get_cached_data(
+            "canais_list",
+            lambda session: session.query(Canal).all(),
+            lambda canais: [{"id": c.id, "valor": c.valor} for c in canais],
+        )
 
     def get_deducao(
         self, material_nome: str, espessura_valor: float, canal_valor: str
     ) -> Optional[Dict]:
         """Busca dedução específica do cache ou banco."""
-        with self._lock:
-            cache_key = f"deducao_{material_nome}_{espessura_valor}_{canal_valor}"
+        cache_key = f"deducao_{material_nome}_{espessura_valor}_{canal_valor}"
 
-            if self._is_cache_valid(cache_key):
-                self.cache_logger.debug("Usando dedução do cache: %s", cache_key)
-                return self._cache[cache_key]
-
-            try:
-                with get_session() as session:
-                    deducao = (
-                        # pylint: disable=duplicate-code
-                        session.query(Deducao)
-                        .join(Material)
-                        .join(Espessura)
-                        .join(Canal)
-                        .filter(
-                            Material.nome == material_nome,
-                            Espessura.valor == espessura_valor,
-                            Canal.valor == canal_valor,
-                        )
-                        .first()
-                    )
-
-                    if deducao:
-                        result = {
-                            "valor": deducao.valor,
-                            "observacao": deducao.observacao,
-                            "forca": deducao.forca,
-                        }
-                    else:
-                        result = None
-
-                    self._cache[cache_key] = result
-                    self._update_cache_timestamp(cache_key)
-                    self._save_persistent_cache()
-
-                    self.cache_logger.debug(
-                        "Cache atualizado para dedução: %s", cache_key
-                    )
-                    return result
-
-            except SQLAlchemyError as e:
-                self.cache_logger.warning(
-                    "Banco bloqueado, usando cache para dedução: %s", e
+        def query_deducao(session):
+            return (
+                session.query(Deducao)
+                .join(Material)
+                .join(Espessura)
+                .join(Canal)
+                .filter(
+                    Material.nome == material_nome,
+                    Espessura.valor == espessura_valor,
+                    Canal.valor == canal_valor,
                 )
-                cached_data = self._cache.get(cache_key)
+                .first()
+            )
 
-                if cached_data is None:
-                    self.cache_logger.warning(
-                        "Nenhum dado em cache para dedução: %s", cache_key
-                    )
+        def process_deducao(deducao):
+            if deducao:
+                return {
+                    "valor": deducao.valor,
+                    "observacao": deducao.observacao,
+                    "forca": deducao.forca,
+                }
+            return None
 
-                return cached_data
+        return self._get_cached_data(cache_key, query_deducao, process_deducao)
 
     def invalidate_cache(self, keys: Optional[List[str]] = None):
         """Invalida cache específico ou todo o cache."""
@@ -277,7 +221,8 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
                 self._cache_timestamps.clear()
                 self.cache_logger.info("Todo o cache foi invalidado")
 
-            self._save_persistent_cache()
+            self._dirty = True
+            self._save_persistent_cache(force=True)
 
     def preload_cache(self):
         """Pré-carrega dados essenciais no cache."""
@@ -337,7 +282,7 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
                 self.cache_logger.info(
                     "Removidas %d entradas expiradas do cache", len(expired_keys)
                 )
-                self._save_persistent_cache()
+                self._save_persistent_cache(force=True)
 
     def force_refresh(self, cache_types: Optional[List[str]] = None):
         """Força atualização do cache."""
@@ -351,6 +296,12 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
 
             # Recarrega dados essenciais
             self.preload_cache()
+
+    def sync_cache_to_disk(self):
+        """Sincroniza cache modificado para o disco."""
+        if self._dirty:
+            self._save_persistent_cache(force=True)
+            logging.info("Cache sincronizado para disco")
 
 
 # Instância global do cache

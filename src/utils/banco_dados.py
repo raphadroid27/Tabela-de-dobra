@@ -14,14 +14,14 @@ from sqlalchemy.orm import sessionmaker
 
 from src.models.models import Base, Log
 
-# Garante que o diretório do banco de dados exista
+# Configuração do banco de dados
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
 
 # Timeout reduzido para conexões SQLAlchemy (10 segundos)
 SQLALCHEMY_TIMEOUT = 10
 
-# Configuração do Engine do SQLAlchemy com timeout reduzido
+# Configuração do Engine do SQLAlchemy
 engine = create_engine(
     f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}',
     connect_args={"timeout": 30},
@@ -44,7 +44,7 @@ def set_sqlite_pragma(dbapi_connection, _connection_record):
         cursor.close()
 
 
-# Cria uma "fábrica" de sessões que será usada para criar sessões individuais.
+# Factory de sessões
 Session = sessionmaker(bind=engine)
 
 
@@ -81,10 +81,7 @@ def get_session():
 
 
 def registrar_log(session, usuario_nome, acao, tabela, registro_id, detalhes=None):
-    """
-    Registra uma ação no banco de dados usando a sessão fornecida.
-    A sessão é gerenciada pela função que chama este log.
-    """
+    """Registra uma ação no log do sistema."""
     try:
         log = Log(
             usuario_nome=usuario_nome,
@@ -95,16 +92,15 @@ def registrar_log(session, usuario_nome, acao, tabela, registro_id, detalhes=Non
         )
         session.add(log)
     except (IntegrityError, OperationalError) as e:
-        # O rollback será feito pelo context manager `get_session`
-        logging.error("Erro de banco de dados ao criar log: %s", e)
+        logging.error("Erro ao criar log: %s", e)
 
 
 def inicializar_banco_dados():
-    """Cria todas as tabelas no banco de dados, se ainda não existirem."""
+    """Cria todas as tabelas no banco de dados."""
     try:
-        logging.info("Inicializando o banco de dados e criando tabelas.")
+        logging.info("Inicializando banco de dados...")
         Base.metadata.create_all(engine)
+        logging.info("Banco de dados inicializado com sucesso")
     except OperationalError as e:
-        logging.critical("Falha ao criar tabelas no banco de dados: %s", e)
-        # Em caso de falha aqui, a aplicação provavelmente não pode continuar.
+        logging.critical("Falha crítica ao inicializar banco: %s", e)
         raise
