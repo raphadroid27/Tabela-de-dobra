@@ -49,9 +49,9 @@ def ensure_ipc_dirs_exist() -> None:
     """
     try:
         if not os.path.exists(RUNTIME_DIR):
-            os.makedirs(SESSION_DIR)
-            os.makedirs(COMMAND_DIR)
-            os.makedirs(CACHE_DIR)
+            os.makedirs(SESSION_DIR, exist_ok=True)
+            os.makedirs(COMMAND_DIR, exist_ok=True)
+            os.makedirs(CACHE_DIR, exist_ok=True)
             _hide_path(RUNTIME_DIR)
         else:
             os.makedirs(SESSION_DIR, exist_ok=True)

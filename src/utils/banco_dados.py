@@ -18,11 +18,10 @@ from src.models.models import Base, Log
 DATABASE_DIR = os.path.abspath("database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
 
-# Timeout padronizado para conexões SQLAlchemy (30 segundos)
-# Equivale ao 'recovery_operation' do database_recovery
-SQLALCHEMY_TIMEOUT = 30
+# Timeout reduzido para conexões SQLAlchemy (10 segundos)
+SQLALCHEMY_TIMEOUT = 10
 
-# Configuração do Engine do SQLAlchemy com timeout padronizado
+# Configuração do Engine do SQLAlchemy com timeout reduzido
 engine = create_engine(
     f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}',
     connect_args={"timeout": 30},
