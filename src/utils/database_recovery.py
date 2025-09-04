@@ -7,20 +7,103 @@ import json
 import logging
 import shutil
 import sqlite3
+import subprocess
+import sys
 import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Import opcional do psutil
-try:
-    HAS_PSUTIL = True
-except ImportError:
-    HAS_PSUTIL = False
-    logging.warning(
-        "psutil não disponível - funcionalidade de monitoramento de processos limitada"
-    )
+# Timeouts padronizados por contexto de operação
+DATABASE_TIMEOUTS = {
+    "quick_check": 2.0,  # Verificações rápidas de status
+    "normal_operation": 5.0,  # Operações normais de leitura/escrita
+    "recovery_operation": 15.0,  # Operações de recovery e checkpoint
+    "emergency_recovery": 30.0,  # Recovery de emergência com verificação completa
+}
+
+# Import opcional do psutil - removido conforme análise
+# A funcionalidade será implementada usando ferramentas nativas do Python
+
+
+def _parse_windows_processes(result_stdout: str) -> List[Dict[str, str]]:
+    """Extrai processos Python da saída do tasklist do Windows."""
+    processes = []
+    lines = result_stdout.split("\n")[3:]  # Pula cabeçalho
+
+    for line in lines:
+        if not (line.strip() and "python" in line.lower()):
+            continue
+
+        parts = line.split()
+        if len(parts) >= 2:
+            processes.append(
+                {
+                    "name": parts[0],
+                    "pid": parts[1],
+                    "memory": parts[4] if len(parts) > 4 else "N/A",
+                }
+            )
+
+    return processes
+
+
+def _parse_unix_processes(result_stdout: str) -> List[Dict[str, str]]:
+    """Extrai processos Python da saída do ps no Unix/Linux."""
+    processes = []
+    lines = result_stdout.split("\n")[1:]  # Pula cabeçalho
+
+    for line in lines:
+        if not ("python" in line.lower() and "tabela-de-dobra" in line):
+            continue
+
+        parts = line.split()
+        if len(parts) >= 11:
+            processes.append(
+                {
+                    "name": "python",
+                    "pid": parts[1],
+                    "memory": parts[3],
+                    "command": " ".join(parts[10:]),
+                }
+            )
+
+    return processes
+
+
+def get_database_processes():
+    """
+    Monitora processos que podem estar usando o banco de dados.
+    Implementação nativa sem dependência do psutil.
+    """
+    processes = []
+
+    try:
+        if sys.platform == "win32":
+            # Windows: usa tasklist para encontrar processos Python
+            result = subprocess.run(
+                ["tasklist", "/fi", "imagename eq python*"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if result.returncode == 0:
+                processes = _parse_windows_processes(result.stdout)
+        else:
+            # Unix/Linux: usa ps para encontrar processos Python
+            result = subprocess.run(
+                ["ps", "aux"], capture_output=True, text=True, timeout=5, check=False
+            )
+            if result.returncode == 0:
+                processes = _parse_unix_processes(result.stdout)
+
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
+        # Se falhar, retorna lista vazia - não é crítico
+        pass
+
+    return processes
 
 
 class DatabaseUnlocker:
@@ -50,6 +133,20 @@ class DatabaseUnlocker:
             formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             self.recovery_logger.addHandler(handler)
+
+    def _check_concurrent_processes(self):
+        """Verifica se há outros processos que podem estar usando o banco."""
+        processes = get_database_processes()
+        if processes:
+            self.recovery_logger.info("Processos Python detectados: %d", len(processes))
+            for proc in processes[:3]:  # Log apenas os primeiros 3
+                self.recovery_logger.info(
+                    "Processo: PID=%s, Nome=%s, Memória=%s",
+                    proc.get("pid", "N/A"),
+                    proc.get("name", "N/A"),
+                    proc.get("memory", "N/A"),
+                )
+        return len(processes)
 
     def create_emergency_backup(self) -> Optional[Path]:
         """Cria backup de emergência antes de tentar desbloqueio."""
@@ -87,7 +184,9 @@ class DatabaseUnlocker:
     def _verify_backup_integrity(self, backup_path: Path) -> bool:
         """Verifica integridade do backup criado."""
         try:
-            conn = sqlite3.connect(backup_path, timeout=5.0)
+            conn = sqlite3.connect(
+                backup_path, timeout=DATABASE_TIMEOUTS["normal_operation"]
+            )
             cursor = conn.cursor()
             cursor.execute("PRAGMA integrity_check;")
             result = cursor.fetchone()
@@ -106,6 +205,14 @@ class DatabaseUnlocker:
             create_backup: Se True, cria backup antes de tentar desbloqueio
         """
         self.recovery_logger.info("Iniciando processo de desbloqueio: %s", self.db_path)
+
+        # Verifica processos concorrentes
+        concurrent_processes = self._check_concurrent_processes()
+        if concurrent_processes > 1:
+            self.recovery_logger.warning(
+                "Detectados %d processos Python - possível concorrência",
+                concurrent_processes,
+            )
 
         # Cria backup se solicitado
         backup_path = None
@@ -143,7 +250,11 @@ class DatabaseUnlocker:
     def _try_immediate_unlock(self) -> bool:
         """Tenta desbloqueio imediato com PRAGMA."""
         try:
-            conn = sqlite3.connect(self.db_path, timeout=2.0, isolation_level=None)
+            conn = sqlite3.connect(
+                self.db_path,
+                timeout=DATABASE_TIMEOUTS["quick_check"],
+                isolation_level=None,
+            )
 
             cursor = conn.cursor()
 
@@ -166,7 +277,9 @@ class DatabaseUnlocker:
     def _try_checkpoint_recovery(self) -> bool:
         """Tenta recovery via WAL checkpoint."""
         try:
-            conn = sqlite3.connect(self.db_path, timeout=10.0)
+            conn = sqlite3.connect(
+                self.db_path, timeout=DATABASE_TIMEOUTS["recovery_operation"]
+            )
             cursor = conn.cursor()
 
             # Força checkpoint do WAL
@@ -222,7 +335,9 @@ class DatabaseUnlocker:
         try:
             # Tenta abrir em modo recovery
             conn = sqlite3.connect(
-                f"file:{self.db_path}?mode=rwc", uri=True, timeout=15.0
+                f"file:{self.db_path}?mode=rwc",
+                uri=True,
+                timeout=DATABASE_TIMEOUTS["emergency_recovery"],
             )
 
             cursor = conn.cursor()
@@ -250,7 +365,9 @@ class DatabaseUnlocker:
     def _test_database_access(self) -> bool:
         """Testa se o banco está acessível."""
         try:
-            conn = sqlite3.connect(self.db_path, timeout=3.0)
+            conn = sqlite3.connect(
+                self.db_path, timeout=DATABASE_TIMEOUTS["quick_check"]
+            )
             cursor = conn.cursor()
             cursor.execute("SELECT 1;")
             cursor.fetchone()
@@ -322,7 +439,7 @@ class DatabaseLockMonitor:
 
         # Log do evento
         logging.warning(
-            "BLOQUEIO DETECTADO - Operação: %s, " "Duração: %.2fs, Resolvido: %s",
+            "BLOQUEIO DETECTADO - Operação: %s, Duração: %.2fs, Resolvido: %s",
             operation,
             duration,
             resolved,
@@ -393,7 +510,7 @@ def resilient_database_connection(db_path: str, operation_name: str = "unknown")
     unlocker = DatabaseUnlocker(db_path)
 
     try:
-        conn = sqlite3.connect(db_path, timeout=10.0)
+        conn = sqlite3.connect(db_path, timeout=DATABASE_TIMEOUTS["recovery_operation"])
         yield conn
         conn.close()
 
@@ -417,7 +534,9 @@ def resilient_database_connection(db_path: str, operation_name: str = "unknown")
                     )
 
                     # Tenta novamente após desbloqueio
-                    conn = sqlite3.connect(db_path, timeout=5.0)
+                    conn = sqlite3.connect(
+                        db_path, timeout=DATABASE_TIMEOUTS["normal_operation"]
+                    )
                     yield conn
                     conn.close()
                     return
