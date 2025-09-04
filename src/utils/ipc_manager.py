@@ -16,7 +16,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List
 
-from src.utils.utilitarios import COMMAND_DIR, RUNTIME_DIR, SESSION_DIR
+from src.utils.utilitarios import CACHE_DIR, COMMAND_DIR, RUNTIME_DIR, SESSION_DIR
 
 FILE_ATTRIBUTE_HIDDEN = 0x02
 
@@ -51,10 +51,12 @@ def ensure_ipc_dirs_exist() -> None:
         if not os.path.exists(RUNTIME_DIR):
             os.makedirs(SESSION_DIR)
             os.makedirs(COMMAND_DIR)
+            os.makedirs(CACHE_DIR)
             _hide_path(RUNTIME_DIR)
         else:
             os.makedirs(SESSION_DIR, exist_ok=True)
             os.makedirs(COMMAND_DIR, exist_ok=True)
+            os.makedirs(CACHE_DIR, exist_ok=True)
     except OSError as e:
         logging.critical("Não foi possível criar os diretórios de IPC: %s", e)
         raise
