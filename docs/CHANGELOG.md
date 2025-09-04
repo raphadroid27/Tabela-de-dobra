@@ -2,6 +2,17 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.4.1 (02/09/2025)
+
+- Refatorações gerais para melhorar segurança, legibilidade e organização do código:
+    - Comentário de segurança na importação do subprocess.
+    - Ajuste de formatação em tooltips.
+    - Simplificação da busca de deduções usando função dedicada.
+    - Remoção de parâmetro não utilizado em set_sqlite_pragma.
+    - Encapsulamento da lógica de busca de dedução e obtenção de usuário logado.
+    - Habilitação de ordenação por coluna e cores alternadas nas listas.
+    - Atualização do gerenciamento de sessões do banco de dados.
+
 ## 2.4.0 (29/08/2025)
 
 - Implementado gerenciamento de IPC e simplificado o registro de sessões, removendo dependências do banco de dados
