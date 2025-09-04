@@ -1,12 +1,14 @@
 """
 Módulo de Operações de Dados (Refatorado)
 
-Este módulo foi atualizado para usar o padrão de "sessão por operação".
+Este módulo foi atualizado para usar o padrão de "sessão por operação"
+e integração com cache para melhor performance e resiliência.
 Cada função agora gerencia seu próprio ciclo de vida da sessão,
 garantindo que as transações sejam curtas e o banco de dados
 seja liberado rapidamente.
 """
 
+import logging
 import re
 from typing import Any, Dict, Optional, Tuple
 
@@ -54,6 +56,19 @@ def criar_material(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Material]
                 novo_material.id,
                 f"Material: {nome_material}",
             )
+
+        # Invalida cache após adicionar material
+        try:
+            # Import local para evitar dependência circular
+            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                cache_manager,
+            )
+
+            cache_manager.invalidate_cache(["materiais"])
+            logging.info("Cache de materiais invalidado após adição")
+        except (ImportError, AttributeError, RuntimeError) as e:
+            logging.warning("Erro ao invalidar cache de materiais: %s", e)
+
         return True, "Material adicionado com sucesso!", novo_material
     except SQLAlchemyError as e:
         return False, f"Erro de banco de dados ao criar material: {e}", None
@@ -84,6 +99,19 @@ def criar_espessura(valor: str) -> Tuple[bool, str, Optional[Espessura]]:
                 nova_espessura.id,
                 f"Valor: {espessura_float}",
             )
+
+        # Invalida cache após adicionar espessura
+        try:
+            # Import local para evitar dependência circular
+            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                cache_manager,
+            )
+
+            cache_manager.invalidate_cache(["espessuras"])
+            logging.info("Cache de espessuras invalidado após adição")
+        except (ImportError, AttributeError, RuntimeError) as e:
+            logging.warning("Erro ao invalidar cache de espessuras: %s", e)
+
         return True, "Espessura adicionada com sucesso!", nova_espessura
     except SQLAlchemyError as e:
         return False, f"Erro de banco de dados ao criar espessura: {e}", None
@@ -117,6 +145,19 @@ def criar_canal(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Canal]]:
                 novo_canal.id,
                 f"Valor: {valor_canal}",
             )
+
+        # Invalida cache após adicionar canal
+        try:
+            # Import local para evitar dependência circular
+            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                cache_manager,
+            )
+
+            cache_manager.invalidate_cache(["canais"])
+            logging.info("Cache de canais invalidado após adição")
+        except (ImportError, AttributeError, RuntimeError) as e:
+            logging.warning("Erro ao invalidar cache de canais: %s", e)
+
         return True, "Canal adicionado com sucesso!", novo_canal
     except SQLAlchemyError as e:
         return False, f"Erro de banco de dados ao criar canal: {e}", None
@@ -178,6 +219,19 @@ def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
                 nova_deducao.id,
                 detalhes,
             )
+
+        # Invalida cache após adicionar dedução
+        try:
+            # Import local para evitar dependência circular
+            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                cache_manager,
+            )
+
+            cache_manager.invalidate_cache(["deducoes"])
+            logging.info("Cache de deduções invalidado após adição")
+        except (ImportError, AttributeError, RuntimeError) as e:
+            logging.warning("Erro ao invalidar cache de deduções: %s", e)
+
         return True, "Dedução adicionada com sucesso!", nova_deducao
     except (SQLAlchemyError, ValueError) as e:
         return False, f"Erro ao criar dedução: {e}", None
@@ -216,12 +270,36 @@ def excluir_objeto(obj_id: int, obj_type: type) -> Tuple[bool, str]:
                 if obj_type is Deducao
                 else f"{obj_type.__name__.capitalize()} e suas deduções relacionadas foram excluídos(as)!"  # pylint: disable=C0301
             )
+
+        # Invalida cache após exclusão
+        try:
+            # Import local para evitar dependência circular
+            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                cache_manager,
+            )
+
+            # Mapeia tipos para cache
+            cache_keys = {
+                Material: ["materiais", "deducoes"],
+                Espessura: ["espessuras", "deducoes"],
+                Canal: ["canais", "deducoes"],
+                Deducao: ["deducoes"],
+            }
+
+            keys_to_invalidate = cache_keys.get(obj_type, [])
+            if keys_to_invalidate:
+                cache_manager.invalidate_cache(keys_to_invalidate)
+                logging.info("Cache invalidado após exclusão: %s", keys_to_invalidate)
+
+        except (ImportError, AttributeError, RuntimeError) as e:
+            logging.warning("Erro ao invalidar cache após exclusão: %s", e)
+
         return True, mensagem
     except SQLAlchemyError as e:
         return False, f"Erro de banco de dados ao excluir: {e}"
 
 
-def editar_objeto(
+def editar_objeto(  # pylint: disable=too-many-locals,too-many-branches
     obj_id: int, obj_type: type, dados: Dict[str, Any]
 ) -> Tuple[bool, str, list]:
     """Edita um objeto existente no banco de dados."""
@@ -292,6 +370,30 @@ def editar_objeto(
                 obj.id,
                 detalhes_log,
             )
+
+        # Invalida cache após edição
+        try:
+            # Import local para evitar dependência circular
+            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                cache_manager,
+            )
+
+            # Mapeia tipos para cache
+            cache_keys = {
+                Material: ["materiais", "deducoes"],
+                Espessura: ["espessuras", "deducoes"],
+                Canal: ["canais", "deducoes"],
+                Deducao: ["deducoes"],
+            }
+
+            keys_to_invalidate = cache_keys.get(type(obj), [])
+            if keys_to_invalidate:
+                cache_manager.invalidate_cache(keys_to_invalidate)
+                logging.info("Cache invalidado após edição: %s", keys_to_invalidate)
+
+        except (ImportError, AttributeError, RuntimeError) as e:
+            logging.warning("Erro ao invalidar cache após edição: %s", e)
+
         return (
             True,
             f"{type(obj).__name__.capitalize()} editado com sucesso!",

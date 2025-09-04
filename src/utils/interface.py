@@ -23,6 +23,7 @@ from src.config import globals as g
 from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import get_session
+from src.utils.cache_manager import cache_manager
 from src.utils.widget import WidgetManager
 
 # pylint: disable=R0902
@@ -699,3 +700,145 @@ def canal_tooltip():
 
 atualizar_widgets = WidgetUpdater().atualizar
 atualizar_comboboxes_formulario = FormWidgetUpdater().atualizar
+
+
+class ResilientComboBoxFiller:
+    """Preenche ComboBoxes com dados do banco usando cache quando possível."""
+
+    def __init__(self):
+        # Usa instância global do cache_manager
+        self.cache_manager = cache_manager
+
+    def preencher_combo_material(self, combo_widget, show_cache_indicator=True):
+        """Preenche combo de material usando cache quando possível."""
+        if not combo_widget:
+            return
+
+        current_value = combo_widget.currentText()
+        combo_widget.clear()
+        combo_widget.addItem("")  # Item vazio
+
+        try:
+            materiais = self.cache_manager.get_materiais()
+
+            for material in materiais:
+                item_text = material["nome"]
+                combo_widget.addItem(item_text)
+
+            # Restaura seleção anterior se ainda existe
+            if current_value:
+                index = combo_widget.findText(current_value)
+                if index >= 0:
+                    combo_widget.setCurrentIndex(index)
+
+            if show_cache_indicator and materiais:
+                self._set_cache_tooltip(combo_widget, "materiais", len(materiais))
+
+        except (AttributeError, ValueError, RuntimeError) as e:
+            logging.error("Erro ao preencher combo material: %s", e)
+            combo_widget.addItem("Erro ao carregar dados")
+
+    def preencher_combo_espessura(self, combo_widget, show_cache_indicator=True):
+        """Preenche combo de espessura usando cache quando possível."""
+        if not combo_widget:
+            return
+
+        current_value = combo_widget.currentText()
+        combo_widget.clear()
+        combo_widget.addItem("")  # Item vazio
+
+        try:
+            espessuras = self.cache_manager.get_espessuras()
+
+            for espessura in espessuras:
+                item_text = str(espessura["valor"])
+                combo_widget.addItem(item_text)
+
+            # Restaura seleção anterior se ainda existe
+            if current_value:
+                index = combo_widget.findText(current_value)
+                if index >= 0:
+                    combo_widget.setCurrentIndex(index)
+
+            if show_cache_indicator and espessuras:
+                self._set_cache_tooltip(combo_widget, "espessuras", len(espessuras))
+
+        except (AttributeError, ValueError, RuntimeError) as e:
+            logging.error("Erro ao preencher combo espessura: %s", e)
+            combo_widget.addItem("Erro ao carregar dados")
+
+    def preencher_combo_canal(self, combo_widget, show_cache_indicator=True):
+        """Preenche combo de canal usando cache quando possível."""
+        if not combo_widget:
+            return
+
+        current_value = combo_widget.currentText()
+        combo_widget.clear()
+        combo_widget.addItem("")  # Item vazio
+
+        try:
+            canais = self.cache_manager.get_canais()
+
+            for canal in canais:
+                item_text = canal["valor"]
+                combo_widget.addItem(item_text)
+
+            # Restaura seleção anterior se ainda existe
+            if current_value:
+                index = combo_widget.findText(current_value)
+                if index >= 0:
+                    combo_widget.setCurrentIndex(index)
+
+            if show_cache_indicator and canais:
+                self._set_cache_tooltip(combo_widget, "canais", len(canais))
+
+        except (AttributeError, ValueError, RuntimeError) as e:
+            logging.error("Erro ao preencher combo canal: %s", e)
+            combo_widget.addItem("Erro ao carregar dados")
+
+    def _set_cache_tooltip(self, combo_widget, data_type: str, count: int):
+        """Define tooltip indicando fonte dos dados."""
+        cache_status = self.cache_manager.get_cache_status()
+
+        if cache_status.get("initialized", False):
+            tooltip = f"📊 {count} {data_type} carregados (cache)"
+        else:
+            tooltip = f"{count} {data_type} disponíveis"
+
+        combo_widget.setToolTip(tooltip)
+
+    def atualizar_todos_combos(self):
+        """Atualiza todos os combos principais da interface."""
+        try:
+            # Combos principais
+            if hasattr(g, "MAT_COMB") and g.MAT_COMB:
+                self.preencher_combo_material(g.MAT_COMB)
+
+            if hasattr(g, "ESP_COMB") and g.ESP_COMB:
+                self.preencher_combo_espessura(g.ESP_COMB)
+
+            if hasattr(g, "CANAL_COMB") and g.CANAL_COMB:
+                self.preencher_combo_canal(g.CANAL_COMB)
+
+            # Combos do formulário de dedução
+            if hasattr(g, "DED_MATER_COMB") and g.DED_MATER_COMB:
+                self.preencher_combo_material(
+                    g.DED_MATER_COMB, show_cache_indicator=False
+                )
+
+            if hasattr(g, "DED_ESPES_COMB") and g.DED_ESPES_COMB:
+                self.preencher_combo_espessura(
+                    g.DED_ESPES_COMB, show_cache_indicator=False
+                )
+
+            if hasattr(g, "DED_CANAL_COMB") and g.DED_CANAL_COMB:
+                self.preencher_combo_canal(g.DED_CANAL_COMB, show_cache_indicator=False)
+
+            logging.info("Combos atualizados com dados do cache/banco")
+
+        except (AttributeError, ValueError, RuntimeError) as e:
+            logging.error("Erro ao atualizar todos os combos: %s", e)
+
+
+# Instância global do preenchedor resiliente
+resilient_combo_filler = ResilientComboBoxFiller()
