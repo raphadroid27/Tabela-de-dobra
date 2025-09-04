@@ -1,7 +1,7 @@
 """
 Módulo utilitário para manipulação de banco de dados no aplicativo de Calculadora de Dobras.
 Versão refatorada para usar sessões de curta duração (short-lived sessions)
-e modo WAL (Write-Ahead Logging) para prevenir bloqueios de banco de dados.
+e modo DELETE (padrão) para prevenir criação de arquivos WAL e SHM.
 """
 
 import logging
@@ -28,13 +28,15 @@ engine = create_engine(
 @event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, _connection_record):
     """
-    Ativa o modo WAL (Write-Ahead Logging) ao estabelecer uma nova conexão.
-    Isso melhora a concorrência, permitindo leituras enquanto ocorrem escritas.
+    Configura o SQLite para usar modo DELETE (padrão) e desabilita funcionalidades WAL.
+    Isso evita a criação de arquivos .wal e .shm.
     """
     cursor = dbapi_connection.cursor()
     try:
-        cursor.execute("PRAGMA journal_mode=WAL;")
-        logging.info("Modo de jornal do SQLite definido como WAL.")
+        cursor.execute("PRAGMA journal_mode=DELETE;")
+        cursor.execute("PRAGMA synchronous=FULL;")
+        cursor.execute("PRAGMA wal_autocheckpoint=OFF;")
+        logging.info("Modo de jornal do SQLite definido como DELETE (WAL desabilitado).")
     finally:
         cursor.close()
 
