@@ -64,8 +64,9 @@ ICON_PATH = obter_dir_icone()
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 
 # Configuração de AppData para dados do usuário
-APPDATA_DIR = os.environ.get("APPDATA", os.path.join(
-    os.environ["USERPROFILE"], "AppData", "Roaming"))
+APPDATA_DIR = os.environ.get(
+    "APPDATA", os.path.join(os.environ["USERPROFILE"], "AppData", "Roaming")
+)
 
 # Diretórios para comunicação entre processos (IPC) - mantidos no diretório base
 RUNTIME_DIR = os.path.join(BASE_DIR, ".runtime")
@@ -126,8 +127,9 @@ APP_EXECUTABLE_NAME = "Calculadora de Dobra.exe"
 APP_EXECUTABLE_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE_NAME)
 
 # Arquivos de configuração do usuário (movido para AppData)
-APPDATA_DIR = os.environ.get("APPDATA", os.path.join(
-    os.environ["USERPROFILE"], "AppData", "Roaming"))
+APPDATA_DIR = os.environ.get(
+    "APPDATA", os.path.join(os.environ["USERPROFILE"], "AppData", "Roaming")
+)
 CONFIG_DIR = os.path.join(APPDATA_DIR, "Calculadora de Dobra")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
