@@ -7,11 +7,9 @@ import logging
 import os
 import signal
 import sys
-import time
 import traceback
 from functools import partial
 
-import psutil
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
@@ -413,42 +411,12 @@ def iniciar_timers():
     TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
 
 
-def verificar_instancias_multiplas():
-    """Verifica se há múltiplas instâncias rodando."""
-    try:
-
-        # Conta processos Python que podem estar acessando o banco
-        processos_python = []
-        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-            try:
-                if proc.info["name"] and "python" in proc.info["name"].lower():
-                    cmdline = proc.info["cmdline"]
-                    if cmdline and any("tabela" in arg.lower() for arg in cmdline):
-                        processos_python.append(proc.info)
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-
-        if len(processos_python) > 1:
-            logging.warning(
-                "Detectadas %d instâncias Python. Possível concorrência.",
-                len(processos_python),
-            )
-
-            # Aguarda um pouco para outras instâncias terminarem
-            time.sleep(2)
-    except (ImportError, OSError, RuntimeError) as e:
-        logging.warning("Erro ao verificar instâncias múltiplas: %s", e)
-
-
 def main():
     """Função principal que inicializa e executa a aplicação."""
     setup_logging("app.log", log_to_console=True)
     app = None
     try:
         logging.info("Iniciando a aplicação v%s...", APP_VERSION)
-
-        # Verifica instâncias múltiplas primeiro
-        verificar_instancias_multiplas()
 
         ipc_manager.ensure_ipc_dirs_exist()
         inicializar_banco_dados()
