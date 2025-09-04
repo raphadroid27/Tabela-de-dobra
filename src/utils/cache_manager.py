@@ -5,6 +5,8 @@ Mantém dados em memória para acesso quando o banco está bloqueado.
 
 import json
 import logging
+import os
+import tempfile
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -26,6 +28,7 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
         self._lock = threading.RLock()
         self._initialized = False
         self._dirty = False  # Flag para controle de persistência
+        self._last_save: datetime = datetime.min  # controle de frequência de gravação
 
         # Configurações simplificadas de TTL por tipo de dado
         self._cache_ttl = {
@@ -69,9 +72,13 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
             self._cache_timestamps = {}
 
     def _save_persistent_cache(self, force=False):
-        """Salva cache no disco para persistência."""
-        if not force and not self._dirty:
-            return  # Só salva se houve mudanças
+        """Salva cache no disco para persistência (escrita atômica + throttling)."""
+        # Throttling: evita gravar muitas vezes em curto intervalo
+        if not force:
+            if not self._dirty:
+                return
+            if datetime.now() - self._last_save < timedelta(seconds=2):
+                return
 
         try:
             cache_data = {
@@ -83,10 +90,19 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
                 "saved_at": datetime.now().isoformat(),
             }
 
-            with open(self.cache_file, "w", encoding="utf-8") as f:
-                json.dump(cache_data, f, indent=2, ensure_ascii=False)
+            # Escrita atômica: grava em arquivo temporário e substitui
+            tmp_dir = self.cache_file.parent
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                "w", delete=False, dir=tmp_dir, encoding="utf-8"
+            ) as tf:
+                json.dump(cache_data, tf, indent=2, ensure_ascii=False)
+                tmp_path = tf.name
 
-            self._dirty = False  # Reset flag após salvar
+            os.replace(tmp_path, self.cache_file)
+
+            self._dirty = False
+            self._last_save = datetime.now()
 
         except (OSError, json.JSONDecodeError, ValueError) as e:
             logging.error("Erro ao salvar cache persistido: %s", e)
@@ -173,7 +189,8 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
         self, material_nome: str, espessura_valor: float, canal_valor: str
     ) -> Optional[Dict]:
         """Busca dedução específica do cache ou banco."""
-        cache_key = f"deducao_{material_nome}_{espessura_valor}_{canal_valor}"
+        # Padroniza prefixo no plural para alinhar com TTL/invalidade
+        cache_key = f"deducoes_{material_nome}_{espessura_valor}_{canal_valor}"
 
         def query_deducao(session):
             return (
@@ -204,18 +221,26 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
         """Invalida cache específico ou todo o cache."""
         with self._lock:
             if keys:
-                # Remove chaves que começam com os padrões fornecidos
+                # Expande padrões para lidar com singular/plural
+                expanded = set(keys)
+                if any(
+                    k.startswith("deducao") or k.startswith("deducoes") for k in keys
+                ):
+                    expanded.update({"deducao", "deducao_", "deducoes", "deducoes_"})
+
                 keys_to_remove = [
                     cache_key
-                    for cache_key in self._cache.keys()
-                    if any(cache_key.startswith(pattern) for pattern in keys)
+                    for cache_key in list(self._cache.keys())
+                    if any(cache_key.startswith(pattern) for pattern in expanded)
                 ]
 
                 for cache_key in keys_to_remove:
                     self._cache.pop(cache_key, None)
                     self._cache_timestamps.pop(cache_key, None)
 
-                    self.cache_logger.info("Cache invalidado para: %s", keys)
+                self.cache_logger.info(
+                    "Cache invalidado para padrões: %s", list(expanded)
+                )
             else:
                 self._cache.clear()
                 self._cache_timestamps.clear()
