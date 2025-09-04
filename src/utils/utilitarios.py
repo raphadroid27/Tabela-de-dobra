@@ -67,6 +67,7 @@ LOG_DIR = os.path.join(BASE_DIR, "logs")
 RUNTIME_DIR = os.path.join(BASE_DIR, ".runtime")
 SESSION_DIR = os.path.join(RUNTIME_DIR, "sessions")
 COMMAND_DIR = os.path.join(RUNTIME_DIR, "commands")
+CACHE_DIR = os.path.join(RUNTIME_DIR, "cache")
 
 
 # Margens e espaçamentos padrão para layouts

@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Canal, Deducao, Espessura, Material
 from src.utils.banco_dados import get_session
+from src.utils.utilitarios import CACHE_DIR
 
 
 class CacheManager:  # pylint: disable=too-many-instance-attributes
@@ -35,7 +36,7 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
         }
 
         # Arquivo para persistir cache entre sessões
-        self.cache_file = Path("cache/database_cache.json")
+        self.cache_file = Path(CACHE_DIR) / "database_cache.json"
         self.cache_file.parent.mkdir(parents=True, exist_ok=True)
 
         # Carrega cache persistido
