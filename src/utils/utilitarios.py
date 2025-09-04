@@ -63,11 +63,17 @@ ICON_PATH = obter_dir_icone()
 # Diretório de logs
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 
-# Diretórios para comunicação entre processos (IPC)
+# Configuração de AppData para dados do usuário
+APPDATA_DIR = os.environ.get("APPDATA", os.path.join(
+    os.environ["USERPROFILE"], "AppData", "Roaming"))
+
+# Diretórios para comunicação entre processos (IPC) - mantidos no diretório base
 RUNTIME_DIR = os.path.join(BASE_DIR, ".runtime")
 SESSION_DIR = os.path.join(RUNTIME_DIR, "sessions")
 COMMAND_DIR = os.path.join(RUNTIME_DIR, "commands")
-CACHE_DIR = os.path.join(RUNTIME_DIR, "cache")
+
+# Cache movido para AppData
+CACHE_DIR = os.path.join(APPDATA_DIR, "Calculadora de Dobra", "cache")
 
 
 # Margens e espaçamentos padrão para layouts
@@ -119,9 +125,10 @@ UPDATE_TEMP_DIR = os.path.join(BASE_DIR, "update_temp")
 APP_EXECUTABLE_NAME = "Calculadora de Dobra.exe"
 APP_EXECUTABLE_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE_NAME)
 
-# Arquivos de configuração do usuário
-DOCUMENTS_DIR = os.path.join(os.environ["USERPROFILE"], "Documents")
-CONFIG_DIR = os.path.join(DOCUMENTS_DIR, "Calculadora de Dobra")
+# Arquivos de configuração do usuário (movido para AppData)
+APPDATA_DIR = os.environ.get("APPDATA", os.path.join(
+    os.environ["USERPROFILE"], "AppData", "Roaming"))
+CONFIG_DIR = os.path.join(APPDATA_DIR, "Calculadora de Dobra")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 
@@ -132,6 +139,7 @@ def ensure_dirs_exist() -> None:
     os.makedirs(DATABASE_DIR, exist_ok=True)
     os.makedirs(LOG_DIR, exist_ok=True)
     os.makedirs(CONFIG_DIR, exist_ok=True)
+    os.makedirs(CACHE_DIR, exist_ok=True)
     # Diretórios de IPC são criados pelo ipc_manager
 
 
