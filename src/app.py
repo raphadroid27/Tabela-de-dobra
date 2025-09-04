@@ -454,10 +454,10 @@ def main():
         # Atualiza combos com dados do cache após carregar interface
         try:
             from src.utils.interface import (  # pylint: disable=import-outside-toplevel
-                resilient_combo_filler,
+                todas_funcoes,
             )
 
-            resilient_combo_filler.atualizar_todos_combos()
+            todas_funcoes()
             logging.info("Combos inicializados com dados do cache")
         except (OSError, RuntimeError, ImportError) as e:
             logging.warning("Erro ao inicializar combos: %s", e)
