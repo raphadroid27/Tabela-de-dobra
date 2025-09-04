@@ -1,235 +1,127 @@
-# Sistema Resiliente de Banco de Dados
+# Sistema Resiliente (SQLite + Cache)
 
-Este documento descreve o sistema implementado para tornar o aplicativo mais resiliente a bloqueios de banco de dados.
+Este documento descreve como o aplicativo foi projetado para se manter estável e rápido mesmo sob bloqueios ocasionais do SQLite e múltiplas instâncias.
 
-## 📋 Recursos Implementados
+## 📋 Visão Geral dos Recursos
 
-### 🔧 1. Sistema de Recovery Automático
-- **Desbloqueio automático** para operações críticas
-- **Backup automático** antes de tentativas de desbloqueio
-- **Múltiplas estratégias** de recovery
-- **Logs detalhados** para auditoria
+### 🔧 1) Acesso ao Banco com Sessões Curtas
+- Uso de sessões de curta duração via `get_session()` (context manager) em `src/utils/banco_dados.py`.
+- SQLite configurado para evitar arquivos WAL/SHM: `journal_mode=DELETE` e `synchronous=FULL`.
+- Timeout de conexão de 30s para evitar travas prolongadas.
 
-### 💾 2. Sistema de Cache Inteligente
-- **Cache persistente** em memória e disco
-- **Invalidação automática** quando dados são modificados
-- **Fallback automático** para cache quando banco está bloqueado
-- **TTL configurável** por tipo de dado
+### 💾 2) Cache Inteligente (Memória + Disco)
+- Cache em memória com persistência em `CACHE_DIR/database_cache.json`.
+- Escrita atômica em disco (arquivo temporário + replace) e throttling para reduzir I/O.
+- TTL por tipo de dado e fallback para cache se o banco estiver indisponível.
 
-### 📊 3. Monitoramento de Bloqueios
-- **Registro automático** de eventos de bloqueio
-- **Estatísticas detalhadas** de frequência e duração
-- **Alertas** para alta frequência de bloqueios
-- **Dashboard** de monitoramento em tempo real
+### 🎛️ 3) Interface Resiliente
+- Combos e cálculos tentam o banco; se falhar, usam o cache.
+- Pré-carregamento do cache na inicialização para uma UI responsiva.
 
-### 🎛️4. Interface Resiliente
-- **ComboBoxes** que funcionam mesmo com banco bloqueado
-- **Indicadores visuais** do status dos dados (cache vs banco)
-- **Atualização automática** dos combos após mudanças
+### 📊 4) Monitoramento Opcional de Bloqueios
+- Monitoramento via `logs/app.log`.
 
-## 🚀 Como Usar
+## 🚀 Como Executar
 
-### Execução Normal do Aplicativo
-O sistema é **completamente transparente**. Ao executar o aplicativo normalmente:
+O sistema é transparente para o usuário. Para iniciar:
 
-```bash
+```powershell
 python -m src.app
 ```
 
-- Cache é inicializado automaticamente
-- Combos são preenchidos com dados do cache/banco
-- Recovery automático é ativado para operações críticas
+- O cache será inicializado/precarregado automaticamente.
+- A UI consulta o banco e faz fallback para cache quando necessário.
 
-### Monitoramento de Bloqueios
+## 📊 Configurações do SQLite
 
-#### Relatório Único
-```bash
-python scripts/monitor_bloqueios.py
-```
-
-#### Monitoramento Contínuo
-```bash
-python scripts/monitor_bloqueios.py --continuous
-```
-
-### Teste do Sistema
-```bash
-python -m tests.test_sistema_resiliente
-```
-
-## 📈 Configurações do Cache
-
-### TTL (Time To Live) por Tipo
-- **Materiais**: 60 minutos (dados estáticos)
-- **Espessuras**: 60 minutos (dados estáticos)  
-- **Canais**: 60 minutos (dados estáticos)
-- **Deduções**: 5 minutos (dados dinâmicos)
-
-### Estratégias de Invalidação
-- **Automática**: Após operações CRUD
-- **Por expiração**: Baseada no TTL
-- **Manual**: Via `cache_manager.invalidate_cache()`
-
-## 🔧 Estratégias de Recovery
-
-O sistema tenta as seguintes estratégias em ordem:
-
-1. **Desbloqueio Imediato**: PRAGMA + rollback
-2. **Checkpoint Recovery**: WAL checkpoint
-3. **Limpeza WAL/SHM**: Remove arquivos temporários
-4. **Recovery de Emergência**: Verificação de integridade
-
-## 📊 Configurações Otimizadas do SQLite
+As PRAGMAs aplicadas no connect do engine (ver `src/utils/banco_dados.py`):
 
 ```sql
-PRAGMA journal_mode=WAL;          -- Write-Ahead Logging
-PRAGMA synchronous=NORMAL;        -- Balance segurança/performance
-PRAGMA cache_size=10000;          -- Cache de 10MB
-PRAGMA temp_store=MEMORY;         -- Tabelas temp em memória
-PRAGMA busy_timeout=30000;        -- Timeout de 30s
-PRAGMA wal_autocheckpoint=1000;   -- Checkpoint automático
+PRAGMA journal_mode=DELETE;   -- Evita criar .wal e .shm (melhor p/ OneDrive e antivírus)
+PRAGMA synchronous=FULL;      -- Maior integridade nas escritas
+PRAGMA wal_autocheckpoint=OFF; -- Desabilitado (sem efeito em DELETE, mantido por segurança)
 ```
 
-## 🛡️ Operações Críticas
+Racional: Em ambientes com diretórios sincronizados (ex.: OneDrive) e múltiplas instâncias, o modo WAL cria arquivos extras (.wal/.shm) que aumentam a chance de conflito e inspeção por antivírus. O modo DELETE reduz esses impactos.
 
-As seguintes operações ativam recovery automático:
-- `initialization`: Inicialização do banco
-- `critical_read`: Leituras críticas
-- `critical_write`: Escritas críticas
+## 📈 Cache: TTL, Invalidação e Persistência
 
-## 📁 Estrutura de Arquivos
+### TTL por Tipo
+- Materiais: 60 minutos
+- Espessuras: 60 minutos
+- Canais: 60 minutos
+- Deduções: 5 minutos
 
-```
-src/utils/
-├── database_recovery.py     # Sistema de recovery
-├── cache_manager.py         # Gerenciamento de cache
-├── banco_dados.py          # Banco com recovery integrado
-├── interface.py            # Interface resiliente
-└── operacoes_crud.py       # CRUD com invalidação
+### Chaves e Prefixos
+- Listas: `materiais_list`, `espessuras_list`, `canais_list`.
+- Deduções (item específico): `deducoes_{material}_{espessura}_{canal}`.
 
-logs/
-├── database_locks.json     # Eventos de bloqueio
-├── database_recovery.log   # Logs de recovery
-└── app.log                # Logs principais
+### Invalidação
+- Após CRUD em Material: `invalidate_cache(["materiais", "deducoes"])`.
+- Após CRUD em Espessura: `invalidate_cache(["espessuras", "deducoes"])`.
+- Após CRUD em Canal: `invalidate_cache(["canais", "deducoes"])`.
+- Após CRUD em Dedução: `invalidate_cache(["deducoes"])`.
 
-cache/
-└── database_cache.json     # Cache persistente
+### Persistência em Disco
+- Escrita atômica: grava em arquivo temporário e substitui o JSON final (evita corrupção).
+- Throttling: evita gravar com muita frequência; grava imediatamente ao encerrar ou quando forçado.
 
-scripts/
-└── monitor_bloqueios.py    # Monitor de bloqueios
+## 🧭 Sessões e Comandos entre Instâncias
 
-tests/
-└── test_sistema_resiliente.py  # Testes completos
-```
+- As sessões ativas e comandos do sistema são coordenados por arquivos simples (`.session`, `.cmd`).
+- Motivos: simplicidade, baixa latência, menor risco de lock no SQLite (em especial no modo DELETE e em OneDrive).
+- A antiga tabela `SystemControl` continua disponível para metadados de baixa frequência (ex.: versão instalada), mas não é usada para sessões/comandos.
 
-## 📊 Exemplo de Dashboard
-
-```
-📊 DASHBOARD DE MONITORAMENTO - BANCO DE DADOS
-════════════════════════════════════════════════
-🕒 Última atualização: 2025-09-03 22:33:24
-
-🔒 BLOQUEIOS NA ÚLTIMA HORA:
-   Total de bloqueios: 0
-   ✅ Nenhum bloqueio detectado na última hora
-
-🔒 BLOQUEIOS NAS ÚLTIMAS 24 HORAS:
-   Total de bloqueios: 3
-   Taxa de resolução: 100.0%
-   Duração média: 1.25s
-
-🔧 ESTATÍSTICAS DE RECOVERY:
-   Total de recoveries: 2
-   
-   📋 Estratégias utilizadas:
-      Checkpoint Recovery: 1 vezes
-      Limpeza WAL/SHM: 1 vezes
-
-💾 STATUS DO CACHE:
-   Inicializado: ✅
-   Total de entradas: 4
-   Entradas válidas: 4
-   Entradas expiradas: 0
-   
-   📊 Tipos de cache:
-      materiais: 1 entradas
-      espessuras: 1 entradas
-      canais: 1 entradas
-      deducoes: 1 entradas
-```
-
-## ⚙️ APIs do Sistema
+## ⚙️ APIs Úteis
 
 ### Cache Manager
 ```python
 from src.utils.cache_manager import cache_manager
 
-# Pré-carrega cache
+# Preload na inicialização
 cache_manager.preload_cache()
 
-# Busca dados (banco ou cache)
+# Consultas (banco com fallback p/ cache)
 materiais = cache_manager.get_materiais()
 espessuras = cache_manager.get_espessuras()
 canais = cache_manager.get_canais()
 deducao = cache_manager.get_deducao("Aço", 1.0, "U 20")
 
-# Invalida cache
-cache_manager.invalidate_cache(["materiais"])
+# Invalidação
+cache_manager.invalidate_cache(["materiais"])  # ou ["espessuras"], ["canais"], ["deducoes"]
 
-# Status do cache
+# Status e manutenção
 status = cache_manager.get_cache_status()
+cache_manager.cleanup_expired_cache()
+cache_manager.sync_cache_to_disk()
 ```
 
-### Database Recovery
+### Banco de Dados (sessões curtas)
 ```python
-from src.utils.database_recovery import DatabaseUnlocker
+from src.utils.banco_dados import get_session
 
-# Desbloqueio manual
-unlocker = DatabaseUnlocker("path/to/database.db")
-success = unlocker.force_unlock(create_backup=True)
-
-# Conexão resiliente
-with resilient_database_connection("db.path", "operation_name") as conn:
-    # Usa conexão normalmente
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tabela")
-```
-
-### Interface Resiliente
-```python
-from src.utils.interface import resilient_combo_filler
-
-# Atualiza todos os combos
-resilient_combo_filler.atualizar_todos_combos()
-
-# Atualiza combo específico
-resilient_combo_filler.preencher_combo_material(combo_widget)
+with get_session() as session:
+   # Suas operações ORM aqui
+   pass
 ```
 
 ## 🔍 Troubleshooting
 
-### Cache não está funcionando
-1. Verifique se o diretório `cache/` existe
-2. Verifique permissões de escrita
-3. Execute `cache_manager.force_refresh()`
+### Cache não está atualizando
+1) Verifique permissões de escrita no `CACHE_DIR`.
+2) Chame `cache_manager.invalidate_cache([...])` após CRUD.
+3) Forçe atualização: `cache_manager.force_refresh()`.
 
-### Recovery não está funcionando
-1. Verifique se existem backups em `backups/database/`
-2. Verifique logs em `logs/database_recovery.log`
-3. Execute teste: `python -m tests.test_sistema_resiliente`
+### Bloqueios do SQLite
+1) Verifique as mensagens em `logs/app.log`.
+2) Prefira rodar o app sem outras ferramentas que mantenham o DB aberto.
+3) Evite colocar o DB em pastas com sync agressivo se possível.
 
-### Muitos bloqueios detectados
-1. Execute monitor: `python scripts/monitor_bloqueios.py`
-2. Verifique se múltiplas instâncias estão rodando
-3. Considere aumentar timeouts no banco
+## 🎯 Benefícios
 
-## 🎯 Benefícios do Sistema
+✅ Disponibilidade: app continua operando via cache mesmo se o DB bloquear.
+✅ Performance: menos I/O no banco; UI mais fluida.
+✅ Robustez: sessões curtas + PRAGMAs adequadas + persistência atômica do cache.
+✅ Previsibilidade: estratégia simples para sessões/comandos via arquivos.
 
-✅ **Disponibilidade**: Aplicativo funciona mesmo com banco bloqueado  
-✅ **Performance**: Cache reduz acessos ao banco  
-✅ **Resiliência**: Recovery automático resolve bloqueios  
-✅ **Monitoramento**: Visibilidade completa dos problemas  
-✅ **Transparência**: Funciona sem mudanças no código existente  
-✅ **Auditoria**: Logs detalhados de todas as operações  
-
-O sistema implementado garante que seu aplicativo seja muito mais robusto e confiável, especialmente em ambientes onde múltiplas instâncias podem estar rodando simultaneamente.
+Este arranjo foi otimizado para Windows/OneDrive e múltiplas instâncias, equilibrando segurança, desempenho e simplicidade operacional.
