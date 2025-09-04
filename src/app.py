@@ -420,6 +420,18 @@ def main():
 
         ipc_manager.ensure_ipc_dirs_exist()
         inicializar_banco_dados()
+
+        # Inicializa o cache de dados essenciais
+        try:
+            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                cache_manager,
+            )
+
+            cache_manager.preload_cache()
+            logging.info("Cache de dados inicializado com sucesso")
+        except (OSError, RuntimeError, ImportError) as e:
+            logging.warning("Erro ao inicializar cache: %s", e)
+
         limpar_sessoes_inativas()
         ipc_manager.clear_all_commands()
 
@@ -438,6 +450,17 @@ def main():
         configurar_menu(menu_custom)
         registrar_sessao()
         verificar_admin_existente()
+
+        # Atualiza combos com dados do cache após carregar interface
+        try:
+            from src.utils.interface import (  # pylint: disable=import-outside-toplevel
+                resilient_combo_filler,
+            )
+
+            resilient_combo_filler.atualizar_todos_combos()
+            logging.info("Combos inicializados com dados do cache")
+        except (OSError, RuntimeError, ImportError) as e:
+            logging.warning("Erro ao inicializar combos: %s", e)
 
         if g.PRINC_FORM:
             g.PRINC_FORM.show()

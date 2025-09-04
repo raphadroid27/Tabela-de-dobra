@@ -7,6 +7,7 @@ recebem dados brutos como argumentos, processam-nos e retornam os resultados,
 sem modificar ou sequer conhecer a interface gráfica.
 """
 
+import logging
 import re
 from math import pi
 from typing import List
@@ -34,6 +35,7 @@ def buscar_deducao_por_parametros(
         Objeto Deducao ou None se não encontrado
     """
     return (
+        # pylint: disable=duplicate-code
         session.query(Deducao)
         .join(Material)
         .join(Espessura)
@@ -66,25 +68,74 @@ def _extrair_valor_canal(canal_str):
 
 
 class CalculoDeducaoDB:
-    """Busca a dedução e observação do banco de dados."""
+    """Busca a dedução e observação do banco de dados com cache resiliente."""
+
+    def __init__(self):
+        # Importa cache apenas quando necessário para evitar circular imports
+        from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+            cache_manager,
+        )
+
+        self.cache_manager = cache_manager
 
     def buscar(self, material_nome: str, espessura_str: str, canal_valor: str):
-        """Busca a dedução no banco de dados."""
+        """
+        Busca a dedução no banco de dados usando cache quando possível.
+
+        Returns:
+            dict: {"valor": float|str, "obs": str} ou None se erro
+        """
         if not all([material_nome, espessura_str, canal_valor]):
             return None
 
         try:
+            espessura_valor_float = float(espessura_str)
+
+            # Tenta buscar do cache primeiro
+            resultado_cache = self.cache_manager.get_deducao(
+                material_nome, espessura_valor_float, canal_valor
+            )
+
+            if resultado_cache:
+                return {
+                    "valor": resultado_cache["valor"],
+                    "obs": resultado_cache["observacao"] or "",
+                }
+            if resultado_cache is None:
+                # Cache retornou None = não encontrado no banco
+                return {"valor": "N/A", "obs": "Dedução não encontrada."}
+
+            # Fallback para busca direta no banco (se cache falhou)
+            return self._buscar_direto_banco(
+                material_nome, espessura_valor_float, canal_valor
+            )
+
+        except (ValueError, TypeError) as e:
+            logging.error("Erro ao converter espessura '%s': %s", espessura_str, e)
+            return None
+        except (SQLAlchemyError, OSError) as e:
+            logging.error("Erro inesperado ao buscar dedução: %s", e)
+            return None
+
+    def _buscar_direto_banco(
+        self, material_nome: str, espessura_valor: float, canal_valor: str
+    ):
+        """Busca direta no banco como fallback."""
+        try:
             with get_session() as session:
-                espessura_valor_float = float(espessura_str)
                 resultado = buscar_deducao_por_parametros(
-                    session, material_nome, espessura_valor_float, canal_valor
+                    session, material_nome, espessura_valor, canal_valor
                 )
 
                 if resultado:
                     return {"valor": resultado.valor, "obs": resultado.observacao or ""}
                 return {"valor": "N/A", "obs": "Dedução não encontrada."}
 
-        except (SQLAlchemyError, ValueError, TypeError):
+        except SQLAlchemyError as e:
+            logging.warning("Erro ao acessar banco para dedução: %s", e)
+            return {"valor": "N/A", "obs": "Erro ao acessar dados."}
+        except (OSError, RuntimeError) as e:
+            logging.error("Erro inesperado na busca direta: %s", e)
             return None
 
 
