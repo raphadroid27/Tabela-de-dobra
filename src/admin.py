@@ -419,7 +419,7 @@ class UpdaterWidget(QWidget):
         return widget
 
     def _update_progress_ui(self, message: str, value: int):
-        """Callback para atualizar a UI de progresso."""
+        """Atualiza a UI de progresso."""
         self.progress_status_label.setText(message)
         self.progress_bar.setValue(value)
 

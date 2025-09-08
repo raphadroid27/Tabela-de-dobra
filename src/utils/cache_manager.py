@@ -1,7 +1,5 @@
-"""
-Gerenciador de cache para dados do banco de dados.
-Mantém dados em memória para acesso quando o banco está bloqueado.
-"""
+"""Gerenciador de cache para dados do banco; mantém dados
+em memória para acesso quando o banco está bloqueado."""
 
 import json
 import logging
@@ -10,7 +8,7 @@ import tempfile
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -124,7 +122,9 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
         self._cache_timestamps[key] = datetime.now()
         self._dirty = True  # Marca cache como modificado
 
-    def _get_cached_data(self, cache_key: str, query_func, result_processor=None):
+    def _get_cached_data(
+        self, cache_key: str, query_func, result_processor=None
+    ) -> Any:
         """Método genérico para buscar dados com cache."""
         with self._lock:
             if self._is_cache_valid(cache_key):
@@ -163,26 +163,37 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
 
     def get_materiais(self) -> List[Dict]:
         """Retorna lista de materiais do cache ou banco."""
-        return self._get_cached_data(
-            "materiais_list",
-            lambda session: session.query(Material).all(),
-            lambda materiais: [{"id": m.id, "nome": m.nome} for m in materiais],
+        return cast(
+            List[Dict],
+            self._get_cached_data(
+                "materiais_list",
+                lambda session: session.query(Material).all(),
+                lambda materiais: [{"id": m.id, "nome": m.nome} for m in materiais],
+            ),
         )
 
     def get_espessuras(self) -> List[Dict]:
         """Retorna lista de espessuras do cache ou banco."""
-        return self._get_cached_data(
-            "espessuras_list",
-            lambda session: session.query(Espessura).order_by(Espessura.valor).all(),
-            lambda espessuras: [{"id": e.id, "valor": e.valor} for e in espessuras],
+        return cast(
+            List[Dict],
+            self._get_cached_data(
+                "espessuras_list",
+                lambda session: session.query(Espessura)
+                .order_by(Espessura.valor)
+                .all(),
+                lambda espessuras: [{"id": e.id, "valor": e.valor} for e in espessuras],
+            ),
         )
 
     def get_canais(self) -> List[Dict]:
         """Retorna lista de canais do cache ou banco."""
-        return self._get_cached_data(
-            "canais_list",
-            lambda session: session.query(Canal).all(),
-            lambda canais: [{"id": c.id, "valor": c.valor} for c in canais],
+        return cast(
+            List[Dict],
+            self._get_cached_data(
+                "canais_list",
+                lambda session: session.query(Canal).all(),
+                lambda canais: [{"id": c.id, "valor": c.valor} for c in canais],
+            ),
         )
 
     def get_deducao(
@@ -215,7 +226,10 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
                 }
             return None
 
-        return self._get_cached_data(cache_key, query_deducao, process_deducao)
+        return cast(
+            Optional[Dict],
+            self._get_cached_data(cache_key, query_deducao, process_deducao),
+        )
 
     def invalidate_cache(self, keys: Optional[List[str]] = None):
         """Invalida cache específico ou todo o cache."""
@@ -274,7 +288,7 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
                 1 for key in self._cache.keys() if self._is_cache_valid(key)
             )
 
-            cache_types = {}
+            cache_types: Dict[str, int] = {}
             for key in self._cache.keys():
                 cache_type = key.split("_")[0]
                 cache_types[cache_type] = cache_types.get(cache_type, 0) + 1

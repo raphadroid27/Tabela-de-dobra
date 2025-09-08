@@ -1,6 +1,6 @@
 """
-# Formulário "Sobre"
-# Este módulo implementa a janela "Sobre" do aplicativo.
+Formulário "Sobre"
+Este módulo implementa a janela "Sobre" do aplicativo.
 """
 
 import sys

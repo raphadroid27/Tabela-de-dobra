@@ -1,48 +1,48 @@
-"""
-Este módulo define variáveis globais para uso em diferentes partes da aplicação.
-"""
+"""Variáveis globais usadas em diferentes partes da aplicação."""
+
+from typing import Any, Dict, List, Optional
 
 # Variáveis globais
-VALORES_W = [1, 2]
-EXP_V = None
-EXP_H = None
-USUARIO_ID = None
-USUARIO_NOME = None
-TEMA_ATUAL = None
-BARRA_TITULO = None
+VALORES_W: List[int] = [1, 2]
+EXP_V: Optional[bool] = None
+EXP_H: Optional[bool] = None
+USUARIO_ID: Optional[int] = None
+USUARIO_NOME: Optional[str] = None
+TEMA_ATUAL: Optional[str] = None
+BARRA_TITULO: Any = None
 # Lista para rastrear todas as barras de título ativas
-BARRAS_TITULO_ATIVAS = []
-SESSION_ID = None
-UPDATE_INFO = None
-UPDATE_ACTION = None
+BARRAS_TITULO_ATIVAS: List[Any] = []
+SESSION_ID: Optional[str] = None
+UPDATE_INFO: Optional[Dict[str, Any]] = None
+UPDATE_ACTION: Optional[str] = None
 
 # Flag para controlar quando a interface está sendo recarregada
-INTERFACE_RELOADING = False
+INTERFACE_RELOADING: bool = False
 
 # Função para carregar interface (definida dinamicamente para evitar importação cíclica)
-CARREGAR_INTERFACE_FUNC = None
+CARREGAR_INTERFACE_FUNC: Any = None
 
 # Layout principal da interface (para redimensionamento)
-MAIN_LAYOUT = None
+MAIN_LAYOUT: Any = None
 
 # head.py widgets
-MAT_COMB = None
-ESP_COMB = None
-CANAL_COMB = None
-OFFSET_LBL = None
-OBS_LBL = None
-COMPR_ENTRY = None
-RI_ENTRY = None
-K_LBL = None
-DED_LBL = None
-ABA_EXT_LBL = None
-Z_EXT_LBL = None
-FORCA_LBL = None
+MAT_COMB: Any = None
+ESP_COMB: Any = None
+CANAL_COMB: Any = None
+OFFSET_LBL: Any = None
+OBS_LBL: Any = None
+COMPR_ENTRY: Any = None
+RI_ENTRY: Any = None
+K_LBL: Any = None
+DED_LBL: Any = None
+ABA_EXT_LBL: Any = None
+Z_EXT_LBL: Any = None
+FORCA_LBL: Any = None
 
-N = 6
-DED_ESPEC_ENTRY = None
-FRAME_DOBRA = None
-RAZAO_RIE_LBL = None
+N: int = 6
+DED_ESPEC_ENTRY: Any = None
+FRAME_DOBRA: Any = None
+RAZAO_RIE_LBL: Any = None
 
 RAIO_K = {
     0.1: 0.23,
@@ -68,52 +68,52 @@ RAIO_K = {
 }
 
 # nova_espessura.py widgets
-ESP_VALOR_ENTRY = None
-LIST_ESP = None
-ESP_BUSCA_ENTRY = None
+ESP_VALOR_ENTRY: Any = None
+LIST_ESP: Any = None
+ESP_BUSCA_ENTRY: Any = None
 
 # deducao_form.py widgets
-DED_MATER_COMB = None
-DED_ESPES_COMB = None
-DED_CANAL_COMB = None
-DED_VALOR_ENTRY = None
-DED_OBSER_ENTRY = None
-DED_FORCA_ENTRY = None
-LIST_DED = None
+DED_MATER_COMB: Any = None
+DED_ESPES_COMB: Any = None
+DED_CANAL_COMB: Any = None
+DED_VALOR_ENTRY: Any = None
+DED_OBSER_ENTRY: Any = None
+DED_FORCA_ENTRY: Any = None
+LIST_DED: Any = None
 
 # material_form.py widgets
-MAT_NOME_ENTRY = None
-MAT_DENS_ENTRY = None
-MAT_ESCO_ENTRY = None
-MAT_ELAS_ENTRY = None
-LIST_MAT = None
-MAT_BUSCA_ENTRY = None
+MAT_NOME_ENTRY: Any = None
+MAT_DENS_ENTRY: Any = None
+MAT_ESCO_ENTRY: Any = None
+MAT_ELAS_ENTRY: Any = None
+LIST_MAT: Any = None
+MAT_BUSCA_ENTRY: Any = None
 
 # canal_form.py widgets
-CANAL_VALOR_ENTRY = None
-CANAL_LARGU_ENTRY = None
-CANAL_ALTUR_ENTRY = None
-CANAL_COMPR_ENTRY = None
-CANAL_OBSER_ENTRY = None
-LIST_CANAL = None
-CANAL_BUSCA_ENTRY = None
+CANAL_VALOR_ENTRY: Any = None
+CANAL_LARGU_ENTRY: Any = None
+CANAL_ALTUR_ENTRY: Any = None
+CANAL_COMPR_ENTRY: Any = None
+CANAL_OBSER_ENTRY: Any = None
+LIST_CANAL: Any = None
+CANAL_BUSCA_ENTRY: Any = None
 
 # form_autenticacao.py widgets
-USUARIO_ENTRY = None
-SENHA_ENTRY = None
-ADMIN_VAR = None
-LOGIN = None
+USUARIO_ENTRY: Any = None
+SENHA_ENTRY: Any = None
+ADMIN_VAR: Any = None
+LOGIN: Any = None
 
 # form_usuario.py widgets
-USUARIO_BUSCA_ENTRY = None
-LIST_USUARIO = None
+USUARIO_BUSCA_ENTRY: Any = None
+LIST_USUARIO: Any = None
 
 
 # formularios
-PRINC_FORM = None
-DEDUC_FORM = None
-MATER_FORM = None
-CANAL_FORM = None
-ESPES_FORM = None
-AUTEN_FORM = None
-USUAR_FORM = None
+PRINC_FORM: Any = None
+DEDUC_FORM: Any = None
+MATER_FORM: Any = None
+CANAL_FORM: Any = None
+ESPES_FORM: Any = None
+AUTEN_FORM: Any = None
+USUAR_FORM: Any = None
