@@ -1,5 +1,4 @@
-"""
-Funções e constantes utilitárias genéricas para a aplicação.
+"""Funções e constantes utilitárias genéricas para a aplicação.
 
 Este módulo centraliza a gestão de caminhos, a configuração de logs e as
 funções de diálogo com o usuário (QMessageBox, QInputDialog).
@@ -19,8 +18,7 @@ from src.config import globals as g
 
 
 def obter_dir_base() -> str:
-    """
-    Retorna o diretório base da aplicação de forma consistente.
+    """Retorna o diretório base da aplicação de forma consistente.
 
     Verifica se a aplicação está rodando como um script ou como um executável
     "congelado" para determinar o caminho raiz correto.

@@ -1,7 +1,4 @@
-"""
-Este módulo contém funções para criar e gerenciar o frame de dobras
-com widgets auto-ajustáveis para melhor responsividade.
-"""
+"""Cria e gerencia o frame de dobras com widgets auto-ajustáveis."""
 
 from dataclasses import dataclass
 from typing import Any, Tuple
@@ -199,7 +196,6 @@ def dobras(w):
 
 def _configurar_layout_dobra(layout):
     """Configura o layout com responsividade e espaçamento adequado."""
-
     # Configurar primeira coluna (labels de aba) com largura fixa
     layout.setColumnMinimumWidth(0, 50)
     layout.setColumnStretch(0, 0)

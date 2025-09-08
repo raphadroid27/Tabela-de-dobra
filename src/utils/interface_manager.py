@@ -1,5 +1,5 @@
-"""
-Módulo para gerenciar a interface principal do aplicativo.
+"""Módulo para gerenciar a interface principal do aplicativo.
+
 Sistema robusto com gerenciamento seguro de widgets.
 """
 

@@ -1,6 +1,4 @@
-"""
-Módulo responsável por criar o frame de avisos na interface gráfica.
-"""
+"""Cria o frame de avisos na interface gráfica."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont

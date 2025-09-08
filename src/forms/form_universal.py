@@ -269,6 +269,7 @@ class ButtonConfigManager:
     """Gerencia a configuração de botões para os formulários."""
 
     def __init__(self, config, tipo):
+        """Initialize button configuration manager with config and type."""
         self.config = config
         self.tipo = tipo
         self.is_edit = getattr(g, config["global_edit"], False)
@@ -334,6 +335,7 @@ class FormManager:
     """Gerencia a criação e configuração de formulários."""
 
     def __init__(self, tipo, config, root):
+        """Initialize form manager with type, config and root widget."""
         self.tipo = tipo
         self.config = config
         self.root = root
@@ -357,7 +359,9 @@ class FormManager:
         new_form.setFixedSize(*self.config["size"])
 
         # Remover barra de título nativa
-        new_form.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        new_form.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
+        )
         new_form.setWindowIcon(QIcon(ICON_PATH))
 
         # Layout vertical: barra de título + conteúdo
@@ -390,7 +394,8 @@ class FormManager:
         conteudo_widget.setLayout(grid_layout)
 
         # Guardar referência para uso posterior
-        new_form.conteudo_layout = grid_layout
+        # Atribuição dinâmica: apenas para este QDialog específico
+        new_form.conteudo_layout = grid_layout  # type: ignore[attr-defined]
 
         Janela.posicionar_janela(new_form, None)
 
@@ -441,7 +446,7 @@ def criar_label(layout, texto, pos):
     """Cria um rótulo (QLabel) no layout especificado."""
     linha, coluna = pos
     label = QLabel(texto)
-    label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
     layout.addWidget(label, linha, coluna)
     return label
 
@@ -514,7 +519,7 @@ def criar_lista(config, tipo):
     """Cria a lista/árvore baseada na configuração."""
     tree_widget = QTreeWidget()
     tree_widget.setHeaderLabels(config["lista"]["headers"])
-    tree_widget.header().setDefaultAlignment(Qt.AlignCenter)
+    tree_widget.header().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
     tree_widget.setRootIsDecorated(False)
 
     # Habilitar ordenação por coluna e cores alternadas
@@ -635,22 +640,22 @@ def _executar_pos_inicio(config, tipo):
 
 # Funções de compatibilidade para manter a API existente
 def form_deducao_main(root):
-    """Wrapper para manter compatibilidade com form_deducao."""
+    """Create and display dedução form for compatibility."""
     main("deducao", root)
 
 
 def form_material_main(root):
-    """Wrapper para manter compatibilidade com form_material."""
+    """Create and display material form for compatibility."""
     main("material", root)
 
 
 def form_canal_main(root):
-    """Wrapper para manter compatibilidade com form_canal."""
+    """Create and display canal form for compatibility."""
     main("canal", root)
 
 
 def form_espessura_main(root):
-    """Wrapper para manter compatibilidade com form_espessura."""
+    """Create and display espessura form for compatibility."""
     main("espessura", root)
 
 

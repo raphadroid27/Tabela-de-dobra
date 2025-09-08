@@ -1,6 +1,4 @@
-"""
-Formulário para o cálculo de Spring Back
-"""
+"""Formulário para o cálculo de Spring Back."""
 
 import sys
 from typing import Optional
@@ -19,12 +17,12 @@ from PySide6.QtWidgets import (
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models.models import Material
-from src.utils.banco_dados import session
+from src.utils.banco_dados import get_session
 from src.utils.estilo import obter_tema_atual
 
 
 def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
-    """Cria o formulário de Spring Back usando QDialog com barra customizada"""
+    """Create the Spring Back form using QDialog with custom title bar."""
     form_spring = QDialog(root)
     form_spring.setWindowTitle("Cálculo de Spring Back")
     form_spring.setFixedSize(300, 150)
@@ -42,7 +40,8 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     conteudo = QWidget()
     layout = QGridLayout(conteudo)
 
-    materiais = [str(material.nome) for material in session.query(Material).all()]
+    with get_session() as session:
+        materiais = [str(material.nome) for material in session.query(Material).all()]
 
     layout.addWidget(QLabel("Material:"), 0, 0)
     g.MAT_COMB = QComboBox()

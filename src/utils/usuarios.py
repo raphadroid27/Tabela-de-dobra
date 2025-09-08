@@ -1,5 +1,5 @@
-"""
-Módulo utilitário para gerenciamento de usuários (Refatorado)
+"""Módulo utilitário para gerenciamento de usuários (Refatorado).
+
 Atualizado para usar o padrão de sessão por operação.
 """
 
@@ -23,8 +23,7 @@ from src.utils.utilitarios import (
 
 
 def _obter_usuario_logado(session):
-    """
-    Obtém o usuário logado com verificação de segurança.
+    """Obtém o usuário logado com verificação de segurança.
 
     Returns:
         Usuario ou None: O objeto usuario se logado e válido, None caso contrário.

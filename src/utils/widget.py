@@ -1,7 +1,7 @@
-"""
-Módulo utilitário para gerenciamento, análise, criação e validação de widgets na
-aplicação. Inclui classes para análise de uso, factory, cache, operações e
-gerenciamento de estado de widgets. Também oferece funções para criar, registrar,
+"""Módulo utilitário para gerenciamento, análise, criação e validação de widgets.
+
+Inclui classes para análise de uso, factory, cache, operações e
+gerenciamento de estado de widgets na aplicação. Também oferece funções para criar, registrar,
 validar e manipular widgets usados em formulários e operações.
 """
 

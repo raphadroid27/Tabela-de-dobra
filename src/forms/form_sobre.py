@@ -1,5 +1,5 @@
-"""
-Formulário "Sobre"
+"""Formulário "Sobre".
+
 Este módulo implementa a janela "Sobre" do aplicativo.
 """
 
@@ -18,10 +18,7 @@ from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 
 def main(root: Optional[QWidget]) -> None:
-    """
-    Função principal que cria a janela "Sobre" com barra de título customizada.
-    """
-
+    """Create and display the About dialog with custom title bar."""
     sobre_form = QDialog(root)
     sobre_form.setWindowTitle("Sobre")
     sobre_form.setFixedSize(300, 210)

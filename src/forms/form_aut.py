@@ -1,5 +1,5 @@
 """
-Formulário de Autenticação
+Formulário de Autenticação.
 
 Este módulo implementa uma interface gráfica para autenticação de usuários no sistema.
 As funcionalidades incluem login de usuários existentes e criação de novos usuários,
@@ -84,7 +84,7 @@ def _criar_campos_usuario_senha(main_layout):
 
     main_layout.addWidget(QLabel("Senha:"), 1, 0)
     g.SENHA_ENTRY = QLineEdit()
-    g.SENHA_ENTRY.setEchoMode(QLineEdit.Password)
+    g.SENHA_ENTRY.setEchoMode(QLineEdit.EchoMode.Password)
     main_layout.addWidget(g.SENHA_ENTRY, 1, 1)
 
 

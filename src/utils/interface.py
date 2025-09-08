@@ -13,7 +13,7 @@ import logging
 import traceback
 from dataclasses import dataclass
 from functools import partial
-from typing import Union
+from typing import Any, Dict, Optional, Union
 
 import pyperclip
 from PySide6.QtCore import QTimer
@@ -51,6 +51,7 @@ class CopyManager:
     """Gerencia operações de cópia de valores dos widgets."""
 
     def __init__(self):
+        """Inicializa o gerenciador de operações de cópia."""
         self.configuracoes = {
             "dedução": {"label": lambda *_: g.DED_LBL},
             "fator_k": {"label": lambda *_: g.K_LBL},
@@ -71,6 +72,8 @@ class CopyManager:
 
     def copiar(self, tipo, numero=None, w=None):
         """Copia o valor do label para a área de transferência."""
+        if not self.configuracoes:
+            return
         label_func = self.configuracoes.get(tipo, {}).get("label")
         if not label_func:
             return
@@ -108,7 +111,7 @@ class ListManager:
     """Gerencia operações de listagem de dados do banco na interface."""
 
     def __init__(self):
-        self.configuracoes = None
+        self.configuracoes: Optional[Dict[str, Dict[str, Any]]] = None
 
     def listar(self, tipo):
         """Lista os itens do banco de dados na interface gráfica."""
@@ -557,10 +560,20 @@ def _atualizar_deducao_ui(data: UIData) -> float:
     )
     deducao_db_valor = ""
     if res_db:
-        _atualizar_label(g.DED_LBL, res_db.get("valor"), formato="{:.2f}")
+        valor = (
+            res_db.get("valor")
+            if hasattr(res_db, "get")
+            else getattr(res_db, "valor", None)
+        )
+        obs = (
+            res_db.get("obs", "")
+            if hasattr(res_db, "get")
+            else getattr(res_db, "obs", "")
+        )
+        _atualizar_label(g.DED_LBL, valor, formato="{:.2f}")
         if g.OBS_LBL:
-            g.OBS_LBL.setText(res_db.get("obs", ""))
-        deducao_db_valor = str(res_db.get("valor", ""))
+            g.OBS_LBL.setText(obs)
+        deducao_db_valor = str(valor or "")
     else:
         _atualizar_label(g.DED_LBL, None)
         if g.OBS_LBL:
@@ -640,7 +653,7 @@ def _atualizar_parametros_auxiliares_ui(data: UIData, deducao_usada: float) -> f
         razao if data.espessura > 0 and data.raio_interno > 0 else None,
         formato="{:.1f}",
     )
-    return aba_min
+    return float(aba_min) if aba_min is not None else 0.0
 
 
 def _atualizar_forca_ui(data: UIData):

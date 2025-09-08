@@ -1,8 +1,8 @@
-"""
-Módulo de Operações de Dados (Refatorado)
+"""Módulo de Operações de Dados (Refatorado).
 
 Este módulo foi atualizado para usar o padrão de "sessão por operação"
 e integração com cache para melhor performance e resiliência.
+
 Cada função agora gerencia seu próprio ciclo de vida da sessão,
 garantindo que as transações sejam curtas e o banco de dados
 seja liberado rapidamente.
@@ -20,7 +20,7 @@ from src.utils.banco_dados import get_session, registrar_log
 
 
 def _converter_para_float(valor_str: Optional[str]) -> Optional[float]:
-    """Converte uma string para float, tratando vírgulas e valores vazios."""
+    """Convert a string to float, handling commas and empty values."""
     if not valor_str or not valor_str.strip():
         return None
     try:
@@ -100,19 +100,19 @@ def criar_espessura(valor: str) -> Tuple[bool, str, Optional[Espessura]]:
                 f"Valor: {espessura_float}",
             )
 
-        # Invalida cache após adicionar espessura
-        try:
-            # Import local para evitar dependência circular
-            from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
-                cache_manager,
-            )
+            # Invalida cache após adicionar espessura
+            try:
+                # Import local para evitar dependência circular
+                from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
+                    cache_manager,
+                )
 
-            cache_manager.invalidate_cache(["espessuras"])
-            logging.info("Cache de espessuras invalidado após adição")
-        except (ImportError, AttributeError, RuntimeError) as e:
-            logging.warning("Erro ao invalidar cache de espessuras: %s", e)
+                cache_manager.invalidate_cache(["espessuras"])
+                logging.info("Cache de espessuras invalidado após adição")
+            except (ImportError, AttributeError, RuntimeError) as e:
+                logging.warning("Erro ao invalidar cache de espessuras: %s", e)
 
-        return True, "Espessura adicionada com sucesso!", nova_espessura
+            return True, "Espessura adicionada com sucesso!", nova_espessura
     except SQLAlchemyError as e:
         return False, f"Erro de banco de dados ao criar espessura: {e}", None
 
@@ -279,7 +279,7 @@ def excluir_objeto(obj_id: int, obj_type: type) -> Tuple[bool, str]:
             )
 
             # Mapeia tipos para cache
-            cache_keys = {
+            cache_keys: Dict[type, list[str]] = {
                 Material: ["materiais", "deducoes"],
                 Espessura: ["espessuras", "deducoes"],
                 Canal: ["canais", "deducoes"],
