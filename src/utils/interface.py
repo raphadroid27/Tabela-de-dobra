@@ -12,8 +12,8 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 import logging
 import traceback
 from dataclasses import dataclass
-from typing import Union
 from functools import partial
+from typing import Union
 
 import pyperclip
 from PySide6.QtCore import QTimer
