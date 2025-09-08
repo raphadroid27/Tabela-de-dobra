@@ -25,7 +25,13 @@ from PySide6.QtWidgets import (
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.utils.controlador import adicionar, buscar, editar, excluir, preencher_campos
+from src.utils.controlador import (
+    adicionar,
+    buscar_debounced,
+    editar,
+    excluir,
+    preencher_campos,
+)
 from src.utils.estilo import (
     ALTURA_PADRAO_COMPONENTE,
     aplicar_estilo_botao,
@@ -499,9 +505,9 @@ def configurar_conexoes_busca(widget, campo_config, tipo_busca):
         return
 
     if campo_config["widget"] == "entry":
-        widget.textChanged.connect(lambda _, tb=tipo_busca: buscar(tb))
+        widget.textChanged.connect(lambda _, tb=tipo_busca: buscar_debounced(tb))
     elif campo_config["widget"] == "combobox":
-        widget.currentTextChanged.connect(lambda _, tb=tipo_busca: buscar(tb))
+        widget.currentTextChanged.connect(lambda _, tb=tipo_busca: buscar_debounced(tb))
 
 
 def criar_lista(config, tipo):

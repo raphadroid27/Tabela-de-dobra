@@ -15,8 +15,8 @@ from src.utils.estilo import (
     LARGURA_MINIMA_COMPONENTE,
     aplicar_estilo_widget_auto_ajustavel,
 )
+from src.utils.interface import calcular_valores_debounced as calcular_valores
 from src.utils.interface import (
-    calcular_valores,
     copiar,
     focus_next_entry,
     focus_previous_entry,

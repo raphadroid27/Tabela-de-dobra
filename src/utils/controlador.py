@@ -9,6 +9,10 @@ Ele é responsável por:
 6. Orquestrar a atualização da UI (listar, limpar campos, etc.).
 """
 
+import logging
+from typing import Dict
+
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QTreeWidgetItem
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -26,6 +30,37 @@ from src.utils.interface import (
 from src.utils.usuarios import logado, tem_permissao
 from src.utils.utilitarios import ask_yes_no, show_error, show_info, show_warning
 from src.utils.widget import WidgetManager
+
+_buscar_timers: Dict[str, QTimer] = {}
+
+
+def buscar_debounced(tipo: str, delay_ms: int = 200):
+    """Agenda a busca com um pequeno atraso para evitar consultas a cada tecla.
+
+    Coalescemos múltiplas chamadas rápidas utilizando QTimer single-shot por 'tipo'.
+    """
+    timer = _buscar_timers.get(tipo)
+    if not timer:
+        timer = QTimer()
+        timer.setSingleShot(True)
+        _buscar_timers[tipo] = timer
+
+    def _run():
+        try:
+            buscar(tipo)
+        except (ValueError, SQLAlchemyError) as e:
+            logging.error("Erro em buscar_debounced(%s): %s", tipo, e)
+
+    try:
+        timer.timeout.disconnect()  # desconecta sinais anteriores se houver
+    except (TypeError, RuntimeError):
+        pass
+    timer.timeout.connect(_run)
+    try:
+        delay = max(0, int(delay_ms))
+    except (ValueError, TypeError):
+        delay = 200
+    timer.start(delay)
 
 
 def adicionar(tipo):

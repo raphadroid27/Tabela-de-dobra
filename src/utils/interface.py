@@ -193,7 +193,7 @@ class WidgetUpdater:
             valores_preservar = self._preservar_valores(tipo)
             self.acoes[tipo]()
             self._restaurar_valores(valores_preservar)
-            calcular_valores()
+            calcular_valores_debounced()
 
     def _preservar_valores(self, tipo):
         valores = {}
@@ -481,7 +481,7 @@ def limpar_dobras():
                 entry = getattr(g, f"aba{i}_entry_{w}", None)
                 if entry and hasattr(entry, "clear"):
                     entry.clear()
-    calcular_valores()
+    calcular_valores_debounced()
     if hasattr(g, "VALORES_W") and g.VALORES_W:
         primo_entry = getattr(g, f"aba1_entry_{g.VALORES_W[0]}", None)
         if primo_entry and hasattr(primo_entry, "setFocus"):
@@ -718,6 +718,60 @@ def calcular_valores():
         logging.error("Erro em calcular_valores: %s\n%s", e, traceback.format_exc())
 
 
+# Debounce para reduzir cálculos em digitação rápida
+_debounce_timer = QTimer()
+_debounce_timer.setSingleShot(True)
+
+
+def calcular_valores_debounced(delay_ms: int | float | str = 75):
+    """Agenda calcular_valores com pequeno atraso; reinicia se chamado novamente."""
+    if _debounce_timer.isActive():
+        _debounce_timer.stop()
+
+    def _run():  # encapsula para evitar captura de args
+        # Em caso de erro, registra e continua; não propaga para não quebrar a UI
+        try:
+            calcular_valores()
+        except (AttributeError, ValueError, TypeError, SQLAlchemyError) as e:
+            logging.error("Falha ao executar calcular_valores (debounced): %s", e)
+
+    if not getattr(calcular_valores_debounced, "_connected", False):
+        _debounce_timer.timeout.connect(_run)
+        setattr(calcular_valores_debounced, "_connected", True)
+    # Converte delay para inteiro com segurança
+    try:
+        delay = int(float(delay_ms))
+    except (ValueError, TypeError):
+        delay = 75
+    _debounce_timer.start(max(0, delay))
+
+
+# Debounce específico para o tooltip do canal
+_tooltip_timer = QTimer()
+_tooltip_timer.setSingleShot(True)
+
+
+def canal_tooltip_debounced(delay_ms: int | float | str = 100):
+    """Agenda a atualização do tooltip do canal com pequeno atraso."""
+    if _tooltip_timer.isActive():
+        _tooltip_timer.stop()
+    try:
+        delay = int(float(delay_ms))
+    except (ValueError, TypeError):
+        delay = 100
+
+    def _run():
+        try:
+            canal_tooltip()
+        except (AttributeError, ValueError, TypeError, SQLAlchemyError) as e:
+            logging.error("Falha ao atualizar tooltip do canal (debounced): %s", e)
+
+    if not getattr(canal_tooltip_debounced, "_connected", False):
+        _tooltip_timer.timeout.connect(_run)
+        setattr(canal_tooltip_debounced, "_connected", True)
+    _tooltip_timer.start(max(0, delay))
+
+
 def todas_funcoes():
     """Executa a atualização completa da interface, incluindo comboboxes."""
     updater = WidgetUpdater()
@@ -740,21 +794,32 @@ def focus_previous_entry(current_index, w):
 
 
 def canal_tooltip():
-    """Atualiza o tooltip do combobox de canais."""
+    """Atualiza o tooltip do combobox de canais, usando cache quando possível."""
     if not g.CANAL_COMB:
         return
     canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
     tooltip = "Selecione o canal de dobra."
     if canal_str:
+        # Tenta cache primeiro
         try:
-            with get_session() as session:
-                canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
-                if canal_obj:
-                    obs = getattr(canal_obj, "observacao", "N/A")
-                    comp = getattr(canal_obj, "comprimento_total", "N/A")
-                    tooltip = f"Obs: {obs}\nComprimento total: {comp}"
-                else:
-                    tooltip = "Canal não encontrado."
+            canais = cache_manager.get_canais()
+            canal_info = next(
+                (c for c in canais if str(c.get("valor")) == str(canal_str)), None
+            )
+            if canal_info:
+                obs = canal_info.get("observacao", "N/A")
+                comp = canal_info.get("comprimento_total", "N/A")
+                tooltip = f"Obs: {obs}\nComprimento total: {comp}"
+            else:
+                # Fallback para DB
+                with get_session() as session:
+                    canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
+                    if canal_obj:
+                        obs = getattr(canal_obj, "observacao", "N/A")
+                        comp = getattr(canal_obj, "comprimento_total", "N/A")
+                        tooltip = f"Obs: {obs}\nComprimento total: {comp}"
+                    else:
+                        tooltip = "Canal não encontrado."
         except SQLAlchemyError as e:
             tooltip = f"Erro ao buscar dados do canal: {e}"
     g.CANAL_COMB.setToolTip(tooltip)

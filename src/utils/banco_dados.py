@@ -39,7 +39,9 @@ def set_sqlite_pragma(dbapi_connection, _connection_record):
         cursor.execute("PRAGMA journal_mode=DELETE;")
         cursor.execute("PRAGMA synchronous=FULL;")
         cursor.execute("PRAGMA wal_autocheckpoint=OFF;")
-        logging.info("Modo de jornal do SQLite definido como DELETE (WAL desabilitado).")
+        logging.info(
+            "Modo de jornal do SQLite definido como DELETE (WAL desabilitado)."
+        )
     finally:
         cursor.close()
 
