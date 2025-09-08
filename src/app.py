@@ -1,6 +1,4 @@
-"""
-Formulário Principal do Aplicativo de Calculadora de Dobra.
-"""
+"""Formulário principal do aplicativo de Calculadora de Dobra."""
 
 import json
 import logging

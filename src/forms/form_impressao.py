@@ -1,5 +1,5 @@
 """
-Formulário de Impressão com QGridLayout
+Formulário de Impressão com QGridLayout.
 
 Este módulo contém a implementação do formulário de impressão em lote,
 que permite selecionar um diretório e uma lista de arquivos PDF para impressão.
@@ -354,6 +354,7 @@ class FormImpressao(QDialog):
         layout.addWidget(procurar_btn, 0, 1)
         return frame
 
+    # pylint: disable=R0915
     def _criar_secao_arquivos(self) -> QGroupBox:
         """Cria a seção de gerenciamento de arquivos."""
         frame = QGroupBox("Lista de Arquivos para Impressão")
@@ -364,10 +365,9 @@ class FormImpressao(QDialog):
         label_lista.setStyleSheet(STYLE_LABEL_BOLD)
         layout.addWidget(label_lista, 0, 0, 1, 3)
 
-        self.lista_text = QTextEdit(
-            maximumHeight=ALTURA_MAXIMA_LISTA,
-            placeholderText=PLACEHOLDER_LISTA_ARQUIVOS,
-        )
+        self.lista_text = QTextEdit()
+        self.lista_text.setMaximumHeight(ALTURA_MAXIMA_LISTA)
+        self.lista_text.setPlaceholderText(PLACEHOLDER_LISTA_ARQUIVOS)
         # Não aceitar arrastar/soltar aqui para evitar inserir 'file:///...'
         self.lista_text.setAcceptDrops(False)
         layout.addWidget(self.lista_text, 1, 0, 2, 2)
@@ -387,13 +387,13 @@ class FormImpressao(QDialog):
         layout.addWidget(label_arquivos, 3, 0, 1, 3)
 
         # Lista com suporte a arrastar/soltar arquivos PDF
-        self.lista_arquivos_widget = QListWidget(
-            maximumHeight=ALTURA_MAXIMA_LISTA_WIDGET
-        )
+        self.lista_arquivos_widget = QListWidget()
+        self.lista_arquivos_widget.setMaximumHeight(ALTURA_MAXIMA_LISTA_WIDGET)
         self.lista_arquivos_widget.setAcceptDrops(True)
-        self.lista_arquivos_widget.dragEnterEvent = self._lista_drag_enter_event  # type: ignore
-        self.lista_arquivos_widget.dragMoveEvent = self._lista_drag_move_event  # type: ignore
-        self.lista_arquivos_widget.dropEvent = self._lista_drop_event  # type: ignore
+        # Atribui handlers de DnD dinamicamente
+        self.lista_arquivos_widget.dragEnterEvent = self._lista_drag_enter_event
+        self.lista_arquivos_widget.dragMoveEvent = self._lista_drag_move_event
+        self.lista_arquivos_widget.dropEvent = self._lista_drop_event
         self.lista_arquivos_widget.setAccessibleName("lista_arquivos_para_impressao")
         self.lista_arquivos_widget.setToolTip(
             "Arraste PDFs aqui para adicionar à lista."
@@ -432,7 +432,8 @@ class FormImpressao(QDialog):
         frame = QGroupBox("Resultado da Impressão")
         layout = QGridLayout(frame)
         aplicar_medida_borda_espaco(layout)
-        self.resultado_text = QTextBrowser(maximumHeight=ALTURA_MAXIMA_LISTA)
+        self.resultado_text = QTextBrowser()
+        self.resultado_text.setMaximumHeight(ALTURA_MAXIMA_LISTA)
         layout.addWidget(self.resultado_text, 0, 0)
 
         # Barra de progresso da impressão
@@ -449,37 +450,39 @@ class FormImpressao(QDialog):
             diretorio = QFileDialog.getExistingDirectory(
                 self, "Selecionar Diretório dos PDFs"
             )
-            if diretorio:
+            if diretorio and self.diretorio_entry is not None:
                 self.diretorio_entry.setText(diretorio)
         finally:
             Janela.estado_janelas(True)
 
     def adicionar_lista_arquivos(self):
         """Adiciona múltiplos arquivos à lista a partir do campo de texto."""
+        assert self.lista_text is not None
         texto = self.lista_text.toPlainText().strip()
         if not texto:
             return
         arquivos = [linha.strip() for linha in texto.split("\n") if linha.strip()]
         if arquivos:
+            assert self.lista_arquivos_widget is not None
             self.lista_arquivos_widget.addItems(arquivos)
             self.lista_text.clear()
             msg = f"{len(arquivos)} arquivo(s) adicionado(s) à lista!"
             show_info("Sucesso", msg, parent=self)
 
     # Suporte a arrastar/soltar PDFs na lista
-    def _lista_drag_enter_event(self, event):  # type: ignore
+    def _lista_drag_enter_event(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
         else:
             event.ignore()
 
-    def _lista_drag_move_event(self, event):  # type: ignore
+    def _lista_drag_move_event(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
         else:
             event.ignore()
 
-    def _lista_drop_event(self, event):  # type: ignore
+    def _lista_drop_event(self, event):
         urls = event.mimeData().urls()
         if not urls:
             return
@@ -517,6 +520,7 @@ class FormImpressao(QDialog):
         # Adiciona somente os nomes (sem extensão) à lista
         for p in pdf_paths:
             nome = os.path.splitext(os.path.basename(p))[0]
+            assert self.lista_arquivos_widget is not None
             self.lista_arquivos_widget.addItem(nome)
 
         show_info(
@@ -527,6 +531,7 @@ class FormImpressao(QDialog):
 
     def remover_arquivo_selecionado(self):
         """Remove o arquivo selecionado da lista."""
+        assert self.lista_arquivos_widget is not None
         item_selecionado = self.lista_arquivos_widget.currentItem()
         if item_selecionado:
             self.lista_arquivos_widget.takeItem(
@@ -535,6 +540,7 @@ class FormImpressao(QDialog):
 
     def _obter_lista_arquivos_da_widget(self) -> List[str]:
         """Obtém a lista de arquivos da QListWidget."""
+        assert self.lista_arquivos_widget is not None
         return [
             self.lista_arquivos_widget.item(i).text()
             for i in range(self.lista_arquivos_widget.count())
@@ -542,14 +548,14 @@ class FormImpressao(QDialog):
 
     def _validar_entradas(self) -> bool:
         """Valida se o diretório e a lista de arquivos estão prontos."""
+        assert self.diretorio_entry is not None
         if not self.diretorio_entry.text().strip():
-
             show_error("Erro", "Por favor, selecione um diretório.", parent=self)
             return False
         if not os.path.isdir(self.diretorio_entry.text().strip()):
-
             show_error("Erro", "O diretório selecionado não existe.", parent=self)
             return False
+        assert self.lista_arquivos_widget is not None
         if self.lista_arquivos_widget.count() == 0:
             # MODIFICADO: Uso da função show_warning centralizada
             show_warning(
@@ -562,12 +568,11 @@ class FormImpressao(QDialog):
 
     def verificar_arquivos_existentes(self):
         """Verifica se os arquivos da lista existem no diretório selecionado."""
+        assert self.diretorio_entry is not None
         diretorio = self.diretorio_entry.text().strip()
         if not diretorio or not os.path.isdir(diretorio):
-
             show_error("Erro", "Por favor, selecione um diretório válido.", parent=self)
             return
-
         lista_arquivos = self._obter_lista_arquivos_da_widget()
         if not lista_arquivos:
             # MODIFICADO: Uso da função show_warning centralizada
@@ -588,7 +593,6 @@ class FormImpressao(QDialog):
             # MODIFICADO: Uso da função show_info centralizada
             show_info("Verificação Concluída", msg, parent=self)
         except (OSError, ValueError) as e:
-
             show_error(
                 "Erro", f"Ocorreu um erro durante a verificação: {e}", parent=self
             )
@@ -598,6 +602,7 @@ class FormImpressao(QDialog):
         if not self._validar_entradas():
             return
 
+        assert self.diretorio_entry is not None
         diretorio = self.diretorio_entry.text().strip()
         lista_arquivos = self._obter_lista_arquivos_da_widget()
 
@@ -623,18 +628,19 @@ class FormImpressao(QDialog):
             )
             self.print_worker.progress_update.connect(self.atualizar_resultado)
             # Atualiza a barra de progresso
-            self.print_worker.progress_percent.connect(self.progress_bar.setValue)
+            if self.progress_bar is not None:
+                self.print_worker.progress_percent.connect(self.progress_bar.setValue)
             self.print_worker.processo_finalizado.connect(self.impressao_finalizada)
             self.print_worker.start()
 
         except (OSError, ValueError) as e:
-
             show_error("Erro", f"Erro ao iniciar impressão: {e}", parent=self)
             self.imprimir_btn.setEnabled(True)
             self.imprimir_btn.setText("🖨️ Imprimir")
 
     def atualizar_resultado(self, mensagem: str):
         """Adiciona mensagens de progresso à caixa de texto de resultado."""
+        assert self.resultado_text is not None
         self.resultado_text.append(mensagem)
         self.resultado_text.verticalScrollBar().setValue(
             self.resultado_text.verticalScrollBar().maximum()

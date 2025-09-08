@@ -1,9 +1,7 @@
-"""
-Módulo com funções auxiliares para manipulação de janelas no aplicativo.
-"""
+"""Funções auxiliares para manipulação de janelas no aplicativo."""
 
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional, Set
 
 from PySide6.QtCore import QEvent, QObject, Qt, QTimer
 from PySide6.QtWidgets import QApplication, QWidget
@@ -75,8 +73,8 @@ class Janela:
 
     _on_top_state: bool = False
     _transparency_state: bool = False
-    _event_filters = {}
-    _configured_windows = set()
+    _event_filters: Dict[int, TransparencyEventFilter] = {}
+    _configured_windows: Set[int] = set()
     _monitor_timer: Optional[QTimer] = None
 
     @staticmethod
@@ -86,7 +84,7 @@ class Janela:
         if not app:
             return []
 
-        app_windows = []
+        app_windows: List[QWidget] = []
         for widget in app.topLevelWidgets():
             is_window = bool(widget.windowFlags() & Qt.WindowType.Window)
             if is_window and widget.isVisible():

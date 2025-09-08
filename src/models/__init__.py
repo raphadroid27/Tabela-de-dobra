@@ -1,7 +1,4 @@
-"""
-Este módulo inicializa os modelos disponíveis no pacote.
-Ele importa e expõe as classes principais para facilitar o acesso.
-"""
+"""Inicializa os modelos disponíveis e expõe classes principais."""
 
 from .models import Canal, Deducao, Espessura, Log, Material, Usuario
 

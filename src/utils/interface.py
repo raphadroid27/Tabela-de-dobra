@@ -12,6 +12,7 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 import logging
 import traceback
 from dataclasses import dataclass
+from typing import Union
 from functools import partial
 
 import pyperclip
@@ -723,7 +724,7 @@ _debounce_timer = QTimer()
 _debounce_timer.setSingleShot(True)
 
 
-def calcular_valores_debounced(delay_ms: int | float | str = 75):
+def calcular_valores_debounced(delay_ms: Union[int, float, str] = 75):
     """Agenda calcular_valores com pequeno atraso; reinicia se chamado novamente."""
     if _debounce_timer.isActive():
         _debounce_timer.stop()
@@ -751,7 +752,7 @@ _tooltip_timer = QTimer()
 _tooltip_timer.setSingleShot(True)
 
 
-def canal_tooltip_debounced(delay_ms: int | float | str = 100):
+def canal_tooltip_debounced(delay_ms: Union[int, float, str] = 100):
     """Agenda a atualização do tooltip do canal com pequeno atraso."""
     if _tooltip_timer.isActive():
         _tooltip_timer.stop()

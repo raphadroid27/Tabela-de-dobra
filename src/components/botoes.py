@@ -27,23 +27,24 @@ COLUNAS_EXPANDIDA = 2
 
 
 class ExpansionManager:
-    """Gerencia a expansão da interface de forma robusta"""
+    """Gerencia a expansão da interface de forma robusta."""
 
     def __init__(self):
+        """Inicializa o gerenciador de expansão."""
         self.is_updating = False
         self.cleanup_timer = QTimer()
         self.cleanup_timer.setSingleShot(True)
         self.cleanup_timer.timeout.connect(self.force_cleanup_orphans)
 
     def force_cleanup_orphans(self):
-        """Remove todas as janelas órfãs - usa função centralizada"""
+        """Remove todas as janelas órfãs utilizando a função centralizada."""
         try:
             Janela.remover_janelas_orfas()
-        except (ImportError, ValueError, RuntimeError):
-            pass
+        except (ImportError, ValueError, RuntimeError) as exc:
+            logging.debug("Falha ao limpar janelas órfãs: %s", exc)
 
     def update_interface_size(self, exp_h, exp_v):
-        """Atualiza o tamanho da interface baseado nos estados de expansão"""
+        """Atualiza o tamanho da interface conforme os estados de expansão."""
         if self.is_updating or not g.PRINC_FORM:
             return
 
@@ -70,8 +71,8 @@ class ExpansionManager:
             try:
                 g.PRINC_FORM.setMinimumSize(largura, altura)
                 g.PRINC_FORM.resize(largura, altura)
-            except Exception:  # pylint: disable=broad-except
-                pass
+            except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
+                logging.debug("Falha ao redimensionar janela principal: %s", exc)
 
             if hasattr(g, "CARREGAR_INTERFACE_FUNC") and callable(
                 g.CARREGAR_INTERFACE_FUNC
@@ -86,9 +87,9 @@ class ExpansionManager:
             # Dispara recálculo debounced após relayout para refletir corretamente os widgets
             try:
                 calcular_valores_debounced(0)
-            except (AttributeError, ValueError, RuntimeError, TypeError):
+            except (AttributeError, ValueError, RuntimeError, TypeError) as exc:
                 # salvaguarda para não quebrar a UI em cenários inesperados
-                pass
+                logging.debug("Recálculo debounced pós-relayout falhou: %s", exc)
 
             # Agendar limpeza de órfãos após mudanças (mantido por segurança)
             self.cleanup_timer.start(500)
@@ -100,9 +101,7 @@ class ExpansionManager:
 
 
 def criar_botoes():
-    """
-    Cria os botões e checkbuttons no frame inferior com nova lógica de expansão.
-    """
+    """Cria botões e checkbuttons no frame inferior com lógica de expansão."""
     frame_botoes = QWidget()
     layout = QGridLayout(frame_botoes)
     layout.setContentsMargins(10, 0, 10, 10)
@@ -153,14 +152,14 @@ def _criar_widgets_botoes(expansion_manager):
 def _criar_checkbox_vertical(expansion_manager):
     """Cria o checkbox de expansão vertical."""
     exp_v_check = QCheckBox("Expandir Vertical")
-    exp_v_check.setChecked(g.EXP_V)
+    exp_v_check.setChecked(bool(g.EXP_V))
     aplicar_estilo_checkbox(exp_v_check)
     exp_v_check.setShortcut("Alt+V")
     exp_v_check.setAccessibleName("Expansão Vertical")
     exp_v_check.setStatusTip("Alternar expansão vertical (Alt+V)")
 
     def on_expandir_v(checked):
-        """Callback para expansão vertical"""
+        """Alterne a expansão vertical."""
         if not expansion_manager.is_updating:
             expansion_manager.update_interface_size(g.EXP_H, checked)
 
@@ -171,14 +170,14 @@ def _criar_checkbox_vertical(expansion_manager):
 def _criar_checkbox_horizontal(expansion_manager):
     """Cria o checkbox de expansão horizontal."""
     exp_h_check = QCheckBox("Expandir Horizontal")
-    exp_h_check.setChecked(g.EXP_H)
+    exp_h_check.setChecked(bool(g.EXP_H))
     aplicar_estilo_checkbox(exp_h_check)
     exp_h_check.setShortcut("Alt+H")
     exp_h_check.setAccessibleName("Expansão Horizontal")
     exp_h_check.setStatusTip("Alternar expansão horizontal (Alt+H)")
 
     def on_expandir_h(checked):
-        """Callback para expansão horizontal"""
+        """Alterne a expansão horizontal."""
         if not expansion_manager.is_updating:
             expansion_manager.update_interface_size(checked, g.EXP_V)
 
