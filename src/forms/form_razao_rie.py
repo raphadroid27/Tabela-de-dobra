@@ -1,6 +1,4 @@
-"""
-Módulo para exibir o formulário de cálculo de razão raio interno / espessura.
-"""
+"""Módulo para exibir o formulário de cálculo de razão raio interno/espessura."""
 
 import sys
 
@@ -39,7 +37,7 @@ class FormRazaoRIE:
     """Classe para o formulário de cálculo da razão raio interno / espessura."""
 
     def __init__(self):
-
+        """Inicializa a instância do formulário sem exibir a janela."""
         self.rie_form = QDialog(None)
 
     def show_form(self):
@@ -53,12 +51,14 @@ class FormRazaoRIE:
         self.rie_form.show()
 
     def _fechar_form_antigo(self):
-        if self.rie_form is None:
+        if self.rie_form is not None:
             self.rie_form.close()
 
     def _criar_form(self):
         self.rie_form.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
-        self.rie_form.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.rie_form.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
+        )
         self.rie_form.setWindowIcon(QIcon(ICON_PATH))
         Janela.posicionar_janela(self.rie_form, None)
 
@@ -167,9 +167,9 @@ class FormRazaoRIE:
 
 
 def main(_):
-    """
-    Inicializa e exibe o formulário de cálculo de razão raio interno /
-    espessura com barra de título customizada.
+    """Inicializa e exibe o formulário de razão raio interno/espessura.
+
+    Inclui barra de título customizada.
     """
     form = FormRazaoRIE()
     form.show_form()

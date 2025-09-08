@@ -446,7 +446,7 @@ class UpdaterWidget(QWidget):
             return
 
         self.stacked_widget.setCurrentWidget(self.progress_view)
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
             run_update_process(self.selected_file_path, self._update_progress_ui)
             self._update_progress_ui("Concluído!", 100)

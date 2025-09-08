@@ -1,7 +1,4 @@
-"""
-BarraTitulo: Barra de título customizada para o aplicativo, com ícone, título, minimizar e fechar.
-Permite arrastar a janela e adapta o tema (dark/light/auto).
-"""
+"""Barra de título customizada com ícone, título, minimizar e fechar."""
 
 import darkdetect
 from PySide6.QtCore import QEvent, QPoint, Qt
@@ -13,17 +10,10 @@ from src.utils.utilitarios import ICON_PATH
 
 
 class BarraTitulo(QWidget):
-    """
-    Barra de título personalizada para janelas do aplicativo.
-    Inclui ícone, título, botões de minimizar/fechar e suporte a tema.
-    """
+    """Barra de título para janelas com ícone, título e suporte a tema."""
 
     def __init__(self, parent=None, tema="dark"):
-        """
-        Inicializa a barra de título customizada.
-        :param parent: Janela pai.
-        :param tema: Tema visual ('dark', 'light' ou 'auto').
-        """
+        """Inicializa a barra de título customizada."""
         super().__init__(parent)
         self._parent = parent
         self.pressing = False
@@ -90,9 +80,7 @@ class BarraTitulo(QWidget):
         super().deleteLater()
 
     def set_tema(self, tema):
-        """
-        Define o tema visual da barra de título (dark, light ou auto).
-        """
+        """Define o tema visual da barra de título (dark, light ou auto)."""
         self.current_theme = tema
 
         tema_real = tema
@@ -119,23 +107,17 @@ class BarraTitulo(QWidget):
             self._is_updating_style = False
 
     def minimizar(self):
-        """
-        Minimiza a janela pai.
-        """
+        """Minimiza a janela pai."""
         if self._parent:
             self._parent.showMinimized()
 
     def fechar(self):
-        """
-        Fecha a janela pai.
-        """
+        """Fecha a janela pai."""
         if self._parent:
             self._parent.close()
 
     def changeEvent(self, event):  # pylint: disable=invalid-name
-        """
-        Detecta a mudança de tema do sistema e atualiza a barra de título.
-        """
+        """Detecta a mudança de tema do sistema e atualiza a barra de título."""
         # SOLUÇÃO: Se a flag estiver ativa, ignora o evento para quebrar o loop.
         if self._is_updating_style:
             return
@@ -145,9 +127,7 @@ class BarraTitulo(QWidget):
             self.set_tema(self.current_theme)
 
     def mousePressEvent(self, event):  # pylint: disable=invalid-name
-        """
-        Inicia o arrasto da janela ao pressionar o botão esquerdo do mouse.
-        """
+        """Inicia o arrasto da janela ao pressionar o botão esquerdo do mouse."""
         if event.button() == Qt.MouseButton.LeftButton:
             self.pressing = True
             if self._parent:
@@ -158,9 +138,7 @@ class BarraTitulo(QWidget):
             event.accept()
 
     def mouseMoveEvent(self, event):  # pylint: disable=invalid-name
-        """
-        Move a janela enquanto o mouse é arrastado com o botão esquerdo pressionado.
-        """
+        """Move a janela enquanto o mouse é arrastado com o botão esquerdo."""
         if (
             self.pressing
             and event.buttons() == Qt.MouseButton.LeftButton
@@ -170,8 +148,6 @@ class BarraTitulo(QWidget):
             event.accept()
 
     def mouseReleaseEvent(self, event):  # pylint: disable=invalid-name
-        """
-        Finaliza o arrasto da janela ao soltar o botão do mouse.
-        """
+        """Finaliza o arrasto da janela ao soltar o botão do mouse."""
         self.pressing = False
         event.accept()

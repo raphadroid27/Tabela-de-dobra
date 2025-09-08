@@ -1,5 +1,4 @@
-"""
-Módulo para Gerenciamento de Comunicação entre Processos (IPC) via sistema de arquivos.
+"""Módulo para Gerenciamento de Comunicação entre Processos (IPC) via sistema de arquivos.
 
 Responsável por:
 - Criar e gerenciar um diretório de tempo de execução oculto.
@@ -25,8 +24,8 @@ FILE_ATTRIBUTE_HIDDEN = 0x02
 
 
 def _hide_path(path: str) -> None:
-    """
-    Define o atributo 'oculto' em um arquivo ou diretório no Windows.
+    """Define o atributo 'oculto' em um arquivo ou diretório no Windows.
+
     No Linux/macOS, arquivos que começam com '.' já são ocultos por padrão.
     """
     if os.name == "nt":

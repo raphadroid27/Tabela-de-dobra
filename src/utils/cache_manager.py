@@ -1,5 +1,7 @@
-"""Gerenciador de cache para dados do banco; mantém dados
-em memória para acesso quando o banco está bloqueado."""
+"""Gerenciador de cache para dados do banco.
+
+Mantém dados em memória para acesso quando o banco está bloqueado.
+"""
 
 import json
 import logging
@@ -21,6 +23,7 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
     """Gerencia cache de dados do banco para acesso offline."""
 
     def __init__(self):
+        """Inicializa o gerenciador de cache."""
         self._cache: Dict[str, Any] = {}
         self._cache_timestamps: Dict[str, datetime] = {}
         self._lock = threading.RLock()

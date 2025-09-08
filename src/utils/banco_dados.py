@@ -1,5 +1,6 @@
 """
 Módulo utilitário para manipulação de banco de dados no aplicativo de Calculadora de Dobras.
+
 Versão refatorada para usar sessões de curta duração (short-lived sessions)
 e modo DELETE (padrão) para prevenir criação de arquivos WAL e SHM.
 """
@@ -52,8 +53,8 @@ Session = sessionmaker(bind=engine)
 
 @contextmanager
 def get_session():
-    """
-    Fornece uma sessão transacional para uma "unidade de trabalho".
+    """Fornece uma sessão transacional para uma unidade de trabalho.
+
     Este context manager garante que a sessão seja sempre fechada
     corretamente, realizando commit em caso de sucesso ou rollback em caso de erro.
 

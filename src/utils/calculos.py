@@ -22,8 +22,7 @@ from src.utils.banco_dados import get_session
 def buscar_deducao_por_parametros(
     session, material_nome: str, espessura_valor: float, canal_valor: str
 ):
-    """
-    Busca uma dedução no banco de dados usando os parâmetros fornecidos.
+    """Busca uma dedução no banco de dados usando os parâmetros fornecidos.
 
     Args:
         session: Sessão do SQLAlchemy
@@ -71,6 +70,7 @@ class CalculoDeducaoDB:
     """Busca a dedução e observação do banco de dados com cache resiliente."""
 
     def __init__(self):
+        """Inicializa o calculador de dedução com cache resiliente."""
         # Importa cache apenas quando necessário para evitar circular imports
         from src.utils.cache_manager import (  # pylint: disable=import-outside-toplevel
             cache_manager,
@@ -79,8 +79,7 @@ class CalculoDeducaoDB:
         self.cache_manager = cache_manager
 
     def buscar(self, material_nome: str, espessura_str: str, canal_valor: str):
-        """
-        Busca a dedução no banco de dados usando cache quando possível.
+        """Busca a dedução no banco de dados usando cache quando possível.
 
         Returns:
             dict: {"valor": float|str, "obs": str} ou None se erro

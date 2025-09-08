@@ -1,5 +1,5 @@
-"""
-Este módulo atua como uma camada de 'Handler' ou 'Controller'.
+"""Este módulo atua como uma camada de 'Handler' ou 'Controller'.
+
 Ele é responsável por:
 1. Receber eventos da interface do usuário (ex: cliques de botão).
 2. Coletar dados dos widgets da UI.
@@ -64,7 +64,7 @@ def buscar_debounced(tipo: str, delay_ms: int = 200):
 
 
 def adicionar(tipo):
-    """Handler principal para adicionar um novo item."""
+    """Adiciona um novo item do tipo especificado."""
     if not logado(tipo):
         return
 
@@ -115,7 +115,7 @@ def adicionar(tipo):
 
 
 def editar(tipo):
-    """Handler para editar um item existente."""
+    """Edita um item existente do tipo especificado."""
     if not tem_permissao(tipo, "editor"):
         return
 

@@ -1,7 +1,4 @@
-"""
-Cria o cabeçalho da interface gráfica com os campos de entrada e os rótulos correspondentes.
-Utiliza widgets auto-ajustáveis para melhor responsividade.
-"""
+"""Cabeçalho da interface com campos de entrada e rótulos."""
 
 from PySide6.QtCore import QLocale, Qt
 from PySide6.QtGui import QDoubleValidator
@@ -38,7 +35,7 @@ def criar_label(layout, texto, linha_coluna):
     """
     linha, coluna = linha_coluna
     label = QLabel(texto)
-    label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
     layout.addWidget(label, linha, coluna)
     return label
 
@@ -46,6 +43,7 @@ def criar_label(layout, texto, linha_coluna):
 def criar_widget_cabecalho(layout, tipo, nome_global, pos, **kwargs):
     """
     Cria widgets do cabeçalho com largura auto-ajustável.
+
     Mantém altura fixa mas permite largura flexível.
 
     Args:
@@ -64,19 +62,17 @@ def criar_widget_cabecalho(layout, tipo, nome_global, pos, **kwargs):
         widget.setFrameShadow(QLabel.Shadow.Sunken)
         widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
         widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
-        widget.setAlignment(Qt.AlignCenter)
-
+        widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
     elif tipo == "combobox":
         widget = QComboBox(**kwargs)
         widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
         widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
         aplicar_estilo_widget_auto_ajustavel(widget, "combobox")
-
     elif tipo == "entry":
         widget = QLineEdit(**kwargs)
         widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
         widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
-        widget.setAlignment(Qt.AlignCenter)
+        widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
         aplicar_estilo_widget_auto_ajustavel(widget, "lineedit")
     else:
         return None
@@ -89,6 +85,7 @@ def criar_widget_cabecalho(layout, tipo, nome_global, pos, **kwargs):
 def criar_widget_observacao(layout, nome_global, pos, **kwargs):
     """
     Cria widget de observação (comportamento original, SEM alterações).
+
     Mantém largura flexível para ocupar toda a área disponível.
 
     Args:
@@ -104,7 +101,7 @@ def criar_widget_observacao(layout, nome_global, pos, **kwargs):
     widget.setFrameShape(QLabel.Shape.Panel)
     widget.setFrameShadow(QLabel.Shadow.Sunken)
     widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-    widget.setAlignment(Qt.AlignCenter)
+    widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     layout.addWidget(widget, *pos)
     setattr(g, nome_global, widget)
@@ -125,7 +122,7 @@ def _criar_linha_1(layout):
     # Validador numérico (aceita vírgula conforme locale PT-BR)
     val_c = QDoubleValidator(0.0, 999999.0, 3)
     val_c.setNotation(QDoubleValidator.Notation.StandardNotation)
-    val_c.setLocale(QLocale(QLocale.Portuguese, QLocale.Brazil))
+    val_c.setLocale(QLocale(QLocale.Language.Portuguese, QLocale.Country.Brazil))
     compr_entry.setValidator(val_c)
 
     # Tooltips
@@ -152,7 +149,7 @@ def _criar_linha_2(layout):
     # Validador numérico (aceita vírgula conforme locale PT-BR)
     val_r = QDoubleValidator(0.0, 999999.0, 3)
     val_r.setNotation(QDoubleValidator.Notation.StandardNotation)
-    val_r.setLocale(QLocale(QLocale.Portuguese, QLocale.Brazil))
+    val_r.setLocale(QLocale(QLocale.Language.Portuguese, QLocale.Country.Brazil))
     ri_entry.setValidator(val_r)
     k_lbl = criar_widget_cabecalho(layout, "label", "K_LBL", (3, 1))
     ded_lbl = criar_widget_cabecalho(layout, "label", "DED_LBL", (3, 2))
@@ -200,6 +197,7 @@ def _criar_linha_3(layout):
 def _criar_observacoes(layout):
     """
     Cria a seção de observações (MANTIDA EXATAMENTE COMO ESTAVA).
+
     Preserva comportamento original com largura flexível.
     """
     obs_label = criar_label(layout, "Observações:", (6, 0))

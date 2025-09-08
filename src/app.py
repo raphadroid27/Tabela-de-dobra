@@ -393,6 +393,7 @@ def configurar_sinais_excecoes():
 def system_tick():
     """
     Função chamada periodicamente pelo timer do sistema.
+
     Executa tarefas de manutenção como verificar comandos e atualizar heartbeat.
     """
     if verificar_comando_sistema():

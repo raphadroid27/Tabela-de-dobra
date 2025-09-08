@@ -78,6 +78,7 @@ class PrintManager:
     """Gerencia as operações de busca e validação de arquivos PDF."""
 
     def __init__(self):
+        """Inicializa listas de controle de arquivos encontrados e ausentes."""
         self.arquivos_encontrados: List[str] = []
         self.arquivos_nao_encontrados: List[str] = []
 
@@ -136,9 +137,9 @@ class PrintManager:
 
 
 class PrintWorker(QThread):
-    """
-    Worker thread para executar a impressão em segundo plano,
-    evitando que a GUI congele e controlando a fila de impressão.
+    """Executa a impressão em segundo plano.
+
+    Evita travar a GUI e controla a fila de impressão.
     """
 
     progress_update = Signal(str)
@@ -146,6 +147,7 @@ class PrintWorker(QThread):
     processo_finalizado = Signal()
 
     def __init__(self, diretorio: str, arquivos_para_imprimir: List[str], parent=None):
+        """Guarda parâmetros e prepara a thread de impressão."""
         super().__init__(parent)
         self.diretorio = diretorio
         self.arquivos = arquivos_para_imprimir
@@ -289,6 +291,7 @@ class FormImpressao(QDialog):
     """Formulário de Impressão em Lote de PDFs."""
 
     def __init__(self, parent=None):
+        """Inicializa widgets, estado e constrói a UI do formulário."""
         super().__init__(parent)
         self.print_manager = PrintManager()
         self.print_worker: Optional[PrintWorker] = None
@@ -299,7 +302,7 @@ class FormImpressao(QDialog):
         self.lista_arquivos_widget = None  # type: Optional[QListWidget]
         self.resultado_text = None  # type: Optional[QTextBrowser]
         self.imprimir_btn = None  # type: Optional[QPushButton]
-        self.progress_bar = None  # type: Optional[object]
+        self.progress_bar = None  # type: Optional[QProgressBar]
 
         self._inicializar_ui()
 
@@ -390,10 +393,16 @@ class FormImpressao(QDialog):
         self.lista_arquivos_widget = QListWidget()
         self.lista_arquivos_widget.setMaximumHeight(ALTURA_MAXIMA_LISTA_WIDGET)
         self.lista_arquivos_widget.setAcceptDrops(True)
-        # Atribui handlers de DnD dinamicamente
-        self.lista_arquivos_widget.dragEnterEvent = self._lista_drag_enter_event
-        self.lista_arquivos_widget.dragMoveEvent = self._lista_drag_move_event
-        self.lista_arquivos_widget.dropEvent = self._lista_drop_event
+        # Atribui handlers de DnD dinamicamente (ignora mypy quanto a atribuição de métodos)
+        self.lista_arquivos_widget.dragEnterEvent = (  # type: ignore[method-assign]
+            self._lista_drag_enter_event
+        )
+        self.lista_arquivos_widget.dragMoveEvent = (  # type: ignore[method-assign]
+            self._lista_drag_move_event
+        )
+        self.lista_arquivos_widget.dropEvent = (  # type: ignore[method-assign]
+            self._lista_drop_event
+        )
         self.lista_arquivos_widget.setAccessibleName("lista_arquivos_para_impressao")
         self.lista_arquivos_widget.setToolTip(
             "Arraste PDFs aqui para adicionar à lista."
@@ -655,7 +664,7 @@ class FormImpressao(QDialog):
         self.imprimir_btn.setEnabled(True)
         self.imprimir_btn.setText("🖨️ Imprimir")
         self.print_worker = None
-        if hasattr(self, "progress_bar"):
+        if self.progress_bar is not None:
             self.progress_bar.setValue(100)
 
 
@@ -695,7 +704,10 @@ class FormManager:
             except RuntimeError:
                 # Se foi destruída entre o check e aqui, recria
                 cls._instance = FormImpressao(parent)
-                cls._instance.destroyed.connect(FormManager._reset_instance)
+                try:
+                    cls._instance.destroyed.connect(FormManager._reset_instance)
+                except (RuntimeError, TypeError):
+                    pass
                 cls._instance.show()
 
 

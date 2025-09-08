@@ -1,7 +1,7 @@
-"""
-Este módulo fornece funções utilitárias para retornar estilos CSS personalizados para
-botões do PySide6 (QPushButton) em diferentes cores temáticas, além de gerenciar
-temas globais da aplicação usando qdarktheme.
+"""Este módulo fornece funções utilitárias para retornar estilos CSS personalizados.
+
+Fornece estilos para botões do PySide6 (QPushButton) em diferentes cores temáticas,
+além de gerenciar temas globais da aplicação usando qdarktheme.
 
 Funcionalidades:
 - Gerenciamento de temas qdarktheme
@@ -269,12 +269,12 @@ def obter_temas_disponiveis():
 
 # Funções de conveniência para compatibilidade com código existente
 def registrar_tema_actions(actions_dict):
-    """Função de conveniência para registrar ações de tema."""
+    """Registra as ações de tema para controle de estado no menu."""
     gerenciador_temas.registrar_tema_actions(actions_dict)
 
 
 def aplicar_tema_qdarktheme(nome_tema):
-    """Função de conveniência para aplicar tema."""
+    """Aplica o tema qdarktheme e atualiza barras de título ativas."""
     gerenciador_temas.aplicar_tema_qdarktheme(nome_tema)
     # Atualizar barra de título customizada, se existir
     if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
@@ -333,12 +333,12 @@ def limpar_barras_titulo_inativas():
 
 
 def aplicar_tema_inicial(tema=None):
-    """Função de conveniência para aplicar tema inicial."""
+    """Aplica o tema inicial usando qdarktheme, se disponível."""
     gerenciador_temas.aplicar_tema_inicial(tema)
 
 
 def obter_tema_atual():
-    """Função de conveniência para obter tema atual."""
+    """Retorna o tema atual do gerenciador de temas."""
     return gerenciador_temas.obter_tema_atual()
 
 

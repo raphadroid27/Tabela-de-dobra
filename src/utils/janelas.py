@@ -10,9 +10,9 @@ from src.config import globals as g
 
 
 class TransparencyEventFilter(QObject):
-    """
-    Filtro de eventos para gerenciar a opacidade da janela com base no mouse
-    e no estado de foco da janela, usando um temporizador para evitar problemas
+    """Filtro de eventos para gerenciar a opacidade da janela com base no mouse.
+
+    Gerencia o estado de foco da janela, usando um temporizador para evitar problemas
     com menus e pop-ups.
     """
 
@@ -81,7 +81,8 @@ class Janela:
     def _get_all_app_windows() -> List[QWidget]:
         """Retorna uma lista de todas as janelas de formulário visíveis do aplicativo."""
         app = QApplication.instance()
-        if not app:
+        # MyPy: instance() retorna QCoreApplication | None; garantimos que é QApplication
+        if not isinstance(app, QApplication):
             return []
 
         app_windows: List[QWidget] = []
@@ -276,7 +277,8 @@ class Janela:
         """Remove janelas órfãs (não visíveis) do aplicativo."""
         try:
             app = QApplication.instance()
-            if not app:
+            # MyPy: garantir que é QApplication para acessar topLevelWidgets
+            if not isinstance(app, QApplication):
                 return
             main_window = g.PRINC_FORM if hasattr(g, "PRINC_FORM") else None
             active_forms = []
@@ -295,9 +297,7 @@ class Janela:
                 form = getattr(g, form_var, None)
                 if form and hasattr(form, "isVisible") and form.isVisible():
                     active_forms.append(form)
-            top_level_widgets = (
-                app.topLevelWidgets() if hasattr(app, "topLevelWidgets") else []
-            )
+            top_level_widgets = app.topLevelWidgets()
             for widget in top_level_widgets[:]:
                 is_special = (
                     widget == main_window
