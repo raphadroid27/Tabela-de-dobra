@@ -43,7 +43,7 @@ from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
-from src.utils.controlador import buscar
+from src.utils.controlador import buscar_debounced
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_widget_auto_ajustavel,
@@ -51,6 +51,7 @@ from src.utils.estilo import (
     obter_estilo_progress_bar,
     obter_tema_atual,
 )
+from src.utils.interface_manager import safe_process_events
 from src.utils.session_manager import (
     force_shutdown_all_instances,
     obter_sessoes_ativas,
@@ -267,7 +268,8 @@ class InstancesWidget(QWidget):
     def _update_shutdown_status(self, active_sessions: int):
         """Atualiza a mensagem de status durante o shutdown."""
         self._set_status_message(f"Aguardando {active_sessions} instância(s) fechar...")
-        QApplication.processEvents()
+
+    safe_process_events()
 
     def _start_global_shutdown(self):
         """Inicia o processo de encerramento de todas as instâncias."""
@@ -275,7 +277,7 @@ class InstancesWidget(QWidget):
         if not ask_yes_no("Confirmar Shutdown", msg, parent=self):
             return
         self._set_status_message("Enviando comando de encerramento...")
-        QApplication.processEvents()
+        safe_process_events()
 
         success = False
         try:
@@ -420,7 +422,8 @@ class UpdaterWidget(QWidget):
         """Callback para atualizar a UI de progresso."""
         self.progress_status_label.setText(message)
         self.progress_bar.setValue(value)
-        QApplication.processEvents()
+
+    safe_process_events()
 
     def _reset_widget_state(self):
         """Reseta a interface do widget para o estado inicial após uma atualização."""
@@ -509,7 +512,9 @@ class UserManagementWidget(QWidget):
         busca_layout = QGridLayout(frame_busca)
         aplicar_medida_borda_espaco(busca_layout)
         busca_layout.addWidget(QLabel("Usuário:"), 0, 0)
-        self.usuario_busca_entry.textChanged.connect(lambda: buscar("usuario"))
+        self.usuario_busca_entry.textChanged.connect(
+            lambda: buscar_debounced("usuario")
+        )
         busca_layout.addWidget(self.usuario_busca_entry, 0, 1)
         limpar_btn = QPushButton("🧹 Limpar")
         aplicar_estilo_botao(limpar_btn, "amarelo")

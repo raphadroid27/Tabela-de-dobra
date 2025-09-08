@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QProgressBar,
     QPushButton,
     QTextBrowser,
     QTextEdit,
@@ -141,6 +142,7 @@ class PrintWorker(QThread):
     """
 
     progress_update = Signal(str)
+    progress_percent = Signal(int)
     processo_finalizado = Signal()
 
     def __init__(self, diretorio: str, arquivos_para_imprimir: List[str], parent=None):
@@ -156,10 +158,13 @@ class PrintWorker(QThread):
 
         self.progress_update.emit("\n--- Iniciando processo de impressão ---\n")
 
-        for nome_arquivo in self.arquivos:
+        total = len(self.arquivos)
+        for idx, nome_arquivo in enumerate(self.arquivos, start=1):
             caminho_completo = os.path.join(self.diretorio, nome_arquivo)
             self._imprimir_arquivo_individual(nome_arquivo, caminho_completo)
-
+            # Atualiza progresso
+            percent = int((idx / total) * 100)
+            self.progress_percent.emit(min(100, max(0, percent)))
             time.sleep(PAUSA_ENTRE_IMPRESSOES_SEGUNDOS)
 
         final_message = "\n--- Processo de impressão finalizado. ---"
@@ -277,6 +282,9 @@ class PrintWorker(QThread):
         return False
 
 
+# pylint: disable=R0902
+
+
 class FormImpressao(QDialog):
     """Formulário de Impressão em Lote de PDFs."""
 
@@ -285,12 +293,13 @@ class FormImpressao(QDialog):
         self.print_manager = PrintManager()
         self.print_worker: Optional[PrintWorker] = None
 
-        # Widgets
-        self.diretorio_entry: Optional[QLineEdit] = None
-        self.lista_text: Optional[QTextEdit] = None
-        self.lista_arquivos_widget: Optional[QListWidget] = None
-        self.resultado_text: Optional[QTextBrowser] = None
-        self.imprimir_btn: Optional[QPushButton] = None
+        # Widgets (atributos de instância inicializados no __init__)
+        self.diretorio_entry = None  # type: Optional[QLineEdit]
+        self.lista_text = None  # type: Optional[QTextEdit]
+        self.lista_arquivos_widget = None  # type: Optional[QListWidget]
+        self.resultado_text = None  # type: Optional[QTextBrowser]
+        self.imprimir_btn = None  # type: Optional[QPushButton]
+        self.progress_bar = None  # type: Optional[object]
 
         self._inicializar_ui()
 
@@ -298,7 +307,7 @@ class FormImpressao(QDialog):
         """Inicializa a interface do usuário."""
         self.setWindowTitle("Impressão em Lote de PDFs")
         self.setFixedSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         self.setWindowIcon(QIcon(ICON_PATH))
 
         Janela.posicionar_janela(self, None)
@@ -359,6 +368,8 @@ class FormImpressao(QDialog):
             maximumHeight=ALTURA_MAXIMA_LISTA,
             placeholderText=PLACEHOLDER_LISTA_ARQUIVOS,
         )
+        # Não aceitar arrastar/soltar aqui para evitar inserir 'file:///...'
+        self.lista_text.setAcceptDrops(False)
         layout.addWidget(self.lista_text, 1, 0, 2, 2)
 
         adicionar_btn = QPushButton("➕ Adicionar")
@@ -375,8 +386,17 @@ class FormImpressao(QDialog):
         label_arquivos.setStyleSheet(STYLE_LABEL_BOLD)
         layout.addWidget(label_arquivos, 3, 0, 1, 3)
 
+        # Lista com suporte a arrastar/soltar arquivos PDF
         self.lista_arquivos_widget = QListWidget(
             maximumHeight=ALTURA_MAXIMA_LISTA_WIDGET
+        )
+        self.lista_arquivos_widget.setAcceptDrops(True)
+        self.lista_arquivos_widget.dragEnterEvent = self._lista_drag_enter_event  # type: ignore
+        self.lista_arquivos_widget.dragMoveEvent = self._lista_drag_move_event  # type: ignore
+        self.lista_arquivos_widget.dropEvent = self._lista_drop_event  # type: ignore
+        self.lista_arquivos_widget.setAccessibleName("lista_arquivos_para_impressao")
+        self.lista_arquivos_widget.setToolTip(
+            "Arraste PDFs aqui para adicionar à lista."
         )
         layout.addWidget(self.lista_arquivos_widget, 4, 0, 4, 2)
 
@@ -398,6 +418,11 @@ class FormImpressao(QDialog):
         self.imprimir_btn = QPushButton("🖨️ Imprimir")
         self.imprimir_btn.clicked.connect(self.executar_impressao)
         aplicar_estilo_botao(self.imprimir_btn, "verde")
+        # Atalhos de teclado
+        self.imprimir_btn.setShortcut("Alt+P")
+        verificar_btn.setShortcut("Alt+V")
+        limpar_text_btn.setShortcut("Alt+L")
+        remover_btn.setShortcut("Del")
         layout.addWidget(self.imprimir_btn, 7, 2)
 
         return frame
@@ -409,6 +434,12 @@ class FormImpressao(QDialog):
         aplicar_medida_borda_espaco(layout)
         self.resultado_text = QTextBrowser(maximumHeight=ALTURA_MAXIMA_LISTA)
         layout.addWidget(self.resultado_text, 0, 0)
+
+        # Barra de progresso da impressão
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        layout.addWidget(self.progress_bar, 1, 0)
         return frame
 
     def selecionar_diretorio(self):
@@ -434,6 +465,65 @@ class FormImpressao(QDialog):
             self.lista_text.clear()
             msg = f"{len(arquivos)} arquivo(s) adicionado(s) à lista!"
             show_info("Sucesso", msg, parent=self)
+
+    # Suporte a arrastar/soltar PDFs na lista
+    def _lista_drag_enter_event(self, event):  # type: ignore
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def _lista_drag_move_event(self, event):  # type: ignore
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def _lista_drop_event(self, event):  # type: ignore
+        urls = event.mimeData().urls()
+        if not urls:
+            return
+
+        # Coleta apenas PDFs
+        pdf_paths = []
+        for url in urls:
+            try:
+                p = url.toLocalFile()
+            except Exception:  # pylint: disable=broad-except
+                p = ""
+            if p and p.lower().endswith(".pdf"):
+                pdf_paths.append(p)
+
+        if not pdf_paths:
+            return
+
+        # Define diretório automaticamente se todos forem do mesmo local
+        dirs = {os.path.dirname(p) for p in pdf_paths}
+        if len(dirs) == 1:
+            dir_unico = next(iter(dirs))
+            if self.diretorio_entry is not None:
+                self.diretorio_entry.setText(dir_unico)
+        else:
+            # Múltiplos diretórios: informa o usuário e não altera o campo
+            show_warning(
+                "Aviso",
+                (
+                    "Arquivos de diretórios diferentes detectados. "
+                    "O campo 'Diretório dos PDFs' não foi alterado."
+                ),
+                parent=self,
+            )
+
+        # Adiciona somente os nomes (sem extensão) à lista
+        for p in pdf_paths:
+            nome = os.path.splitext(os.path.basename(p))[0]
+            self.lista_arquivos_widget.addItem(nome)
+
+        show_info(
+            "Arquivos",
+            f"{len(pdf_paths)} arquivo(s) adicionado(s) da área de soltar.",
+            parent=self,
+        )
 
     def remover_arquivo_selecionado(self):
         """Remove o arquivo selecionado da lista."""
@@ -532,6 +622,8 @@ class FormImpressao(QDialog):
                 diretorio, self.print_manager.arquivos_encontrados
             )
             self.print_worker.progress_update.connect(self.atualizar_resultado)
+            # Atualiza a barra de progresso
+            self.print_worker.progress_percent.connect(self.progress_bar.setValue)
             self.print_worker.processo_finalizado.connect(self.impressao_finalizada)
             self.print_worker.start()
 
@@ -557,6 +649,8 @@ class FormImpressao(QDialog):
         self.imprimir_btn.setEnabled(True)
         self.imprimir_btn.setText("🖨️ Imprimir")
         self.print_worker = None
+        if hasattr(self, "progress_bar"):
+            self.progress_bar.setValue(100)
 
 
 class FormManager:
@@ -565,14 +659,38 @@ class FormManager:
     _instance = None
 
     @classmethod
+    def _reset_instance(cls):
+        cls._instance = None
+
+    @classmethod
     def show_form(cls, parent=None):
         """Cria e exibe o formulário, garantindo uma única instância visível."""
-        if cls._instance is None or not cls._instance.isVisible():
+        visible = False
+        if cls._instance is not None:
+            try:
+                visible = cls._instance.isVisible()
+            except RuntimeError:
+                # Objeto Qt foi destruído; limpa a referência
+                cls._instance = None
+                visible = False
+
+        if not visible:
             cls._instance = FormImpressao(parent)
+            # Quando a janela for destruída, limpa o singleton
+            try:
+                cls._instance.destroyed.connect(FormManager._reset_instance)
+            except (RuntimeError, TypeError):
+                pass
             cls._instance.show()
         else:
-            cls._instance.activateWindow()
-            cls._instance.raise_()
+            try:
+                cls._instance.activateWindow()
+                cls._instance.raise_()
+            except RuntimeError:
+                # Se foi destruída entre o check e aqui, recria
+                cls._instance = FormImpressao(parent)
+                cls._instance.destroyed.connect(FormManager._reset_instance)
+                cls._instance.show()
 
 
 def main(parent=None):

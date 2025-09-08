@@ -181,12 +181,15 @@ class Janela:
         def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
             if window and window.isVisible():
                 current_flags = window.windowFlags()
-                if on_top:
-                    new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
-                else:
-                    new_flags = current_flags & ~Qt.WindowType.WindowStaysOnTopHint
-                window.setWindowFlags(new_flags | Janela.janela_flags())
-                window.show()
+                desired = (
+                    current_flags | Qt.WindowType.WindowStaysOnTopHint
+                    if on_top
+                    else current_flags & ~Qt.WindowType.WindowStaysOnTopHint
+                )
+                desired |= Janela.janela_flags()
+                if desired != current_flags:
+                    window.setWindowFlags(desired)
+                    window.show()
 
         on_top_state = Janela._on_top_state
         janelas = Janela._get_all_app_windows()

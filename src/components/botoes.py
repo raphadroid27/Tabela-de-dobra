@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QGridLayout, QPushButton,
 
 import src.config.globals as g
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_checkbox
-from src.utils.interface import limpar_dobras, limpar_tudo
+from src.utils.interface import calcular_valores_debounced, limpar_dobras, limpar_tudo
 from src.utils.janelas import Janela
 
 # Constantes para dimensões da interface
@@ -66,16 +66,29 @@ class ExpansionManager:
                 colunas,
             )
 
-            g.PRINC_FORM.setFixedSize(largura, altura)
+            # Evitar travar tamanho: manter mínimo e permitir resize
+            try:
+                g.PRINC_FORM.setMinimumSize(largura, altura)
+                g.PRINC_FORM.resize(largura, altura)
+            except Exception:  # pylint: disable=broad-except
+                pass
 
             if hasattr(g, "CARREGAR_INTERFACE_FUNC") and callable(
                 g.CARREGAR_INTERFACE_FUNC
             ):
                 g.CARREGAR_INTERFACE_FUNC(colunas, g.MAIN_LAYOUT)
 
+            # Processa eventos pendentes do Qt para estabilizar o layout
             app = QApplication.instance()
             if app:
                 app.processEvents()
+
+            # Dispara recálculo debounced após relayout para refletir corretamente os widgets
+            try:
+                calcular_valores_debounced(0)
+            except (AttributeError, ValueError, RuntimeError, TypeError):
+                # salvaguarda para não quebrar a UI em cenários inesperados
+                pass
 
             # Agendar limpeza de órfãos após mudanças (mantido por segurança)
             self.cleanup_timer.start(500)
@@ -142,6 +155,9 @@ def _criar_checkbox_vertical(expansion_manager):
     exp_v_check = QCheckBox("Expandir Vertical")
     exp_v_check.setChecked(g.EXP_V)
     aplicar_estilo_checkbox(exp_v_check)
+    exp_v_check.setShortcut("Alt+V")
+    exp_v_check.setAccessibleName("Expansão Vertical")
+    exp_v_check.setStatusTip("Alternar expansão vertical (Alt+V)")
 
     def on_expandir_v(checked):
         """Callback para expansão vertical"""
@@ -157,6 +173,9 @@ def _criar_checkbox_horizontal(expansion_manager):
     exp_h_check = QCheckBox("Expandir Horizontal")
     exp_h_check.setChecked(g.EXP_H)
     aplicar_estilo_checkbox(exp_h_check)
+    exp_h_check.setShortcut("Alt+H")
+    exp_h_check.setAccessibleName("Expansão Horizontal")
+    exp_h_check.setStatusTip("Alternar expansão horizontal (Alt+H)")
 
     def on_expandir_h(checked):
         """Callback para expansão horizontal"""
@@ -170,7 +189,10 @@ def _criar_checkbox_horizontal(expansion_manager):
 def _criar_botao_limpar_dobras():
     """Cria o botão para limpar dobras."""
     limpar_dobras_btn = QPushButton("🧹 Limpar Dobras")
-    aplicar_estilo_botao(limpar_dobras_btn, "amarelo")
+    # Estilo aplicado centralmente em _configurar_estilos_botoes
+    limpar_dobras_btn.setShortcut("Ctrl+D")
+    limpar_dobras_btn.setAccessibleName("Limpar Dobras")
+    limpar_dobras_btn.setStatusTip("Limpar somente as dobras (Ctrl+D)")
     limpar_dobras_btn.clicked.connect(limpar_dobras)
     return limpar_dobras_btn
 
@@ -178,7 +200,10 @@ def _criar_botao_limpar_dobras():
 def _criar_botao_limpar_tudo():
     """Cria o botão para limpar tudo."""
     limpar_tudo_btn = QPushButton("🗑️ Limpar Tudo")
-    aplicar_estilo_botao(limpar_tudo_btn, "vermelho")
+    # Estilo aplicado centralmente em _configurar_estilos_botoes
+    limpar_tudo_btn.setShortcut("Ctrl+L")
+    limpar_tudo_btn.setAccessibleName("Limpar Tudo")
+    limpar_tudo_btn.setStatusTip("Limpar todos os valores (Ctrl+L)")
     limpar_tudo_btn.clicked.connect(limpar_tudo)
     return limpar_tudo_btn
 
