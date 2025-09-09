@@ -154,9 +154,9 @@ def _criar_checkbox_vertical(expansion_manager):
     exp_v_check = QCheckBox("Expandir Vertical")
     exp_v_check.setChecked(bool(g.EXP_V))
     aplicar_estilo_checkbox(exp_v_check)
-    exp_v_check.setShortcut("Alt+V")
+    exp_v_check.setShortcut("Ctrl+Shift+V")
     exp_v_check.setAccessibleName("Expansão Vertical")
-    exp_v_check.setStatusTip("Alternar expansão vertical (Alt+V)")
+    exp_v_check.setStatusTip("Alternar expansão vertical (Ctrl+Shift+V)")
 
     def on_expandir_v(checked):
         """Alterne a expansão vertical."""
@@ -172,9 +172,9 @@ def _criar_checkbox_horizontal(expansion_manager):
     exp_h_check = QCheckBox("Expandir Horizontal")
     exp_h_check.setChecked(bool(g.EXP_H))
     aplicar_estilo_checkbox(exp_h_check)
-    exp_h_check.setShortcut("Alt+H")
+    exp_h_check.setShortcut("Ctrl+H")
     exp_h_check.setAccessibleName("Expansão Horizontal")
-    exp_h_check.setStatusTip("Alternar expansão horizontal (Alt+H)")
+    exp_h_check.setStatusTip("Alternar expansão horizontal (Ctrl+H)")
 
     def on_expandir_h(checked):
         """Alterne a expansão horizontal."""
@@ -200,9 +200,9 @@ def _criar_botao_limpar_tudo():
     """Cria o botão para limpar tudo."""
     limpar_tudo_btn = QPushButton("🗑️ Limpar Tudo")
     # Estilo aplicado centralmente em _configurar_estilos_botoes
-    limpar_tudo_btn.setShortcut("Ctrl+L")
+    limpar_tudo_btn.setShortcut("Ctrl+T")
     limpar_tudo_btn.setAccessibleName("Limpar Tudo")
-    limpar_tudo_btn.setStatusTip("Limpar todos os valores (Ctrl+L)")
+    limpar_tudo_btn.setStatusTip("Limpar todos os valores (Ctrl+T)")
     limpar_tudo_btn.clicked.connect(limpar_tudo)
     return limpar_tudo_btn
 
@@ -227,7 +227,13 @@ def _configurar_estilos_botoes(widgets):
 
 def _configurar_tooltips(widgets):
     """Configura os tooltips dos widgets."""
-    widgets["exp_v_check"].setToolTip("Expande a interface verticalmente")
-    widgets["exp_h_check"].setToolTip("Expande a interface horizontalmente")
-    widgets["limpar_dobras_btn"].setToolTip("Limpa as dobras")
-    widgets["limpar_tudo_btn"].setToolTip("Limpa todos os valores")
+    widgets["exp_v_check"].setToolTip(
+        "Expande a interface verticalmente para mostrar mais dobras (Ctrl+Shift+V)"
+    )
+    widgets["exp_h_check"].setToolTip(
+        "Expande a interface horizontalmente para mostrar dobras lado a lado (Ctrl+H)"
+    )
+    widgets["limpar_dobras_btn"].setToolTip("Limpa apenas os campos de dobras (Ctrl+D)")
+    widgets["limpar_tudo_btn"].setToolTip(
+        "Limpa todos os valores da interface (Ctrl+T)"
+    )

@@ -126,10 +126,10 @@ def _criar_linha_1(layout):
     compr_entry.setValidator(val_c)
 
     # Tooltips
-    mat_comb.setToolTip("Selecione o material.")
-    esp_comb.setToolTip("Selecione a espessura.")
+    mat_comb.setToolTip("Selecione o material para a dobra.")
+    esp_comb.setToolTip("Selecione a espessura do material.")
     canal_comb.setToolTip("Selecione o canal de dobra.")
-    compr_entry.setToolTip("Digite o comprimento em milímetros.")
+    compr_entry.setToolTip("Digite o comprimento da peça em milímetros.")
 
     # Conectar eventos
     compr_entry.textChanged.connect(calcular_valores)
@@ -156,10 +156,13 @@ def _criar_linha_2(layout):
     offset_lbl = criar_widget_cabecalho(layout, "label", "OFFSET_LBL", (3, 3))
 
     # Tooltips
-    ri_entry.setToolTip("Digite o raio interno em milímetros.")
-    k_lbl.setToolTip("Fator K calculado com base no raio interno.")
-    ded_lbl.setToolTip("Dedução de dobra.")
-    offset_lbl.setToolTip("Offset calculado com base no raio interno.")
+    ri_entry.setToolTip("Digite o raio interno da dobra em milímetros.")
+    ded_lbl.setToolTip(
+        "Dedução de dobra calculada com base no material, espessura e canal. Clique para copiar."
+    )
+    offset_lbl.setToolTip(
+        "Offset calculado com base no raio interno. Clique para copiar."
+    )
 
     # Conectar eventos
     ri_entry.textChanged.connect(calcular_valores)
@@ -174,8 +177,8 @@ def _criar_linha_3(layout):
     """Cria a terceira linha do cabeçalho com Ded. Espec., Aba Mín., Ext. Z90° e Força."""
     criar_label(layout, "Ded. Espec.:", (4, 0))
     criar_label(layout, "Aba Mín.:", (4, 1))
-    criar_label(layout, "Ext. Z90°:", (4, 2))
-    criar_label(layout, "Força:", (4, 3))
+    criar_label(layout, 'Ext. "Z" 90°:', (4, 2))
+    criar_label(layout, "Força (t/m):", (4, 3))
 
     ded_espec_entry = criar_widget_cabecalho(layout, "entry", "DED_ESPEC_ENTRY", (5, 0))
     aba_ext_lbl = criar_widget_cabecalho(layout, "label", "ABA_EXT_LBL", (5, 1))
@@ -183,10 +186,16 @@ def _criar_linha_3(layout):
     forca_lbl = criar_widget_cabecalho(layout, "label", "FORCA_LBL", (5, 3))
 
     # Tooltips
-    ded_espec_entry.setToolTip("Digite a dedução específica em milímetros.")
-    aba_ext_lbl.setToolTip("Medida da aba mínima.")
-    z_ext_lbl.setToolTip("Medida de Z90° mínima.")
-    forca_lbl.setToolTip("Força necessária para a dobra em Ton/m.")
+    ded_espec_entry.setToolTip(
+        "Digite uma dedução específica em milímetros para sobrescrever a calculada."
+    )
+    aba_ext_lbl.setToolTip(
+        "Medida mínima externa da aba do perfil dobrado considerando ângulo de 90°."
+    )
+    z_ext_lbl.setToolTip(
+        'Medida mínima externa da altura de um perfil "Z" considerando ângulos de 90°.'
+    )
+    forca_lbl.setToolTip("Força necessária para a dobra em toneladas por metro (t/m).")
 
     # Conectar eventos
     ded_espec_entry.textChanged.connect(calcular_valores)
@@ -207,7 +216,7 @@ def _criar_observacoes(layout):
     obs_widget = criar_widget_observacao(layout, "OBS_LBL", (7, 0))
     # Span de 4 colunas (largura total)
     layout.addWidget(obs_widget, 7, 0, 1, 4)
-    obs_widget.setToolTip("Observações sobre a dobra ou material.")
+    obs_widget.setToolTip("Observações sobre a dobra, material ou canal selecionado.")
 
 
 def _conectar_eventos(mat_comb, esp_comb, canal_comb, compr_entry):
