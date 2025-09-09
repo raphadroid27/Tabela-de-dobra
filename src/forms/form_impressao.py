@@ -349,10 +349,18 @@ class FormImpressao(QDialog):
         aplicar_medida_borda_espaco(layout)
 
         self.diretorio_entry = QLineEdit()
+        self.diretorio_entry.setToolTip(
+            "Caminho do diretório contendo os arquivos PDF para impressão"
+        )
+        self.diretorio_entry.setPlaceholderText("Selecione o diretório com os PDFs...")
         layout.addWidget(self.diretorio_entry, 0, 0)
 
         procurar_btn = QPushButton("📁 Procurar")
         procurar_btn.clicked.connect(self.selecionar_diretorio)
+        procurar_btn.setShortcut("Ctrl+O")
+        procurar_btn.setToolTip(
+            "Abre o explorador para selecionar o diretório dos PDFs (Ctrl+O)"
+        )
         aplicar_estilo_botao(procurar_btn, "cinza")
         layout.addWidget(procurar_btn, 0, 1)
         return frame
@@ -371,17 +379,22 @@ class FormImpressao(QDialog):
         self.lista_text = QTextEdit()
         self.lista_text.setMaximumHeight(ALTURA_MAXIMA_LISTA)
         self.lista_text.setPlaceholderText(PLACEHOLDER_LISTA_ARQUIVOS)
-        # Não aceitar arrastar/soltar aqui para evitar inserir 'file:///...'
         self.lista_text.setAcceptDrops(False)
         layout.addWidget(self.lista_text, 1, 0, 2, 2)
 
         adicionar_btn = QPushButton("➕ Adicionar")
         adicionar_btn.clicked.connect(self.adicionar_lista_arquivos)
+        adicionar_btn.setShortcut("Ctrl+Shift+A")
+        adicionar_btn.setToolTip(
+            "Adiciona os nomes de arquivos do campo de texto à lista (Ctrl+Shift+A)"
+        )
         aplicar_estilo_botao(adicionar_btn, "azul")
         layout.addWidget(adicionar_btn, 1, 2)
 
         limpar_text_btn = QPushButton("🧹 Limpar Texto")
         limpar_text_btn.clicked.connect(self.lista_text.clear)
+        limpar_text_btn.setShortcut("Ctrl+L")
+        limpar_text_btn.setToolTip("Limpa o campo de entrada de texto (Ctrl+L)")
         aplicar_estilo_botao(limpar_text_btn, "amarelo")
         layout.addWidget(limpar_text_btn, 2, 2)
 
@@ -405,32 +418,44 @@ class FormImpressao(QDialog):
         )
         self.lista_arquivos_widget.setAccessibleName("lista_arquivos_para_impressao")
         self.lista_arquivos_widget.setToolTip(
-            "Arraste PDFs aqui para adicionar à lista."
+            "Lista de arquivos PDF para impressão\n"
+            "Arraste PDFs aqui para adicionar à lista\n"
+            "Clique para selecionar arquivos"
         )
         layout.addWidget(self.lista_arquivos_widget, 4, 0, 4, 2)
 
         remover_btn = QPushButton("🗑️ Remover")
         remover_btn.clicked.connect(self.remover_arquivo_selecionado)
+        remover_btn.setShortcut("Del")
+        remover_btn.setToolTip("Remove o arquivo selecionado da lista (Del)")
         aplicar_estilo_botao(remover_btn, "vermelho")
         layout.addWidget(remover_btn, 4, 2)
 
         limpar_lista_btn = QPushButton("🧹 Limpar Lista")
         limpar_lista_btn.clicked.connect(self.lista_arquivos_widget.clear)
+        limpar_lista_btn.setShortcut("Ctrl+Shift+L")
+        limpar_lista_btn.setToolTip("Remove todos os arquivos da lista (Ctrl+Shift+L)")
         aplicar_estilo_botao(limpar_lista_btn, "amarelo")
         layout.addWidget(limpar_lista_btn, 5, 2)
 
         verificar_btn = QPushButton("🔍 Verificar")
         verificar_btn.clicked.connect(self.verificar_arquivos_existentes)
+        verificar_btn.setShortcut("Ctrl+Shift+V")
+        verificar_btn.setToolTip(
+            "Verifica se os arquivos da lista existem no diretório (Ctrl+Shift+V)"
+        )
         aplicar_estilo_botao(verificar_btn, "cinza")
         layout.addWidget(verificar_btn, 6, 2)
 
         self.imprimir_btn = QPushButton("🖨️ Imprimir")
         self.imprimir_btn.clicked.connect(self.executar_impressao)
+        self.imprimir_btn.setShortcut("Ctrl+P")
+        self.imprimir_btn.setToolTip(
+            "Inicia a impressão de todos os arquivos da lista (Ctrl+P)"
+        )
         aplicar_estilo_botao(self.imprimir_btn, "verde")
-        # Atalhos de teclado
-        self.imprimir_btn.setShortcut("Alt+P")
-        verificar_btn.setShortcut("Alt+V")
-        limpar_text_btn.setShortcut("Alt+L")
+        verificar_btn.setShortcut("Ctrl+Shift+V")
+        limpar_text_btn.setShortcut("Ctrl+L")
         remover_btn.setShortcut("Del")
         layout.addWidget(self.imprimir_btn, 7, 2)
 
@@ -443,12 +468,16 @@ class FormImpressao(QDialog):
         aplicar_medida_borda_espaco(layout)
         self.resultado_text = QTextBrowser()
         self.resultado_text.setMaximumHeight(ALTURA_MAXIMA_LISTA)
+        self.resultado_text.setToolTip(
+            "Exibe o progresso e resultado da impressão dos arquivos"
+        )
         layout.addWidget(self.resultado_text, 0, 0)
 
         # Barra de progresso da impressão
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
+        self.progress_bar.setToolTip("Mostra o progresso da impressão dos arquivos")
         layout.addWidget(self.progress_bar, 1, 0)
         return frame
 

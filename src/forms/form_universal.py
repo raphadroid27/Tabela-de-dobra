@@ -83,7 +83,7 @@ FORM_CONFIGS = {
                 "Canal",
                 "Dedução",
                 "Observação",
-                "Força [Ton/m]",
+                "Força (t/m)",
             ],
             "widths": [80, 60, 60, 60, 120, 60],
         },
@@ -104,7 +104,7 @@ FORM_CONFIGS = {
                     "pos": (0, 1),
                 },
                 {
-                    "label": "Força [Ton/m]:",
+                    "label": "Força (t/m):",
                     "widget": "entry",
                     "global": "DED_FORCA_ENTRY",
                     "pos": (0, 2),
@@ -289,11 +289,17 @@ class ButtonConfigManager:
             # Botão Atualizar
             atualizar_btn = QPushButton("✏️ Atualizar")
             aplicar_estilo_botao(atualizar_btn, "verde")
+            atualizar_btn.setShortcut("Ctrl+S")
+            atualizar_btn.setToolTip("Salva as alterações no item selecionado (Ctrl+S)")
             atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
             botao_layout.addWidget(atualizar_btn)
         else:
             adicionar_btn = QPushButton("➕ Adicionar")
             aplicar_estilo_botao(adicionar_btn, "azul")
+            adicionar_btn.setShortcut("Ctrl+Enter")
+            adicionar_btn.setToolTip(
+                "Adiciona um novo item com os dados preenchidos (Ctrl+Enter)"
+            )
             adicionar_btn.clicked.connect(lambda: adicionar(self.tipo_operacao))
             botao_layout.addWidget(adicionar_btn)
 
@@ -426,6 +432,8 @@ class FormManager:
 
         excluir_btn = QPushButton("🗑️ Excluir")
         aplicar_estilo_botao(excluir_btn, "vermelho")
+        excluir_btn.setShortcut("Delete")
+        excluir_btn.setToolTip("Exclui o item selecionado permanentemente (Del)")
 
         tipo_operacao = self.config.get("tipo_busca", self.tipo)
         excluir_btn.clicked.connect(lambda: excluir(tipo_operacao))
@@ -462,6 +470,9 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
     else:
         return None
 
+    # Configurar tooltips específicos baseados no nome do widget
+    _configurar_tooltip_widget(widget, nome_global)
+
     colspan = kwargs.get("colspan", 1)
     rowspan = kwargs.get("rowspan", 1)
     linha, coluna = pos
@@ -469,6 +480,39 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
     layout.addWidget(widget, linha, coluna, rowspan, colspan)
     setattr(g, nome_global, widget)
     return widget
+
+
+def _configurar_tooltip_widget(widget, nome_global):
+    """Configura tooltips específicos para widgets baseados no nome."""
+    tooltips = {
+        # Campos de entrada material
+        "MAT_NOME_ENTRY": "Digite o nome do novo material",
+        "MAT_DENS_ENTRY": "Digite a densidade do material em g/cm³",
+        "MAT_ESCO_ENTRY": "Digite o limite de escoamento do material em MPa",
+        "MAT_ELAS_ENTRY": "Digite o módulo de elasticidade do material em GPa",
+        # Campos de entrada canal
+        "CANAL_VALOR_ENTRY": "Digite o valor do canal",
+        "CANAL_LARGU_ENTRY": "Digite a largura do canal em milímetros",
+        "CANAL_ALTUR_ENTRY": "Digite a altura do canal em milímetros",
+        "CANAL_COMPR_ENTRY": "Digite o comprimento total do canal em metros",
+        "CANAL_OBSER_ENTRY": "Digite observações sobre este canal",
+        # Campos de entrada espessura
+        "ESP_VALOR_ENTRY": "Digite o valor da espessura em milímetros",
+        # Campos de entrada dedução
+        "DED_VALOR_ENTRY": "Digite o valor da dedução em milímetros",
+        "DED_OBSER_ENTRY": "Digite observações sobre esta dedução",
+        "DED_FORCA_ENTRY": "Digite a força necessária em toneladas por metro (t/m)",
+        # Campos de busca
+        "MAT_BUSCA_ENTRY": "Digite parte do nome do material para buscar",
+        "ESP_BUSCA_ENTRY": "Digite parte da espessura para buscar",
+        "CANAL_BUSCA_ENTRY": "Digite parte do valor do canal para buscar",
+        "DED_MATER_COMB": "Selecione o material para filtrar deduções",
+        "DED_ESPES_COMB": "Selecione a espessura para filtrar deduções",
+        "DED_CANAL_COMB": "Selecione o canal para filtrar deduções",
+    }
+
+    if nome_global in tooltips:
+        widget.setToolTip(tooltips[nome_global])
 
 
 def criar_frame_busca(config, tipo):
@@ -500,6 +544,8 @@ def _criar_botao_limpar_busca(layout, col, tipo_busca):
     """Cria o botão de limpar busca."""
     limpar_btn = QPushButton("🧹 Limpar")
     aplicar_estilo_botao(limpar_btn, "amarelo")
+    limpar_btn.setShortcut("Ctrl+R")
+    limpar_btn.setToolTip("Limpa os campos de busca e recarrega a lista (Ctrl+R)")
     limpar_btn.clicked.connect(lambda: limpar_busca(tipo_busca))
     layout.addWidget(limpar_btn, 1, col)
 

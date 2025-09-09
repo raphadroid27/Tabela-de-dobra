@@ -107,7 +107,6 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
             QLineEdit.keyPressEvent(entry, event)
 
     entry.keyPressEvent = custom_key_press_event
-    entry.setToolTip("Insira o valor da dobra.")
 
 
 def criar_entry_dobra(config: ConfigEntry):

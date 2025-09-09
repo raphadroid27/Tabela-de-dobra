@@ -589,15 +589,23 @@ def _atualizar_deducao_ui(data: UIData) -> float:
 def _estilo(data: UIData):
     if not g.K_LBL or g.K_LBL.text() == "":
         if g.K_LBL:
-            g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
+            g.K_LBL.setToolTip(
+                "Fator K calculado com base no raio interno. Clique para copiar."
+            )
         return ""
     if data.deducao_espec > 0:
-        g.K_LBL.setToolTip("Fator K calculado com dedução específica.")
+        g.K_LBL.setToolTip(
+            "Fator K calculado com dedução específica. Clique para copiar."
+        )
         return "QLabel {color: blue;}"
     if not data.canal_str:
-        g.K_LBL.setToolTip("Fator K teórico com base na tabela Raio/Espessura.")
+        g.K_LBL.setToolTip(
+            "Fator K teórico com base na tabela Raio/Espessura. Clique para copiar."
+        )
         return "QLabel {color: orange;}"
-    g.K_LBL.setToolTip("Fator K calculado com base no raio interno.")
+    g.K_LBL.setToolTip(
+        "Fator K calculado com base no raio interno. Clique para copiar."
+    )
     return ""
 
 
@@ -705,7 +713,7 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
             entry.setToolTip(
                 f"Aba ({valores[i - 1]}) menor que a mínima ({aba_min:.0f})."
                 if invalida
-                else "Insira o valor da dobra."
+                else f"Digite o valor da medida externa para a dobra {i} (Use ↑↓ para navegar)"
             )
 
     _atualizar_label(
