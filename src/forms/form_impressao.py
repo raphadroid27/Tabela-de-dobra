@@ -16,7 +16,7 @@ import time
 from typing import List, Optional
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -59,8 +59,15 @@ METODOS_IMPRESSAO = ["foxit", "impressora_padrao", "adobe"]
 
 # Strings de interface
 STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
-PLACEHOLDER_LISTA_ARQUIVOS = (
+PLACEHOLDER_LISTA_ARQUIVOS_1 = (
     "Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519"
+)
+
+TOOLTIP_LISTA_ARQUIVOS_2 = (
+    "Lista de arquivos PDF para impressão\n"
+    "Arraste PDFs aqui para adicionar à lista\n"
+    "Clique para selecionar arquivos\n"
+    "Use Ctrl+↑/↓ para mover item selecionado"
 )
 
 # Caminhos dos programas PDF
@@ -342,6 +349,52 @@ class FormImpressao(QDialog):
 
         vlayout.addWidget(conteudo)
 
+    def _configurar_atalhos_lista(self):
+        """Configura os atalhos de teclado para movimentação de itens na lista."""
+        # Atalho para mover item para cima
+        shortcut_up = QShortcut(QKeySequence("Ctrl+Up"), self.lista_arquivos_widget)
+        shortcut_up.activated.connect(self.mover_item_para_cima)
+
+        # Atalho para mover item para baixo
+        shortcut_down = QShortcut(QKeySequence("Ctrl+Down"), self.lista_arquivos_widget)
+        shortcut_down.activated.connect(self.mover_item_para_baixo)
+
+    def mover_item_para_cima(self):
+        """Move o item selecionado uma posição para cima."""
+        if not self.lista_arquivos_widget:
+            return
+
+        current_row = self.lista_arquivos_widget.currentRow()
+        if current_row <= 0:  # Já está no topo ou nenhum item selecionado
+            return
+
+        # Remove o item atual
+        item = self.lista_arquivos_widget.takeItem(current_row)
+        if item:
+            # Insere uma posição acima
+            self.lista_arquivos_widget.insertItem(current_row - 1, item)
+            # Mantém a seleção no item movido
+            self.lista_arquivos_widget.setCurrentRow(current_row - 1)
+
+    def mover_item_para_baixo(self):
+        """Move o item selecionado uma posição para baixo."""
+        if not self.lista_arquivos_widget:
+            return
+
+        current_row = self.lista_arquivos_widget.currentRow()
+        total_items = self.lista_arquivos_widget.count()
+
+        if current_row < 0 or current_row >= total_items - 1:
+            return
+
+        # Remove o item atual
+        item = self.lista_arquivos_widget.takeItem(current_row)
+        if item:
+            # Insere uma posição abaixo
+            self.lista_arquivos_widget.insertItem(current_row + 1, item)
+            # Mantém a seleção no item movido
+            self.lista_arquivos_widget.setCurrentRow(current_row + 1)
+
     def _criar_secao_diretorio(self) -> QGroupBox:
         """Cria a seção de seleção de diretório."""
         frame = QGroupBox("Diretório dos PDFs")
@@ -378,7 +431,7 @@ class FormImpressao(QDialog):
 
         self.lista_text = QTextEdit()
         self.lista_text.setMaximumHeight(ALTURA_MAXIMA_LISTA)
-        self.lista_text.setPlaceholderText(PLACEHOLDER_LISTA_ARQUIVOS)
+        self.lista_text.setPlaceholderText(PLACEHOLDER_LISTA_ARQUIVOS_1)
         self.lista_text.setAcceptDrops(False)
         layout.addWidget(self.lista_text, 1, 0, 2, 2)
 
@@ -405,7 +458,15 @@ class FormImpressao(QDialog):
         # Lista com suporte a arrastar/soltar arquivos PDF
         self.lista_arquivos_widget = QListWidget()
         self.lista_arquivos_widget.setMaximumHeight(ALTURA_MAXIMA_LISTA_WIDGET)
+        self.lista_arquivos_widget.setToolTip(TOOLTIP_LISTA_ARQUIVOS_2)
         self.lista_arquivos_widget.setAcceptDrops(True)
+        self.lista_arquivos_widget.setDragDropMode(
+            QListWidget.DragDropMode.InternalMove
+        )
+
+        # Configurar atalhos de teclado para movimentação
+        self._configurar_atalhos_lista()
+
         # Atribui handlers de DnD dinamicamente (ignora mypy quanto a atribuição de métodos)
         self.lista_arquivos_widget.dragEnterEvent = (  # type: ignore[method-assign]
             self._lista_drag_enter_event
@@ -417,11 +478,7 @@ class FormImpressao(QDialog):
             self._lista_drop_event
         )
         self.lista_arquivos_widget.setAccessibleName("lista_arquivos_para_impressao")
-        self.lista_arquivos_widget.setToolTip(
-            "Lista de arquivos PDF para impressão\n"
-            "Arraste PDFs aqui para adicionar à lista\n"
-            "Clique para selecionar arquivos"
-        )
+
         layout.addWidget(self.lista_arquivos_widget, 4, 0, 4, 2)
 
         remover_btn = QPushButton("🗑️ Remover")
@@ -454,9 +511,6 @@ class FormImpressao(QDialog):
             "Inicia a impressão de todos os arquivos da lista (Ctrl+P)"
         )
         aplicar_estilo_botao(self.imprimir_btn, "verde")
-        verificar_btn.setShortcut("Ctrl+Shift+V")
-        limpar_text_btn.setShortcut("Ctrl+L")
-        remover_btn.setShortcut("Del")
         layout.addWidget(self.imprimir_btn, 7, 2)
 
         return frame
@@ -504,8 +558,31 @@ class FormImpressao(QDialog):
             assert self.lista_arquivos_widget is not None
             self.lista_arquivos_widget.addItems(arquivos)
             self.lista_text.clear()
-            msg = f"{len(arquivos)} arquivo(s) adicionado(s) à lista!"
+
+            # Ordenar automaticamente após adicionar
+            self._ordenar_lista_alfabeticamente()
+
+            msg = f"{len(arquivos)} arquivo(s) adicionado(s) à lista e ordenado(s) alfabeticamente!"
             show_info("Sucesso", msg, parent=self)
+
+    def _ordenar_lista_alfabeticamente(self):
+        """Ordena a lista alfabeticamente sem mostrar mensagem."""
+        if not self.lista_arquivos_widget or self.lista_arquivos_widget.count() == 0:
+            return
+
+        # Coleta todos os textos dos itens
+        items_text = []
+        for i in range(self.lista_arquivos_widget.count()):
+            item = self.lista_arquivos_widget.item(i)
+            if item:
+                items_text.append(item.text())
+
+        # Ordena alfabeticamente (case-insensitive)
+        items_text.sort(key=str.lower)
+
+        # Limpa a lista e adiciona os itens ordenados
+        self.lista_arquivos_widget.clear()
+        self.lista_arquivos_widget.addItems(items_text)
 
     # Suporte a arrastar/soltar PDFs na lista
     def _lista_drag_enter_event(self, event):
@@ -556,14 +633,19 @@ class FormImpressao(QDialog):
             )
 
         # Adiciona somente os nomes (sem extensão) à lista
+        nomes_adicionados = []
         for p in pdf_paths:
             nome = os.path.splitext(os.path.basename(p))[0]
             assert self.lista_arquivos_widget is not None
             self.lista_arquivos_widget.addItem(nome)
+            nomes_adicionados.append(nome)
+
+        # Ordenar automaticamente após adicionar via drag & drop
+        self._ordenar_lista_alfabeticamente()
 
         show_info(
-            "Arquivos",
-            f"{len(pdf_paths)} arquivo(s) adicionado(s) da área de soltar.",
+            "Sucesso",
+            f"{len(nomes_adicionados)} arquivo(s) adicionado(s) à lista e ordenado(s) alfabeticamente!",  # pylint: disable=line-too-long
             parent=self,
         )
 
@@ -750,7 +832,6 @@ if __name__ == "__main__":
     try:
         main()
     except (ImportError, NameError) as e:
-
         show_error(
             "Erro de Dependência",
             f"Não foi possível iniciar o aplicativo: {e}.\n"
