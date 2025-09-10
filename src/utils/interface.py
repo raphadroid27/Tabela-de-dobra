@@ -281,33 +281,39 @@ class WidgetUpdater:
             if g.CANAL_COMB:
                 g.CANAL_COMB.clear()
 
-    def _preencher_combobox(self, combo, query_func):
+    def _preencher_combobox_comum(self, combo, items_ou_query_func, usar_cache=False):
+        """Método comum para preencher comboboxes, consolidando a lógica duplicada."""
         if not combo:
             return
         current_value = combo.currentText()
         combo.clear()
+
         try:
-            with get_session() as session:
-                items = query_func(session)
-                combo.addItems(items)
-                if current_value in items:
-                    combo.setCurrentText(current_value)
+            if usar_cache or callable(items_ou_query_func):
+                # Se é função, executa; se é lista, usa diretamente
+                if callable(items_ou_query_func):
+                    with get_session() as session:
+                        items = items_ou_query_func(session)
                 else:
-                    combo.setCurrentIndex(-1)
+                    items = items_ou_query_func
+            else:
+                items = items_ou_query_func
+
+            combo.addItems(items)
+            if current_value in items:
+                combo.setCurrentText(current_value)
+            else:
+                combo.setCurrentIndex(-1)
         except SQLAlchemyError as e:
             logging.error("Erro ao preencher combobox: %s", e)
 
+    def _preencher_combobox(self, combo, query_func):
+        """Preenche combobox executando query no banco de dados."""
+        self._preencher_combobox_comum(combo, query_func, usar_cache=False)
+
     def _preencher_combobox_direto(self, combo, items):
         """Preenche combobox diretamente com lista de itens (para uso com cache)."""
-        if not combo:
-            return
-        current_value = combo.currentText()
-        combo.clear()
-        combo.addItems(items)
-        if current_value in items:
-            combo.setCurrentText(current_value)
-        else:
-            combo.setCurrentIndex(-1)
+        self._preencher_combobox_comum(combo, items, usar_cache=True)
 
 
 class FormWidgetUpdater:
@@ -363,6 +369,7 @@ class FormWidgetUpdater:
                     )
 
     def _preencher_form_combo(self, combo, query_func):
+        """Preenche combobox do formulário executando query no banco de dados."""
         if not combo:
             return
         current_text = combo.currentText()
@@ -744,9 +751,36 @@ def calcular_valores():
 _debounce_timer = QTimer()
 _debounce_timer.setSingleShot(True)
 
+# Configurações de delay otimizadas
+DEBOUNCE_DELAYS = {
+    "calcular_valores": 25,  # Muito responsivo para cálculos em tempo real
+    "buscar": 100,  # Balanceado para buscas sem sobrecarregar DB
+    "transparency": 25,  # Muito rápido para efeitos visuais
+    "window_monitor": 250,  # Moderado para monitoramento de janelas
+}
 
-def calcular_valores_debounced(delay_ms: Union[int, float, str] = 75):
-    """Agenda calcular_valores com pequeno atraso; reinicia se chamado novamente."""
+
+def configurar_delay_debounce(tipo: str, novo_delay: int):
+    """Permite configurar dinamicamente os delays dos debouncers."""
+    if tipo in DEBOUNCE_DELAYS:
+        DEBOUNCE_DELAYS[tipo] = max(10, min(1000, novo_delay))  # Entre 10ms e 1s
+        logging.info(
+            "Delay do debouncer '%s' configurado para %sms", tipo, DEBOUNCE_DELAYS[tipo]
+        )
+    else:
+        logging.warning("Tipo de debouncer '%s' não reconhecido", tipo)
+
+
+def obter_delay_otimizado(tipo: str, fallback: int = 50) -> int:
+    """Obtém o delay otimizado para um tipo específico de debouncer."""
+    return DEBOUNCE_DELAYS.get(tipo, fallback)
+
+
+def calcular_valores_debounced(delay_ms: Union[int, float, str] = None):
+    """Agenda calcular_valores com pequeno atraso; reinicia se chamado novamente.
+
+    Para cálculo imediato, use delay_ms=0 ou chame calcular_valores() diretamente.
+    """
     if _debounce_timer.isActive():
         _debounce_timer.stop()
 
@@ -760,42 +794,29 @@ def calcular_valores_debounced(delay_ms: Union[int, float, str] = 75):
     if not getattr(calcular_valores_debounced, "_connected", False):
         _debounce_timer.timeout.connect(_run)
         setattr(calcular_valores_debounced, "_connected", True)
-    # Converte delay para inteiro com segurança
-    try:
-        delay = int(float(delay_ms))
-    except (ValueError, TypeError):
-        delay = 75
+
+    # Usa delay configurado dinamicamente se não especificado
+    if delay_ms is None:
+        delay = obter_delay_otimizado("calcular_valores", 25)
+    else:
+        try:
+            delay = int(float(delay_ms))
+        except (ValueError, TypeError):
+            delay = obter_delay_otimizado("calcular_valores", 25)
+
     _debounce_timer.start(max(0, delay))
 
 
-# Debounce específico para o tooltip do canal
-_tooltip_timer = QTimer()
-_tooltip_timer.setSingleShot(True)
-
-
-def canal_tooltip_debounced(delay_ms: Union[int, float, str] = 100):
-    """Agenda a atualização do tooltip do canal com pequeno atraso."""
-    if _tooltip_timer.isActive():
-        _tooltip_timer.stop()
-    try:
-        delay = int(float(delay_ms))
-    except (ValueError, TypeError):
-        delay = 100
-
-    def _run():
-        try:
-            canal_tooltip()
-        except (AttributeError, ValueError, TypeError, SQLAlchemyError) as e:
-            logging.error("Falha ao atualizar tooltip do canal (debounced): %s", e)
-
-    if not getattr(canal_tooltip_debounced, "_connected", False):
-        _tooltip_timer.timeout.connect(_run)
-        setattr(canal_tooltip_debounced, "_connected", True)
-    _tooltip_timer.start(max(0, delay))
-
-
 def todas_funcoes():
-    """Executa a atualização completa da interface, incluindo comboboxes."""
+    """Executa a atualização completa da interface, incluindo comboboxes.
+
+    Inicializa todos os comboboxes principais na ordem correta:
+    1. Material (independente)
+    2. Espessura (depende do material)
+    3. Canal (depende do material e espessura)
+
+    Usada na inicialização da aplicação e reload da interface.
+    """
     updater = WidgetUpdater()
     for tipo in ["material", "espessura", "canal"]:
         updater.atualizar(tipo)
@@ -847,5 +868,6 @@ def canal_tooltip():
     g.CANAL_COMB.setToolTip(tooltip)
 
 
-atualizar_widgets = WidgetUpdater().atualizar
-atualizar_comboboxes_formulario = FormWidgetUpdater().atualizar
+# Aliases removidos - usar as classes diretamente para maior clareza:
+# WidgetUpdater().atualizar(tipo)
+# FormWidgetUpdater().atualizar(tipos)

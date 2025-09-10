@@ -22,7 +22,8 @@ class TransparencyEventFilter(QObject):
         self.watched_window = parent
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
-        self.timer.setInterval(50)  # Atraso de 50ms para verificar o estado
+        # Reduzido de 50ms para 25ms para maior responsividade
+        self.timer.setInterval(25)
         self.timer.timeout.connect(self.make_transparent)
 
     def eventFilter(  # pylint: disable=C0103
@@ -128,7 +129,8 @@ class Janela:
         if Janela._monitor_timer is None:
             Janela._monitor_timer = QTimer()
             Janela._monitor_timer.timeout.connect(Janela._monitorar_janelas)
-            Janela._monitor_timer.start(500)  # Verifica a cada 500ms
+            # Reduzido de 500ms para 250ms para maior responsividade
+            Janela._monitor_timer.start(250)
 
     @staticmethod
     def _verificar_estado_monitoramento():

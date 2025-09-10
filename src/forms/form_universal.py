@@ -38,7 +38,7 @@ from src.utils.estilo import (
     obter_tema_atual,
 )
 from src.utils.interface import (  # <--- IMPORTA A NOVA FUNÇÃO
-    atualizar_comboboxes_formulario,
+    FormWidgetUpdater,
     limpar_busca,
     listar,
 )
@@ -113,7 +113,7 @@ FORM_CONFIGS = {
         },
         # --- MUDANÇA PRINCIPAL AQUI ---
         # Chama a nova função que só atualiza os comboboxes do formulário
-        "post_init": lambda: atualizar_comboboxes_formulario(
+        "post_init": lambda: FormWidgetUpdater().atualizar(
             ["material", "espessura", "canal"]
         ),
         "tipo_busca": "dedução",
@@ -682,27 +682,6 @@ def _executar_pos_inicio(config, tipo):
     # Garantir que a lista seja carregada
     tipo_lista = config.get("tipo_busca", tipo)
     listar(tipo_lista)
-
-
-# Funções de compatibilidade para manter a API existente
-def form_deducao_main(root):
-    """Create and display dedução form for compatibility."""
-    main("deducao", root)
-
-
-def form_material_main(root):
-    """Create and display material form for compatibility."""
-    main("material", root)
-
-
-def form_canal_main(root):
-    """Create and display canal form for compatibility."""
-    main("canal", root)
-
-
-def form_espessura_main(root):
-    """Create and display espessura form for compatibility."""
-    main("espessura", root)
 
 
 if __name__ == "__main__":
