@@ -566,9 +566,7 @@ class UserManagementWidget(QWidget):
         )
         busca_layout.addWidget(self.usuario_busca_entry, 0, 1)
         limpar_btn = QPushButton("🧹 Limpar")
-        limpar_btn.setToolTip(
-            "Limpa o campo de busca e recarrega a lista de usuários (Ctrl+L)"
-        )
+        limpar_btn.setToolTip("Limpar filtro e mostrar todos os usuários (Ctrl+L)")
         limpar_btn.setShortcut(QKeySequence("Ctrl+L"))
         aplicar_estilo_botao(limpar_btn, "amarelo")
         limpar_btn.clicked.connect(self._limpar_busca_action)

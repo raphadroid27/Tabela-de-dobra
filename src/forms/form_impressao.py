@@ -410,7 +410,7 @@ class FormImpressao(QDialog):
 
         procurar_btn = QPushButton("📁 Procurar")
         procurar_btn.clicked.connect(self.selecionar_diretorio)
-        procurar_btn.setShortcut("Ctrl+O")
+        procurar_btn.setShortcut(QKeySequence("Ctrl+O"))
         procurar_btn.setToolTip(
             "Abre o explorador para selecionar o diretório dos PDFs (Ctrl+O)"
         )
@@ -437,7 +437,7 @@ class FormImpressao(QDialog):
 
         adicionar_btn = QPushButton("➕ Adicionar")
         adicionar_btn.clicked.connect(self.adicionar_lista_arquivos)
-        adicionar_btn.setShortcut("Ctrl+Shift+A")
+        adicionar_btn.setShortcut(QKeySequence("Ctrl+Shift+A"))
         adicionar_btn.setToolTip(
             "Adiciona os nomes de arquivos do campo de texto à lista (Ctrl+Shift+A)"
         )
@@ -446,7 +446,7 @@ class FormImpressao(QDialog):
 
         limpar_text_btn = QPushButton("🧹 Limpar Texto")
         limpar_text_btn.clicked.connect(self.lista_text.clear)
-        limpar_text_btn.setShortcut("Ctrl+L")
+        limpar_text_btn.setShortcut(QKeySequence("Ctrl+L"))
         limpar_text_btn.setToolTip("Limpa o campo de entrada de texto (Ctrl+L)")
         aplicar_estilo_botao(limpar_text_btn, "amarelo")
         layout.addWidget(limpar_text_btn, 2, 2)
@@ -483,21 +483,21 @@ class FormImpressao(QDialog):
 
         remover_btn = QPushButton("🗑️ Remover")
         remover_btn.clicked.connect(self.remover_arquivo_selecionado)
-        remover_btn.setShortcut("Del")
+        remover_btn.setShortcut(QKeySequence("Delete"))
         remover_btn.setToolTip("Remove o arquivo selecionado da lista (Del)")
         aplicar_estilo_botao(remover_btn, "vermelho")
         layout.addWidget(remover_btn, 4, 2)
 
         limpar_lista_btn = QPushButton("🧹 Limpar Lista")
         limpar_lista_btn.clicked.connect(self.lista_arquivos_widget.clear)
-        limpar_lista_btn.setShortcut("Ctrl+Shift+L")
+        limpar_lista_btn.setShortcut(QKeySequence("Ctrl+Shift+L"))
         limpar_lista_btn.setToolTip("Remove todos os arquivos da lista (Ctrl+Shift+L)")
         aplicar_estilo_botao(limpar_lista_btn, "amarelo")
         layout.addWidget(limpar_lista_btn, 5, 2)
 
         verificar_btn = QPushButton("🔍 Verificar")
         verificar_btn.clicked.connect(self.verificar_arquivos_existentes)
-        verificar_btn.setShortcut("Ctrl+Shift+V")
+        verificar_btn.setShortcut(QKeySequence("Ctrl+Shift+V"))
         verificar_btn.setToolTip(
             "Verifica se os arquivos da lista existem no diretório (Ctrl+Shift+V)"
         )
@@ -506,7 +506,7 @@ class FormImpressao(QDialog):
 
         self.imprimir_btn = QPushButton("🖨️ Imprimir")
         self.imprimir_btn.clicked.connect(self.executar_impressao)
-        self.imprimir_btn.setShortcut("Ctrl+P")
+        self.imprimir_btn.setShortcut(QKeySequence("Ctrl+P"))
         self.imprimir_btn.setToolTip(
             "Inicia a impressão de todos os arquivos da lista (Ctrl+P)"
         )
