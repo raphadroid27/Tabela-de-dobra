@@ -10,6 +10,7 @@ interativa.
 import logging
 
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import QApplication, QCheckBox, QGridLayout, QPushButton, QWidget
 
 import src.config.globals as g
@@ -151,7 +152,7 @@ def _criar_checkbox_vertical(expansion_manager):
     exp_v_check = QCheckBox("Expandir Vertical")
     exp_v_check.setChecked(bool(g.EXP_V))
     aplicar_estilo_checkbox(exp_v_check)
-    exp_v_check.setShortcut("Ctrl+Shift+V")
+    exp_v_check.setShortcut(QKeySequence("Ctrl+Shift+V"))
     exp_v_check.setAccessibleName("Expansão Vertical")
     exp_v_check.setStatusTip("Alternar expansão vertical (Ctrl+Shift+V)")
 
@@ -169,7 +170,7 @@ def _criar_checkbox_horizontal(expansion_manager):
     exp_h_check = QCheckBox("Expandir Horizontal")
     exp_h_check.setChecked(bool(g.EXP_H))
     aplicar_estilo_checkbox(exp_h_check)
-    exp_h_check.setShortcut("Ctrl+H")
+    exp_h_check.setShortcut(QKeySequence("Ctrl+H"))
     exp_h_check.setAccessibleName("Expansão Horizontal")
     exp_h_check.setStatusTip("Alternar expansão horizontal (Ctrl+H)")
 
@@ -186,7 +187,7 @@ def _criar_botao_limpar_dobras():
     """Cria o botão para limpar dobras."""
     limpar_dobras_btn = QPushButton("🧹 Limpar Dobras")
     # Estilo aplicado centralmente em _configurar_estilos_botoes
-    limpar_dobras_btn.setShortcut("Ctrl+D")
+    limpar_dobras_btn.setShortcut(QKeySequence("Ctrl+D"))
     limpar_dobras_btn.setAccessibleName("Limpar Dobras")
     limpar_dobras_btn.setStatusTip("Limpar somente as dobras (Ctrl+D)")
     limpar_dobras_btn.clicked.connect(limpar_dobras)
@@ -197,7 +198,7 @@ def _criar_botao_limpar_tudo():
     """Cria o botão para limpar tudo."""
     limpar_tudo_btn = QPushButton("🗑️ Limpar Tudo")
     # Estilo aplicado centralmente em _configurar_estilos_botoes
-    limpar_tudo_btn.setShortcut("Ctrl+T")
+    limpar_tudo_btn.setShortcut(QKeySequence("Ctrl+T"))
     limpar_tudo_btn.setAccessibleName("Limpar Tudo")
     limpar_tudo_btn.setStatusTip("Limpar todos os valores (Ctrl+T)")
     limpar_tudo_btn.clicked.connect(limpar_tudo)

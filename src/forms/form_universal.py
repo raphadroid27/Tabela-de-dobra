@@ -8,7 +8,7 @@ Versão atualizada com botões de ação fora do grid para melhor organização 
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -289,14 +289,14 @@ class ButtonConfigManager:
             # Botão Atualizar
             atualizar_btn = QPushButton("✏️ Atualizar")
             aplicar_estilo_botao(atualizar_btn, "verde")
-            atualizar_btn.setShortcut("Ctrl+S")
+            atualizar_btn.setShortcut(QKeySequence("Ctrl+S"))
             atualizar_btn.setToolTip("Salva as alterações no item selecionado (Ctrl+S)")
             atualizar_btn.clicked.connect(lambda: editar(self.tipo_operacao))
             botao_layout.addWidget(atualizar_btn)
         else:
             adicionar_btn = QPushButton("➕ Adicionar")
             aplicar_estilo_botao(adicionar_btn, "azul")
-            adicionar_btn.setShortcut("Ctrl+Enter")
+            adicionar_btn.setShortcut(QKeySequence("Ctrl+Return"))
             adicionar_btn.setToolTip(
                 "Adiciona um novo item com os dados preenchidos (Ctrl+Enter)"
             )
@@ -432,7 +432,7 @@ class FormManager:
 
         excluir_btn = QPushButton("🗑️ Excluir")
         aplicar_estilo_botao(excluir_btn, "vermelho")
-        excluir_btn.setShortcut("Delete")
+        excluir_btn.setShortcut(QKeySequence("Delete"))
         excluir_btn.setToolTip("Exclui o item selecionado permanentemente (Del)")
 
         tipo_operacao = self.config.get("tipo_busca", self.tipo)
@@ -544,7 +544,7 @@ def _criar_botao_limpar_busca(layout, col, tipo_busca):
     """Cria o botão de limpar busca."""
     limpar_btn = QPushButton("🧹 Limpar")
     aplicar_estilo_botao(limpar_btn, "amarelo")
-    limpar_btn.setShortcut("Ctrl+R")
+    limpar_btn.setShortcut(QKeySequence("Ctrl+R"))
     limpar_btn.setToolTip("Limpa os campos de busca e recarrega a lista (Ctrl+R)")
     limpar_btn.clicked.connect(lambda: limpar_busca(tipo_busca))
     layout.addWidget(limpar_btn, 1, col)
