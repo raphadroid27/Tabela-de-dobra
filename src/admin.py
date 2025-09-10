@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -115,11 +115,13 @@ class AdminAuthWidget(QWidget):
         grid_layout.setHorizontalSpacing(10)
         grid_layout.addWidget(QLabel("Usuário:"), 0, 0)
         self.usuario_entry.setPlaceholderText("Digite o usuário")
+        self.usuario_entry.setToolTip("Digite seu nome de usuário de administrador")
         aplicar_estilo_widget_auto_ajustavel(self.usuario_entry, "lineedit")
         grid_layout.addWidget(self.usuario_entry, 0, 1)
 
         grid_layout.addWidget(QLabel("Senha:"), 1, 0)
         self.senha_entry.setPlaceholderText("Digite a senha")
+        self.senha_entry.setToolTip("Digite sua senha de administrador")
         self.senha_entry.setEchoMode(QLineEdit.EchoMode.Password)
         aplicar_estilo_widget_auto_ajustavel(self.senha_entry, "lineedit")
         grid_layout.addWidget(self.senha_entry, 1, 1)
@@ -128,9 +130,27 @@ class AdminAuthWidget(QWidget):
         main_layout.addStretch()
 
         login_btn = QPushButton("🔐 Acessar Ferramenta")
+        login_btn.setToolTip("Clique para acessar a ferramenta administrativa (Enter)")
+        login_btn.setShortcut(QKeySequence("Return"))
         aplicar_estilo_botao(login_btn, "verde")
         login_btn.clicked.connect(self.attempt_login)
         main_layout.addWidget(login_btn)
+
+        # Atalhos de teclado adicionais
+        self._setup_keyboard_shortcuts()
+
+    def _setup_keyboard_shortcuts(self):
+        """Configura atalhos de teclado para o widget de autenticação."""
+        # Atalho para focar no campo de usuário
+        focus_user_shortcut = QShortcut(QKeySequence("Ctrl+U"), self)
+        focus_user_shortcut.activated.connect(self.usuario_entry.setFocus)
+
+        # Atalho para focar no campo de senha
+        focus_pass_shortcut = QShortcut(QKeySequence("Ctrl+P"), self)
+        focus_pass_shortcut.activated.connect(self.senha_entry.setFocus)
+
+        # Enter no campo de senha também faz login
+        self.senha_entry.returnPressed.connect(self.attempt_login)
 
     def attempt_login(self):
         """Tenta autenticar o usuário com as credenciais fornecidas."""
@@ -193,6 +213,7 @@ class InstancesWidget(QWidget):
         self.tree_sessoes.setColumnWidth(0, 80)
         self.tree_sessoes.setColumnWidth(1, 130)
         self.tree_sessoes.setColumnWidth(2, 150)
+        self.tree_sessoes.setToolTip("Lista de instâncias ativas da aplicação")
 
         # Habilitar ordenação por coluna e cores alternadas
         self.tree_sessoes.setSortingEnabled(True)
@@ -207,6 +228,15 @@ class InstancesWidget(QWidget):
         self.status_label.setStyleSheet("color: #0078d4; margin-top: 5px;")
         self.status_label.setVisible(False)
         main_layout.addWidget(self.status_label)
+
+        # Configurar atalhos de teclado
+        self._setup_keyboard_shortcuts()
+
+    def _setup_keyboard_shortcuts(self):
+        """Configura atalhos de teclado para o widget de instâncias."""
+        # Atalho adicional para atualizar (Ctrl+R)
+        refresh_shortcut = QShortcut(QKeySequence("Ctrl+R"), self)
+        refresh_shortcut.activated.connect(self._load_sessions)
 
     def _create_info_frame(self):
         """Cria o frame de informações do sistema."""
@@ -228,11 +258,15 @@ class InstancesWidget(QWidget):
         buttons_layout.setSpacing(10)
 
         atualizar_btn = QPushButton("🔄 Atualizar")
+        atualizar_btn.setToolTip("Atualizar lista de instâncias ativas (F5)")
+        atualizar_btn.setShortcut(QKeySequence("F5"))
         aplicar_estilo_botao(atualizar_btn, "azul")
         atualizar_btn.clicked.connect(self._load_sessions)
         buttons_layout.addWidget(atualizar_btn)
 
         shutdown_btn = QPushButton("⚠️ Shutdown Geral")
+        shutdown_btn.setToolTip("Encerrar todas as instâncias ativas (Ctrl+Shift+Q)")
+        shutdown_btn.setShortcut(QKeySequence("Ctrl+Shift+Q"))
         aplicar_estilo_botao(shutdown_btn, "vermelho")
         shutdown_btn.clicked.connect(self._start_global_shutdown)
         buttons_layout.addWidget(shutdown_btn)
@@ -370,10 +404,13 @@ class UpdaterWidget(QWidget):
         file_layout = QHBoxLayout(file_group)
         aplicar_medida_borda_espaco(file_layout)
         self.file_path_entry.setPlaceholderText("Nenhum arquivo selecionado")
+        self.file_path_entry.setToolTip("Caminho do arquivo de atualização selecionado")
         self.file_path_entry.setReadOnly(True)
         file_layout.addWidget(self.file_path_entry)
 
         select_button = QPushButton("Selecionar...")
+        select_button.setToolTip("Selecionar arquivo de atualização (.zip) (Ctrl+O)")
+        select_button.setShortcut(QKeySequence("Ctrl+O"))
         aplicar_estilo_botao(select_button, "azul")
         select_button.clicked.connect(self._select_file)
         file_layout.addWidget(select_button)
@@ -382,6 +419,8 @@ class UpdaterWidget(QWidget):
         layout.addStretch()
 
         self.update_button.setEnabled(False)
+        self.update_button.setToolTip("Instalar a atualização selecionada (Ctrl+I)")
+        self.update_button.setShortcut(QKeySequence("Ctrl+I"))
         self.update_button.clicked.connect(self.start_update_process)
         aplicar_estilo_botao(self.update_button, "verde")
         layout.addWidget(self.update_button)
@@ -477,6 +516,13 @@ class UserManagementWidget(QWidget):
         self._listar_usuarios()
         self.list_usuario.itemSelectionChanged.connect(self._update_buttons_state)
         self._update_buttons_state()
+        self._setup_keyboard_shortcuts()
+
+    def _setup_keyboard_shortcuts(self):
+        """Configura atalhos de teclado para o widget de usuários."""
+        # Atalho para focar no campo de busca
+        focus_search_shortcut = QShortcut(QKeySequence("Ctrl+F"), self)
+        focus_search_shortcut.activated.connect(self.usuario_busca_entry.setFocus)
 
     def _setup_ui(self):
         """Configura a interface do usuário para o widget."""
@@ -512,16 +558,24 @@ class UserManagementWidget(QWidget):
         busca_layout = QGridLayout(frame_busca)
         aplicar_medida_borda_espaco(busca_layout)
         busca_layout.addWidget(QLabel("Usuário:"), 0, 0)
+        self.usuario_busca_entry.setToolTip(
+            "Digite parte do nome do usuário para buscar"
+        )
         self.usuario_busca_entry.textChanged.connect(
             lambda: buscar_debounced("usuario")
         )
         busca_layout.addWidget(self.usuario_busca_entry, 0, 1)
         limpar_btn = QPushButton("🧹 Limpar")
+        limpar_btn.setToolTip(
+            "Limpa o campo de busca e recarrega a lista de usuários (Ctrl+L)"
+        )
+        limpar_btn.setShortcut(QKeySequence("Ctrl+L"))
         aplicar_estilo_botao(limpar_btn, "amarelo")
         limpar_btn.clicked.connect(self._limpar_busca_action)
         busca_layout.addWidget(limpar_btn, 0, 2)
         atualizar_btn = QPushButton("🔄")
-        atualizar_btn.setToolTip("Atualizar lista de usuários")
+        atualizar_btn.setToolTip("Atualizar lista de usuários (F5)")
+        atualizar_btn.setShortcut(QKeySequence("F5"))
         atualizar_btn.setFixedWidth(40)
         aplicar_estilo_botao(atualizar_btn, "azul")
         atualizar_btn.clicked.connect(self._listar_usuarios)
@@ -540,6 +594,7 @@ class UserManagementWidget(QWidget):
         g.LIST_USUARIO.setColumnWidth(1, 120)
         g.LIST_USUARIO.setColumnWidth(2, 80)
         g.LIST_USUARIO.setColumnWidth(3, 100)
+        g.LIST_USUARIO.setToolTip("Lista de usuários cadastrados no sistema")
 
         # Habilitar ordenação por coluna e cores alternadas
         g.LIST_USUARIO.setSortingEnabled(True)
@@ -554,14 +609,24 @@ class UserManagementWidget(QWidget):
         aplicar_medida_borda_espaco(buttons_layout, 0)
         buttons_layout.setSpacing(10)
         self.toggle_role_btn = QPushButton("👤 Alterar Permissão")
+        self.toggle_role_btn.setToolTip(
+            "Alterar permissão do usuário selecionado (Ctrl+A)"
+        )
+        self.toggle_role_btn.setShortcut(QKeySequence("Ctrl+A"))
         aplicar_estilo_botao(self.toggle_role_btn, "verde")
         self.toggle_role_btn.clicked.connect(self._toggle_role_action)
         buttons_layout.addWidget(self.toggle_role_btn)
         self.resetar_senha_btn = QPushButton("🔄 Resetar Senha")
+        self.resetar_senha_btn.setToolTip(
+            "Resetar senha do usuário selecionado (Ctrl+R)"
+        )
+        self.resetar_senha_btn.setShortcut(QKeySequence("Ctrl+R"))
         aplicar_estilo_botao(self.resetar_senha_btn, "amarelo")
         self.resetar_senha_btn.clicked.connect(self._resetar_senha_action)
         buttons_layout.addWidget(self.resetar_senha_btn)
         self.excluir_btn = QPushButton("🗑️ Excluir")
+        self.excluir_btn.setToolTip("Excluir usuário selecionado (Delete)")
+        self.excluir_btn.setShortcut(QKeySequence("Delete"))
         aplicar_estilo_botao(self.excluir_btn, "vermelho")
         self.excluir_btn.clicked.connect(self._excluir_usuario_action)
         buttons_layout.addWidget(self.excluir_btn)
@@ -638,12 +703,36 @@ class AdminTool(QMainWindow):
         """Configura a UI principal da ferramenta com abas."""
         layout = QVBoxLayout(self.main_tool_widget)
         aplicar_medida_borda_espaco(layout, 0, 0)
-        tab_widget = QTabWidget()
-        tab_widget.setStyleSheet("QTabWidget::pane { border: 0; }")
-        tab_widget.addTab(self.instances_tab, "🔧 Gerenciar Instâncias")
-        tab_widget.addTab(self.user_management_tab, "👥 Gerenciar Usuários")
-        tab_widget.addTab(self.updater_tab, "🔄 Atualizador")
-        layout.addWidget(tab_widget)
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("QTabWidget::pane { border: 0; }")
+        self.tab_widget.addTab(self.instances_tab, "🔧 Gerenciar Instâncias")
+        self.tab_widget.addTab(self.user_management_tab, "👥 Gerenciar Usuários")
+        self.tab_widget.addTab(self.updater_tab, "🔄 Atualizador")
+
+        # Tooltips para as abas
+        self.tab_widget.setTabToolTip(
+            0, "Gerenciar instâncias ativas da aplicação (Ctrl+1)"
+        )
+        self.tab_widget.setTabToolTip(1, "Gerenciar usuários do sistema (Ctrl+2)")
+        self.tab_widget.setTabToolTip(2, "Atualizar a aplicação (Ctrl+3)")
+
+        layout.addWidget(self.tab_widget)
+
+    def _setup_global_shortcuts(self):
+        """Configura atalhos globais da aplicação."""
+        # Atalhos para navegação entre abas
+        tab1_shortcut = QShortcut(QKeySequence("Ctrl+1"), self)
+        tab1_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(0))
+
+        tab2_shortcut = QShortcut(QKeySequence("Ctrl+2"), self)
+        tab2_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(1))
+
+        tab3_shortcut = QShortcut(QKeySequence("Ctrl+3"), self)
+        tab3_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(2))
+
+        # Atalho para fechar a aplicação
+        close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
+        close_shortcut.activated.connect(self.close)
 
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
