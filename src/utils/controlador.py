@@ -22,10 +22,11 @@ from src.utils import operacoes_crud
 from src.utils.banco_dados import get_session
 from src.utils.calculos import buscar_deducao_por_parametros
 from src.utils.interface import (
-    atualizar_comboboxes_formulario,
-    atualizar_widgets,
+    FormWidgetUpdater,
+    WidgetUpdater,
     listar,
     obter_configuracoes,
+    obter_delay_otimizado,
 )
 from src.utils.usuarios import logado, tem_permissao
 from src.utils.utilitarios import ask_yes_no, show_error, show_info, show_warning
@@ -34,7 +35,7 @@ from src.utils.widget import WidgetManager
 _buscar_timers: Dict[str, QTimer] = {}
 
 
-def buscar_debounced(tipo: str, delay_ms: int = 200):
+def buscar_debounced(tipo: str, delay_ms: int = None):
     """Agenda a busca com um pequeno atraso para evitar consultas a cada tecla.
 
     Coalescemos múltiplas chamadas rápidas utilizando QTimer single-shot por 'tipo'.
@@ -56,10 +57,17 @@ def buscar_debounced(tipo: str, delay_ms: int = 200):
     except (TypeError, RuntimeError):
         pass
     timer.timeout.connect(_run)
-    try:
-        delay = max(0, int(delay_ms))
-    except (ValueError, TypeError):
-        delay = 200
+
+    # Usa delay configurado dinamicamente se não especificado
+    if delay_ms is None:
+        # Importa aqui para evitar dependência circular
+
+        delay = obter_delay_otimizado("buscar", 100)
+    else:
+        try:
+            delay = max(0, int(delay_ms))
+        except (ValueError, TypeError):
+            delay = 100
     timer.start(delay)
 
 
@@ -101,7 +109,7 @@ def adicionar(tipo):
         show_info("Sucesso", mensagem, parent=config.get("form"))
         _limpar_campos(tipo)
         listar(tipo)
-        atualizar_widgets(tipo)
+        WidgetUpdater().atualizar(tipo)
         buscar(tipo)
         if (
             tipo in ["material", "espessura", "canal"]
@@ -109,7 +117,7 @@ def adicionar(tipo):
             and g.DEDUC_FORM
         ):
             listar("dedução")
-            atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+            FormWidgetUpdater().atualizar(["material", "espessura", "canal"])
     else:
         show_error("Erro", mensagem, parent=config.get("form"))
 
@@ -149,7 +157,7 @@ def editar(tipo):
             show_info("Sucesso", mensagem, parent=config.get("form"))
             _limpar_campos(tipo)
             listar(tipo)
-            atualizar_widgets(tipo)
+            WidgetUpdater().atualizar(tipo)
             buscar(tipo)
             if (
                 tipo in ["material", "espessura", "canal"]
@@ -157,7 +165,7 @@ def editar(tipo):
                 and g.DEDUC_FORM
             ):
                 listar("dedução")
-                atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+                FormWidgetUpdater().atualizar(["material", "espessura", "canal"])
         else:
             show_info("Informação", mensagem, parent=config.get("form"))
     else:
@@ -206,14 +214,14 @@ def excluir(tipo):
             item_widget_selecionado.parent() or lista_widget.invisibleRootItem()
         ).removeChild(item_widget_selecionado)
         _limpar_campos(tipo)
-        atualizar_widgets(tipo)
+        WidgetUpdater().atualizar(tipo)
         if (
             tipo in ["material", "espessura", "canal"]
             and hasattr(g, "DEDUC_FORM")
             and g.DEDUC_FORM
         ):
             listar("dedução")
-            atualizar_comboboxes_formulario(["material", "espessura", "canal"])
+            FormWidgetUpdater().atualizar(["material", "espessura", "canal"])
     else:
         show_error("Erro", mensagem, parent=config.get("form"))
 

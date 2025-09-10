@@ -95,8 +95,13 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
         config: Configuração do entry
     """
     # Conectar eventos
-    entry.textChanged.connect(calcular_valores)
-    entry.returnPressed.connect(lambda: focus_next_entry(config.i, config.w))
+    entry.textChanged.connect(calcular_valores)  # Mantém debounce para digitação
+
+    def on_return_pressed():
+        calcular_valores(0)  # Cálculo imediato ao pressionar Enter
+        focus_next_entry(config.i, config.w)
+
+    entry.returnPressed.connect(on_return_pressed)
 
     def custom_key_press_event(event):
         if event.key() == Qt.Key.Key_Down:

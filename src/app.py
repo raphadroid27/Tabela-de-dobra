@@ -29,10 +29,7 @@ from src.forms import (
     form_razao_rie,
     form_sobre,
 )
-from src.forms.form_universal import form_canal_main as FormCanal
-from src.forms.form_universal import form_deducao_main as FormDeducao
-from src.forms.form_universal import form_espessura_main as FormEspessura
-from src.forms.form_universal import form_material_main as FormMaterial
+from src.forms.form_universal import main as form_universal
 from src.models.models import Usuario
 from src.utils import ipc_manager
 from src.utils.banco_dados import get_session, inicializar_banco_dados
@@ -201,10 +198,10 @@ def configurar_janela_principal(config):
     logging.info("Configuração da janela principal concluída.")
 
 
-def abrir_formulario(form_function, edit_flag_name, is_edit_mode):
+def abrir_formulario(form_type, edit_flag_name, is_edit_mode):
     """Abre um formulário genérico, configurando a flag de edição."""
     setattr(g, edit_flag_name, is_edit_mode)
-    form_function(g.PRINC_FORM)
+    form_universal(form_type, g.PRINC_FORM)
 
 
 def _executar_autenticacao(is_login):
@@ -237,19 +234,19 @@ def configurar_menu(menu_custom):
         "📁 Arquivo": [
             (
                 "➕ Nova Dedução",
-                partial(abrir_formulario, FormDeducao, "EDIT_DED", False),
+                partial(abrir_formulario, "deducao", "EDIT_DED", False),
             ),
             (
                 "➕ Novo Material",
-                partial(abrir_formulario, FormMaterial, "EDIT_MAT", False),
+                partial(abrir_formulario, "material", "EDIT_MAT", False),
             ),
             (
                 "➕ Nova Espessura",
-                partial(abrir_formulario, FormEspessura, "EDIT_ESP", False),
+                partial(abrir_formulario, "espessura", "EDIT_ESP", False),
             ),
             (
                 "➕ Novo Canal",
-                partial(abrir_formulario, FormCanal, "EDIT_CANAL", False),
+                partial(abrir_formulario, "canal", "EDIT_CANAL", False),
             ),
             ("separator", None),
             ("🚪 Sair", fechar_aplicativo),
@@ -257,19 +254,19 @@ def configurar_menu(menu_custom):
         "✏️ Editar": [
             (
                 "📝 Editar Dedução",
-                partial(abrir_formulario, FormDeducao, "EDIT_DED", True),
+                partial(abrir_formulario, "deducao", "EDIT_DED", True),
             ),
             (
                 "📝 Editar Material",
-                partial(abrir_formulario, FormMaterial, "EDIT_MAT", True),
+                partial(abrir_formulario, "material", "EDIT_MAT", True),
             ),
             (
                 "📝 Editar Espessura",
-                partial(abrir_formulario, FormEspessura, "EDIT_ESP", True),
+                partial(abrir_formulario, "espessura", "EDIT_ESP", True),
             ),
             (
                 "📝 Editar Canal",
-                partial(abrir_formulario, FormCanal, "EDIT_CANAL", True),
+                partial(abrir_formulario, "canal", "EDIT_CANAL", True),
             ),
         ],
         "🔧 Utilidades": [

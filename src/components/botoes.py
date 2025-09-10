@@ -14,7 +14,11 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QGridLayout, QPushButton,
 
 import src.config.globals as g
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_checkbox
-from src.utils.interface import calcular_valores_debounced, limpar_dobras, limpar_tudo
+from src.utils.interface import (
+    calcular_valores_debounced,
+    limpar_dobras,
+    limpar_tudo,
+)
 from src.utils.janelas import Janela
 
 # Constantes para dimensões da interface
@@ -34,14 +38,7 @@ class ExpansionManager:
         self.is_updating = False
         self.cleanup_timer = QTimer()
         self.cleanup_timer.setSingleShot(True)
-        self.cleanup_timer.timeout.connect(self.force_cleanup_orphans)
-
-    def force_cleanup_orphans(self):
-        """Remove todas as janelas órfãs utilizando a função centralizada."""
-        try:
-            Janela.remover_janelas_orfas()
-        except (ImportError, ValueError, RuntimeError) as exc:
-            logging.debug("Falha ao limpar janelas órfãs: %s", exc)
+        self.cleanup_timer.timeout.connect(Janela.remover_janelas_orfas)
 
     def update_interface_size(self, exp_h, exp_v):
         """Atualiza o tamanho da interface conforme os estados de expansão."""
@@ -84,12 +81,12 @@ class ExpansionManager:
             if app:
                 app.processEvents()
 
-            # Dispara recálculo debounced após relayout para refletir corretamente os widgets
+            # Dispara recálculo instantâneo após relayout para feedback imediato
             try:
-                calcular_valores_debounced(0)
+                calcular_valores_debounced(0)  # Sem delay para ações de botão
             except (AttributeError, ValueError, RuntimeError, TypeError) as exc:
                 # salvaguarda para não quebrar a UI em cenários inesperados
-                logging.debug("Recálculo debounced pós-relayout falhou: %s", exc)
+                logging.debug("Recálculo instantâneo pós-relayout falhou: %s", exc)
 
             # Agendar limpeza de órfãos após mudanças (mantido por segurança)
             self.cleanup_timer.start(500)
