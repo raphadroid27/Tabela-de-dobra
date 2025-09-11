@@ -35,6 +35,7 @@ from src.utils.controlador import (
 from src.utils.estilo import (
     ALTURA_PADRAO_COMPONENTE,
     aplicar_estilo_botao,
+    aplicar_estilo_tree_widget,
     obter_tema_atual,
 )
 from src.utils.interface import (  # <--- IMPORTA A NOVA FUNÇÃO
@@ -568,9 +569,10 @@ def criar_lista(config, tipo):
     tree_widget.header().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
     tree_widget.setRootIsDecorated(False)
 
-    # Habilitar ordenação por coluna e cores alternadas
-    tree_widget.setSortingEnabled(True)
     tree_widget.setAlternatingRowColors(True)
+
+    # Aplicar estilo de grade visual
+    aplicar_estilo_tree_widget(tree_widget)
 
     # Configurar larguras das colunas
     for i, width in enumerate(config["lista"]["widths"]):
