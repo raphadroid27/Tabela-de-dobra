@@ -62,6 +62,12 @@ def _extrair_valor_canal(canal_str):
     """Extrai o valor numérico de uma string de canal."""
     if not canal_str:
         return None
+
+    # Verifica se contém "faca" ou "R" (case insensitive)
+    canal_lower = canal_str.lower()
+    if "faca" in canal_lower or "r" in canal_lower:
+        return None
+
     numeros = re.findall(r"\d+\.?\d*", canal_str)
     return float(numeros[0]) if numeros else None
 
