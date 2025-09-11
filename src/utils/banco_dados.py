@@ -103,7 +103,41 @@ def inicializar_banco_dados():
     try:
         logging.info("Inicializando banco de dados...")
         Base.metadata.create_all(engine)
+        # Limpar deduções órfãs após inicialização
+        limpar_deducoes_orfas()
         logging.info("Banco de dados inicializado com sucesso")
     except OperationalError as e:
         logging.critical("Falha crítica ao inicializar banco: %s", e)
         raise
+
+
+def limpar_deducoes_orfas():
+    """Remove deduções órfãs (sem relacionamentos válidos) do banco de dados."""
+    try:
+        from src.models.models import Deducao  # pylint: disable=import-outside-toplevel
+
+        with get_session() as session:
+            deducoes = session.query(Deducao).all()
+            orfaos_removidos = 0
+
+            for d in deducoes:
+                if not d.material or not d.espessura or not d.canal:
+                    logging.warning(
+                        "Removendo dedução órfã ID %s: material_id=%s, espessura_id=%s, canal_id=%s",  # pylint: disable=line-too-long
+                        d.id,
+                        d.material_id,
+                        d.espessura_id,
+                        d.canal_id,
+                    )
+                    session.delete(d)
+                    orfaos_removidos += 1
+
+            if orfaos_removidos > 0:
+                session.commit()
+                logging.info(
+                    "Foram removidas %s deduções órfãs do banco de dados",
+                    orfaos_removidos,
+                )
+
+    except (IntegrityError, OperationalError) as e:
+        logging.error("Erro ao limpar deduções órfãs: %s", e)
