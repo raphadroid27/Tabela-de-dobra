@@ -467,3 +467,29 @@ def aplicar_estilo_checkbox(checkbox, altura: int = None):
 
     altura_final = altura if altura is not None else ALTURA_PADRAO_COMPONENTE
     checkbox.setFixedHeight(altura_final)
+
+
+def obter_estilo_tree_widget():
+    """
+    Retorna CSS para QTreeWidget com aparência de grade visual.
+
+    Returns:
+        str: CSS para simular grade em QTreeWidget
+    """
+    return """
+        QTreeWidget::item {
+            border-right: 1px solid #202124;
+            padding: 2px;
+        }
+    """
+
+
+def aplicar_estilo_tree_widget(tree_widget):
+    """
+    Aplica estilo com grade visual ao QTreeWidget.
+
+    Args:
+        tree_widget: O QTreeWidget a receber o estilo
+    """
+    if hasattr(tree_widget, "setStyleSheet"):
+        tree_widget.setStyleSheet(obter_estilo_tree_widget())
