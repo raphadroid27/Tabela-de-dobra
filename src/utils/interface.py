@@ -127,13 +127,26 @@ class ListManager:
         lista_widget.clear()
         try:
             with get_session() as session:
-                itens = session.query(config["modelo"]).order_by(config["ordem"]).all()
+                if tipo == "dedução":
+                    # Para deduções, usar join para garantir integridade
+                    itens = (
+                        session.query(config["modelo"])
+                        .join(Material)
+                        .join(Espessura)
+                        .join(Canal)
+                        .order_by(config["ordem"])
+                        .all()
+                    )
+                else:
+                    itens = (
+                        session.query(config["modelo"]).order_by(config["ordem"]).all()
+                    )
+
                 for item in itens:
-                    if tipo == "dedução" and not all(
-                        [item.material, item.espessura, item.canal]
-                    ):
-                        continue
                     valores = config["valores"](item)
+                    # Filtrar itens que retornam None (deduções órfãs)
+                    if valores is None:
+                        continue
                     valores_str = [str(v) if v is not None else "" for v in valores]
                     item_widget = QTreeWidgetItem(valores_str)
                     lista_widget.addTopLevelItem(item_widget)
@@ -411,12 +424,16 @@ def obter_configuracoes():
                 "forca": g.DED_FORCA_ENTRY,
             },
             "valores": lambda d: (
-                d.material.nome if d.material else "N/A",
-                d.espessura.valor if d.espessura else "N/A",
-                d.canal.valor if d.canal else "N/A",
-                d.valor,
-                d.observacao,
-                d.forca if d.forca is not None else "N/A",
+                (
+                    d.material.nome if d.material else "N/A",
+                    d.espessura.valor if d.espessura else "N/A",
+                    d.canal.valor if d.canal else "N/A",
+                    d.valor,
+                    d.observacao,
+                    d.forca if d.forca is not None else "N/A",
+                )
+                if d.material and d.espessura and d.canal
+                else None
             ),
             "ordem": Deducao.valor,
             "entries": {

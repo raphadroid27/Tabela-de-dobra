@@ -311,6 +311,9 @@ def buscar(tipo):
         with get_session() as session:
             query = session.query(config["modelo"])
             if tipo == "dedução":
+                # Para deduções, sempre fazer join para garantir integridade
+                query = query.join(Material).join(Espessura).join(Canal)
+
                 crit_mat = WidgetManager.get_widget_value(
                     config["entries"]["material_combo"]
                 )
@@ -320,14 +323,13 @@ def buscar(tipo):
                 crit_can = WidgetManager.get_widget_value(
                     config["entries"]["canal_combo"]
                 )
-                if crit_mat or crit_esp or crit_can:
-                    query = query.join(Material).join(Espessura).join(Canal)
-                    if crit_mat:
-                        query = query.filter(Material.nome == crit_mat)
-                    if crit_esp:
-                        query = query.filter(Espessura.valor == float(crit_esp))
-                    if crit_can:
-                        query = query.filter(Canal.valor == crit_can)
+
+                if crit_mat:
+                    query = query.filter(Material.nome == crit_mat)
+                if crit_esp:
+                    query = query.filter(Espessura.valor == float(crit_esp))
+                if crit_can:
+                    query = query.filter(Canal.valor == crit_can)
             else:
                 termo = WidgetManager.get_widget_value(config.get("busca")).replace(
                     ",", "."
@@ -337,7 +339,15 @@ def buscar(tipo):
 
             itens = query.order_by(config["ordem"]).all()
             for item in itens:
+                # Para deduções, verificar se todos os relacionamentos existem
+                if tipo == "dedução" and not all(
+                    [item.material, item.espessura, item.canal]
+                ):
+                    continue
                 valores = config["valores"](item)
+                # Filtrar itens que retornam None (deduções órfãs)
+                if valores is None:
+                    continue
                 item_widget = QTreeWidgetItem(
                     [str(v) if v is not None else "" for v in valores]
                 )
