@@ -64,8 +64,7 @@ class FormRazaoRIE:
 
     def _criar_layout_principal(self, parent):
         layout = QVBoxLayout(parent)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        aplicar_medida_borda_espaco(layout, 0)
         return layout
 
     def _criar_barra_titulo(self, layout):
@@ -77,7 +76,7 @@ class FormRazaoRIE:
     def _criar_conteudo(self):
         conteudo = QWidget()
         conteudo_layout = QVBoxLayout(conteudo)
-        aplicar_medida_borda_espaco(conteudo_layout)
+        aplicar_medida_borda_espaco(conteudo_layout, 0)
         main_frame = self._criar_main_frame()
         conteudo_layout.addWidget(main_frame)
         conteudo.setLayout(conteudo_layout)
@@ -89,6 +88,7 @@ class FormRazaoRIE:
         main_layout.setRowStretch(0, 0)
         main_layout.setRowStretch(1, 1)
         main_layout.setRowStretch(2, 0)
+        aplicar_medida_borda_espaco(main_layout, 10)
         self._criar_label_razao(main_layout)
         self._criar_label_resultado(main_layout)
         self._criar_tabela(main_layout)
@@ -96,7 +96,7 @@ class FormRazaoRIE:
         return main_frame
 
     def _criar_label_razao(self, main_layout):
-        razao_label = QLabel("Razão Raio Interno / Espessura: ")
+        razao_label = QLabel("Raio Int. / Esp.: ")
         main_layout.addWidget(razao_label, 0, 0)
 
     def _criar_label_resultado(self, main_layout):
