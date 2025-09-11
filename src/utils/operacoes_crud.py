@@ -165,6 +165,11 @@ def criar_canal(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Canal]]:
 
 def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
     """Cria uma nova dedução no banco de dados."""
+    # Validação do valor da dedução antes de tentar inserir
+    valor_deducao = _converter_para_float(dados.get("valor"))
+    if valor_deducao is None:
+        return False, "O valor da dedução não pode ser vazio ou inválido.", None
+
     try:
         with get_session() as session:
             material_obj = (
@@ -201,7 +206,7 @@ def criar_deducao(dados: Dict[str, Any]) -> Tuple[bool, str, Optional[Deducao]]:
                 material_id=material_obj.id,
                 espessura_id=espessura_obj.id,
                 canal_id=canal_obj.id,
-                valor=_converter_para_float(dados.get("valor")),
+                valor=valor_deducao,
                 observacao=dados.get("observacao"),
                 forca=_converter_para_float(dados.get("forca")),
             )
