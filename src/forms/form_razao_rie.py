@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.utils.estilo import obter_tema_atual
+from src.utils.estilo import aplicar_estilo_tree_widget, obter_tema_atual
 from src.utils.interface import calcular_valores
 from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
@@ -118,6 +118,7 @@ class FormRazaoRIE:
         tree.setRootIsDecorated(False)
         tree.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
         tree.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
+        aplicar_estilo_tree_widget(tree)
 
         tree.setAlternatingRowColors(True)
 
