@@ -46,6 +46,7 @@ from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
 from src.utils.estilo import (
     aplicar_estilo_botao,
+    aplicar_estilo_tree_widget,
     aplicar_estilo_widget_auto_ajustavel,
     aplicar_tema_inicial,
     obter_estilo_progress_bar,
@@ -214,6 +215,7 @@ class InstancesWidget(QWidget):
         self.tree_sessoes.setColumnWidth(1, 130)
         self.tree_sessoes.setColumnWidth(2, 150)
         self.tree_sessoes.setToolTip("Lista de instâncias ativas da aplicação")
+        aplicar_estilo_tree_widget(self.tree_sessoes)
 
         # Habilitar ordenação por coluna e cores alternadas
         self.tree_sessoes.setSortingEnabled(True)
@@ -593,6 +595,7 @@ class UserManagementWidget(QWidget):
         g.LIST_USUARIO.setColumnWidth(2, 80)
         g.LIST_USUARIO.setColumnWidth(3, 100)
         g.LIST_USUARIO.setToolTip("Lista de usuários cadastrados no sistema")
+        aplicar_estilo_tree_widget(g.LIST_USUARIO)
 
         # Habilitar ordenação por coluna e cores alternadas
         g.LIST_USUARIO.setSortingEnabled(True)
