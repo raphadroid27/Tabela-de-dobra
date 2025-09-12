@@ -2,6 +2,20 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.4.2 (12/09/2025)
+
+- Refatorações gerais para melhorar performance, usabilidade e organização do código:
+    - Aplicação de estilos visuais consistentes em QTreeWidget e remoção de ordenação automática.
+    - Implementação de sistema de cache para dados do banco com persistência e invalidação inteligente.
+    - Adição de validações para integridade de dados e limpeza de deduções órfãs.
+    - Melhorias na interface com tooltips, atalhos de teclado e debounce em buscas.
+    - Otimização de timeouts para operações de banco de dados.
+    - Migração de cache e configurações para AppData do usuário.
+    - Implementação de analisador de bloqueios com dashboard de recovery.
+    - Unificação de importações e ajustes de responsividade da interface.
+    - Padronização de docstrings e comentários para maior clareza.
+    - Remoção de dependências desnecessárias e simplificação do código.
+
 ## 2.4.1 (02/09/2025)
 
 - Refatorações gerais para melhorar segurança, legibilidade e organização do código:
