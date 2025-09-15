@@ -559,9 +559,6 @@ class FormImpressao(QDialog):
             self.lista_arquivos_widget.addItems(arquivos)
             self.lista_text.clear()
 
-            # Ordenar automaticamente após adicionar
-            self._ordenar_lista_alfabeticamente()
-
             msg = f"{len(arquivos)} arquivo(s) adicionado(s) à lista e ordenado(s) alfabeticamente!"
             show_info("Sucesso", msg, parent=self)
 
