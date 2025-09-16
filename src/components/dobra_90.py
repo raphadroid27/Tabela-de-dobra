@@ -12,8 +12,8 @@ from src.utils.estilo import (
     LARGURA_MINIMA_COMPONENTE,
     aplicar_estilo_widget_auto_ajustavel,
 )
-from src.utils.interface import calcular_valores_debounced as calcular_valores
 from src.utils.interface import (
+    calcular_valores,
     copiar,
     focus_next_entry,
     focus_previous_entry,
@@ -98,7 +98,7 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
     entry.textChanged.connect(calcular_valores)  # Mantém debounce para digitação
 
     def on_return_pressed():
-        calcular_valores(0)  # Cálculo imediato ao pressionar Enter
+        calcular_valores()  # Cálculo imediato ao pressionar Enter
         focus_next_entry(config.i, config.w)
 
     entry.returnPressed.connect(on_return_pressed)

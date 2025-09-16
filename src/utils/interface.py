@@ -13,7 +13,7 @@ import logging
 import traceback
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import pyperclip
 from PySide6.QtCore import QTimer
@@ -210,7 +210,7 @@ class WidgetUpdater:
             valores_preservar = self._preservar_valores(tipo)
             self.acoes[tipo]()
             self._restaurar_valores(valores_preservar)
-            calcular_valores_debounced()
+            calcular_valores()
 
     def _preservar_valores(self, tipo):
         valores = {}
@@ -509,7 +509,7 @@ def limpar_dobras():
                 entry = getattr(g, f"aba{i}_entry_{w}", None)
                 if entry and hasattr(entry, "clear"):
                     entry.clear()
-    calcular_valores_debounced()
+    calcular_valores()
     if hasattr(g, "VALORES_W") and g.VALORES_W:
         primo_entry = getattr(g, f"aba1_entry_{g.VALORES_W[0]}", None)
         if primo_entry and hasattr(primo_entry, "setFocus"):
@@ -749,7 +749,10 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
 
 
 def calcular_valores():
-    """Função principal que orquestra todos os cálculos e atualizações da UI."""
+    """Função principal que orquestra todos os cálculos e atualizações da UI.
+
+    SISTEMA OTIMIZADO: Execução direta sem delay desnecessário.
+    """
     try:
         ui_data = _coletar_dados_entrada()
         deducao_usada = _atualizar_deducao_ui(ui_data)
@@ -762,66 +765,6 @@ def calcular_valores():
                 _atualizar_coluna_dobras_ui(w, deducao_usada, aba_min)
     except (AttributeError, ValueError, TypeError, SQLAlchemyError) as e:
         logging.error("Erro em calcular_valores: %s\n%s", e, traceback.format_exc())
-
-
-# Debounce para reduzir cálculos em digitação rápida
-_debounce_timer = QTimer()
-_debounce_timer.setSingleShot(True)
-
-# Configurações de delay otimizadas
-DEBOUNCE_DELAYS = {
-    "calcular_valores": 25,  # Muito responsivo para cálculos em tempo real
-    "buscar": 100,  # Balanceado para buscas sem sobrecarregar DB
-    "transparency": 25,  # Muito rápido para efeitos visuais
-    "window_monitor": 250,  # Moderado para monitoramento de janelas
-}
-
-
-def configurar_delay_debounce(tipo: str, novo_delay: int):
-    """Permite configurar dinamicamente os delays dos debouncers."""
-    if tipo in DEBOUNCE_DELAYS:
-        DEBOUNCE_DELAYS[tipo] = max(10, min(1000, novo_delay))  # Entre 10ms e 1s
-        logging.info(
-            "Delay do debouncer '%s' configurado para %sms", tipo, DEBOUNCE_DELAYS[tipo]
-        )
-    else:
-        logging.warning("Tipo de debouncer '%s' não reconhecido", tipo)
-
-
-def obter_delay_otimizado(tipo: str, fallback: int = 50) -> int:
-    """Obtém o delay otimizado para um tipo específico de debouncer."""
-    return DEBOUNCE_DELAYS.get(tipo, fallback)
-
-
-def calcular_valores_debounced(delay_ms: Union[int, float, str] = None):
-    """Agenda calcular_valores com pequeno atraso; reinicia se chamado novamente.
-
-    Para cálculo imediato, use delay_ms=0 ou chame calcular_valores() diretamente.
-    """
-    if _debounce_timer.isActive():
-        _debounce_timer.stop()
-
-    def _run():  # encapsula para evitar captura de args
-        # Em caso de erro, registra e continua; não propaga para não quebrar a UI
-        try:
-            calcular_valores()
-        except (AttributeError, ValueError, TypeError, SQLAlchemyError) as e:
-            logging.error("Falha ao executar calcular_valores (debounced): %s", e)
-
-    if not getattr(calcular_valores_debounced, "_connected", False):
-        _debounce_timer.timeout.connect(_run)
-        setattr(calcular_valores_debounced, "_connected", True)
-
-    # Usa delay configurado dinamicamente se não especificado
-    if delay_ms is None:
-        delay = obter_delay_otimizado("calcular_valores", 25)
-    else:
-        try:
-            delay = int(float(delay_ms))
-        except (ValueError, TypeError):
-            delay = obter_delay_otimizado("calcular_valores", 25)
-
-    _debounce_timer.start(max(0, delay))
 
 
 def todas_funcoes():
