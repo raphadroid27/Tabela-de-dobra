@@ -26,7 +26,6 @@ from src.utils.interface import (
     WidgetUpdater,
     listar,
     obter_configuracoes,
-    obter_delay_otimizado,
 )
 from src.utils.usuarios import logado, tem_permissao
 from src.utils.utilitarios import ask_yes_no, show_error, show_info, show_warning
@@ -58,16 +57,14 @@ def buscar_debounced(tipo: str, delay_ms: int = None):
         pass
     timer.timeout.connect(_run)
 
-    # Usa delay configurado dinamicamente se não especificado
+    # Usa delay fixo otimizado para buscas
     if delay_ms is None:
-        # Importa aqui para evitar dependência circular
-
-        delay = obter_delay_otimizado("buscar", 100)
+        delay = 50  # 50ms - balanceado para buscas sem sobrecarregar DB
     else:
         try:
             delay = max(0, int(delay_ms))
         except (ValueError, TypeError):
-            delay = 100
+            delay = 50
     timer.start(delay)
 
 

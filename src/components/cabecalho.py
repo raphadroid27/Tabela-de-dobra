@@ -13,9 +13,7 @@ from src.utils.estilo import (
 )
 from src.utils.interface import (
     WidgetUpdater,
-)
-from src.utils.interface import calcular_valores_debounced as calcular_valores
-from src.utils.interface import (
+    calcular_valores,
     canal_tooltip,
     copiar,
 )
@@ -132,13 +130,9 @@ def _criar_linha_1(layout):
     compr_entry.setToolTip("Digite o comprimento da peça em milímetros.")
 
     # Conectar eventos
-    compr_entry.textChanged.connect(calcular_valores)  # Debounce durante digitação
-    compr_entry.editingFinished.connect(
-        lambda: calcular_valores(0)
-    )  # Instantâneo ao finalizar
-    canal_comb.currentTextChanged.connect(
-        lambda: calcular_valores(10)
-    )  # Rápido para combobox (10ms delay)
+    compr_entry.textChanged.connect(calcular_valores)  # Execução direta
+    compr_entry.editingFinished.connect(calcular_valores)  # Execução direta
+    canal_comb.currentTextChanged.connect(calcular_valores)  # Execução direta
 
     return mat_comb, esp_comb, canal_comb, compr_entry
 
@@ -170,10 +164,8 @@ def _criar_linha_2(layout):
     )
 
     # Conectar eventos
-    ri_entry.textChanged.connect(calcular_valores)  # Debounce durante digitação
-    ri_entry.editingFinished.connect(
-        lambda: calcular_valores(0)
-    )  # Instantâneo ao finalizar
+    ri_entry.textChanged.connect(calcular_valores)  # Execução direta
+    ri_entry.editingFinished.connect(calcular_valores)  # Execução direta
     k_lbl.mousePressEvent = lambda event: copiar("fator_k")
     ded_lbl.mousePressEvent = lambda event: copiar("dedução")
     offset_lbl.mousePressEvent = lambda event: copiar("offset")
@@ -206,10 +198,8 @@ def _criar_linha_3(layout):
     forca_lbl.setToolTip("Força necessária para a dobra em toneladas por metro (t/m).")
 
     # Conectar eventos
-    ded_espec_entry.textChanged.connect(calcular_valores)  # Debounce durante digitação
-    ded_espec_entry.editingFinished.connect(
-        lambda: calcular_valores(0)
-    )  # Instantâneo ao finalizar
+    ded_espec_entry.textChanged.connect(calcular_valores)  # Execução direta
+    ded_espec_entry.editingFinished.connect(calcular_valores)  # Execução direta
 
     return ded_espec_entry, aba_ext_lbl, z_ext_lbl, forca_lbl
 

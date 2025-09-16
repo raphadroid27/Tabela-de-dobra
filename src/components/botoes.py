@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QGridLayout, QPushButton,
 import src.config.globals as g
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_checkbox
 from src.utils.interface import (
-    calcular_valores_debounced,
+    calcular_valores,
     limpar_dobras,
     limpar_tudo,
 )
@@ -84,7 +84,7 @@ class ExpansionManager:
 
             # Dispara recálculo instantâneo após relayout para feedback imediato
             try:
-                calcular_valores_debounced(0)  # Sem delay para ações de botão
+                calcular_valores()  # Execução direta sem delay
             except (AttributeError, ValueError, RuntimeError, TypeError) as exc:
                 # salvaguarda para não quebrar a UI em cenários inesperados
                 logging.debug("Recálculo instantâneo pós-relayout falhou: %s", exc)
