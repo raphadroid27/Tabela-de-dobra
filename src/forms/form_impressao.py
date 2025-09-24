@@ -60,7 +60,7 @@ METODOS_IMPRESSAO = ["foxit", "impressora_padrao", "adobe"]
 # Strings de interface
 STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
 PLACEHOLDER_LISTA_ARQUIVOS_1 = (
-    "Digite os nomes dos arquivos, um por linha.\nExemplo:\n010464516\n010464519"
+    "Digite os nomes dos arquivos, um por linha. Exemplo:\n010464516\n010464519"
 )
 
 TOOLTIP_LISTA_ARQUIVOS_2 = (
