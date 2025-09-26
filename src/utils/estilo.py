@@ -409,9 +409,6 @@ def obter_estilo_botao(cor: str) -> str:
     """
 
 
-# Funções de compatibilidade removidas - usar aplicar_estilo_botao() diretamente
-
-
 def obter_estilo_progress_bar():
     """Retorna o estilo CSS para a barra de progresso."""
     return """
@@ -452,15 +449,12 @@ def aplicar_estilo_botao(botao, cor: str, altura: int = None, largura_min: int =
         botao.setMinimumWidth(largura_final)
 
 
-# Função aplicar_estilo_componente removida - não utilizada no projeto
-
-
 def aplicar_estilo_checkbox(checkbox, altura: int = None):
     """Aplica estilo padronizado para checkboxes.
 
     Args:
         checkbox: O checkbox QCheckBox a ser configurado
-        altura: Altura do checkbox (padrão: CHECKBOX_ALTURA_PADRAO)
+        altura: Altura do checkbox (padrão: ALTURA_PADRAO_COMPONENTE)
     """
     if not hasattr(checkbox, "setFixedHeight"):
         return
@@ -469,27 +463,35 @@ def aplicar_estilo_checkbox(checkbox, altura: int = None):
     checkbox.setFixedHeight(altura_final)
 
 
-def obter_estilo_tree_widget():
+def obter_estilo_table_widget():
     """
-    Retorna CSS para QTreeWidget com aparência de grade visual.
+    Retorna CSS para QTableWidget com aparência de grade visual.
 
     Returns:
-        str: CSS para simular grade em QTreeWidget
+        str: CSS para simular grade em QTableWidget
     """
     return """
-        QTreeWidget::item {
-            border-right: 1px solid #202124;
-            padding: 2px;
+        QTableWidget {
+            gridline-color: #202124;
+            background-color: #202124;
+            font-size: 10pt;
+        }
+        QTableWidget::item {
+            padding: 0px;
+        }
+        QHeaderView::section {
+            padding: 0px;
+            gridline-color: #202124;
         }
     """
 
 
-def aplicar_estilo_tree_widget(tree_widget):
+def aplicar_estilo_table_widget(table_widget):
     """
-    Aplica estilo com grade visual ao QTreeWidget.
+    Aplica estilo com grade visual ao QTableWidget.
 
     Args:
-        tree_widget: O QTreeWidget a receber o estilo
+        table_widget: O QTableWidget a receber o estilo
     """
-    if hasattr(tree_widget, "setStyleSheet"):
-        tree_widget.setStyleSheet(obter_estilo_tree_widget())
+    if hasattr(table_widget, "setStyleSheet"):
+        table_widget.setStyleSheet(obter_estilo_table_widget())
