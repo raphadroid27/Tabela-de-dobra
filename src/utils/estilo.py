@@ -33,6 +33,10 @@ PADDING_INTERNO_COMPONENTE = "2px 4px"
 ALTURA_PADRAO_BOTAO = 25
 LARGURA_MINIMA_BOTAO = 20
 
+COR_FUNDO_BRANCO = "#f0f0f0"
+COR_FUNDO_ESCURO = "#161719"
+COR_FUNDO_CLARO = "#f8f9fa"
+
 
 class GerenciadorTemas:
     """Classe para gerenciar temas da aplicação de forma organizada."""
@@ -472,8 +476,7 @@ def obter_estilo_table_widget():
     """
     return """
         QTableWidget {
-            gridline-color: #202124;
-            background-color: #202124;
+            background-color: {COR_FUNDO_CLARO if obter_tema_atual() == 'light' else COR_FUNDO_ESCURO};
             font-size: 10pt;
         }
         QTableWidget::item {
@@ -481,7 +484,6 @@ def obter_estilo_table_widget():
         }
         QHeaderView::section {
             padding: 0px;
-            gridline-color: #202124;
         }
     """
 
