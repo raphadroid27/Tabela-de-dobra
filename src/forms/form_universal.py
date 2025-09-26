@@ -10,15 +10,17 @@ Versão atualizada com botões de ação fora do grid para melhor organização 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QKeySequence
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QComboBox,
     QDialog,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLineEdit,
     QPushButton,
-    QTreeWidget,
+    QTableWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -35,10 +37,10 @@ from src.utils.controlador import (
 from src.utils.estilo import (
     ALTURA_PADRAO_COMPONENTE,
     aplicar_estilo_botao,
-    aplicar_estilo_tree_widget,
+    aplicar_estilo_table_widget,
     obter_tema_atual,
 )
-from src.utils.interface import (  # <--- IMPORTA A NOVA FUNÇÃO
+from src.utils.interface import (
     FormWidgetUpdater,
     limpar_busca,
     listar,
@@ -112,8 +114,6 @@ FORM_CONFIGS = {
                 },
             ],
         },
-        # --- MUDANÇA PRINCIPAL AQUI ---
-        # Chama a nova função que só atualiza os comboboxes do formulário
         "post_init": lambda: FormWidgetUpdater().atualizar(
             ["material", "espessura", "canal"]
         ),
@@ -278,7 +278,6 @@ class ButtonConfigManager:
 
     def create_button_container(self):
         """Cria o container para os botões fora do grid."""
-        # Verificar se é espessura em modo edição (não mostrar botões)
         if self.tipo == "espessura" and self.is_edit:
             return None
 
@@ -287,7 +286,6 @@ class ButtonConfigManager:
         aplicar_medida_borda_espaco(botao_layout, 0)
 
         if self.is_edit:
-            # Botão Atualizar
             atualizar_btn = QPushButton("✏️ Atualizar")
             aplicar_estilo_botao(atualizar_btn, "verde")
             atualizar_btn.setShortcut(QKeySequence("Ctrl+S"))
@@ -365,13 +363,11 @@ class FormManager:
         new_form.resize(*self.config["size"])
         new_form.setFixedSize(*self.config["size"])
 
-        # Remover barra de título nativa
         new_form.setWindowFlags(
             Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
         )
         new_form.setWindowIcon(QIcon(ICON_PATH))
 
-        # Layout vertical: barra de título + conteúdo
         vlayout = QVBoxLayout(new_form)
         vlayout.setContentsMargins(0, 0, 0, 0)
         vlayout.setSpacing(0)
@@ -387,21 +383,16 @@ class FormManager:
                 nome = self.config["titulo"].split(" ")[-1]
                 barra_titulo = f"Adicionar {nome}"
 
-        # Barra de título customizada
         barra = BarraTitulo(new_form, tema=obter_tema_atual())
         barra.titulo.setText(barra_titulo)
         vlayout.addWidget(barra)
 
-        # Widget de conteúdo principal
         conteudo_widget = QWidget()
         vlayout.addWidget(conteudo_widget)
 
-        # Layout do conteúdo principal
         grid_layout = QGridLayout(conteudo_widget)
         conteudo_widget.setLayout(grid_layout)
 
-        # Guardar referência para uso posterior
-        # Atribuição dinâmica: apenas para este QDialog específico
         new_form.conteudo_layout = grid_layout  # type: ignore[attr-defined]
 
         Janela.posicionar_janela(new_form, None)
@@ -410,7 +401,6 @@ class FormManager:
 
     def config_layout_main(self, form):
         """Configura o layout principal do formulário."""
-        # Usar o layout do widget de conteúdo
         return form.conteudo_layout
 
     def criar_frame_busca(self):
@@ -471,7 +461,6 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
     else:
         return None
 
-    # Configurar tooltips específicos baseados no nome do widget
     _configurar_tooltip_widget(widget, nome_global)
 
     colspan = kwargs.get("colspan", 1)
@@ -486,24 +475,19 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
 def _configurar_tooltip_widget(widget, nome_global):
     """Configura tooltips específicos para widgets baseados no nome."""
     tooltips = {
-        # Campos de entrada material
         "MAT_NOME_ENTRY": "Digite o nome do novo material",
         "MAT_DENS_ENTRY": "Digite a densidade do material em g/cm³",
         "MAT_ESCO_ENTRY": "Digite o limite de escoamento do material em MPa",
         "MAT_ELAS_ENTRY": "Digite o módulo de elasticidade do material em GPa",
-        # Campos de entrada canal
         "CANAL_VALOR_ENTRY": "Digite o valor do canal",
         "CANAL_LARGU_ENTRY": "Digite a largura do canal em milímetros",
         "CANAL_ALTUR_ENTRY": "Digite a altura do canal em milímetros",
         "CANAL_COMPR_ENTRY": "Digite o comprimento total do canal em metros",
         "CANAL_OBSER_ENTRY": "Digite observações sobre este canal",
-        # Campos de entrada espessura
         "ESP_VALOR_ENTRY": "Digite o valor da espessura em milímetros",
-        # Campos de entrada dedução
         "DED_VALOR_ENTRY": "Digite o valor da dedução em milímetros",
         "DED_OBSER_ENTRY": "Digite observações sobre esta dedução",
         "DED_FORCA_ENTRY": "Digite a força necessária em toneladas por metro (t/m)",
-        # Campos de busca
         "MAT_BUSCA_ENTRY": "Digite parte do nome do material para buscar",
         "ESP_BUSCA_ENTRY": "Digite parte da espessura para buscar",
         "CANAL_BUSCA_ENTRY": "Digite parte do valor do canal para buscar",
@@ -537,7 +521,6 @@ def _criar_campo_busca(layout, campo, col, tipo_busca):
     criar_label(layout, campo["label"], (0, col))
     widget = criar_widget(layout, campo["widget"], campo["global"], (1, col))
 
-    # Configurar conexões
     configurar_conexoes_busca(widget, campo, tipo_busca)
 
 
@@ -563,27 +546,29 @@ def configurar_conexoes_busca(widget, campo_config, tipo_busca):
 
 
 def criar_lista(config, tipo):
-    """Cria a lista/árvore baseada na configuração."""
-    tree_widget = QTreeWidget()
-    tree_widget.setHeaderLabels(config["lista"]["headers"])
-    tree_widget.header().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
-    tree_widget.setRootIsDecorated(False)
+    """Cria a lista/tabela baseada na configuração."""
+    table_widget = QTableWidget()
+    table_widget.setColumnCount(len(config["lista"]["headers"]))
+    table_widget.setHorizontalHeaderLabels(config["lista"]["headers"])
+    table_widget.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
+    table_widget.setAlternatingRowColors(True)
+    table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+    table_widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+    table_widget.verticalHeader().setVisible(False)
 
-    tree_widget.setAlternatingRowColors(True)
+    aplicar_estilo_table_widget(table_widget)
 
-    # Aplicar estilo de grade visual
-    aplicar_estilo_tree_widget(tree_widget)
-
-    # Configurar larguras das colunas
+    header = table_widget.horizontalHeader()
     for i, width in enumerate(config["lista"]["widths"]):
-        tree_widget.setColumnWidth(i, width)
+        header.setSectionResizeMode(i, QHeaderView.ResizeMode.Stretch)
+        table_widget.setColumnWidth(i, width)
 
-    setattr(g, config["lista"]["global"], tree_widget)
+    setattr(g, config["lista"]["global"], table_widget)
 
     tipo_lista = config.get("tipo_busca", tipo)
     listar(tipo_lista)
 
-    return tree_widget
+    return table_widget
 
 
 def criar_frame_edicoes(config):
@@ -636,7 +621,6 @@ def main(tipo, root):
     config = FORM_CONFIGS[tipo]
     gerenciador_form = FormManager(tipo, config, root)
 
-    # Configurar janela
     novo_form = gerenciador_form.setup_window()
     layout_principal = gerenciador_form.config_layout_main(novo_form)
 
@@ -657,20 +641,17 @@ def _config_componentes_form(gerenciador_form, layout):
     lista_widget = gerenciador_form.criar_widget_lista()
     layout.addWidget(lista_widget, 1, 0)
 
-    # Botão Excluir (se necessário)
     excluir_container = gerenciador_form.criar_botao_delete()
     current_row = 2
     if excluir_container:
         layout.addWidget(excluir_container, current_row, 0)
         current_row += 1
 
-    # Frame de edições (se necessário)
     frame_edicoes = gerenciador_form.criar_frame_edicoes()
     if frame_edicoes:
         layout.addWidget(frame_edicoes, current_row, 0)
         current_row += 1
 
-    # Botões Adicionar/Atualizar (fora do grid)
     botao_container = configurar_botoes(gerenciador_form.config, gerenciador_form.tipo)
     if botao_container:
         layout.addWidget(botao_container, current_row, 0)
@@ -681,11 +662,9 @@ def _executar_pos_inicio(config, tipo):
     if "post_init" in config:
         config["post_init"]()
 
-    # Garantir que a lista seja carregada
     tipo_lista = config.get("tipo_busca", tipo)
     listar(tipo_lista)
 
 
 if __name__ == "__main__":
-    # Teste básico
     main("material", None)

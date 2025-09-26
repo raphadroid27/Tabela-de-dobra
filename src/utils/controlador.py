@@ -13,7 +13,7 @@ import logging
 from typing import Dict
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QTableWidgetItem
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
@@ -35,10 +35,7 @@ _buscar_timers: Dict[str, QTimer] = {}
 
 
 def buscar_debounced(tipo: str, delay_ms: int = None):
-    """Agenda a busca com um pequeno atraso para evitar consultas a cada tecla.
-
-    Coalescemos múltiplas chamadas rápidas utilizando QTimer single-shot por 'tipo'.
-    """
+    """Agenda a busca com um pequeno atraso para evitar consultas a cada tecla."""
     timer = _buscar_timers.get(tipo)
     if not timer:
         timer = QTimer()
@@ -52,14 +49,13 @@ def buscar_debounced(tipo: str, delay_ms: int = None):
             logging.error("Erro em buscar_debounced(%s): %s", tipo, e)
 
     try:
-        timer.timeout.disconnect()  # desconecta sinais anteriores se houver
+        timer.timeout.disconnect()
     except (TypeError, RuntimeError):
         pass
     timer.timeout.connect(_run)
 
-    # Usa delay fixo otimizado para buscas
     if delay_ms is None:
-        delay = 50  # 50ms - balanceado para buscas sem sobrecarregar DB
+        delay = 50
     else:
         try:
             delay = max(0, int(delay_ms))
@@ -176,14 +172,14 @@ def excluir(tipo):
 
     config = obter_configuracoes()[tipo]
     lista_widget = config.get("lista")
-    selected_items = lista_widget.selectedItems()
-    if not selected_items:
+    current_row = lista_widget.currentRow()
+
+    if current_row < 0:
         show_warning(
             "Aviso", f"Nenhum {tipo} selecionado para exclusão.", parent=config["form"]
         )
         return
 
-    item_widget_selecionado = selected_items[0]
     obj_id, obj_type = _obter_item_selecionado_info(tipo)
 
     if obj_id is None:
@@ -207,9 +203,7 @@ def excluir(tipo):
 
     if sucesso:
         show_info("Sucesso", mensagem, parent=config["form"])
-        (
-            item_widget_selecionado.parent() or lista_widget.invisibleRootItem()
-        ).removeChild(item_widget_selecionado)
+        lista_widget.removeRow(current_row)
         _limpar_campos(tipo)
         WidgetUpdater().atualizar(tipo)
         if (
@@ -258,26 +252,26 @@ def _obter_item_selecionado_info(tipo):
     if not lista_widget:
         return None, None
 
-    selected_items = lista_widget.selectedItems()
-    if not selected_items:
+    current_row = lista_widget.currentRow()
+    if current_row < 0:
         return None, None
 
-    selected_item = selected_items[0]
     obj_type = config["modelo"]
 
     try:
         with get_session() as session:
             if tipo == "dedução":
-                material_nome, espessura_valor, canal_valor = (
-                    selected_item.text(0),
-                    float(selected_item.text(1)),
-                    selected_item.text(2),
-                )
+                material_nome = lista_widget.item(current_row, 0).text()
+                espessura_valor = float(lista_widget.item(current_row, 1).text())
+                canal_valor = lista_widget.item(current_row, 2).text()
                 obj = buscar_deducao_por_parametros(
                     session, material_nome, espessura_valor, canal_valor
                 )
             else:
-                identifier_val = selected_item.text(0)
+                identifier_item = lista_widget.item(current_row, 0)
+                if not identifier_item:
+                    return None, None
+                identifier_val = identifier_item.text()
                 if tipo in ["espessura"]:
                     identifier_val = float(identifier_val)
                 obj = (
@@ -287,7 +281,7 @@ def _obter_item_selecionado_info(tipo):
                 )
 
             return (obj.id, obj_type) if obj else (None, None)
-    except (SQLAlchemyError, ValueError, IndexError) as e:
+    except (SQLAlchemyError, ValueError, IndexError, AttributeError) as e:
         show_error("Erro", f"Erro ao buscar item selecionado: {e}")
         return None, None
 
@@ -301,16 +295,14 @@ def buscar(tipo):
     if not config or not config.get("lista"):
         return
 
-    lista_widget = config["lista"]
-    lista_widget.clear()
+    table_widget = config["lista"]
+    table_widget.setRowCount(0)
 
     try:
         with get_session() as session:
             query = session.query(config["modelo"])
             if tipo == "dedução":
-                # Para deduções, sempre fazer join para garantir integridade
                 query = query.join(Material).join(Espessura).join(Canal)
-
                 crit_mat = WidgetManager.get_widget_value(
                     config["entries"]["material_combo"]
                 )
@@ -336,18 +328,21 @@ def buscar(tipo):
 
             itens = query.order_by(config["ordem"]).all()
             for item in itens:
-                # Para deduções, verificar se todos os relacionamentos existem
                 if tipo == "dedução" and not all(
                     [item.material, item.espessura, item.canal]
                 ):
                     continue
                 valores = config["valores"](item)
-                # Filtrar itens que retornam None (deduções órfãs)
                 if valores is None:
                     continue
-                item_widget = QTreeWidgetItem(
-                    [str(v) if v is not None else "" for v in valores]
-                )
-                lista_widget.addTopLevelItem(item_widget)
+
+                row_position = table_widget.rowCount()
+                table_widget.insertRow(row_position)
+                for col, valor in enumerate(valores):
+                    table_widget.setItem(
+                        row_position,
+                        col,
+                        QTableWidgetItem(str(valor) if valor is not None else ""),
+                    )
     except (SQLAlchemyError, ValueError) as e:
         show_error("Erro de Busca", f"Não foi possível realizar a busca: {e}")
