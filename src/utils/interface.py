@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 
 import pyperclip
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QTableWidgetItem
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
@@ -93,7 +93,6 @@ class CopyManager:
 
     def _restaurar_label(self, label, texto):
         """Restaura o texto e estilo original do label."""
-        # CORREÇÃO: Verifica se o widget ainda é válido antes de tentar usá-lo.
         if not WidgetManager.is_widget_valid(label):
             return
 
@@ -120,15 +119,14 @@ class ListManager:
             return
 
         config = self.configuracoes[tipo]
-        lista_widget = config.get("lista")
-        if not lista_widget:
+        table_widget = config.get("lista")
+        if not table_widget:
             return
 
-        lista_widget.clear()
+        table_widget.setRowCount(0)
         try:
             with get_session() as session:
                 if tipo == "dedução":
-                    # Para deduções, usar join para garantir integridade
                     itens = (
                         session.query(config["modelo"])
                         .join(Material)
@@ -144,12 +142,17 @@ class ListManager:
 
                 for item in itens:
                     valores = config["valores"](item)
-                    # Filtrar itens que retornam None (deduções órfãs)
                     if valores is None:
                         continue
-                    valores_str = [str(v) if v is not None else "" for v in valores]
-                    item_widget = QTreeWidgetItem(valores_str)
-                    lista_widget.addTopLevelItem(item_widget)
+
+                    row_position = table_widget.rowCount()
+                    table_widget.insertRow(row_position)
+                    for col, valor in enumerate(valores):
+                        table_widget.setItem(
+                            row_position,
+                            col,
+                            QTableWidgetItem(str(valor) if valor is not None else ""),
+                        )
         except SQLAlchemyError as e:
             logging.error("Erro ao listar itens do tipo '%s': %s", tipo, e)
 
@@ -231,12 +234,10 @@ class WidgetUpdater:
     def _atualizar_material(self):
         """Atualiza combobox de materiais usando cache quando possível."""
         try:
-            # Tenta usar cache primeiro
             materiais = cache_manager.get_materiais()
             items = [material["nome"] for material in materiais]
             self._preencher_combobox_direto(g.MAT_COMB, items)
         except (AttributeError, ValueError, RuntimeError):
-            # Fallback para banco de dados
             self._preencher_combobox(
                 g.MAT_COMB,
                 lambda s: [
@@ -252,7 +253,6 @@ class WidgetUpdater:
                 g.ESP_COMB.clear()
             return
 
-        # Para espessuras, sempre usa consulta ao banco pois depende do material selecionado
         self._preencher_combobox(
             g.ESP_COMB,
             lambda s: [
@@ -276,7 +276,6 @@ class WidgetUpdater:
             return
         try:
             esp_val = float(espessura_valor)
-            # Para canais, sempre usa consulta ao banco pois depende de material e espessura
             self._preencher_combobox(
                 g.CANAL_COMB,
                 lambda s: [
@@ -303,7 +302,6 @@ class WidgetUpdater:
 
         try:
             if usar_cache or callable(items_ou_query_func):
-                # Se é função, executa; se é lista, usa diretamente
                 if callable(items_ou_query_func):
                     with get_session() as session:
                         items = items_ou_query_func(session)
@@ -337,12 +335,10 @@ class FormWidgetUpdater:
         for tipo in tipos:
             if tipo == "material":
                 try:
-                    # Tenta usar cache primeiro
                     materiais = cache_manager.get_materiais()
                     items = [material["nome"] for material in materiais]
                     self._preencher_form_combo_direto(g.DED_MATER_COMB, items)
                 except (AttributeError, ValueError, RuntimeError):
-                    # Fallback para banco de dados
                     self._preencher_form_combo(
                         g.DED_MATER_COMB,
                         lambda s: [
@@ -352,12 +348,10 @@ class FormWidgetUpdater:
                     )
             elif tipo == "espessura":
                 try:
-                    # Tenta usar cache primeiro
                     espessuras = cache_manager.get_espessuras()
                     items = [str(espessura["valor"]) for espessura in espessuras]
                     self._preencher_form_combo_direto(g.DED_ESPES_COMB, items)
                 except (AttributeError, ValueError, RuntimeError):
-                    # Fallback para banco de dados
                     self._preencher_form_combo(
                         g.DED_ESPES_COMB,
                         lambda s: [
@@ -367,12 +361,10 @@ class FormWidgetUpdater:
                     )
             elif tipo == "canal":
                 try:
-                    # Tenta usar cache primeiro
                     canais = cache_manager.get_canais()
                     items = [canal["valor"] for canal in canais]
                     self._preencher_form_combo_direto(g.DED_CANAL_COMB, items)
                 except (AttributeError, ValueError, RuntimeError):
-                    # Fallback para banco de dados
                     self._preencher_form_combo(
                         g.DED_CANAL_COMB,
                         lambda s: [
@@ -803,7 +795,6 @@ def canal_tooltip():
     canal_str = WidgetManager.get_widget_value(g.CANAL_COMB)
     tooltip = "Selecione o canal de dobra."
     if canal_str:
-        # Tenta cache primeiro
         try:
             canais = cache_manager.get_canais()
             canal_info = next(
@@ -814,7 +805,6 @@ def canal_tooltip():
                 comp = canal_info.get("comprimento_total", "N/A")
                 tooltip = f"Obs: {obs}\nComprimento total: {comp}"
             else:
-                # Fallback para DB
                 with get_session() as session:
                     canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
                     if canal_obj:
@@ -826,8 +816,3 @@ def canal_tooltip():
         except SQLAlchemyError as e:
             tooltip = f"Erro ao buscar dados do canal: {e}"
     g.CANAL_COMB.setToolTip(tooltip)
-
-
-# Aliases removidos - usar as classes diretamente para maior clareza:
-# WidgetUpdater().atualizar(tipo)
-# FormWidgetUpdater().atualizar(tipos)

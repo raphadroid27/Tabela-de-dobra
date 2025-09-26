@@ -5,20 +5,22 @@ import sys
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QDialog,
     QGridLayout,
+    QHeaderView,
     QLabel,
+    QTableWidget,
+    QTableWidgetItem,
     QTextBrowser,
-    QTreeWidget,
-    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.utils.estilo import aplicar_estilo_tree_widget, obter_tema_atual
+from src.utils.estilo import aplicar_estilo_table_widget, obter_tema_atual
 from src.utils.interface import calcular_valores
 from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
@@ -113,37 +115,47 @@ class FormRazaoRIE:
         self._create_table(main_layout, g.RAIO_K)
 
     def _create_table(self, parent_layout, data):
-        tree = QTreeWidget()
-        tree.setHeaderLabels(["Razão", "Fator K"])
-        tree.setRootIsDecorated(False)
-        tree.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
-        tree.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
-        aplicar_estilo_tree_widget(tree)
-
-        tree.setAlternatingRowColors(True)
+        table = QTableWidget()
+        table.setColumnCount(2)
+        table.setHorizontalHeaderLabels(["Razão", "Fator K"])
+        table.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
+        table.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        aplicar_estilo_table_widget(table)
+        table.setAlternatingRowColors(True)
+        table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.verticalHeader().setVisible(False)
 
         try:
             if isinstance(data, dict):
-                for razao, k in data.items():
-                    item = QTreeWidgetItem([str(razao), str(k)])
-                    tree.addTopLevelItem(item)
+                table.setRowCount(len(data))
+                for i, (razao, k) in enumerate(data.items()):
+                    table.setItem(i, 0, QTableWidgetItem(str(razao)))
+                    table.setItem(i, 1, QTableWidgetItem(str(k)))
             elif (
                 hasattr(data, "__getitem__")
-                and data  # Pylint: usar truthiness ao invés de len() > 0
+                and data
                 and isinstance(data[0], (list, tuple))
                 and len(data[0]) == 2
             ):
-                for razao, k in data:
-                    item = QTreeWidgetItem([str(razao), str(k)])
-                    tree.addTopLevelItem(item)
+                table.setRowCount(len(data))
+                for i, (razao, k) in enumerate(data):
+                    table.setItem(i, 0, QTableWidgetItem(str(razao)))
+                    table.setItem(i, 1, QTableWidgetItem(str(k)))
             else:
-                for valor in data:
-                    item = QTreeWidgetItem([str(valor), ""])
-                    tree.addTopLevelItem(item)
+                table.setRowCount(len(data))
+                for i, valor in enumerate(data):
+                    table.setItem(i, 0, QTableWidgetItem(str(valor)))
+                    table.setItem(i, 1, QTableWidgetItem(""))
         except (TypeError, IndexError):
-            item = QTreeWidgetItem([str(data), ""])
-            tree.addTopLevelItem(item)
-        parent_layout.addWidget(tree, 1, 0, 1, 2)
+            table.setRowCount(1)
+            table.setItem(0, 0, QTableWidgetItem(str(data)))
+            table.setItem(0, 1, QTableWidgetItem(""))
+
+        parent_layout.addWidget(table, 1, 0, 1, 2)
 
     def _criar_aviso(self, main_layout):
         aviso_browser = QTextBrowser()
@@ -166,10 +178,7 @@ class FormRazaoRIE:
 
 
 def main(_):
-    """Inicializa e exibe o formulário de razão raio interno/espessura.
-
-    Inclui barra de título customizada.
-    """
+    """Inicializa e exibe o formulário de razão raio interno/espessura."""
     form = FormRazaoRIE()
     form.show_form()
 

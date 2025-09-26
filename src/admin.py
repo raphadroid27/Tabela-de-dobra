@@ -20,20 +20,22 @@ from datetime import datetime
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QFileDialog,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLineEdit,
     QMainWindow,
     QProgressBar,
     QPushButton,
     QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
     QTabWidget,
-    QTreeWidget,
-    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -46,7 +48,7 @@ from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
 from src.utils.estilo import (
     aplicar_estilo_botao,
-    aplicar_estilo_tree_widget,
+    aplicar_estilo_table_widget,
     aplicar_estilo_widget_auto_ajustavel,
     aplicar_tema_inicial,
     obter_estilo_progress_bar,
@@ -137,20 +139,16 @@ class AdminAuthWidget(QWidget):
         login_btn.clicked.connect(self.attempt_login)
         main_layout.addWidget(login_btn)
 
-        # Atalhos de teclado adicionais
         self._setup_keyboard_shortcuts()
 
     def _setup_keyboard_shortcuts(self):
         """Configura atalhos de teclado para o widget de autenticação."""
-        # Atalho para focar no campo de usuário
         focus_user_shortcut = QShortcut(QKeySequence("Ctrl+U"), self)
         focus_user_shortcut.activated.connect(self.usuario_entry.setFocus)
 
-        # Atalho para focar no campo de senha
         focus_pass_shortcut = QShortcut(QKeySequence("Ctrl+P"), self)
         focus_pass_shortcut.activated.connect(self.senha_entry.setFocus)
 
-        # Enter no campo de senha também faz login
         self.senha_entry.returnPressed.connect(self.attempt_login)
 
     def attempt_login(self):
@@ -194,7 +192,7 @@ class InstancesWidget(QWidget):
     def __init__(self, parent=None):
         """Inicializa o widget de gerenciamento de instâncias."""
         super().__init__(parent)
-        self.tree_sessoes = QTreeWidget()
+        self.table_sessoes = QTableWidget()
         self.label_total_instancias = QLabel("0")
         self.label_ultima_atualizacao = QLabel("N/A")
         self.status_label = QLabel()
@@ -210,18 +208,26 @@ class InstancesWidget(QWidget):
         frame_info = self._create_info_frame()
         main_layout.addWidget(frame_info)
 
-        self.tree_sessoes.setHeaderLabels(["ID Sessão", "Hostname", "Última Atividade"])
-        self.tree_sessoes.setColumnWidth(0, 80)
-        self.tree_sessoes.setColumnWidth(1, 130)
-        self.tree_sessoes.setColumnWidth(2, 150)
-        self.tree_sessoes.setToolTip("Lista de instâncias ativas da aplicação")
-        aplicar_estilo_tree_widget(self.tree_sessoes)
+        self.table_sessoes.setColumnCount(3)
+        self.table_sessoes.setHorizontalHeaderLabels(
+            ["ID Sessão", "Hostname", "Última Atividade"]
+        )
+        header = self.table_sessoes.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        self.table_sessoes.setColumnWidth(0, 80)
+        self.table_sessoes.setToolTip("Lista de instâncias ativas da aplicação")
+        aplicar_estilo_table_widget(self.table_sessoes)
+        self.table_sessoes.setSortingEnabled(True)
+        self.table_sessoes.setAlternatingRowColors(True)
+        self.table_sessoes.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.table_sessoes.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_sessoes.verticalHeader().setVisible(False)
 
-        # Habilitar ordenação por coluna e cores alternadas
-        self.tree_sessoes.setSortingEnabled(True)
-        self.tree_sessoes.setAlternatingRowColors(True)
-
-        main_layout.addWidget(self.tree_sessoes)
+        main_layout.addWidget(self.table_sessoes)
 
         action_buttons = self._create_action_buttons()
         main_layout.addWidget(action_buttons)
@@ -231,12 +237,10 @@ class InstancesWidget(QWidget):
         self.status_label.setVisible(False)
         main_layout.addWidget(self.status_label)
 
-        # Configurar atalhos de teclado
         self._setup_keyboard_shortcuts()
 
     def _setup_keyboard_shortcuts(self):
         """Configura atalhos de teclado para o widget de instâncias."""
-        # Atalho adicional para atualizar (Ctrl+R)
         refresh_shortcut = QShortcut(QKeySequence("Ctrl+R"), self)
         refresh_shortcut.activated.connect(self._load_sessions)
 
@@ -284,19 +288,24 @@ class InstancesWidget(QWidget):
     def _load_sessions(self):
         """Carrega e exibe as sessões ativas."""
         try:
-            self.tree_sessoes.clear()
+            self.table_sessoes.setRowCount(0)
             sessoes = obter_sessoes_ativas()
             self.label_total_instancias.setText(str(len(sessoes)))
             self.label_ultima_atualizacao.setText(datetime.now().strftime("%H:%M:%S"))
             for sessao in sessoes:
-                item = QTreeWidgetItem(
-                    [
-                        sessao.get("session_id", "N/A")[:8],
-                        sessao.get("hostname", "N/A"),
-                        sessao.get("last_updated", "N/A"),
-                    ]
+                row_position = self.table_sessoes.rowCount()
+                self.table_sessoes.insertRow(row_position)
+                self.table_sessoes.setItem(
+                    row_position,
+                    0,
+                    QTableWidgetItem(sessao.get("session_id", "N/A")[:8]),
                 )
-                self.tree_sessoes.addTopLevelItem(item)
+                self.table_sessoes.setItem(
+                    row_position, 1, QTableWidgetItem(sessao.get("hostname", "N/A"))
+                )
+                self.table_sessoes.setItem(
+                    row_position, 2, QTableWidgetItem(sessao.get("last_updated", "N/A"))
+                )
         except (KeyError, AttributeError, TypeError) as e:
             logging.error("Erro ao carregar sessões: %s", e)
             self._set_status_message("Erro ao carregar sessões.")
@@ -304,8 +313,6 @@ class InstancesWidget(QWidget):
     def _update_shutdown_status(self, active_sessions: int):
         """Atualiza a mensagem de status durante o shutdown."""
         self._set_status_message(f"Aguardando {active_sessions} instância(s) fechar...")
-
-    safe_process_events()
 
     def _start_global_shutdown(self):
         """Inicia o processo de encerramento de todas as instâncias."""
@@ -351,9 +358,6 @@ class InstancesWidget(QWidget):
     def stop_timer(self):
         """Para o timer de atualização."""
         self.timer_atualizacao.stop()
-
-
-# pylint: disable=R0902
 
 
 class UpdaterWidget(QWidget):
@@ -463,8 +467,7 @@ class UpdaterWidget(QWidget):
         """Atualiza a UI de progresso."""
         self.progress_status_label.setText(message)
         self.progress_bar.setValue(value)
-
-    safe_process_events()
+        safe_process_events()
 
     def _reset_widget_state(self):
         """Reseta a interface do widget para o estado inicial após uma atualização."""
@@ -508,7 +511,7 @@ class UserManagementWidget(QWidget):
         """Inicializa o widget de gerenciamento de usuários."""
         super().__init__(parent)
         self.usuario_busca_entry = QLineEdit()
-        self.list_usuario = QTreeWidget()
+        self.list_usuario = QTableWidget()
         self.toggle_role_btn = None
         self.resetar_senha_btn = None
         self.excluir_btn = None
@@ -522,7 +525,6 @@ class UserManagementWidget(QWidget):
 
     def _setup_keyboard_shortcuts(self):
         """Configura atalhos de teclado para o widget de usuários."""
-        # Atalho para focar no campo de busca
         focus_search_shortcut = QShortcut(QKeySequence("Ctrl+F"), self)
         focus_search_shortcut.activated.connect(self.usuario_busca_entry.setFocus)
 
@@ -531,21 +533,31 @@ class UserManagementWidget(QWidget):
         main_layout = QVBoxLayout(self)
         aplicar_medida_borda_espaco(main_layout, 10, 10)
         self._create_search_frame(main_layout)
-        self._create_tree_widget(main_layout)
+        self._create_table_widget(main_layout)
         self._create_action_buttons(main_layout)
 
     def _listar_usuarios(self):
         """Busca os usuários no banco de dados e atualiza a lista na interface."""
         try:
             with get_session() as session:
-                self.list_usuario.clear()
+                self.list_usuario.setRowCount(0)
                 usuarios = session.query(Usuario).order_by(Usuario.nome).all()
                 for usuario in usuarios:
-                    senha_resetada = "Sim" if usuario.senha == "nova_senha" else "Não"
-                    item = QTreeWidgetItem(
-                        [str(usuario.id), usuario.nome, usuario.role, senha_resetada]
+                    row_position = self.list_usuario.rowCount()
+                    self.list_usuario.insertRow(row_position)
+                    self.list_usuario.setItem(
+                        row_position, 0, QTableWidgetItem(str(usuario.id))
                     )
-                    self.list_usuario.addTopLevelItem(item)
+                    self.list_usuario.setItem(
+                        row_position, 1, QTableWidgetItem(usuario.nome)
+                    )
+                    self.list_usuario.setItem(
+                        row_position, 2, QTableWidgetItem(usuario.role)
+                    )
+                    senha_resetada = "Sim" if usuario.senha == "nova_senha" else "Não"
+                    self.list_usuario.setItem(
+                        row_position, 3, QTableWidgetItem(senha_resetada)
+                    )
         except SQLAlchemyError as e:
             logging.error("Erro ao listar usuários: %s", e)
             show_error(
@@ -587,20 +599,28 @@ class UserManagementWidget(QWidget):
         self.usuario_busca_entry.clear()
         self._listar_usuarios()
 
-    def _create_tree_widget(self, main_layout):
-        """Cria o TreeWidget para listar usuários."""
-        g.LIST_USUARIO.setHeaderLabels(["Id", "Nome", "Permissões", "Senha Resetada"])
+    def _create_table_widget(self, main_layout):
+        """Cria o QTableWidget para listar usuários."""
+        g.LIST_USUARIO.setColumnCount(4)
+        g.LIST_USUARIO.setHorizontalHeaderLabels(
+            ["Id", "Nome", "Permissões", "Senha Resetada"]
+        )
         g.LIST_USUARIO.setColumnHidden(0, True)
-        g.LIST_USUARIO.setColumnWidth(1, 120)
+        header = g.LIST_USUARIO.horizontalHeader()
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         g.LIST_USUARIO.setColumnWidth(2, 80)
         g.LIST_USUARIO.setColumnWidth(3, 100)
         g.LIST_USUARIO.setToolTip("Lista de usuários cadastrados no sistema")
-        aplicar_estilo_tree_widget(g.LIST_USUARIO)
-
-        # Habilitar ordenação por coluna e cores alternadas
+        aplicar_estilo_table_widget(g.LIST_USUARIO)
         g.LIST_USUARIO.setSortingEnabled(True)
         g.LIST_USUARIO.setAlternatingRowColors(True)
-
+        g.LIST_USUARIO.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        g.LIST_USUARIO.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        g.LIST_USUARIO.verticalHeader().setVisible(False)
         main_layout.addWidget(g.LIST_USUARIO)
 
     def _create_action_buttons(self, main_layout):
@@ -643,8 +663,11 @@ class UserManagementWidget(QWidget):
         if not has_selection:
             self.toggle_role_btn.setText("👤 Alterar Permissão")
             return
-        selected_item = selected_items[0]
-        role = selected_item.text(2)
+        current_row = self.list_usuario.currentRow()
+        role_item = self.list_usuario.item(current_row, 2)
+        if not role_item:
+            return
+        role = role_item.text()
         if role == "admin":
             self.toggle_role_btn.setEnabled(False)
             self.excluir_btn.setEnabled(False)
@@ -699,6 +722,7 @@ class AdminTool(QMainWindow):
         self.user_management_tab = UserManagementWidget()
         self._setup_main_tool_ui()
         self.stacked_widget.addWidget(self.main_tool_widget)
+        self._setup_global_shortcuts()
 
     def _setup_main_tool_ui(self):
         """Configura a UI principal da ferramenta com abas."""
@@ -710,7 +734,6 @@ class AdminTool(QMainWindow):
         self.tab_widget.addTab(self.user_management_tab, "👥 Gerenciar Usuários")
         self.tab_widget.addTab(self.updater_tab, "🔄 Atualizador")
 
-        # Tooltips para as abas
         self.tab_widget.setTabToolTip(
             0, "Gerenciar instâncias ativas da aplicação (Ctrl+1)"
         )
@@ -721,7 +744,6 @@ class AdminTool(QMainWindow):
 
     def _setup_global_shortcuts(self):
         """Configura atalhos globais da aplicação."""
-        # Atalhos para navegação entre abas
         tab1_shortcut = QShortcut(QKeySequence("Ctrl+1"), self)
         tab1_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(0))
 
@@ -731,7 +753,6 @@ class AdminTool(QMainWindow):
         tab3_shortcut = QShortcut(QKeySequence("Ctrl+3"), self)
         tab3_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(2))
 
-        # Atalho para fechar a aplicação
         close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
         close_shortcut.activated.connect(self.close)
 

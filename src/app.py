@@ -23,9 +23,9 @@ from src import __version__
 from src.components.barra_titulo import BarraTitulo
 from src.components.menu_custom import MenuCustom
 from src.config import globals as g
+from src.forms import form_comparar_arquivos  # <-- ADICIONADO
 from src.forms import (
     form_aut,
-    form_comparar_arquivos,  # <-- ADICIONADO
     form_impressao,
     form_razao_rie,
     form_sobre,
