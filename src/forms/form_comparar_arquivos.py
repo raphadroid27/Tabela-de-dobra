@@ -502,7 +502,7 @@ class FormCompararArquivos(QDialog):
                 f"({round(com.X(), 3)}, {round(com.Y(), 3)}, {round(com.Z(), 3)})",
                 f"({round(i1, 3)}, {round(i2, 3)}, {round(i3, 3)})",
             ), "OK"
-        except (IOError, RuntimeError) as e:
+        except (IOError, RuntimeError, ValueError) as e:
             logging.error(
                 "Falha ao processar arquivo CAD '%s': %s",
                 os.path.basename(file_path),
@@ -523,7 +523,7 @@ class FormCompararArquivos(QDialog):
                 f"({round(extmin.x, 3)}, {round(extmin.y, 3)})",
                 f"({round(extmax.x, 3)}, {round(extmax.y, 3)})",
             ), "OK"
-        except (IOError, ezdxf.DXFStructureError) as e:
+        except (IOError, ezdxf.DXFStructureError, ValueError, TypeError) as e:
             logging.error(
                 "Falha ao processar arquivo DXF '%s': %s",
                 os.path.basename(file_path),
@@ -747,7 +747,7 @@ class FormCompararArquivos(QDialog):
 
         if status_msg != "OK":
             status_text, color = "⚠️", QColor("#FFC107")
-            tooltip += f"\nStatus: {status_msg}"
+            status_item.setToolTip(f"Status: {status_msg}")
         elif are_equal:
             status_text, color = "✓", QColor("#4CAF50")
             status_item.setToolTip("Arquivos equivalentes")
