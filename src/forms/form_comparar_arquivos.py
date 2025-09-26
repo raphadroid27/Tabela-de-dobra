@@ -1,7 +1,7 @@
 """
-Módulo para o formulário de Comparador Geométrico de Ficheiros STEP.
+Módulo para o formulário de Comparador Geométrico de Arquivos STEP.
 
-Este formulário permite aos utilizadores carregar ficheiros STEP (.step, .stp) em
+Este formulário permite aos utilizadores carregar arquivos STEP (.step, .stp) em
 duas listas lado a lado e realizar uma comparação geométrica detalhada.
 A comparação utiliza a biblioteca python-occ-core para extrair e comparar
 propriedades como topologia, volume, área de superfície, centro de massa e
@@ -63,7 +63,7 @@ MARGEM_LAYOUT = 10
 
 class FileTableWidget(QTableWidget):
     """
-    Tabela personalizada que aceita ficheiros arrastados e soltos,
+    Tabela personalizada que aceita arquivos arrastados e soltos,
     mostra uma numeração, impede duplicados e permite reordenação de itens.
     """
 
@@ -78,9 +78,9 @@ class FileTableWidget(QTableWidget):
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         self.setColumnCount(3)
-        self.setHorizontalHeaderLabels(["#", "Ficheiro", "Status"])
+        self.setHorizontalHeaderLabels(["#", "Arquivo", "Status"])
         self.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Interactive
+            0, QHeaderView.ResizeMode.Fixed
         )
         self.horizontalHeader().setSectionResizeMode(
             1, QHeaderView.ResizeMode.Stretch
@@ -88,8 +88,8 @@ class FileTableWidget(QTableWidget):
         self.horizontalHeader().setSectionResizeMode(
             2, QHeaderView.ResizeMode.Interactive
         )
-        self.setColumnWidth(0, 20)
-        self.setColumnWidth(2, 60)
+        self.setColumnWidth(0, 5)
+        self.setColumnWidth(2, 40)
         self.verticalHeader().setVisible(False)
 
         self.other_table = None
@@ -122,7 +122,7 @@ class FileTableWidget(QTableWidget):
 
     # pylint: disable=invalid-name
     def dragEnterEvent(self, event):
-        """Aceita o evento de arrastar se os dados contiverem ficheiros."""
+        """Aceita o evento de arrastar se os dados contiverem arquivos."""
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
         else:
@@ -138,7 +138,7 @@ class FileTableWidget(QTableWidget):
 
     # pylint: disable=invalid-name
     def dropEvent(self, event):
-        """Processa os ficheiros soltos, filtrando por .step e .stp."""
+        """Processa os arquivos soltos, filtrando por .step e .stp."""
         files_to_add = [
             url.toLocalFile()
             for url in event.mimeData().urls()
@@ -149,7 +149,7 @@ class FileTableWidget(QTableWidget):
             self.add_files(files_to_add)
 
     def add_files(self, file_paths):
-        """Adiciona uma lista de caminhos de ficheiro à tabela, evitando duplicados."""
+        """Adiciona uma lista de caminhos de arquivo à tabela, evitando duplicados."""
         current_paths = {
             self.item(i, 1).data(Qt.ItemDataRole.UserRole)
             for i in range(self.rowCount())
@@ -183,14 +183,14 @@ class FileTableWidget(QTableWidget):
                 skipped_count += 1
         if skipped_count > 0:
             show_warning(
-                "Ficheiros Ignorados",
-                f"{skipped_count} ficheiro(s) não foram adicionados porque já existem.",
+                "Arquivos Ignorados",
+                f"{skipped_count} arquivo(s) não foram adicionados porque já existem.",
                 parent=self.window(),
             )
 
 
 class FormCompararArquivos(QDialog):
-    """Formulário para Comparação Geométrica de Ficheiros STEP."""
+    """Formulário para Comparação Geométrica de Arquivos STEP."""
 
     def __init__(self, parent=None):
         """Inicializa o formulário."""
@@ -213,7 +213,7 @@ class FormCompararArquivos(QDialog):
         aplicar_medida_borda_espaco(vlayout, 0)
 
         barra = BarraTitulo(self, tema=obter_tema_atual())
-        barra.titulo.setText("Comparador Geométrico de Ficheiros STEP")
+        barra.titulo.setText("Comparador Geométrico de Arquivos STEP")
         vlayout.addWidget(barra)
 
         conteudo = QWidget()
@@ -284,10 +284,10 @@ class FormCompararArquivos(QDialog):
         main_layout.addWidget(self.progress_bar)
 
     def _select_files(self, table_widget):
-        """Abre uma caixa de diálogo para selecionar ficheiros STEP."""
+        """Abre uma caixa de diálogo para selecionar arquivos STEP."""
         file_paths, _ = QFileDialog.getOpenFileNames(
             self,
-            "Selecionar Ficheiros STEP",
+            "Selecionar Arquivos STEP",
             "",
             "STEP Files (*.step *.stp);;All Files (*)",
         )
@@ -295,7 +295,7 @@ class FormCompararArquivos(QDialog):
             table_widget.add_files(file_paths)
 
     def _get_file_hash(self, file_path):
-        """Calcula o hash SHA256 da secção de dados de um ficheiro."""
+        """Calcula o hash SHA256 da secção de dados de um arquivo."""
         sha256 = hashlib.sha256()
         try:
             with open(file_path, "rb") as f:
@@ -310,11 +310,11 @@ class FormCompararArquivos(QDialog):
             return None
 
     def _get_geometric_properties(self, file_path):
-        """Lê um ficheiro STEP e extrai um conjunto de propriedades geométricas."""
+        """Lê um arquivo STEP e extrai um conjunto de propriedades geométricas."""
         try:
             reader = STEPControl_Reader()
             if reader.ReadFile(file_path) != 1:
-                return None, "Erro ao ler o ficheiro"
+                return None, "Erro ao ler o arquivo"
             reader.TransferRoots()
             shape = reader.OneShape()
             if shape is None or shape.IsNull():
@@ -360,9 +360,9 @@ class FormCompararArquivos(QDialog):
             return None, f"Exceção: {str(e)}"
 
     def _compare_files(self):
-        """Inicia o processo de comparação para todos os ficheiros nas listas."""
+        """Inicia o processo de comparação para todos os arquivos nas listas."""
         if self.table_a_widget.rowCount() == 0 or self.table_b_widget.rowCount() == 0:
-            show_warning("Aviso", "Adicione ficheiros em ambas as listas.", parent=self)
+            show_warning("Aviso", "Adicione arquivos em ambas as listas.", parent=self)
             return
 
         self.progress_bar.setValue(0)
@@ -467,7 +467,7 @@ class FormCompararArquivos(QDialog):
                 item.setForeground(color)
 
     def _clear_all(self):
-        """Limpa todos os ficheiros de ambas as tabelas."""
+        """Limpa todos os arquivos de ambas as tabelas."""
         if self.table_a_widget:
             self.table_a_widget.setRowCount(0)
         if self.table_b_widget:
