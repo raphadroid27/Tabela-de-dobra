@@ -4,3 +4,5 @@ pyperclip
 pyinstaller
 pylint
 PyQtDarkTheme-fork
+ezdxf
+PyMuPDF
