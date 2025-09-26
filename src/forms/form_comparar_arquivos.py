@@ -39,7 +39,11 @@ from PySide6.QtWidgets import (
 # Integração com o ecossistema da aplicação
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
+from src.utils.estilo import (
+    aplicar_estilo_botao,
+    aplicar_estilo_table_widget,
+    obter_tema_atual,
+)
 from src.utils.janelas import Janela
 from src.utils.utilitarios import (
     ICON_PATH,
@@ -131,6 +135,9 @@ class FileTableWidget(QTableWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+
+        # Aplicar estilo de grade visual
+        aplicar_estilo_table_widget(self)
 
         self.setColumnCount(3)
         self.setHorizontalHeaderLabels(["#", "Arquivo", "Status"])
