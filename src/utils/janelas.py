@@ -294,6 +294,7 @@ class Janela:
                 "USUAR_FORM",
                 "RIE_FORM",
                 "IMPRESSAO_FORM",
+                "COMPARAR_FORM",
             ]
             for form_var in form_vars:
                 form = getattr(g, form_var, None)

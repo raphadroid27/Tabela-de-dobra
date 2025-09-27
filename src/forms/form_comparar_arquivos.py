@@ -38,7 +38,6 @@ from PySide6.QtWidgets import (
 
 # Integração com o ecossistema da aplicação
 from src.components.barra_titulo import BarraTitulo
-from src.config import globals as g
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
@@ -315,6 +314,7 @@ class FormCompararArquivos(QDialog):
         """Inicializa a interface do utilizador."""
         self.setFixedSize(LARGURA_FORM, ALTURA_FORM)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowIcon(QIcon(ICON_PATH))
         Janela.posicionar_janela(self, "direita")
 
@@ -784,20 +784,39 @@ class FormManager:
     def _reset_instance(cls):
         """Limpa a referência à instância quando o formulário é fechado."""
         cls._instance = None
-        if hasattr(g, "COMPARAR_FORM"):
-            g.COMPARAR_FORM = None
 
     @classmethod
     def show_form(cls, parent=None):
         """Cria e exibe o formulário, garantindo uma única instância visível."""
-        if cls._instance is None:
+        visible = False
+        if cls._instance is not None:
+            try:
+                visible = cls._instance.isVisible()
+            except RuntimeError:
+                # Objeto Qt foi destruído; limpa a referência
+                cls._instance = None
+                visible = False
+
+        if not visible:
             cls._instance = FormCompararArquivos(parent)
-            g.COMPARAR_FORM = cls._instance
-            cls._instance.destroyed.connect(cls._reset_instance)
+            # Quando a janela for destruída, limpa o singleton
+            try:
+                cls._instance.destroyed.connect(FormManager._reset_instance)
+            except (RuntimeError, TypeError):
+                pass
             cls._instance.show()
         else:
-            cls._instance.activateWindow()
-            cls._instance.raise_()
+            try:
+                cls._instance.activateWindow()
+                cls._instance.raise_()
+            except RuntimeError:
+                # Se foi destruída entre o check e aqui, recria
+                cls._instance = FormCompararArquivos(parent)
+                try:
+                    cls._instance.destroyed.connect(FormManager._reset_instance)
+                except (RuntimeError, TypeError):
+                    pass
+                cls._instance.show()
 
 
 def main(parent=None):
