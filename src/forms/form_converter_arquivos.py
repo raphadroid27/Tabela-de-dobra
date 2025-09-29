@@ -36,6 +36,29 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.components.barra_titulo import BarraTitulo
+from src.utils.estilo import (
+    aplicar_estilo_botao,
+    aplicar_estilo_table_widget,
+    obter_tema_atual,
+)
+from src.utils.janelas import Janela
+from src.utils.utilitarios import (
+    ICON_PATH,
+    aplicar_medida_borda_espaco,
+    show_error,
+    show_info,
+    show_warning,
+)
+
+# --- CONFIGURAÇÃO DO CONVERSOR EXTERNO ---
+# ATENÇÃO: Para a conversão de DWG para PDF, é necessário um conversor externo.
+# 1. Baixe e instale o ODA File Converter: https://www.opendesign.com/guestfiles/oda_file_Converter
+# 2. Cole o caminho para o executável principal do programa na constante abaixo.
+# Exemplo para Windows: "C:/Program Files/ODA/ODAFileConverter 26.8.0/ODAFileConverter.exe"
+# Exemplo para macOS: "/Applications/ODAFileConverter.app/Contents/MacOS/ODAFileConverter"
+ODA_CONVERTER_PATH = "C:/Program Files/ODA/ODAFileConverter 26.8.0/ODAFileConverter.exe"
+
 # --- Verificação de Dependências ---
 try:
     from PIL import Image, UnidentifiedImageError
@@ -55,22 +78,11 @@ try:
 except ImportError:
     CAD_LIBS_AVAILABLE = False
 
+# Verifica se o executável do conversor DWG existe
+ODA_CONVERTER_AVAILABLE = os.path.isfile(ODA_CONVERTER_PATH)
+
 
 # Integração com o ecossistema da aplicação
-from src.components.barra_titulo import BarraTitulo
-from src.utils.estilo import (
-    aplicar_estilo_botao,
-    aplicar_estilo_table_widget,
-    obter_tema_atual,
-)
-from src.utils.janelas import Janela
-from src.utils.utilitarios import (
-    ICON_PATH,
-    aplicar_medida_borda_espaco,
-    show_error,
-    show_info,
-    show_warning,
-)
 
 # --- Constantes de Configuração ---
 LARGURA_FORM_CONVERSAO = 550
@@ -79,6 +91,12 @@ MARGEM_LAYOUT_PRINCIPAL = 10
 
 # --- Dicionário de Conversores ---
 CONVERSION_HANDLERS = {
+    "DWG para PDF": {
+        "extensions": ("*.dwg",),
+        "tooltip": "Converte DWG para PDF (via DXF intermediário).",
+        "enabled": ODA_CONVERTER_AVAILABLE and CAD_LIBS_AVAILABLE,
+        "dependency_msg": "Requer ODA Converter, ezdxf e matplotlib.",
+    },
     "TIF para PDF": {
         "extensions": ("*.tif", "*.tiff"),
         "tooltip": "Converte arquivos de imagem TIF para o formato PDF.",
@@ -121,16 +139,88 @@ class ConversionWorker(QThread):
                 self._convert_tif_to_pdf(row, path_origem)
             elif self.conversion_type == "DXF para PDF":
                 self._convert_dxf_to_pdf(row, path_origem)
+            elif self.conversion_type == "DWG para PDF":
+                self._convert_dwg_to_pdf_2_steps(row, path_origem)
 
             percent = int((idx / total) * 100)
             self.progress_percent.emit(percent)
 
         self.processo_finalizado.emit()
 
+    def _convert_dwg_to_pdf_2_steps(self, row: int, path_origem: str):
+        """Converte DWG para PDF em duas etapas: DWG -> DXF, depois DXF -> PDF."""
+        nome_base = os.path.splitext(os.path.basename(path_origem))[0]
+        path_dxf_temp = os.path.join(self.pasta_destino, f"{nome_base}_temp.dxf")
+
+        # ETAPA 1: Converter DWG para DXF usando ODA File Converter
+        command = [
+            ODA_CONVERTER_PATH,
+            os.path.dirname(path_origem),  # Pasta de entrada
+            self.pasta_destino,  # Pasta de saída
+            "ACAD2018",  # Versão do arquivo de saída
+            "DXF",  # Tipo de arquivo de saída
+            "0",  # Não recursivo
+            "1",  # Auditar arquivos
+            os.path.basename(path_origem),  # Filtro para processar apenas este arquivo
+        ]
+        try:
+            startupinfo = None
+            if sys.platform == "win32":
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            # Renomeia o arquivo de saída esperado pelo ODA
+            expected_dxf_path = os.path.join(self.pasta_destino, f"{nome_base}.dxf")
+            if os.path.exists(path_dxf_temp):
+                os.remove(path_dxf_temp)  # Garante que não existe um antigo
+
+            subprocess.run(
+                command,
+                check=True,
+                capture_output=True,
+                text=True,
+                startupinfo=startupinfo,
+                timeout=300,
+            )
+
+            # ODA cria o arquivo com o mesmo nome, então renomeamos para nosso temp
+            if os.path.exists(expected_dxf_path):
+                os.rename(expected_dxf_path, path_dxf_temp)
+            else:
+                raise FileNotFoundError("Arquivo DXF intermediário não foi criado.")
+
+        except (
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            FileNotFoundError,
+            OSError,
+        ) as e:
+            logging.error("Falha na etapa DWG->DXF para '%s': %s", path_origem, e)
+            msg = "Falha na conversão para DXF."
+            if isinstance(e, subprocess.TimeoutExpired):
+                msg = "Tempo limite na conversão DWG->DXF."
+            self.file_processed.emit(row, "", False, msg)
+            return
+
+        # ETAPA 2: Converter o DXF temporário para PDF
+        try:
+            self._convert_dxf_to_pdf(row, path_dxf_temp)
+        finally:
+            # ETAPA 3: Limpar o arquivo DXF temporário
+            if os.path.exists(path_dxf_temp):
+                try:
+                    os.remove(path_dxf_temp)
+                except OSError as e:
+                    logging.warning(
+                        "Não foi possível remover o DXF temporário '%s': %s",
+                        path_dxf_temp,
+                        e,
+                    )
+
     def _convert_tif_to_pdf(self, row: int, path_origem: str):
         """Converte um único arquivo TIF para PDF."""
         nome_arquivo = os.path.basename(path_origem)
-        nome_pdf = os.path.splitext(nome_arquivo)[0] + ".pdf"
+        nome_pdf = os.path.splitext(nome_arquivo)[0].replace("_temp", "") + ".pdf"
         path_destino = os.path.join(self.pasta_destino, nome_pdf)
         try:
             with Image.open(path_origem) as img:
@@ -143,7 +233,8 @@ class ConversionWorker(QThread):
     def _convert_dxf_to_pdf(self, row: int, path_origem: str):
         """Converte um único arquivo DXF para PDF usando ezdxf e matplotlib."""
         nome_arquivo = os.path.basename(path_origem)
-        nome_pdf = os.path.splitext(nome_arquivo)[0] + ".pdf"
+        # Remove sufixo _temp se existir no nome do arquivo final
+        nome_pdf = os.path.splitext(nome_arquivo)[0].replace("_temp", "") + ".pdf"
         path_destino = os.path.join(self.pasta_destino, nome_pdf)
         try:
             doc = ezdxf.readfile(path_origem)
