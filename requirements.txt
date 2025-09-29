@@ -6,3 +6,5 @@ pylint
 PyQtDarkTheme-fork
 ezdxf
 PyMuPDF
+pillow
+matplotlib
