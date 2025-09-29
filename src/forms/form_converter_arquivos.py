@@ -73,7 +73,7 @@ from src.utils.utilitarios import (
 )
 
 # --- Constantes de Configuração ---
-LARGURA_FORM_CONVERSAO = 600
+LARGURA_FORM_CONVERSAO = 550
 ALTURA_FORM_CONVERSAO = 513
 MARGEM_LAYOUT_PRINCIPAL = 10
 
