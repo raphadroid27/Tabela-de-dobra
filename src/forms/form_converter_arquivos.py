@@ -5,15 +5,20 @@ Este módulo implementa um formulário para conversão de arquivos, com um layou
 inspirado no formulário de comparação para manter a consistência da UI.
 Utiliza uma thread para processamento em segundo plano, garantindo que a interface
 permaneça responsiva durante a conversão.
+
+A versão otimizada adiciona a funcionalidade de cancelamento, tratamento de
+exceções globais na thread e deteção automática de softwares externos.
 """
 
-# pylint: disable=R0902,R0911,R0913,R0914,R0915,R0917
+# pylint: disable= R1702,R0902,R0911,R0913,R0914,R0915,R0917,C0103
 
 import logging
 import os
 import shutil
 import subprocess
 import sys
+import tempfile
+import traceback
 from typing import List, Optional
 
 from PySide6.QtCore import Qt, QThread, QTimer, Signal
@@ -52,25 +57,6 @@ from src.utils.utilitarios import (
     show_warning,
 )
 
-# --- CONFIGURAÇÃO DO CONVERSOR EXTERNO ---
-# ATENÇÃO: Para a conversão de DWG para PDF, é necessário um conversor externo.
-# 1. Baixe e instale o ODA File Converter: https://www.opendesign.com/guestfiles/oda_file_Converter
-# 2. Cole o caminho para o executável principal do programa na constante abaixo.
-# Exemplo para Windows: "C:/Program Files/ODA/ODAFileConverter 26.8.0/ODAFileConverter.exe"
-# Exemplo para macOS: "/Applications/ODAFileConverter.app/Contents/MacOS/ODAFileConverter"
-ODA_CONVERTER_PATH = "C:/Program Files/ODA/ODAFileConverter 26.8.0/ODAFileConverter.exe"
-
-# --- CONFIGURAÇÃO DO INKSCAPE ---
-# ATENÇÃO: Para a conversão de PDF para DXF, é necessário o Inkscape.
-# 1. Baixe e instale o Inkscape: https://inkscape.org/
-# 2. Adicione a pasta 'bin' do Inkscape ao PATH do sistema OU cole o
-#    caminho para o executável na constante abaixo.
-# Exemplo para Windows: "C:/Program Files/Inkscape/bin/inkscape.exe"
-# Exemplo para macOS: "/Applications/Inkscape.app/Contents/MacOS/inkscape"
-# Deixar em branco para procurar no PATH do sistema
-INKSCAPE_PATH = "C:/Program Files/Inkscape/bin/inkscape.exe"
-
-
 # --- Verificação de Dependências ---
 try:
     from PIL import Image, UnidentifiedImageError
@@ -91,25 +77,56 @@ except ImportError:
     CAD_LIBS_AVAILABLE = False
 
 
-def find_executable(name: str, custom_path: str) -> Optional[str]:
+def find_external_program(
+    program_name: str, executable_name: str, common_paths: List[str]
+) -> Optional[str]:
     """
-    Procura por um executável no caminho personalizado ou no PATH do sistema.
-    Retorna o caminho do executável ou None se não for encontrado.
+    Tenta encontrar um executável externo no sistema.
+
+    Verifica primeiro o PATH do sistema, depois uma lista de caminhos comuns.
+    Retorna o caminho completo do executável se encontrado, senão None.
     """
-    if custom_path and os.path.isfile(custom_path):
-        return custom_path
-    return shutil.which(name)
+    # 1. Tenta encontrar no PATH do sistema
+    path = shutil.which(executable_name)
+    if path and os.path.isfile(path):
+        return path
+
+    # 2. Tenta encontrar em diretórios comuns
+    for common_path in common_paths:
+        # Lógica especial para pastas com versão (ex: ODA File Converter 26.8.0)
+        if "*" in common_path:
+            base_dir = os.path.dirname(common_path)
+            if os.path.isdir(base_dir):
+                for item in os.listdir(base_dir):
+                    dir_path = os.path.join(base_dir, item)
+                    if os.path.isdir(dir_path) and item.startswith(
+                        os.path.basename(common_path).replace("*", "")
+                    ):
+                        full_path = os.path.join(dir_path, executable_name)
+                        if os.path.isfile(full_path):
+                            return full_path
+        else:
+            # Caminho padrão sem versão
+            full_path = os.path.join(common_path, executable_name)
+            if os.path.isfile(full_path):
+                return full_path
+
+    logging.warning("'%s' não foi encontrado no sistema.", program_name)
+    return None
 
 
-# Verifica se o executável do conversor DWG existe
-ODA_CONVERTER_AVAILABLE = os.path.isfile(ODA_CONVERTER_PATH)
+# --- DETEÇÃO AUTOMÁTICA DE EXECUTÁVEIS ---
+INKSCAPE_EXECUTABLE = find_external_program(
+    "Inkscape", "inkscape.exe", common_paths=["C:/Program Files/Inkscape/bin"]
+)
+ODA_CONVERTER_EXECUTABLE = find_external_program(
+    "ODA File Converter",
+    "ODAFileConverter.exe",
+    common_paths=["C:/Program Files/ODA/ODAFileConverter*"],
+)
 
-# Verifica se o executável do Inkscape existe
-INKSCAPE_EXECUTABLE = find_executable("inkscape", INKSCAPE_PATH)
 INKSCAPE_AVAILABLE = bool(INKSCAPE_EXECUTABLE)
-
-
-# Integração com o ecossistema da aplicação
+ODA_CONVERTER_AVAILABLE = bool(ODA_CONVERTER_EXECUTABLE)
 
 # --- Constantes de Configuração ---
 LARGURA_FORM_CONVERSAO = 550
@@ -122,8 +139,7 @@ CONVERSION_HANDLERS = {
         "extensions": ("*.dwg",),
         "tooltip": "Converte DWG para PDF.",
         "enabled": ODA_CONVERTER_AVAILABLE and CAD_LIBS_AVAILABLE,
-        "dependency_msg": "O software ODA Converter e "
-        "as bibliotecas ezdxf e matplotlib são necessárias.",
+        "dependency_msg": "O ODA Converter e as bibliotecas ezdxf/matplotlib são necessários.",
     },
     "TIF para PDF": {
         "extensions": ("*.tif", "*.tiff"),
@@ -139,9 +155,9 @@ CONVERSION_HANDLERS = {
     },
     "PDF para DXF": {
         "extensions": ("*.pdf",),
-        "tooltip": "Converte PDF para DXF.",
+        "tooltip": "Converte PDF para DXF (suporta vetorial e imagem).",
         "enabled": INKSCAPE_AVAILABLE,
-        "dependency_msg": "O software Inkscape é necessário.",
+        "dependency_msg": "O software Inkscape (instalado e/ou no PATH) é necessário.",
     },
 }
 
@@ -150,8 +166,9 @@ class ConversionWorker(QThread):
     """Executa a conversão em segundo plano."""
 
     progress_percent = Signal(int)
-    file_processed = Signal(int, str, bool, str)  # row, new_path, success, message
-    processo_finalizado = Signal()
+    file_processed = Signal(int, str, bool, str)
+    processo_finalizado = Signal(bool)
+    error_occurred = Signal(str)
 
     def __init__(
         self,
@@ -164,122 +181,133 @@ class ConversionWorker(QThread):
         self.pasta_destino = pasta_destino
         self.files = files_to_process
         self.conversion_type = conversion_type
+        self._is_interrupted = False
+
+    def stop(self):
+        """Sinaliza à thread para parar a execução."""
+        self._is_interrupted = True
 
     def run(self):
         """Ponto de entrada da thread, executa o loop de conversão."""
-        total = len(self.files)
-        for idx, (row, path_origem) in enumerate(self.files, start=1):
-            if self.conversion_type == "TIF para PDF":
-                self._convert_tif_to_pdf(row, path_origem)
-            elif self.conversion_type == "DXF para PDF":
-                self._convert_dxf_to_pdf(row, path_origem)
-            elif self.conversion_type == "DWG para PDF":
-                self._convert_dwg_to_pdf_2_steps(row, path_origem)
-            elif self.conversion_type == "PDF para DXF":
-                self._convert_pdf_to_dxf(row, path_origem)
-
-            percent = int((idx / total) * 100)
-            self.progress_percent.emit(percent)
-
-        self.processo_finalizado.emit()
-
-    def _convert_dwg_to_pdf_2_steps(self, row: int, path_origem: str):
-        """Converte DWG para PDF em duas etapas: DWG -> DXF, depois DXF -> PDF."""
-        nome_base = os.path.splitext(os.path.basename(path_origem))[0]
-        path_dxf_temp = os.path.join(self.pasta_destino, f"{nome_base}_temp.dxf")
-
-        # ETAPA 1: Converter DWG para DXF usando ODA File Converter
-        command = [
-            ODA_CONVERTER_PATH,
-            os.path.dirname(path_origem),  # Pasta de entrada
-            self.pasta_destino,  # Pasta de saída
-            "ACAD2018",  # Versão do arquivo de saída
-            "DXF",  # Tipo de arquivo de saída
-            "0",  # Não recursivo
-            "1",  # Auditar arquivos
-            os.path.basename(path_origem),  # Filtro para processar apenas este arquivo
-        ]
         try:
-            startupinfo = None
-            if sys.platform == "win32":
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            total = len(self.files)
+            for idx, (row, path_origem) in enumerate(self.files, start=1):
+                if self._is_interrupted:
+                    break
 
-            # Renomeia o arquivo de saída esperado pelo ODA
-            expected_dxf_path = os.path.join(self.pasta_destino, f"{nome_base}.dxf")
-            if os.path.exists(path_dxf_temp):
-                os.remove(path_dxf_temp)  # Garante que não existe um antigo
+                if self.conversion_type == "TIF para PDF":
+                    self._convert_tif_to_pdf(row, path_origem)
+                elif self.conversion_type == "DXF para PDF":
+                    self._convert_dxf_to_pdf(row, path_origem, path_origem)
+                elif self.conversion_type == "DWG para PDF":
+                    self._convert_dwg_to_pdf(row, path_origem)
+                elif self.conversion_type == "PDF para DXF":
+                    self._convert_pdf_to_dxf(row, path_origem)
 
-            subprocess.run(
-                command,
-                check=True,
-                capture_output=True,
-                text=True,
-                startupinfo=startupinfo,
-                timeout=300,
-            )
+                percent = int((idx / total) * 100)
+                self.progress_percent.emit(percent)
+        except (
+            OSError,
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            FileNotFoundError,
+        ) as e:
+            logging.error("Ocorreu um erro na thread de conversão.")
+            logging.error(traceback.format_exc())
+            self.error_occurred.emit(f"Ocorreu um erro crítico na conversão:\n{e}")
+        finally:
+            self.processo_finalizado.emit(self._is_interrupted)
 
-            # ODA cria o arquivo com o mesmo nome, então renomeamos para nosso temp
-            if os.path.exists(expected_dxf_path):
-                os.rename(expected_dxf_path, path_dxf_temp)
-            else:
-                raise FileNotFoundError("Arquivo DXF intermediário não foi criado.")
+    def _convert_dwg_to_pdf(self, row: int, path_origem: str):
+        """Converte DWG para PDF em duas etapas: DWG -> DXF, depois DXF -> PDF."""
+        nome_arquivo = os.path.basename(path_origem)
+        fd, path_dxf_temp = tempfile.mkstemp(suffix=".dxf", prefix="conv_")
+        os.close(fd)
+
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                command = [
+                    ODA_CONVERTER_EXECUTABLE,
+                    os.path.dirname(path_origem),
+                    temp_dir,
+                    "ACAD2018",
+                    "DXF",
+                    "0",
+                    "1",
+                    nome_arquivo,
+                ]
+
+                # Configuração para execução silenciosa no Windows
+                startupinfo = None
+                if sys.platform == "win32":
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    startupinfo.wShowWindow = subprocess.SW_HIDE  # 0 = Oculto
+
+                subprocess.run(
+                    command,
+                    check=True,
+                    capture_output=True,
+                    timeout=300,
+                    startupinfo=startupinfo,
+                )
+
+                nome_base = os.path.splitext(nome_arquivo)[0]
+                expected_dxf = os.path.join(temp_dir, f"{nome_base}.dxf")
+                if os.path.exists(expected_dxf):
+                    shutil.move(expected_dxf, path_dxf_temp)
+                else:
+                    logging.error("FALHA: Arquivo DXF intermediário não foi criado.")
+                    raise FileNotFoundError("Arquivo DXF intermediário não foi criado.")
+
+            if self._is_interrupted:
+                return
+
+            self._convert_dxf_to_pdf(row, path_dxf_temp, path_origem)
 
         except (
             subprocess.CalledProcessError,
             subprocess.TimeoutExpired,
             FileNotFoundError,
-            OSError,
         ) as e:
-            logging.error("Falha na etapa DWG->DXF para '%s': %s", path_origem, e)
-            msg = "Falha na conversão para DXF."
-            if isinstance(e, subprocess.TimeoutExpired):
-                msg = "Tempo limite na conversão DWG->DXF."
+            logging.error(
+                "FALHA na etapa DWG->DXF para %s.", nome_arquivo, exc_info=True
+            )
+            msg = f"Falha na etapa DWG->DXF: {getattr(e, 'stderr', e)}"
             self.file_processed.emit(row, "", False, msg)
-            return
-
-        # ETAPA 2: Converter o DXF temporário para PDF
-        try:
-            self._convert_dxf_to_pdf(row, path_dxf_temp)
         finally:
-            # ETAPA 3: Limpar o arquivo DXF temporário
             if os.path.exists(path_dxf_temp):
-                try:
-                    os.remove(path_dxf_temp)
-                except OSError as e:
-                    logging.warning(
-                        "Não foi possível remover o DXF temporário '%s': %s",
-                        path_dxf_temp,
-                        e,
-                    )
+                os.remove(path_dxf_temp)
 
     def _convert_tif_to_pdf(self, row: int, path_origem: str):
         """Converte um único arquivo TIF para PDF."""
         nome_arquivo = os.path.basename(path_origem)
-        nome_pdf = os.path.splitext(nome_arquivo)[0].replace("_temp", "") + ".pdf"
+        nome_pdf = os.path.splitext(nome_arquivo)[0] + ".pdf"
         path_destino = os.path.join(self.pasta_destino, nome_pdf)
         try:
             with Image.open(path_origem) as img:
                 img.convert("RGB").save(path_destino, "PDF")
             self.file_processed.emit(row, path_destino, True, "Conversão bem-sucedida")
         except (IOError, UnidentifiedImageError, OSError) as e:
-            logging.error("Falha na conversão de TIF '%s': %s", nome_arquivo, e)
+            logging.error("FALHA na conversão de %s.", nome_arquivo, exc_info=True)
             self.file_processed.emit(row, "", False, str(e))
 
-    def _convert_dxf_to_pdf(self, row: int, path_origem: str):
-        """Converte um único arquivo DXF para PDF usando ezdxf e matplotlib."""
-        nome_arquivo = os.path.basename(path_origem)
-        # Remove sufixo _temp se existir no nome do arquivo final
-        nome_pdf = os.path.splitext(nome_arquivo)[0].replace("_temp", "") + ".pdf"
+    def _convert_dxf_to_pdf(
+        self, row: int, path_dxf: str, path_original_para_nome: str
+    ):
+        """
+        Converte um arquivo DXF para PDF.
+        Usa `path_original_para_nome` para nomear corretamente o arquivo de saída.
+        """
+        nome_arquivo = os.path.basename(path_original_para_nome)
+        nome_base = os.path.splitext(nome_arquivo)[0]
+        nome_pdf = nome_base + ".pdf"
         path_destino = os.path.join(self.pasta_destino, nome_pdf)
         try:
-            doc = ezdxf.readfile(path_origem)
+            doc = ezdxf.readfile(path_dxf)
             msp = doc.modelspace()
-
             fig = plt.figure()
             ax = fig.add_axes([0, 0, 1, 1])
-            ax.set_facecolor("#FFFFFF")
-
             ctx = RenderContext(doc)
             out = MatplotlibBackend(ax)
 
@@ -293,72 +321,80 @@ class ConversionWorker(QThread):
             plt.close(fig)
             self.file_processed.emit(row, path_destino, True, "Conversão bem-sucedida")
         except (IOError, ezdxf.DXFStructureError, OSError) as e:
-            logging.error("Falha na conversão de DXF '%s': %s", nome_arquivo, e)
+            logging.error("FALHA na conversão de %s.", nome_arquivo, exc_info=True)
             self.file_processed.emit(row, "", False, str(e))
 
     def _convert_pdf_to_dxf(self, row: int, path_origem: str):
-        """Converte um único arquivo PDF para DXF usando Inkscape."""
+        """
+        Converte PDF para DXF de forma robusta, usando um diretório temporário
+        para evitar problemas com caminhos de arquivo complexos.
+        """
         nome_arquivo = os.path.basename(path_origem)
-        nome_dxf = os.path.splitext(nome_arquivo)[0] + ".dxf"
-        path_destino = os.path.join(self.pasta_destino, nome_dxf)
+        nome_dxf_final = os.path.splitext(nome_arquivo)[0] + ".dxf"
+        path_destino_final = os.path.join(self.pasta_destino, nome_dxf_final)
 
-        # Comando do Inkscape para converter PDF para DXF
-        # A opção --pdf-poppler é recomendada para melhor compatibilidade com PDF
-        command = [
-            INKSCAPE_EXECUTABLE,
-            "--pdf-poppler",
-            f"--export-filename={path_destino}",
-            path_origem,
-        ]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            try:
+                # Copia o PDF para um nome simples em um caminho simples
+                temp_pdf_path = os.path.join(temp_dir, "entrada.pdf")
+                shutil.copy(path_origem, temp_pdf_path)
 
-        try:
-            startupinfo = None
-            if sys.platform == "win32":
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                temp_dxf_path = os.path.join(temp_dir, "saida.dxf")
 
-            process = subprocess.run(
-                command,
-                check=True,
-                capture_output=True,
-                text=True,
-                startupinfo=startupinfo,
-                timeout=120,  # Timeout de 2 minutos
-            )
+                # Usa o comando mais simples e compatível
+                command = [
+                    INKSCAPE_EXECUTABLE,
+                    temp_pdf_path,
+                    f"--export-filename={temp_dxf_path}",
+                    "--pdf-poppler",
+                    "--export-text-to-path",
+                ]
 
-            if os.path.exists(path_destino) and os.path.getsize(path_destino) > 0:
-                self.file_processed.emit(
-                    row, path_destino, True, "Conversão bem-sucedida"
+                result = subprocess.run(
+                    command,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                    encoding="utf-8",
                 )
-            else:
-                # Inkscape pode não gerar erro, mas o arquivo pode estar vazio ou não ser criado
-                error_msg = (
-                    process.stderr.strip()
-                    if process.stderr
-                    else "Arquivo de saída não foi criado ou está vazio."
-                )
-                raise FileNotFoundError(error_msg)
 
-        except (
-            subprocess.CalledProcessError,
-            subprocess.TimeoutExpired,
-            FileNotFoundError,
-            OSError,
-        ) as e:
-            logging.error("Falha na conversão PDF->DXF para '%s': %s", path_origem, e)
-            msg = "Falha na conversão para DXF."
-            if isinstance(e, subprocess.TimeoutExpired):
-                msg = "Tempo limite na conversão PDF->DXF."
-            elif isinstance(e, subprocess.CalledProcessError):
-                msg = f"Erro do Inkscape: {e.stderr.strip()}" if e.stderr else str(e)
-            else:
-                msg = str(e)
+                if result.stderr:
+                    logging.warning("Saída de Erro (stderr):\n%s", result.stderr)
 
-            self.file_processed.emit(row, "", False, msg)
+                if os.path.exists(temp_dxf_path) and os.path.getsize(temp_dxf_path) > 0:
+                    # Move o resultado para o destino final
+                    shutil.move(temp_dxf_path, path_destino_final)
+                    self.file_processed.emit(
+                        row, path_destino_final, True, "Conversão bem-sucedida"
+                    )
+                else:
+                    logging.error(
+                        "FALHA: Arquivo de saída não foi criado ou está vazio no temp."
+                    )
+                    raise FileNotFoundError("Arquivo DXF temporário não foi criado.")
+
+            except (
+                subprocess.CalledProcessError,
+                subprocess.TimeoutExpired,
+                FileNotFoundError,
+            ) as e:
+                logging.error("FALHA na conversão de %s.", nome_arquivo, exc_info=True)
+                error_output = "Comando falhou."
+                if hasattr(e, "stderr") and e.stderr:
+                    error_output = e.stderr
+                elif hasattr(e, "stdout") and e.stdout:
+                    error_output = e.stdout
+                else:
+                    error_output = str(e)
+
+                logging.error("Detalhes do erro do subprocesso: %s", error_output)
+                msg = f"Erro do Inkscape: {error_output.strip()}"
+                self.file_processed.emit(row, "", False, msg)
 
 
 class FileTableWidget(QTableWidget):
-    """Tabela personalizada para exibir arquivos, suportando arrastar e soltar."""
+    """Tabela personalizada para exibir arquivos."""
 
     files_added = Signal(list)
 
@@ -378,31 +414,53 @@ class FileTableWidget(QTableWidget):
         self.setColumnWidth(0, 30)
         self.verticalHeader().setVisible(False)
         self.allowed_extensions = []
+        self.itemDoubleClicked.connect(self._open_file_on_double_click)
+
+    def _open_file_on_double_click(self, item: QTableWidgetItem):
+        """
+        Abre o arquivo associado à linha com o programa padrão do sistema.
+        """
+        if item.column() != 1:
+            return
+
+        file_path = item.data(Qt.ItemDataRole.UserRole)
+        if not file_path or not os.path.exists(file_path):
+            show_warning(
+                "Arquivo Não Encontrado",
+                f"O arquivo '{os.path.basename(file_path)}' não foi encontrado.",
+                parent=self.window(),
+            )
+            return
+
+        try:
+            if sys.platform == "win32":
+                os.startfile(file_path)
+            elif sys.platform == "darwin":
+                subprocess.call(("open", file_path))
+            else:
+                subprocess.call(("xdg-open", file_path))
+        except (OSError, subprocess.CalledProcessError) as e:
+            show_error("Erro ao Abrir", f"Não foi possível abrir o arquivo:\n{e}", self)
 
     def set_allowed_extensions(self, extensions: List[str]):
         """Define as extensões de arquivo permitidas para arrastar e soltar."""
         self.allowed_extensions = [ext.replace("*", "") for ext in extensions]
 
-    # pylint: disable=invalid-name
     def dragEnterEvent(self, event):
         """Valida se os arquivos arrastados têm a extensão permitida."""
-        if event.mimeData().hasUrls():
-            urls = event.mimeData().urls()
-            if any(
-                url.toLocalFile().lower().endswith(tuple(self.allowed_extensions))
-                for url in urls
-                if url.isLocalFile()
-            ):
-                event.acceptProposedAction()
+        if event.mimeData().hasUrls() and any(
+            url.toLocalFile().lower().endswith(tuple(self.allowed_extensions))
+            for url in event.mimeData().urls()
+            if url.isLocalFile()
+        ):
+            event.acceptProposedAction()
 
-    # pylint: disable=invalid-name
     def dragMoveEvent(self, event):
-        """Aceita o movimento de arrastar."""
+        """Aceita o movimento de arrastar para atualizar o cursor."""
         event.acceptProposedAction()
 
-    # pylint: disable=invalid-name
     def dropEvent(self, event):
-        """Adiciona os arquivos soltos à tabela."""
+        """Processa os arquivos soltos na tabela."""
         files_to_add = [
             url.toLocalFile()
             for url in event.mimeData().urls()
@@ -413,27 +471,22 @@ class FileTableWidget(QTableWidget):
             self.add_files(files_to_add)
 
     def add_files(self, file_paths: List[str]):
-        """Adiciona uma lista de caminhos de arquivo à tabela, evitando duplicatas."""
+        """Adiciona uma lista de arquivos à tabela, evitando duplicatas."""
         current_paths = {
             self.item(i, 1).data(Qt.ItemDataRole.UserRole)
             for i in range(self.rowCount())
         }
-        newly_added_paths = []
-        for path in file_paths:
-            if path not in current_paths:
-                row = self.rowCount()
-                self.insertRow(row)
-                num_item = QTableWidgetItem(str(row + 1))
-                num_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                file_item = QTableWidgetItem(os.path.basename(path))
-                file_item.setData(Qt.ItemDataRole.UserRole, path)
-                file_item.setToolTip(path)
-                self.setItem(row, 0, num_item)
-                self.setItem(row, 1, file_item)
-                newly_added_paths.append(path)
-
-        if newly_added_paths:
-            self.files_added.emit(newly_added_paths)
+        newly_added = [path for path in file_paths if path not in current_paths]
+        for path in newly_added:
+            row = self.rowCount()
+            self.insertRow(row)
+            self.setItem(row, 0, QTableWidgetItem(str(row + 1)))
+            file_item = QTableWidgetItem(os.path.basename(path))
+            file_item.setData(Qt.ItemDataRole.UserRole, path)
+            file_item.setToolTip(path)
+            self.setItem(row, 1, file_item)
+        if newly_added:
+            self.files_added.emit(newly_added)
 
 
 class FormConverterArquivos(QDialog):
@@ -442,16 +495,14 @@ class FormConverterArquivos(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.worker: Optional[ConversionWorker] = None
-
-        # Inicialização dos atributos da UI para conformidade com Pylint
         self.cmb_conversion_type: Optional[QComboBox] = None
         self.tabela_origem: Optional[FileTableWidget] = None
         self.tabela_resultado: Optional[QTableWidget] = None
         self.destino_entry: Optional[QLineEdit] = None
         self.btn_converter: Optional[QPushButton] = None
+        self.btn_cancel: Optional[QPushButton] = None
         self.btn_limpar: Optional[QPushButton] = None
         self.progress_bar: Optional[QProgressBar] = None
-
         self._inicializar_ui()
 
     def _inicializar_ui(self):
@@ -483,8 +534,7 @@ class FormConverterArquivos(QDialog):
         type_layout = QHBoxLayout()
         type_layout.addWidget(QLabel("Tipo de Conversão:"))
         self.cmb_conversion_type = QComboBox()
-        for name, _ in CONVERSION_HANDLERS.items():
-            self.cmb_conversion_type.addItem(name)
+        self.cmb_conversion_type.addItems(CONVERSION_HANDLERS.keys())
         self.cmb_conversion_type.currentTextChanged.connect(
             self._on_conversion_type_changed
         )
@@ -494,52 +544,19 @@ class FormConverterArquivos(QDialog):
         tables_layout = QHBoxLayout()
         self.tabela_origem = FileTableWidget()
         self.tabela_origem.files_added.connect(self._on_files_added)
-
-        self.tabela_resultado = QTableWidget()
-        aplicar_estilo_table_widget(self.tabela_resultado)
-        self.tabela_resultado.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )
-        self.tabela_resultado.itemDoubleClicked.connect(self._abrir_arquivo_resultado)
-        self.tabela_resultado.setColumnCount(3)
-        self.tabela_resultado.setHorizontalHeaderLabels(["#", "Arquivo", "Status"])
-        self.tabela_resultado.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Fixed
-        )
-        self.tabela_resultado.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeMode.Stretch
-        )
-        self.tabela_resultado.horizontalHeader().setSectionResizeMode(
-            2, QHeaderView.ResizeMode.Fixed
-        )
-        self.tabela_resultado.setColumnWidth(0, 30)
-        self.tabela_resultado.setColumnWidth(2, 45)
-        self.tabela_resultado.verticalHeader().setVisible(False)
+        self.tabela_resultado = self._criar_tabela_resultado()
 
         btn_add = QPushButton("➕ Adicionar Arquivos")
-        btn_add.clicked.connect(lambda: self._select_files(self.tabela_origem))
+        btn_add.clicked.connect(self._select_files)
         aplicar_estilo_botao(btn_add, "cinza")
 
-        self.destino_entry = QLineEdit()
-        self.destino_entry.setPlaceholderText("Pasta de Destino...")
-        btn_destino = QPushButton("📁 Procurar")
-        btn_destino.clicked.connect(self._selecionar_pasta_destino)
-        aplicar_estilo_botao(btn_destino, "cinza")
-        destino_widget = QWidget()
-        destino_layout = QHBoxLayout(destino_widget)
-        destino_layout.setContentsMargins(0, 0, 0, 0)
-        destino_layout.addWidget(self.destino_entry)
-        destino_layout.addWidget(btn_destino)
+        destino_widget = self._criar_widget_destino()
 
         tables_layout.addWidget(
-            self._criar_tabela_groupbox(
-                "Arquivos de Origem", self.tabela_origem, btn_add
-            )
+            self._criar_groupbox("Arquivos de Origem", self.tabela_origem, btn_add)
         )
         tables_layout.addWidget(
-            self._criar_tabela_groupbox(
-                "Resultado da Conversão", self.tabela_resultado, destino_widget
-            )
+            self._criar_groupbox("Resultado", self.tabela_resultado, destino_widget)
         )
         main_layout.addLayout(tables_layout, 1)
 
@@ -547,10 +564,15 @@ class FormConverterArquivos(QDialog):
         self.btn_converter = QPushButton("🚀 Converter")
         self.btn_converter.clicked.connect(self.executar_conversao)
         aplicar_estilo_botao(self.btn_converter, "verde")
-        self.btn_limpar = QPushButton("🧹 Limpar Tudo")
+        self.btn_cancel = QPushButton("🛑 Cancelar")
+        self.btn_cancel.clicked.connect(self._cancel_conversion)
+        self.btn_cancel.setEnabled(False)
+        aplicar_estilo_botao(self.btn_cancel, "laranja")
+        self.btn_limpar = QPushButton("🧹 Limpar")
         self.btn_limpar.clicked.connect(self._clear_all)
         aplicar_estilo_botao(self.btn_limpar, "vermelho")
         action_layout.addWidget(self.btn_converter)
+        action_layout.addWidget(self.btn_cancel)
         action_layout.addWidget(self.btn_limpar)
         main_layout.addLayout(action_layout)
 
@@ -558,82 +580,102 @@ class FormConverterArquivos(QDialog):
         self.progress_bar.setVisible(False)
         main_layout.addWidget(self.progress_bar)
 
-    def _criar_tabela_groupbox(self, title, table_widget, top_widget):
-        """Cria um QGroupBox com um widget superior e uma tabela."""
+    def _criar_tabela_resultado(self) -> QTableWidget:
+        """Cria e configura a tabela de resultados."""
+        table = QTableWidget()
+        aplicar_estilo_table_widget(table)
+        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.itemDoubleClicked.connect(self._abrir_arquivo_resultado)
+        table.setColumnCount(3)
+        table.setHorizontalHeaderLabels(["#", "Arquivo", "Status"])
+        table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        table.setColumnWidth(0, 30)
+        table.setColumnWidth(2, 45)
+        table.verticalHeader().setVisible(False)
+        return table
+
+    def _criar_widget_destino(self) -> QWidget:
+        """Cria o widget para seleção da pasta de destino."""
+        self.destino_entry = QLineEdit()
+        self.destino_entry.setPlaceholderText("Pasta de Destino...")
+        btn_destino = QPushButton("📁 Procurar")
+        btn_destino.clicked.connect(self._selecionar_pasta_destino)
+        aplicar_estilo_botao(btn_destino, "cinza")
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.destino_entry)
+        layout.addWidget(btn_destino)
+        return widget
+
+    def _criar_groupbox(self, title, table, top_widget):
+        """Cria um QGroupBox para agrupar widgets."""
         gb = QGroupBox(title)
         layout = QVBoxLayout(gb)
         if top_widget:
             layout.addWidget(top_widget)
-        layout.addWidget(table_widget)
+        layout.addWidget(table)
         return gb
 
     def _on_files_added(self, added_paths: List[str]):
         """Define a pasta de destino com base no primeiro arquivo adicionado."""
         if not self.destino_entry.text() and added_paths:
-            primeiro_arquivo = added_paths[0]
-            pasta_destino = os.path.dirname(primeiro_arquivo)
-            self.destino_entry.setText(pasta_destino)
+            self.destino_entry.setText(os.path.dirname(added_paths[0]))
 
     def _abrir_arquivo_resultado(self, item: QTableWidgetItem):
         """Abre o arquivo correspondente ao item da tabela de resultados."""
         if item.column() != 1:
             return
-
-        caminho_arquivo = item.data(Qt.ItemDataRole.UserRole)
-        if caminho_arquivo and os.path.exists(caminho_arquivo):
+        path = item.data(Qt.ItemDataRole.UserRole)
+        if path and os.path.exists(path):
             try:
                 if sys.platform == "win32":
-                    os.startfile(caminho_arquivo)
-                elif sys.platform == "darwin":  # macOS
-                    subprocess.call(("open", caminho_arquivo))
-                else:  # linux
-                    subprocess.call(("xdg-open", caminho_arquivo))
-            except (OSError, FileNotFoundError) as e:
+                    os.startfile(path)
+                elif sys.platform == "darwin":
+                    subprocess.call(("open", path))
+                else:
+                    subprocess.call(("xdg-open", path))
+            except OSError as e:
                 show_error(
                     "Erro ao Abrir", f"Não foi possível abrir o arquivo:\n{e}", self
                 )
-        else:
-            status_item = self.tabela_resultado.item(item.row(), 2)
-            if status_item and status_item.text() == "✓":
-                show_warning("Aviso", "O arquivo convertido não foi encontrado.", self)
 
     def _on_conversion_type_changed(self):
         """Atualiza a UI quando o tipo de conversão é alterado."""
         self._clear_all()
         conv_type = self.cmb_conversion_type.currentText()
-        handler = CONVERSION_HANDLERS.get(conv_type)
-        if handler:
+        if handler := CONVERSION_HANDLERS.get(conv_type):
             self.tabela_origem.set_allowed_extensions(handler["extensions"])
             self.btn_converter.setToolTip(handler["tooltip"])
             self.btn_converter.setEnabled(handler["enabled"])
             if not handler["enabled"]:
-                show_warning("Dependência Faltando", handler["dependency_msg"], self)
+                show_warning("Dependência em Falta", handler["dependency_msg"], self)
 
     def _selecionar_pasta_destino(self):
         """Abre um diálogo para selecionar a pasta de destino."""
-        diretorio = QFileDialog.getExistingDirectory(
+        if directory := QFileDialog.getExistingDirectory(
             self, "Selecionar Pasta de Destino"
-        )
-        if diretorio:
-            self.destino_entry.setText(diretorio)
+        ):
+            self.destino_entry.setText(directory)
 
-    def _select_files(self, table_widget):
-        """Abre um diálogo para selecionar os arquivos de origem."""
-        conv_type = self.cmb_conversion_type.currentText()
-        handler = CONVERSION_HANDLERS.get(conv_type)
-        if not handler:
+    def _select_files(self):
+        """Abre o diálogo para selecionar arquivos de origem."""
+        if not (
+            handler := CONVERSION_HANDLERS.get(self.cmb_conversion_type.currentText())
+        ):
             return
-
         extensions = " ".join(handler["extensions"])
         dialog_filter = f"Arquivos ({extensions});;Todos os arquivos (*)"
         file_paths, _ = QFileDialog.getOpenFileNames(
             self, "Selecionar Arquivos", "", dialog_filter
         )
         if file_paths:
-            table_widget.add_files(file_paths)
+            self.tabela_origem.add_files(file_paths)
 
     def _clear_all(self):
-        """Limpa todas as tabelas e campos de entrada."""
+        """Limpa as tabelas e campos de entrada."""
+        if self.worker:
+            return
         self.tabela_origem.setRowCount(0)
         self.tabela_resultado.setRowCount(0)
         self.destino_entry.clear()
@@ -642,12 +684,6 @@ class FormConverterArquivos(QDialog):
 
     def executar_conversao(self):
         """Inicia o processo de conversão dos arquivos."""
-        conv_type = self.cmb_conversion_type.currentText()
-        handler = CONVERSION_HANDLERS.get(conv_type)
-        if not handler or not handler["enabled"]:
-            self._on_conversion_type_changed()
-            return
-
         if not self.destino_entry.text() or not os.path.isdir(
             self.destino_entry.text()
         ):
@@ -659,50 +695,77 @@ class FormConverterArquivos(QDialog):
             show_warning("Aviso", "Não há arquivos para converter.", self)
             return
 
-        self.btn_converter.setEnabled(False)
-        self.progress_bar.setValue(0)
-        self.progress_bar.setVisible(True)
-        self.tabela_resultado.setRowCount(0)
-
-        files_to_process = []
-        for row in range(self.tabela_origem.rowCount()):
-            item = self.tabela_origem.item(row, 1)
-            full_path = item.data(Qt.ItemDataRole.UserRole)
-            files_to_process.append((row, full_path))
-
-            self.tabela_resultado.insertRow(row)
+        self._set_ui_state(is_running=True)
+        files = [
+            (r, self.tabela_origem.item(r, 1).data(Qt.ItemDataRole.UserRole))
+            for r in range(self.tabela_origem.rowCount())
+        ]
+        self.tabela_resultado.setRowCount(len(files))
+        for row, (_, path) in enumerate(files):
             self.tabela_resultado.setItem(row, 0, QTableWidgetItem(str(row + 1)))
-            self.tabela_resultado.setItem(row, 1, QTableWidgetItem(item.text()))
+            self.tabela_resultado.setItem(
+                row, 1, QTableWidgetItem(os.path.basename(path))
+            )
             self.tabela_resultado.setItem(row, 2, QTableWidgetItem("..."))
 
-        self.worker = ConversionWorker(
-            self.destino_entry.text(), files_to_process, conv_type
-        )
+        conv_type = self.cmb_conversion_type.currentText()
+        self.worker = ConversionWorker(self.destino_entry.text(), files, conv_type)
         self.worker.progress_percent.connect(self.progress_bar.setValue)
         self.worker.file_processed.connect(self._update_file_status)
         self.worker.processo_finalizado.connect(self._on_conversion_finished)
+        self.worker.error_occurred.connect(self._on_worker_error)
         self.worker.start()
+
+    def _cancel_conversion(self):
+        """Solicita o cancelamento da thread de conversão."""
+        if self.worker:
+            self.btn_cancel.setText("Aguarde...")
+            self.btn_cancel.setEnabled(False)
+            self.worker.stop()
+
+    def _on_worker_error(self, message: str):
+        """Chamado quando um erro não tratado ocorre na thread."""
+        if self.worker:
+            self.worker.stop()
+        show_error("Erro Inesperado na Conversão", message, self)
+
+    def _set_ui_state(self, is_running: bool):
+        """Habilita/desabilita os controlos da UI com base no estado da operação."""
+        self.btn_converter.setEnabled(not is_running)
+        self.btn_limpar.setEnabled(not is_running)
+        self.cmb_conversion_type.setEnabled(not is_running)
+        self.btn_cancel.setEnabled(is_running)
+        self.progress_bar.setVisible(is_running)
+        if is_running:
+            self.progress_bar.setValue(0)
+        if not is_running:
+            self.btn_cancel.setText("🛑 Cancelar")
 
     def _update_file_status(self, row, new_path, success, message):
         """Atualiza o status de um arquivo na tabela de resultados."""
-        status_item = QTableWidgetItem()
-        status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         color = QColor("#4CAF50") if success else QColor("#F44336")
-        status_item.setText("✓" if success else "✗")
+        status_item = QTableWidgetItem("✓" if success else "✗")
         status_item.setForeground(color)
         status_item.setToolTip(message)
         self.tabela_resultado.setItem(row, 2, status_item)
-
-        file_item = self.tabela_resultado.item(row, 1)
         if success:
+            file_item = self.tabela_resultado.item(row, 1)
             file_item.setText(os.path.basename(new_path))
             file_item.setToolTip(new_path)
             file_item.setData(Qt.ItemDataRole.UserRole, new_path)
 
-    def _on_conversion_finished(self):
+    def _on_conversion_finished(self, was_cancelled: bool):
         """Executado quando a thread de conversão termina."""
-        self.btn_converter.setEnabled(True)
-        show_info("Sucesso", "Conversão de arquivos finalizada.", self)
+        self._set_ui_state(is_running=False)
+        self.worker = None
+        if was_cancelled and self.btn_cancel.text() == "Aguarde...":
+            msg = "Conversão cancelada."
+        else:
+            msg = "Conversão de arquivos finalizada."
+
+        if not was_cancelled:
+            show_info("Informação", msg, self)
+
         QTimer.singleShot(2000, lambda: self.progress_bar.setVisible(False))
 
 
@@ -712,16 +775,11 @@ class FormManager:
     _instance = None
 
     @classmethod
-    def _reset_instance(cls):
-        """Reseta a instância quando o formulário é fechado."""
-        cls._instance = None
-
-    @classmethod
     def show_form(cls, parent=None):
-        """Mostra o formulário, criando uma nova instância se necessário."""
+        """Mostra o formulário, criando-o se necessário."""
         if cls._instance is None:
             cls._instance = FormConverterArquivos(parent)
-            cls._instance.destroyed.connect(cls._reset_instance)
+            cls._instance.destroyed.connect(lambda: setattr(cls, "_instance", None))
             cls._instance.show()
         else:
             cls._instance.activateWindow()
@@ -729,11 +787,16 @@ class FormManager:
 
 
 def main(parent=None):
-    """Função principal para exibir o formulário."""
+    """Ponto de entrada para exibir o formulário."""
     FormManager.show_form(parent)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    # Configuração básica do logging para ver as saídas na consola
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - [%(levelname)s] - %(name)s - %(message)s",
+    )
     main()
     sys.exit(app.exec())
