@@ -577,8 +577,8 @@ class FormCompararArquivos(QDialog):
         self.btn_clear.clicked.connect(self._clear_all)
         aplicar_estilo_botao(self.btn_clear, "vermelho")
         action_layout.addWidget(self.btn_compare)
-        action_layout.addWidget(self.btn_cancel)
         action_layout.addWidget(self.btn_clear)
+        action_layout.addWidget(self.btn_cancel)
         main_layout.addLayout(action_layout)
 
         self.progress_bar = QProgressBar()
