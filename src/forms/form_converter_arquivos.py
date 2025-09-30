@@ -11,9 +11,9 @@ permaneça responsiva durante a conversão.
 
 import logging
 import os
+import shutil
 import subprocess
 import sys
-import shutil
 from typing import List, Optional
 
 from PySide6.QtCore import Qt, QThread, QTimer, Signal
@@ -120,27 +120,28 @@ MARGEM_LAYOUT_PRINCIPAL = 10
 CONVERSION_HANDLERS = {
     "DWG para PDF": {
         "extensions": ("*.dwg",),
-        "tooltip": "Converte DWG para PDF (via DXF intermediário).",
+        "tooltip": "Converte DWG para PDF.",
         "enabled": ODA_CONVERTER_AVAILABLE and CAD_LIBS_AVAILABLE,
-        "dependency_msg": "Requer ODA Converter, ezdxf e matplotlib.",
+        "dependency_msg": "O software ODA Converter e "
+        "as bibliotecas ezdxf e matplotlib são necessárias.",
     },
     "TIF para PDF": {
         "extensions": ("*.tif", "*.tiff"),
-        "tooltip": "Converte arquivos de imagem TIF para o formato PDF.",
+        "tooltip": "Converte TIF para PDF.",
         "enabled": PIL_AVAILABLE,
-        "dependency_msg": "A biblioteca 'Pillow' é necessária (pip install Pillow).",
+        "dependency_msg": "A biblioteca 'Pillow' é necessária.",
     },
     "DXF para PDF": {
         "extensions": ("*.dxf",),
-        "tooltip": "Converte arquivos DXF para PDF (requer ezdxf e matplotlib).",
+        "tooltip": "Converte DXF para PDF.",
         "enabled": CAD_LIBS_AVAILABLE,
         "dependency_msg": "As bibliotecas 'ezdxf' e 'matplotlib' são necessárias.",
     },
     "PDF para DXF": {
         "extensions": ("*.pdf",),
-        "tooltip": "Converte PDF para DXF (requer Inkscape).",
+        "tooltip": "Converte PDF para DXF.",
         "enabled": INKSCAPE_AVAILABLE,
-        "dependency_msg": "Inkscape é necessário. Instale-o e adicione ao PATH ou configure o caminho no script.",
+        "dependency_msg": "O software Inkscape é necessário.",
     },
 }
 
