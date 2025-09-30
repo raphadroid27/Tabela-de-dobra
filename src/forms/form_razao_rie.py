@@ -125,7 +125,8 @@ class FormRazaoRIE:
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         aplicar_estilo_table_widget(table)
         table.setAlternatingRowColors(True)
-        table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         table.verticalHeader().setVisible(False)
 
