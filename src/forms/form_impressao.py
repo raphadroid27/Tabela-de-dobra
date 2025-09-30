@@ -15,7 +15,7 @@ import sys
 import time
 from typing import List, Optional
 
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
@@ -532,6 +532,7 @@ class FormImpressao(QDialog):
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
         self.progress_bar.setToolTip("Mostra o progresso da impressão dos arquivos")
+        self.progress_bar.setVisible(False)  # Começa oculta
         layout.addWidget(self.progress_bar, 1, 0)
         return frame
 
@@ -729,7 +730,6 @@ class FormImpressao(QDialog):
             self.resultado_text.setText(resultado_busca)
 
             if not self.print_manager.arquivos_encontrados:
-                # MODIFICADO: Uso da função show_warning centralizada
                 show_warning(
                     "Aviso",
                     "Nenhum arquivo válido foi encontrado para impressão.",
@@ -740,11 +740,15 @@ class FormImpressao(QDialog):
             self.imprimir_btn.setEnabled(False)
             self.imprimir_btn.setText("🖨️ Imprimindo...")
 
+            if self.progress_bar is not None:
+                self.progress_bar.setValue(0)
+                self.progress_bar.setVisible(True)
+
             self.print_worker = PrintWorker(
                 diretorio, self.print_manager.arquivos_encontrados
             )
             self.print_worker.progress_update.connect(self.atualizar_resultado)
-            # Atualiza a barra de progresso
+
             if self.progress_bar is not None:
                 self.print_worker.progress_percent.connect(self.progress_bar.setValue)
             self.print_worker.processo_finalizado.connect(self.impressao_finalizada)
@@ -765,7 +769,6 @@ class FormImpressao(QDialog):
 
     def impressao_finalizada(self):
         """Chamado quando a thread de impressão termina."""
-        # MODIFICADO: Uso da função show_info centralizada
         show_info(
             "Processo Concluído", "A impressão em lote foi finalizada.", parent=self
         )
@@ -774,6 +777,7 @@ class FormImpressao(QDialog):
         self.print_worker = None
         if self.progress_bar is not None:
             self.progress_bar.setValue(100)
+            QTimer.singleShot(2000, lambda: self.progress_bar.setVisible(False))
 
 
 class FormManager:
