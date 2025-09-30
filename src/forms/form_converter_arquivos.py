@@ -515,8 +515,7 @@ class FormConverterArquivos(QDialog):
         Janela.posicionar_janela(self, "direita")
 
         vlayout = QVBoxLayout(self)
-        vlayout.setContentsMargins(0, 0, 0, 0)
-        vlayout.setSpacing(0)
+        aplicar_medida_borda_espaco(vlayout, 0)
         barra = BarraTitulo(self, tema=obter_tema_atual())
         barra.titulo.setText("Conversor de Arquivos")
         vlayout.addWidget(barra)
@@ -572,8 +571,8 @@ class FormConverterArquivos(QDialog):
         self.btn_limpar.clicked.connect(self._clear_all)
         aplicar_estilo_botao(self.btn_limpar, "vermelho")
         action_layout.addWidget(self.btn_converter)
-        action_layout.addWidget(self.btn_cancel)
         action_layout.addWidget(self.btn_limpar)
+        action_layout.addWidget(self.btn_cancel)
         main_layout.addLayout(action_layout)
 
         self.progress_bar = QProgressBar()
