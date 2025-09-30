@@ -378,6 +378,12 @@ BUTTON_COLORS = {
         "pressed": "#3d8b40",
         "text": "white",
     },
+    "laranja": {
+        "normal": "#ff9800",
+        "hover": "#fb8c00",
+        "pressed": "#f57c00",
+        "text": "white",
+    },
 }
 
 
