@@ -233,25 +233,23 @@ def configurar_menu(menu_custom):
     menu_bar = menu_custom.get_menu_bar()
 
     estrutura_menu = {
-        "📁 Arquivo": [
+        "📄 Adicionar": [
             (
-                "➕ Nova Dedução",
+                "➕ Adicionar Dedução",
                 partial(abrir_formulario, "deducao", "EDIT_DED", False),
             ),
             (
-                "➕ Novo Material",
+                "➕ Adicionar Material",
                 partial(abrir_formulario, "material", "EDIT_MAT", False),
             ),
             (
-                "➕ Nova Espessura",
+                "➕ Adicionar Espessura",
                 partial(abrir_formulario, "espessura", "EDIT_ESP", False),
             ),
             (
-                "➕ Novo Canal",
+                "➕ Adicionar Canal",
                 partial(abrir_formulario, "canal", "EDIT_CANAL", False),
             ),
-            ("separator", None),
-            ("🚪 Sair", fechar_aplicativo),
         ],
         "✏️ Editar": [
             (
@@ -271,7 +269,7 @@ def configurar_menu(menu_custom):
                 partial(abrir_formulario, "canal", "EDIT_CANAL", True),
             ),
         ],
-        "🔧 Utilidades": [
+        "🔧 Recursos": [
             ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
             ("🖨️ Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM)),
             ("📊 Comparar Arquivos", lambda: form_comparar_arquivos.main(g.PRINC_FORM)),
