@@ -13,6 +13,7 @@ import logging
 import os
 import subprocess
 import sys
+import shutil
 from typing import List, Optional
 
 from PySide6.QtCore import Qt, QThread, QTimer, Signal
@@ -59,6 +60,17 @@ from src.utils.utilitarios import (
 # Exemplo para macOS: "/Applications/ODAFileConverter.app/Contents/MacOS/ODAFileConverter"
 ODA_CONVERTER_PATH = "C:/Program Files/ODA/ODAFileConverter 26.8.0/ODAFileConverter.exe"
 
+# --- CONFIGURAÇÃO DO INKSCAPE ---
+# ATENÇÃO: Para a conversão de PDF para DXF, é necessário o Inkscape.
+# 1. Baixe e instale o Inkscape: https://inkscape.org/
+# 2. Adicione a pasta 'bin' do Inkscape ao PATH do sistema OU cole o
+#    caminho para o executável na constante abaixo.
+# Exemplo para Windows: "C:/Program Files/Inkscape/bin/inkscape.exe"
+# Exemplo para macOS: "/Applications/Inkscape.app/Contents/MacOS/inkscape"
+# Deixar em branco para procurar no PATH do sistema
+INKSCAPE_PATH = "C:/Program Files/Inkscape/bin/inkscape.exe"
+
+
 # --- Verificação de Dependências ---
 try:
     from PIL import Image, UnidentifiedImageError
@@ -78,8 +90,23 @@ try:
 except ImportError:
     CAD_LIBS_AVAILABLE = False
 
+
+def find_executable(name: str, custom_path: str) -> Optional[str]:
+    """
+    Procura por um executável no caminho personalizado ou no PATH do sistema.
+    Retorna o caminho do executável ou None se não for encontrado.
+    """
+    if custom_path and os.path.isfile(custom_path):
+        return custom_path
+    return shutil.which(name)
+
+
 # Verifica se o executável do conversor DWG existe
 ODA_CONVERTER_AVAILABLE = os.path.isfile(ODA_CONVERTER_PATH)
+
+# Verifica se o executável do Inkscape existe
+INKSCAPE_EXECUTABLE = find_executable("inkscape", INKSCAPE_PATH)
+INKSCAPE_AVAILABLE = bool(INKSCAPE_EXECUTABLE)
 
 
 # Integração com o ecossistema da aplicação
@@ -108,6 +135,12 @@ CONVERSION_HANDLERS = {
         "tooltip": "Converte arquivos DXF para PDF (requer ezdxf e matplotlib).",
         "enabled": CAD_LIBS_AVAILABLE,
         "dependency_msg": "As bibliotecas 'ezdxf' e 'matplotlib' são necessárias.",
+    },
+    "PDF para DXF": {
+        "extensions": ("*.pdf",),
+        "tooltip": "Converte PDF para DXF (requer Inkscape).",
+        "enabled": INKSCAPE_AVAILABLE,
+        "dependency_msg": "Inkscape é necessário. Instale-o e adicione ao PATH ou configure o caminho no script.",
     },
 }
 
@@ -141,6 +174,8 @@ class ConversionWorker(QThread):
                 self._convert_dxf_to_pdf(row, path_origem)
             elif self.conversion_type == "DWG para PDF":
                 self._convert_dwg_to_pdf_2_steps(row, path_origem)
+            elif self.conversion_type == "PDF para DXF":
+                self._convert_pdf_to_dxf(row, path_origem)
 
             percent = int((idx / total) * 100)
             self.progress_percent.emit(percent)
@@ -259,6 +294,66 @@ class ConversionWorker(QThread):
         except (IOError, ezdxf.DXFStructureError, OSError) as e:
             logging.error("Falha na conversão de DXF '%s': %s", nome_arquivo, e)
             self.file_processed.emit(row, "", False, str(e))
+
+    def _convert_pdf_to_dxf(self, row: int, path_origem: str):
+        """Converte um único arquivo PDF para DXF usando Inkscape."""
+        nome_arquivo = os.path.basename(path_origem)
+        nome_dxf = os.path.splitext(nome_arquivo)[0] + ".dxf"
+        path_destino = os.path.join(self.pasta_destino, nome_dxf)
+
+        # Comando do Inkscape para converter PDF para DXF
+        # A opção --pdf-poppler é recomendada para melhor compatibilidade com PDF
+        command = [
+            INKSCAPE_EXECUTABLE,
+            "--pdf-poppler",
+            f"--export-filename={path_destino}",
+            path_origem,
+        ]
+
+        try:
+            startupinfo = None
+            if sys.platform == "win32":
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            process = subprocess.run(
+                command,
+                check=True,
+                capture_output=True,
+                text=True,
+                startupinfo=startupinfo,
+                timeout=120,  # Timeout de 2 minutos
+            )
+
+            if os.path.exists(path_destino) and os.path.getsize(path_destino) > 0:
+                self.file_processed.emit(
+                    row, path_destino, True, "Conversão bem-sucedida"
+                )
+            else:
+                # Inkscape pode não gerar erro, mas o arquivo pode estar vazio ou não ser criado
+                error_msg = (
+                    process.stderr.strip()
+                    if process.stderr
+                    else "Arquivo de saída não foi criado ou está vazio."
+                )
+                raise FileNotFoundError(error_msg)
+
+        except (
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            FileNotFoundError,
+            OSError,
+        ) as e:
+            logging.error("Falha na conversão PDF->DXF para '%s': %s", path_origem, e)
+            msg = "Falha na conversão para DXF."
+            if isinstance(e, subprocess.TimeoutExpired):
+                msg = "Tempo limite na conversão PDF->DXF."
+            elif isinstance(e, subprocess.CalledProcessError):
+                msg = f"Erro do Inkscape: {e.stderr.strip()}" if e.stderr else str(e)
+            else:
+                msg = str(e)
+
+            self.file_processed.emit(row, "", False, msg)
 
 
 class FileTableWidget(QTableWidget):
