@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from shiboken6 import Shiboken
+
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.forms.common.ui_helpers import configure_frameless_dialog
@@ -351,7 +353,21 @@ class FormManager:
         form_attr = self.config["global_form"]
         current_form = getattr(g, form_attr, None)
         if current_form:
-            current_form.close()
+            is_valid = getattr(Shiboken, "isValid", None)
+            should_close = True
+            if callable(is_valid):
+                try:
+                    should_close = bool(is_valid(current_form))
+                except TypeError:
+                    should_close = False
+
+            if should_close:
+                try:
+                    current_form.close()
+                    current_form.deleteLater()
+                except RuntimeError:
+                    pass
+            setattr(g, form_attr, None)
 
         new_form = self._create_dialog()
         setattr(g, form_attr, new_form)
