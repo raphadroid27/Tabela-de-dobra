@@ -9,6 +9,8 @@ Ele é responsável por:
 6. Orquestrar a atualização da UI (listar, limpar campos, etc.).
 """
 
+# pylint: disable=R0912,R0914
+
 import logging
 from typing import Dict
 
