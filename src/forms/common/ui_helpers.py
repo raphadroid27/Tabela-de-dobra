@@ -23,6 +23,8 @@ from src.utils.utilitarios import aplicar_medida_borda_espaco
 def configure_frameless_dialog(dialog: QWidget, icon_path: str) -> None:
     """Aplica configuração padrão de janelas sem moldura."""
     dialog.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+    if Janela.get_on_top_state():
+        dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
     dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
     dialog.setWindowIcon(QIcon(icon_path))
 

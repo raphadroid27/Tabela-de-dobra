@@ -108,6 +108,9 @@ class Janela:
             transparency_state = Janela.get_transparency_state()
 
             for window in novas_janelas:
+                if hasattr(window, "_is_system_widget"):
+                    Janela._configured_windows.add(id(window))
+                    continue
                 current_flags = window.windowFlags()
                 if on_top_state:
                     new_flags = current_flags | Qt.WindowType.WindowStaysOnTopHint
@@ -181,6 +184,8 @@ class Janela:
 
         def set_topmost(window: Optional[QWidget], on_top: bool) -> None:
             if window and window.isVisible():
+                if hasattr(window, "_is_system_widget"):
+                    return
                 current_flags = window.windowFlags()
                 desired = (
                     current_flags | Qt.WindowType.WindowStaysOnTopHint

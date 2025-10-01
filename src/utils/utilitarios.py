@@ -13,9 +13,11 @@ import sys
 from pathlib import Path
 from typing import Optional, Sequence, Union
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QInputDialog, QLayout, QLineEdit, QMessageBox, QWidget
 
 from src.config import globals as g
+from src.utils.janelas import Janela
 
 FILE_OPEN_EXCEPTIONS = (
     OSError,
@@ -90,6 +92,9 @@ CACHE_DIR = os.path.join(APPDATA_DIR, "Calculadora de Dobra", "cache")
 # Margens e espaçamentos padrão para layouts
 MARGEM_PADRAO = 5
 ESPACAMENTO_PADRAO = 5
+
+# Nome padronizado para marcar widgets que não devem ser alterados pelo monitor
+SYSTEM_WIDGET_ATTR = "_is_system_widget"
 
 # === CONSTANTES DE WIDGETS ===
 
@@ -195,6 +200,11 @@ def ask_string(
     return text if ok else None
 
 
+def marcar_widget_como_sistema(widget: QWidget) -> None:
+    """Atribui a flag que indica que o widget não deve ser manipulado pelo monitor."""
+    setattr(widget, SYSTEM_WIDGET_ATTR, True)
+
+
 def _show_message_box(
     icon: QMessageBox.Icon,
     title: str,
@@ -225,6 +235,12 @@ def _show_message_box(
     msg.setText(f"{main_text}")
     if informative_text:
         msg.setInformativeText(informative_text)
+
+    # Garante que o monitor de janelas não altere o diálogo
+    marcar_widget_como_sistema(msg)
+
+    if Janela.get_on_top_state():
+        msg.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
 
     msg.exec()
 
@@ -337,6 +353,11 @@ def ask_yes_no(
     msg.button(QMessageBox.StandardButton.No).setText("Não")
 
     msg.setDefaultButton(QMessageBox.StandardButton.No)
+
+    marcar_widget_como_sistema(msg)
+    if Janela.get_on_top_state():
+        msg.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+
     return msg.exec() == QMessageBox.StandardButton.Yes
 
 
