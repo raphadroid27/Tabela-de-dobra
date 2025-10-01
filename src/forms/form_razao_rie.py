@@ -3,7 +3,6 @@
 import sys
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -20,6 +19,8 @@ from PySide6.QtWidgets import (
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
+from src.forms.common.form_manager import BaseSingletonFormManager
+from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.estilo import aplicar_estilo_table_widget, obter_tema_atual
 from src.utils.interface import calcular_valores
 from src.utils.janelas import Janela
@@ -35,130 +36,99 @@ AVISO_ALTURA_MAXIMA = 70
 AVISO_LARGURA_MAXIMA = 220
 
 
-class FormRazaoRIE:
-    """Classe para o formulário de cálculo da razão raio interno / espessura."""
+class FormRazaoRIE(QDialog):
+    """Formulário para cálculo da razão raio interno/espessura."""
 
-    def __init__(self):
-        """Inicializa a instância do formulário sem exibir a janela."""
-        self.rie_form = QDialog(None)
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Raio/Espessura")
+        self.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
+        configure_frameless_dialog(self, ICON_PATH)
+        Janela.posicionar_janela(self, None)
 
-    def show_form(self):
-        """Exibe o formulário de cálculo da razão raio interno / espessura."""
-        self._fechar_form_antigo()
-        self._criar_form()
-        layout = self._criar_layout_principal(self.rie_form)
-        self._criar_barra_titulo(layout)
-        conteudo = self._criar_conteudo()
-        layout.addWidget(conteudo)
-        self.rie_form.show()
-
-    def _fechar_form_antigo(self):
-        if self.rie_form is not None:
-            self.rie_form.close()
-
-    def _criar_form(self):
-        self.rie_form.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
-        self.rie_form.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
-        )
-        self.rie_form.setWindowIcon(QIcon(ICON_PATH))
-        Janela.posicionar_janela(self.rie_form, None)
-
-    def _criar_layout_principal(self, parent):
-        layout = QVBoxLayout(parent)
+        layout = QVBoxLayout(self)
         aplicar_medida_borda_espaco(layout, 0)
-        return layout
 
-    def _criar_barra_titulo(self, layout):
-        barra = BarraTitulo(self.rie_form, tema=obter_tema_atual())
+        barra = BarraTitulo(self, tema=obter_tema_atual())
         barra.titulo.setText("Raio/Espessura")
         layout.addWidget(barra)
-        return barra
 
-    def _criar_conteudo(self):
         conteudo = QWidget()
         conteudo_layout = QVBoxLayout(conteudo)
         aplicar_medida_borda_espaco(conteudo_layout, 0)
-        main_frame = self._criar_main_frame()
-        conteudo_layout.addWidget(main_frame)
-        conteudo.setLayout(conteudo_layout)
-        return conteudo
+        conteudo_layout.addWidget(self._criar_main_frame())
+        layout.addWidget(conteudo)
 
-    def _criar_main_frame(self):
-        main_frame = QWidget()
-        main_layout = QGridLayout(main_frame)
+    def _criar_main_frame(self) -> QWidget:
+        frame = QWidget()
+        main_layout = QGridLayout(frame)
         main_layout.setRowStretch(0, 0)
         main_layout.setRowStretch(1, 1)
         main_layout.setRowStretch(2, 0)
         aplicar_medida_borda_espaco(main_layout, 10)
-        self._criar_label_razao(main_layout)
-        self._criar_label_resultado(main_layout)
-        self._criar_tabela(main_layout)
-        self._criar_aviso(main_layout)
-        return main_frame
 
-    def _criar_label_razao(self, main_layout):
-        razao_label = QLabel("Raio Int. / Esp.: ")
-        main_layout.addWidget(razao_label, 0, 0)
+        main_layout.addWidget(QLabel("Raio Int. / Esp.: "), 0, 0)
+        main_layout.addWidget(self._criar_label_resultado(), 0, 1)
+        main_layout.addWidget(self._criar_tabela(), 1, 0, 1, 2)
+        main_layout.addWidget(self._criar_aviso(), 2, 0, 1, 2)
+        return frame
 
-    def _criar_label_resultado(self, main_layout):
+    def _criar_label_resultado(self) -> QLabel:
         g.RAZAO_RIE_LBL = QLabel("")
         g.RAZAO_RIE_LBL.setMinimumWidth(COLUNA_RAZAO_LARGURA)
         g.RAZAO_RIE_LBL.setFrameShape(QLabel.Shape.Panel)
         g.RAZAO_RIE_LBL.setFrameShadow(QLabel.Shadow.Sunken)
         g.RAZAO_RIE_LBL.setFixedHeight(LABEL_ALTURA)
         g.RAZAO_RIE_LBL.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(g.RAZAO_RIE_LBL, 0, 1)
+        return g.RAZAO_RIE_LBL
 
-    def _criar_tabela(self, main_layout):
+    def _criar_tabela(self) -> QTableWidget:
         calcular_valores()
-        self._create_table(main_layout, g.RAIO_K)
-
-    def _create_table(self, parent_layout, data):
-        table = QTableWidget()
-        table.setColumnCount(2)
-        table.setHorizontalHeaderLabels(["Razão", "Fator K"])
-        table.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
-        table.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
-        header = table.horizontalHeader()
+        tabela = QTableWidget()
+        tabela.setColumnCount(2)
+        tabela.setHorizontalHeaderLabels(["Razão", "Fator K"])
+        tabela.setColumnWidth(0, COLUNA_RAZAO_LARGURA)
+        tabela.setColumnWidth(1, COLUNA_FATOR_K_LARGURA)
+        header = tabela.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        aplicar_estilo_table_widget(table)
-        table.setAlternatingRowColors(True)
-        table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.verticalHeader().setVisible(False)
+        aplicar_estilo_table_widget(tabela)
+        tabela.setAlternatingRowColors(True)
+        tabela.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        tabela.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        tabela.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        tabela.verticalHeader().setVisible(False)
 
+        dados = g.RAIO_K
         try:
-            if isinstance(data, dict):
-                table.setRowCount(len(data))
-                for i, (razao, k) in enumerate(data.items()):
-                    table.setItem(i, 0, QTableWidgetItem(str(razao)))
-                    table.setItem(i, 1, QTableWidgetItem(str(k)))
+            if isinstance(dados, dict):
+                tabela.setRowCount(len(dados))
+                for linha, (razao, k) in enumerate(dados.items()):
+                    tabela.setItem(linha, 0, QTableWidgetItem(str(razao)))
+                    tabela.setItem(linha, 1, QTableWidgetItem(str(k)))
             elif (
-                hasattr(data, "__getitem__")
-                and data
-                and isinstance(data[0], (list, tuple))
-                and len(data[0]) == 2
+                hasattr(dados, "__getitem__")
+                and dados
+                and isinstance(dados[0], (list, tuple))
+                and len(dados[0]) == 2
             ):
-                table.setRowCount(len(data))
-                for i, (razao, k) in enumerate(data):
-                    table.setItem(i, 0, QTableWidgetItem(str(razao)))
-                    table.setItem(i, 1, QTableWidgetItem(str(k)))
+                tabela.setRowCount(len(dados))
+                for linha, (razao, k) in enumerate(dados):
+                    tabela.setItem(linha, 0, QTableWidgetItem(str(razao)))
+                    tabela.setItem(linha, 1, QTableWidgetItem(str(k)))
             else:
-                table.setRowCount(len(data))
-                for i, valor in enumerate(data):
-                    table.setItem(i, 0, QTableWidgetItem(str(valor)))
-                    table.setItem(i, 1, QTableWidgetItem(""))
+                tabela.setRowCount(len(dados))
+                for linha, valor in enumerate(dados):
+                    tabela.setItem(linha, 0, QTableWidgetItem(str(valor)))
+                    tabela.setItem(linha, 1, QTableWidgetItem(""))
         except (TypeError, IndexError):
-            table.setRowCount(1)
-            table.setItem(0, 0, QTableWidgetItem(str(data)))
-            table.setItem(0, 1, QTableWidgetItem(""))
+            tabela.setRowCount(1)
+            tabela.setItem(0, 0, QTableWidgetItem(str(dados)))
+            tabela.setItem(0, 1, QTableWidgetItem(""))
 
-        parent_layout.addWidget(table, 1, 0, 1, 2)
+        return tabela
 
-    def _criar_aviso(self, main_layout):
+    def _criar_aviso(self) -> QTextBrowser:
         aviso_browser = QTextBrowser()
         aviso_browser.setHtml(
             """
@@ -175,13 +145,18 @@ class FormRazaoRIE:
         aviso_browser.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
-        main_layout.addWidget(aviso_browser, 2, 0, 1, 2)
+        return aviso_browser
 
 
-def main(_):
+class FormManager(BaseSingletonFormManager):
+    """Gerencia a instância do formulário para garantir unicidade."""
+
+    FORM_CLASS = FormRazaoRIE
+
+
+def main(parent=None):
     """Inicializa e exibe o formulário de razão raio interno/espessura."""
-    form = FormRazaoRIE()
-    form.show_form()
+    FormManager.show_form(parent)
 
 
 if __name__ == "__main__":

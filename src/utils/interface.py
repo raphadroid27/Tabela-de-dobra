@@ -17,7 +17,6 @@ from typing import Any, Dict, Optional
 
 import pyperclip
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QTableWidgetItem
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
@@ -25,7 +24,7 @@ from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import get_session
 from src.utils.cache_manager import cache_manager
-from src.utils.widget import WidgetManager
+from src.utils.widget import WidgetManager, append_row
 
 # pylint: disable=R0902
 
@@ -144,15 +143,7 @@ class ListManager:
                     valores = config["valores"](item)
                     if valores is None:
                         continue
-
-                    row_position = table_widget.rowCount()
-                    table_widget.insertRow(row_position)
-                    for col, valor in enumerate(valores):
-                        table_widget.setItem(
-                            row_position,
-                            col,
-                            QTableWidgetItem(str(valor) if valor is not None else ""),
-                        )
+                    append_row(table_widget, valores)
         except SQLAlchemyError as e:
             logging.error("Erro ao listar itens do tipo '%s': %s", tipo, e)
 
