@@ -10,6 +10,8 @@ gerenciarem a aplicação, combinando as funcionalidades de:
 O acesso à ferramenta requer autenticação de administrador.
 """
 
+# pylint: disable=R0902
+
 import hashlib
 import logging
 import os
