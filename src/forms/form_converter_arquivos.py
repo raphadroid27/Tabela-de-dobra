@@ -15,14 +15,14 @@ exceções globais na thread e deteção automática de softwares externos.
 import logging
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404 - necessário para integração com conversores externos
 import sys
 import tempfile
 import traceback
 from typing import List, Optional
 
 from PySide6.QtCore import Qt, QThread, QTimer, Signal
-from PySide6.QtGui import QColor, QIcon
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -42,16 +42,25 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.components.barra_titulo import BarraTitulo
+from src.forms.common.file_tables import StyledFileTableWidget
+from src.forms.common.form_manager import BaseSingletonFormManager
+from src.forms.common.ui_helpers import (
+    attach_actions_with_progress,
+    create_dialog_scaffold,
+    request_worker_cancel,
+    stop_worker_on_error,
+    update_processing_state,
+)
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
-    obter_tema_atual,
 )
-from src.utils.janelas import Janela
 from src.utils.utilitarios import (
+    FILE_OPEN_EXCEPTIONS,
     ICON_PATH,
     aplicar_medida_borda_espaco,
+    open_file_with_default_app,
+    run_trusted_command,
     show_error,
     show_info,
     show_warning,
@@ -244,9 +253,9 @@ class ConversionWorker(QThread):
                     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                     startupinfo.wShowWindow = subprocess.SW_HIDE  # 0 = Oculto
 
-                subprocess.run(
+                run_trusted_command(
                     command,
-                    check=True,
+                    description="ODA Converter DWG->DXF",
                     capture_output=True,
                     timeout=300,
                     startupinfo=startupinfo,
@@ -350,9 +359,9 @@ class ConversionWorker(QThread):
                     "--export-text-to-path",
                 ]
 
-                result = subprocess.run(
+                result = run_trusted_command(
                     command,
-                    check=True,
+                    description="Inkscape PDF->DXF",
                     capture_output=True,
                     text=True,
                     timeout=180,
@@ -393,100 +402,32 @@ class ConversionWorker(QThread):
                 self.file_processed.emit(row, "", False, msg)
 
 
-class FileTableWidget(QTableWidget):
+class FileTableWidget(StyledFileTableWidget):
     """Tabela personalizada para exibir arquivos."""
 
     files_added = Signal(list)
 
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAcceptDrops(True)
-        self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
-        self.setAlternatingRowColors(True)
-        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        aplicar_estilo_table_widget(self)
-        self.setColumnCount(2)
-        self.setHorizontalHeaderLabels(["#", "Arquivo"])
-        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
-        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.setColumnWidth(0, 30)
-        self.verticalHeader().setVisible(False)
-        self.allowed_extensions = []
-        self.itemDoubleClicked.connect(self._open_file_on_double_click)
+        super().__init__(parent, path_column=1)
+        self.configure_columns(
+            ["#", "Arquivo"], fixed_widths={0: 30}, stretch_columns=(1,)
+        )
 
-    def _open_file_on_double_click(self, item: QTableWidgetItem):
-        """
-        Abre o arquivo associado à linha com o programa padrão do sistema.
-        """
-        if item.column() != 1:
-            return
+    # type: ignore[override]
+    def set_allowed_extensions(self, extensions: List[str]) -> None:
+        super().set_allowed_extensions(extensions)
 
-        file_path = item.data(Qt.ItemDataRole.UserRole)
-        if not file_path or not os.path.exists(file_path):
-            show_warning(
-                "Arquivo Não Encontrado",
-                f"O arquivo '{os.path.basename(file_path)}' não foi encontrado.",
-                parent=self.window(),
-            )
-            return
+    def _insert_path(self, path: str) -> None:
+        row = self.rowCount()
+        self.insertRow(row)
+        self.setItem(row, 0, QTableWidgetItem(str(row + 1)))
+        file_item = QTableWidgetItem(os.path.basename(path))
+        file_item.setData(Qt.ItemDataRole.UserRole, path)
+        file_item.setToolTip(path)
+        self.setItem(row, 1, file_item)
 
-        try:
-            if sys.platform == "win32":
-                os.startfile(file_path)
-            elif sys.platform == "darwin":
-                subprocess.call(("open", file_path))
-            else:
-                subprocess.call(("xdg-open", file_path))
-        except (OSError, subprocess.CalledProcessError) as e:
-            show_error("Erro ao Abrir", f"Não foi possível abrir o arquivo:\n{e}", self)
-
-    def set_allowed_extensions(self, extensions: List[str]):
-        """Define as extensões de arquivo permitidas para arrastar e soltar."""
-        self.allowed_extensions = [ext.replace("*", "") for ext in extensions]
-
-    def dragEnterEvent(self, event):
-        """Valida se os arquivos arrastados têm a extensão permitida."""
-        if event.mimeData().hasUrls() and any(
-            url.toLocalFile().lower().endswith(tuple(self.allowed_extensions))
-            for url in event.mimeData().urls()
-            if url.isLocalFile()
-        ):
-            event.acceptProposedAction()
-
-    def dragMoveEvent(self, event):
-        """Aceita o movimento de arrastar para atualizar o cursor."""
-        event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        """Processa os arquivos soltos na tabela."""
-        files_to_add = [
-            url.toLocalFile()
-            for url in event.mimeData().urls()
-            if url.isLocalFile()
-            and url.toLocalFile().lower().endswith(tuple(self.allowed_extensions))
-        ]
-        if files_to_add:
-            self.add_files(files_to_add)
-
-    def add_files(self, file_paths: List[str]):
-        """Adiciona uma lista de arquivos à tabela, evitando duplicatas."""
-        current_paths = {
-            self.item(i, 1).data(Qt.ItemDataRole.UserRole)
-            for i in range(self.rowCount())
-        }
-        newly_added = [path for path in file_paths if path not in current_paths]
-        for path in newly_added:
-            row = self.rowCount()
-            self.insertRow(row)
-            self.setItem(row, 0, QTableWidgetItem(str(row + 1)))
-            file_item = QTableWidgetItem(os.path.basename(path))
-            file_item.setData(Qt.ItemDataRole.UserRole, path)
-            file_item.setToolTip(path)
-            self.setItem(row, 1, file_item)
-        if newly_added:
-            self.files_added.emit(newly_added)
+    def on_files_added(self, added_paths: List[str]) -> None:  # type: ignore[override]
+        self.files_added.emit(added_paths)
 
 
 class FormConverterArquivos(QDialog):
@@ -507,18 +448,14 @@ class FormConverterArquivos(QDialog):
 
     def _inicializar_ui(self):
         """Configura a interface gráfica do formulário."""
-        self.setWindowTitle("Conversor de Arquivos")
-        self.setFixedSize(LARGURA_FORM_CONVERSAO, ALTURA_FORM_CONVERSAO)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setWindowIcon(QIcon(ICON_PATH))
-        Janela.posicionar_janela(self, "direita")
-
-        vlayout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(vlayout, 0)
-        barra = BarraTitulo(self, tema=obter_tema_atual())
-        barra.titulo.setText("Conversor de Arquivos")
-        vlayout.addWidget(barra)
+        vlayout = create_dialog_scaffold(
+            self,
+            title="Conversor de Arquivos",
+            size=(LARGURA_FORM_CONVERSAO, ALTURA_FORM_CONVERSAO),
+            icon_path=ICON_PATH,
+            position="direita",
+            barra_title="Conversor de Arquivos",
+        )
 
         conteudo = QWidget()
         layout_principal = QVBoxLayout(conteudo)
@@ -573,11 +510,8 @@ class FormConverterArquivos(QDialog):
         action_layout.addWidget(self.btn_converter)
         action_layout.addWidget(self.btn_limpar)
         action_layout.addWidget(self.btn_cancel)
-        main_layout.addLayout(action_layout)
 
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setVisible(False)
-        main_layout.addWidget(self.progress_bar)
+        self.progress_bar = attach_actions_with_progress(main_layout, action_layout)
 
     def _criar_tabela_resultado(self) -> QTableWidget:
         """Cria e configura a tabela de resultados."""
@@ -614,6 +548,7 @@ class FormConverterArquivos(QDialog):
         if top_widget:
             layout.addWidget(top_widget)
         layout.addWidget(table)
+        aplicar_medida_borda_espaco(layout, 5)
         return gb
 
     def _on_files_added(self, added_paths: List[str]):
@@ -626,18 +561,20 @@ class FormConverterArquivos(QDialog):
         if item.column() != 1:
             return
         path = item.data(Qt.ItemDataRole.UserRole)
-        if path and os.path.exists(path):
-            try:
-                if sys.platform == "win32":
-                    os.startfile(path)
-                elif sys.platform == "darwin":
-                    subprocess.call(("open", path))
-                else:
-                    subprocess.call(("xdg-open", path))
-            except OSError as e:
-                show_error(
-                    "Erro ao Abrir", f"Não foi possível abrir o arquivo:\n{e}", self
-                )
+        if not isinstance(path, str) or not os.path.exists(path):
+            filename = os.path.basename(path) if isinstance(path, str) else ""
+            show_warning(
+                "Arquivo Não Encontrado",
+                f"O arquivo '{filename}' não foi encontrado.",
+                parent=self,
+            )
+            return
+        try:
+            open_file_with_default_app(path)
+        except FILE_OPEN_EXCEPTIONS as exc:  # pragma: no cover
+            show_error(
+                "Erro ao Abrir", f"Não foi possível abrir o arquivo:\n{exc}", self
+            )
 
     def _on_conversion_type_changed(self):
         """Atualiza a UI quando o tipo de conversão é alterado."""
@@ -717,28 +654,21 @@ class FormConverterArquivos(QDialog):
 
     def _cancel_conversion(self):
         """Solicita o cancelamento da thread de conversão."""
-        if self.worker:
-            self.btn_cancel.setText("Aguarde...")
-            self.btn_cancel.setEnabled(False)
-            self.worker.stop()
+        request_worker_cancel(self.worker, self.btn_cancel)
 
     def _on_worker_error(self, message: str):
         """Chamado quando um erro não tratado ocorre na thread."""
-        if self.worker:
-            self.worker.stop()
+        stop_worker_on_error(self.worker, self.btn_cancel)
         show_error("Erro Inesperado na Conversão", message, self)
 
     def _set_ui_state(self, is_running: bool):
         """Habilita/desabilita os controlos da UI com base no estado da operação."""
-        self.btn_converter.setEnabled(not is_running)
-        self.btn_limpar.setEnabled(not is_running)
-        self.cmb_conversion_type.setEnabled(not is_running)
-        self.btn_cancel.setEnabled(is_running)
-        self.progress_bar.setVisible(is_running)
-        if is_running:
-            self.progress_bar.setValue(0)
-        if not is_running:
-            self.btn_cancel.setText("🛑 Cancelar")
+        update_processing_state(
+            is_running,
+            [self.btn_converter, self.btn_limpar, self.cmb_conversion_type],
+            self.btn_cancel,
+            self.progress_bar,
+        )
 
     def _update_file_status(self, row, new_path, success, message):
         """Atualiza o status de um arquivo na tabela de resultados."""
@@ -768,21 +698,10 @@ class FormConverterArquivos(QDialog):
         QTimer.singleShot(2000, lambda: self.progress_bar.setVisible(False))
 
 
-class FormManager:
+class FormManager(BaseSingletonFormManager):
     """Gerencia a instância do formulário para evitar múltiplas janelas."""
 
-    _instance = None
-
-    @classmethod
-    def show_form(cls, parent=None):
-        """Mostra o formulário, criando-o se necessário."""
-        if cls._instance is None:
-            cls._instance = FormConverterArquivos(parent)
-            cls._instance.destroyed.connect(lambda: setattr(cls, "_instance", None))
-            cls._instance.show()
-        else:
-            cls._instance.activateWindow()
-            cls._instance.raise_()
+    FORM_CLASS = FormConverterArquivos
 
 
 def main(parent=None):

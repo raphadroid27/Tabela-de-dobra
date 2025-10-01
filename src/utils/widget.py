@@ -6,9 +6,16 @@ validar e manipular widgets usados em formulários e operações.
 """
 
 import logging
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Iterable
 
-from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QWidget,
+)
 from sqlalchemy.exc import SQLAlchemyError
 
 import src.config.globals as g
@@ -21,6 +28,19 @@ from src.utils.utilitarios import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def append_row(table_widget: QTableWidget, values: Iterable[object]) -> None:
+    """Insere uma nova linha com os valores fornecidos em um QTableWidget."""
+
+    row_position = table_widget.rowCount()
+    table_widget.insertRow(row_position)
+    for col, value in enumerate(values):
+        table_widget.setItem(
+            row_position,
+            col,
+            QTableWidgetItem(str(value) if value is not None else ""),
+        )
 
 
 class WidgetFactory:

@@ -7,11 +7,12 @@ import sys
 from typing import Optional
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QWidget
 
 from src import __version__
 from src.components.barra_titulo import BarraTitulo
+from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.estilo import obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
@@ -22,10 +23,8 @@ def main(root: Optional[QWidget]) -> None:
     sobre_form = QDialog(root)
     sobre_form.setWindowTitle("Sobre")
     sobre_form.setFixedSize(300, 210)
-    sobre_form.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+    configure_frameless_dialog(sobre_form, ICON_PATH)
     sobre_form.setModal(True)
-
-    sobre_form.setWindowIcon(QIcon(ICON_PATH))
 
     Janela.posicionar_janela(sobre_form, "centro")
 

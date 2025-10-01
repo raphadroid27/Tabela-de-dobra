@@ -3,7 +3,6 @@
 import sys
 from typing import Optional
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -16,9 +15,11 @@ from PySide6.QtWidgets import (
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
+from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.models.models import Material
 from src.utils.banco_dados import get_session
 from src.utils.estilo import obter_tema_atual
+from src.utils.utilitarios import ICON_PATH
 
 
 def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
@@ -26,7 +27,7 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     form_spring = QDialog(root)
     form_spring.setWindowTitle("Cálculo de Spring Back")
     form_spring.setFixedSize(300, 150)
-    form_spring.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+    configure_frameless_dialog(form_spring, ICON_PATH)
 
     # Layout vertical: barra de título customizada + conteúdo grid
     vlayout = QVBoxLayout(form_spring)

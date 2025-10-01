@@ -15,7 +15,6 @@ import logging
 from typing import Dict
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QTableWidgetItem
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
@@ -31,7 +30,7 @@ from src.utils.interface import (
 )
 from src.utils.usuarios import logado, tem_permissao
 from src.utils.utilitarios import ask_yes_no, show_error, show_info, show_warning
-from src.utils.widget import WidgetManager
+from src.utils.widget import WidgetManager, append_row
 
 _buscar_timers: Dict[str, QTimer] = {}
 
@@ -338,13 +337,6 @@ def buscar(tipo):
                 if valores is None:
                     continue
 
-                row_position = table_widget.rowCount()
-                table_widget.insertRow(row_position)
-                for col, valor in enumerate(valores):
-                    table_widget.setItem(
-                        row_position,
-                        col,
-                        QTableWidgetItem(str(valor) if valor is not None else ""),
-                    )
+                append_row(table_widget, valores)
     except (SQLAlchemyError, ValueError) as e:
         show_error("Erro de Busca", f"Não foi possível realizar a busca: {e}")

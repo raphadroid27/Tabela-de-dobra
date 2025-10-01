@@ -15,8 +15,8 @@ import sys
 import time
 from typing import List, Optional
 
-from PySide6.QtCore import Qt, QThread, QTimer, Signal
-from PySide6.QtGui import QIcon, QKeySequence, QShortcut
+from PySide6.QtCore import QThread, QTimer, Signal
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -35,6 +35,8 @@ from PySide6.QtWidgets import (
 )
 
 from src.components.barra_titulo import BarraTitulo
+from src.forms.common.form_manager import BaseSingletonFormManager
+from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.utilitarios import (
@@ -317,8 +319,7 @@ class FormImpressao(QDialog):
         """Inicializa a interface do usuário."""
         self.setWindowTitle("Impressão em Lote de PDFs")
         self.setFixedSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        self.setWindowIcon(QIcon(ICON_PATH))
+        configure_frameless_dialog(self, ICON_PATH)
 
         Janela.posicionar_janela(self, None)
 
@@ -780,47 +781,10 @@ class FormImpressao(QDialog):
             QTimer.singleShot(2000, lambda: self.progress_bar.setVisible(False))
 
 
-class FormManager:
+class FormManager(BaseSingletonFormManager):
     """Gerencia a instância do formulário para garantir que seja um singleton."""
 
-    _instance = None
-
-    @classmethod
-    def _reset_instance(cls):
-        cls._instance = None
-
-    @classmethod
-    def show_form(cls, parent=None):
-        """Cria e exibe o formulário, garantindo uma única instância visível."""
-        visible = False
-        if cls._instance is not None:
-            try:
-                visible = cls._instance.isVisible()
-            except RuntimeError:
-                # Objeto Qt foi destruído; limpa a referência
-                cls._instance = None
-                visible = False
-
-        if not visible:
-            cls._instance = FormImpressao(parent)
-            # Quando a janela for destruída, limpa o singleton
-            try:
-                cls._instance.destroyed.connect(FormManager._reset_instance)
-            except (RuntimeError, TypeError):
-                pass
-            cls._instance.show()
-        else:
-            try:
-                cls._instance.activateWindow()
-                cls._instance.raise_()
-            except RuntimeError:
-                # Se foi destruída entre o check e aqui, recria
-                cls._instance = FormImpressao(parent)
-                try:
-                    cls._instance.destroyed.connect(FormManager._reset_instance)
-                except (RuntimeError, TypeError):
-                    pass
-                cls._instance.show()
+    FORM_CLASS = FormImpressao
 
 
 def main(parent=None):

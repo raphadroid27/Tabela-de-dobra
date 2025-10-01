@@ -7,12 +7,24 @@ funções de diálogo com o usuário (QMessageBox, QInputDialog).
 import logging
 import logging.handlers
 import os
+import shutil
+import subprocess  # nosec B404 - integração controlada com ferramentas externas
 import sys
-from typing import Optional, Union
+from pathlib import Path
+from typing import Optional, Sequence, Union
 
 from PySide6.QtWidgets import QInputDialog, QLayout, QLineEdit, QMessageBox, QWidget
 
 from src.config import globals as g
+
+FILE_OPEN_EXCEPTIONS = (
+    OSError,
+    subprocess.SubprocessError,
+    RuntimeError,
+)
+
+
+LOGGER = logging.getLogger(__name__)
 
 # --- 1. LÓGICA CENTRALIZADA DE CAMINHOS ---
 
@@ -232,6 +244,61 @@ def show_info(title: str, message: str, parent: Optional[QWidget] = None) -> Non
 def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> None:
     """Mostra uma mensagem de aviso usando QMessageBox."""
     _show_message_box(QMessageBox.Icon.Warning, title, message, parent)
+
+
+def _resolve_executable(executable: str) -> str:
+    """Resolve o caminho absoluto de um executável conhecido."""
+    if os.path.isabs(executable):
+        return executable
+    resolved_path = shutil.which(executable)
+    if not resolved_path:
+        raise FileNotFoundError(f"Executável '{executable}' não encontrado no PATH.")
+    return resolved_path
+
+
+def run_trusted_command(
+    command: Sequence[str],
+    *,
+    description: str,
+    check: bool = True,
+    **kwargs,
+):
+    """Executa comandos externos conhecidos após validações básicas."""
+    if not command:
+        raise ValueError("Comando externo não pode ser vazio.")
+
+    executable, *args = command
+    resolved_executable = _resolve_executable(executable)
+    normalized_args = [str(arg) for arg in args]
+    LOGGER.debug(
+        "Executando comando confiável (%s): %s %s",
+        description,
+        resolved_executable,
+        " ".join(normalized_args),
+    )
+    return subprocess.run(  # nosec B603 - comando controlado e validado
+        [resolved_executable, *normalized_args],
+        check=check,
+        **kwargs,
+    )
+
+
+def open_file_with_default_app(file_path: str) -> None:
+    """Abre um arquivo usando o aplicativo padrão do sistema operacional."""
+    resolved_path = Path(file_path).expanduser().resolve(strict=True)
+
+    if sys.platform == "win32":
+        os.startfile(str(resolved_path))  # type: ignore[attr-defined]  # nosec B606
+        # API nativa do Windows usada para abrir arquivos no aplicativo padrão.
+    elif sys.platform == "darwin":
+        run_trusted_command(
+            ["open", str(resolved_path)], description="Abrir arquivo no macOS"
+        )
+    else:
+        run_trusted_command(
+            ["xdg-open", str(resolved_path)],
+            description="Abrir arquivo em sistemas Unix",
+        )
 
 
 def ask_yes_no(

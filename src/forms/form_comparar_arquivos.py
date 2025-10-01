@@ -15,22 +15,19 @@ plano para manter a interface responsiva.
 import hashlib
 import logging
 import os
-import subprocess
 import sys
 import traceback
-from typing import List, Optional, Tuple
+from typing import Optional, Set, Tuple, TypedDict
 
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal
-from PySide6.QtGui import QColor, QIcon
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QApplication,
     QComboBox,
     QDialog,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QProgressBar,
     QPushButton,
@@ -41,13 +38,16 @@ from PySide6.QtWidgets import (
 )
 
 # Integração com o ecossistema da aplicação
-from src.components.barra_titulo import BarraTitulo
-from src.utils.estilo import (
-    aplicar_estilo_botao,
-    aplicar_estilo_table_widget,
-    obter_tema_atual,
+from src.forms.common.file_tables import StyledFileTableWidget
+from src.forms.common.form_manager import BaseSingletonFormManager
+from src.forms.common.ui_helpers import (
+    attach_actions_with_progress,
+    create_dialog_scaffold,
+    request_worker_cancel,
+    stop_worker_on_error,
+    update_processing_state,
 )
-from src.utils.janelas import Janela
+from src.utils.estilo import aplicar_estilo_botao
 from src.utils.utilitarios import (
     ICON_PATH,
     aplicar_medida_borda_espaco,
@@ -94,7 +94,17 @@ ALTURA_FORM = 513
 MARGEM_LAYOUT = 10
 
 # --- Dicionário de Handlers de Arquivo ---
-FILE_HANDLERS = {
+
+
+class FileHandlerInfo(TypedDict):
+    """Estrutura com metadados de suporte para cada tipo de arquivo."""
+
+    extensions: Tuple[str, ...]
+    available: bool
+    tooltip: str
+
+
+FILE_HANDLERS: dict[str, FileHandlerInfo] = {
     "STEP": {
         "extensions": ("*.step", "*.stp"),
         "available": PYTHON_OCC_AVAILABLE,
@@ -134,6 +144,7 @@ class ComparisonWorker(QThread):
     def __init__(
         self, files_a: list, files_b: list, file_type: str, parent: QObject = None
     ):
+        """Inicializa o worker com as filas e o tipo de arquivo alvo."""
         super().__init__(parent)
         self.files_a = files_a
         self.files_b = files_b
@@ -146,9 +157,10 @@ class ComparisonWorker(QThread):
 
     # pylint: disable=broad-except
     def run(self):
-        """
-        Ponto de entrada da thread. Executa o loop de comparação e emite
-        sinais para atualizar a UI de forma segura.
+        """Executa o loop de comparação emitindo os sinais necessários.
+
+        A cada iteração, processa um par de arquivos e atualiza a UI via sinais,
+        permitindo cancelar o processamento quando solicitado.
         """
         try:
             max_count = max(len(self.files_a), len(self.files_b))
@@ -264,12 +276,16 @@ class ComparisonWorker(QThread):
             doc = ezdxf.readfile(file_path)
             msp = doc.modelspace()
             bbox = BoundingBox(msp)
-            extmin = bbox.extmin if bbox.has_data else (0, 0, 0)
-            extmax = bbox.extmax if bbox.has_data else (0, 0, 0)
+            if bbox.has_data:
+                extmin_vec = (bbox.extmin.x, bbox.extmin.y)
+                extmax_vec = (bbox.extmax.x, bbox.extmax.y)
+            else:
+                extmin_vec = (0.0, 0.0)
+                extmax_vec = (0.0, 0.0)
             return (
                 f"{len(msp)} entidades",
-                f"({extmin.x:.3f}, {extmin.y:.3f})",
-                f"({extmax.x:.3f}, {extmax.y:.3f})",
+                f"({extmin_vec[0]:.3f}, {extmin_vec[1]:.3f})",
+                f"({extmax_vec[0]:.3f}, {extmax_vec[1]:.3f})",
             ), "OK"
         except (IOError, ezdxf.DXFStructureError) as e:
             logging.warning("Exceção ao processar arquivo DXF '%s': %s", file_path, e)
@@ -336,75 +352,64 @@ class ComparisonWorker(QThread):
         return None, "Tipo não suportado"
 
 
-class FileTableWidget(QTableWidget):
+class FileTableWidget(StyledFileTableWidget):
     """Tabela que aceita arquivos arrastados e permite reordenação e exclusão."""
 
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAcceptDrops(True)
-        self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
-        self.setAlternatingRowColors(True)
-        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        aplicar_estilo_table_widget(self)
+        """Inicializa a tabela configurando colunas e estado inicial."""
+        super().__init__(parent, path_column=1)
+        self.configure_columns(
+            ["#", "Arquivo", "Status"],
+            fixed_widths={0: 30, 2: 45},
+            stretch_columns=(1,),
+        )
 
-        self.setColumnCount(3)
-        self.setHorizontalHeaderLabels(["#", "Arquivo", "Status"])
-        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
-        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        self.setColumnWidth(0, 30)
-        self.setColumnWidth(2, 45)
-        self.verticalHeader().setVisible(False)
+        self.other_table: Optional["FileTableWidget"] = None
 
-        self.other_table: Optional[FileTableWidget] = None
-        self.allowed_extensions: List[str] = []
-        self.itemDoubleClicked.connect(self._open_file_on_double_click)
-
-    def _open_file_on_double_click(self, item: QTableWidgetItem):
-        """Abre o arquivo com o programa padrão do sistema."""
-        row = item.row()
-        file_item = self.item(row, 1)
-        if not file_item:
-            return
-
-        file_path = file_item.data(Qt.ItemDataRole.UserRole)
-        if not file_path or not os.path.exists(file_path):
-            logging.warning("Tentativa de abrir arquivo inexistente: %s", file_path)
-            show_warning(
-                "Arquivo Não Encontrado",
-                f"O arquivo '{os.path.basename(file_path)}' não foi encontrado.",
-                parent=self.window(),
-            )
-            return
-
-        try:
-            if sys.platform == "win32":
-                os.startfile(file_path)
-            elif sys.platform == "darwin":
-                subprocess.call(["open", file_path])
-            else:
-                subprocess.call(["xdg-open", file_path])
-        except (OSError, subprocess.CalledProcessError) as e:
-            show_error(
-                "Erro ao Abrir Arquivo",
-                f"Não foi possível abrir o arquivo:\n{e}",
-                self.window(),
-            )
-
-    def set_other_table(self, other_table: "FileTableWidget"):
+    def set_other_table(self, other_table: "FileTableWidget") -> None:
         """Define uma referência à outra tabela para verificação de duplicados."""
         self.other_table = other_table
 
-    def set_allowed_extensions(self, extensions: Tuple[str, ...]):
-        """Define as extensões de arquivo permitidas."""
-        self.allowed_extensions = [ext.replace("*", "") for ext in extensions]
+    def _collect_external_paths(self) -> Set[str]:
+        if not self.other_table:
+            return set()
+        paths: Set[str] = set()
+        for row in range(self.other_table.rowCount()):
+            item = self.other_table.item(row, 1)
+            if item:
+                data = item.data(Qt.ItemDataRole.UserRole)
+                if isinstance(data, str):
+                    paths.add(data)
+        return paths
 
-    def _renumber_rows(self):
-        """Atualiza a numeração da primeira coluna."""
-        for row in range(self.rowCount()):
-            self.item(row, 0).setText(str(row + 1))
+    def _insert_path(self, path: str) -> None:
+        row = self.rowCount()
+        self.insertRow(row)
+        num_item = QTableWidgetItem(str(row + 1))
+        num_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        file_item = QTableWidgetItem(os.path.basename(path))
+        file_item.setData(Qt.ItemDataRole.UserRole, path)
+        file_item.setToolTip(path)
+        status_item = QTableWidgetItem("")
+        status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setItem(row, 0, num_item)
+        self.setItem(row, 1, file_item)
+        self.setItem(row, 2, status_item)
+
+    def on_duplicates_skipped(self, count: int) -> None:
+        """Apresenta um aviso quando arquivos duplicados são ignorados."""
+        logging.warning("%d arquivo(s) ignorado(s) por duplicidade.", count)
+        show_warning(
+            "Arquivos Ignorados",
+            f"{count} arquivo(s) ignorado(s) por já existirem na lista.",
+            parent=self.window(),
+        )
+
+    def on_missing_file(self, file_path: str | None) -> None:
+        """Registra e delega o tratamento quando um arquivo está ausente."""
+        if file_path:
+            logging.warning("Tentativa de abrir arquivo inexistente: %s", file_path)
+        super().on_missing_file(file_path)
 
     def keyPressEvent(self, event):
         """Processa a tecla 'Delete' para remover linhas."""
@@ -418,76 +423,18 @@ class FileTableWidget(QTableWidget):
         else:
             super().keyPressEvent(event)
 
-    def dragEnterEvent(self, event):
-        """Aceita o evento se os dados contiverem arquivos permitidos."""
-        if event.mimeData().hasUrls() and any(
-            url.toLocalFile().lower().endswith(tuple(self.allowed_extensions))
-            for url in event.mimeData().urls()
-            if url.isLocalFile()
-        ):
-            event.acceptProposedAction()
-
-    def dragMoveEvent(self, event):
-        """Garante que o cursor mude para indicar uma ação de soltar."""
-        event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        """Processa os arquivos soltos."""
-        files_to_add = [
-            url.toLocalFile()
-            for url in event.mimeData().urls()
-            if url.isLocalFile()
-            and url.toLocalFile().lower().endswith(tuple(self.allowed_extensions))
-        ]
-        if files_to_add:
-            self.add_files(files_to_add)
-
-    def add_files(self, file_paths: List[str]):
-        """Adiciona arquivos à tabela, evitando duplicados."""
-        current_paths = {
-            self.item(i, 1).data(Qt.ItemDataRole.UserRole)
-            for i in range(self.rowCount())
-        }
-        other_paths = set()
-        if self.other_table:
-            other_paths = {
-                self.other_table.item(i, 1).data(Qt.ItemDataRole.UserRole)
-                for i in range(self.other_table.rowCount())
-            }
-
-        all_existing = current_paths.union(other_paths)
-        added_count = 0
-        for path in file_paths:
-            if path not in all_existing:
-                row = self.rowCount()
-                self.insertRow(row)
-                num_item = QTableWidgetItem(str(row + 1))
-                num_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                file_item = QTableWidgetItem(os.path.basename(path))
-                file_item.setData(Qt.ItemDataRole.UserRole, path)
-                file_item.setToolTip(path)
-                status_item = QTableWidgetItem("")
-                status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.setItem(row, 0, num_item)
-                self.setItem(row, 1, file_item)
-                self.setItem(row, 2, status_item)
-                all_existing.add(path)
-                added_count += 1
-
-        skipped_count = len(file_paths) - added_count
-        if skipped_count > 0:
-            logging.warning("%d arquivo(s) ignorado(s) por duplicidade.", skipped_count)
-            show_warning(
-                "Arquivos Ignorados",
-                f"{skipped_count} arquivo(s) ignorado(s) por já existirem na lista.",
-                parent=self.window(),
-            )
+    def _renumber_rows(self) -> None:
+        for row in range(self.rowCount()):
+            item = self.item(row, 0)
+            if item:
+                item.setText(str(row + 1))
 
 
 class FormCompararArquivos(QDialog):
     """Formulário para Comparação de Arquivos."""
 
     def __init__(self, parent=None):
+        """Configura o formulário e inicializa widgets principais."""
         super().__init__(parent)
         self.worker: Optional[ComparisonWorker] = None
         self.table_a_widget: Optional[FileTableWidget] = None
@@ -501,17 +448,14 @@ class FormCompararArquivos(QDialog):
 
     def _inicializar_ui(self):
         """Inicializa a interface do utilizador."""
-        self.setFixedSize(LARGURA_FORM, ALTURA_FORM)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setWindowIcon(QIcon(ICON_PATH))
-        Janela.posicionar_janela(self, "direita")
-
-        vlayout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(vlayout, 0)
-        barra = BarraTitulo(self, tema=obter_tema_atual())
-        barra.titulo.setText("Comparador de Arquivos")
-        vlayout.addWidget(barra)
+        vlayout = create_dialog_scaffold(
+            self,
+            title="Comparador de Arquivos",
+            size=(LARGURA_FORM, ALTURA_FORM),
+            icon_path=ICON_PATH,
+            barra_title="Comparador de Arquivos",
+            position="direita",
+        )
 
         conteudo = QWidget()
         layout_principal = QVBoxLayout(conteudo)
@@ -579,11 +523,7 @@ class FormCompararArquivos(QDialog):
         action_layout.addWidget(self.btn_compare)
         action_layout.addWidget(self.btn_clear)
         action_layout.addWidget(self.btn_cancel)
-        main_layout.addLayout(action_layout)
-
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setVisible(False)
-        main_layout.addWidget(self.progress_bar)
+        self.progress_bar = attach_actions_with_progress(main_layout, action_layout)
 
     def _create_list_groupbox(self, title: str, table: FileTableWidget) -> QGroupBox:
         """Cria um QGroupBox contendo uma tabela e um botão de adicionar."""
@@ -655,28 +595,21 @@ class FormCompararArquivos(QDialog):
 
     def _cancel_comparison(self):
         """Solicita o cancelamento da thread de comparação."""
-        if self.worker:
-            self.btn_cancel.setText("Aguarde...")
-            self.btn_cancel.setEnabled(False)
-            self.worker.stop()
+        request_worker_cancel(self.worker, self.btn_cancel)
 
     def _on_worker_error(self, message: str):
         """Chamado quando um erro não tratado ocorre na thread."""
-        if self.worker:
-            self.worker.stop()
+        stop_worker_on_error(self.worker, self.btn_cancel)
         show_error("Erro Inesperado na Comparação", message, self)
 
     def _set_ui_state(self, is_running: bool):
         """Habilita/desabilita controles da UI com base no estado da operação."""
-        self.btn_compare.setEnabled(not is_running)
-        self.btn_clear.setEnabled(not is_running)
-        self.cmb_file_type.setEnabled(not is_running)
-        self.btn_cancel.setEnabled(is_running)
-        self.progress_bar.setVisible(is_running)
-        if is_running:
-            self.progress_bar.setValue(0)
-        if not is_running:
-            self.btn_cancel.setText("🛑 Cancelar")
+        update_processing_state(
+            is_running,
+            [self.btn_compare, self.btn_clear, self.cmb_file_type],
+            self.btn_cancel,
+            self.progress_bar,
+        )
 
     def _reset_tables_status(self):
         """Limpa o status e a cor de todas as linhas em ambas as tabelas."""
@@ -780,28 +713,10 @@ class FormCompararArquivos(QDialog):
         self.progress_bar.setVisible(False)
 
 
-class FormManager:
+class FormManager(BaseSingletonFormManager):
     """Gerencia a instância do formulário para garantir que seja um singleton."""
 
-    _instance = None
-
-    @classmethod
-    def _reset_instance(cls):
-        """Limpa a referência à instância quando o formulário é fechado."""
-        cls._instance = None
-
-    @classmethod
-    def show_form(cls, parent=None):
-        """Cria e exibe o formulário, garantindo uma única instância visível."""
-        if cls._instance is None or not cls._instance.isVisible():
-            if cls._instance:  # Se existe mas não é visível, pode ter sido fechado
-                cls._instance.deleteLater()
-            cls._instance = FormCompararArquivos(parent)
-            cls._instance.destroyed.connect(cls._reset_instance)
-            cls._instance.show()
-        else:
-            cls._instance.activateWindow()
-            cls._instance.raise_()
+    FORM_CLASS = FormCompararArquivos
 
 
 def main(parent=None):
