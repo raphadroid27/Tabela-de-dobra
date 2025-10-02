@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.components.barra_titulo import BarraTitulo
+from src.forms.common import context_help
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
@@ -329,6 +330,7 @@ class FormImpressao(QDialog):
 
         barra = BarraTitulo(self, tema=obter_tema_atual())
         barra.titulo.setText("Impressão em Lote de PDFs")
+        barra.set_help_callback(self._mostrar_ajuda, "Guia de uso da impressão")
         vlayout.addWidget(barra)
 
         conteudo = QWidget()
@@ -395,6 +397,10 @@ class FormImpressao(QDialog):
             self.lista_arquivos_widget.insertItem(current_row + 1, item)
             # Mantém a seleção no item movido
             self.lista_arquivos_widget.setCurrentRow(current_row + 1)
+
+    def _mostrar_ajuda(self) -> None:
+        """Exibe o guia contextual desta janela."""
+        context_help.show_help("impressao", parent=self)
 
     def _criar_secao_diretorio(self) -> QGroupBox:
         """Cria a seção de seleção de diretório."""

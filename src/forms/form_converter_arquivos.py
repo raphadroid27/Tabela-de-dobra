@@ -44,6 +44,7 @@ from PySide6.QtWidgets import (
 
 from src.forms.common.file_tables import StyledFileTableWidget
 from src.forms.common.form_manager import BaseSingletonFormManager
+from src.forms.common import context_help
 from src.forms.common.ui_helpers import (
     attach_actions_with_progress,
     create_dialog_scaffold,
@@ -455,6 +456,8 @@ class FormConverterArquivos(QDialog):
             icon_path=ICON_PATH,
             position="direita",
             barra_title="Conversor de Arquivos",
+            help_callback=self._mostrar_ajuda,
+            help_tooltip="Guia de uso do conversor",
         )
 
         conteudo = QWidget()
@@ -465,12 +468,19 @@ class FormConverterArquivos(QDialog):
         self._setup_layouts(layout_principal)
         self._on_conversion_type_changed()
 
+    def _mostrar_ajuda(self) -> None:
+        """Mostra as instruções rápidas desta janela."""
+        context_help.show_help("converter", parent=self)
+
     def _setup_layouts(self, main_layout: QVBoxLayout):
         """Cria e organiza os widgets da UI."""
         type_layout = QHBoxLayout()
         type_layout.addWidget(QLabel("Tipo de Conversão:"))
         self.cmb_conversion_type = QComboBox()
         self.cmb_conversion_type.addItems(CONVERSION_HANDLERS.keys())
+        self.cmb_conversion_type.setToolTip(
+            "Selecione o tipo de conversão que deseja executar."
+        )
         self.cmb_conversion_type.currentTextChanged.connect(
             self._on_conversion_type_changed
         )
@@ -480,9 +490,16 @@ class FormConverterArquivos(QDialog):
         tables_layout = QHBoxLayout()
         self.tabela_origem = FileTableWidget()
         self.tabela_origem.files_added.connect(self._on_files_added)
+        self.tabela_origem.setToolTip(
+            "Arquivos de entrada para converter. Arraste, solte ou use o botão ao lado."
+        )
         self.tabela_resultado = self._criar_tabela_resultado()
+        self.tabela_resultado.setToolTip(
+            "Resultados gerados. Dê um duplo clique para abrir o arquivo de saída."
+        )
 
         btn_add = QPushButton("➕ Adicionar Arquivos")
+        btn_add.setToolTip("Selecionar arquivos de origem.")
         btn_add.clicked.connect(self._select_files)
         aplicar_estilo_botao(btn_add, "cinza")
 
@@ -498,13 +515,17 @@ class FormConverterArquivos(QDialog):
 
         action_layout = QHBoxLayout()
         self.btn_converter = QPushButton("🚀 Converter")
+        self.btn_converter.setToolTip("Iniciar a conversão usando o tipo selecionado.")
         self.btn_converter.clicked.connect(self.executar_conversao)
         aplicar_estilo_botao(self.btn_converter, "verde")
         self.btn_cancel = QPushButton("🛑 Cancelar")
+        self.btn_cancel.setToolTip("Cancelar o processamento atual.")
         self.btn_cancel.clicked.connect(self._cancel_conversion)
         self.btn_cancel.setEnabled(False)
         aplicar_estilo_botao(self.btn_cancel, "laranja")
         self.btn_limpar = QPushButton("🧹 Limpar")
+        self.btn_limpar.setToolTip(
+            "Limpar listas de arquivos e reiniciar o formulário.")
         self.btn_limpar.clicked.connect(self._clear_all)
         aplicar_estilo_botao(self.btn_limpar, "vermelho")
         action_layout.addWidget(self.btn_converter)
@@ -512,6 +533,7 @@ class FormConverterArquivos(QDialog):
         action_layout.addWidget(self.btn_cancel)
 
         self.progress_bar = attach_actions_with_progress(main_layout, action_layout)
+        self.progress_bar.setToolTip("Progresso da conversão em andamento.")
 
     def _criar_tabela_resultado(self) -> QTableWidget:
         """Cria e configura a tabela de resultados."""
@@ -531,7 +553,11 @@ class FormConverterArquivos(QDialog):
         """Cria o widget para seleção da pasta de destino."""
         self.destino_entry = QLineEdit()
         self.destino_entry.setPlaceholderText("Pasta de Destino...")
+        self.destino_entry.setToolTip(
+            "Informe a pasta onde os arquivos convertidos serão salvos."
+        )
         btn_destino = QPushButton("📁 Procurar")
+        btn_destino.setToolTip("Selecionar uma pasta de destino pelo explorador.")
         btn_destino.clicked.connect(self._selecionar_pasta_destino)
         aplicar_estilo_botao(btn_destino, "cinza")
         widget = QWidget()

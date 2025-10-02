@@ -45,6 +45,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
+from src.forms.common import context_help
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
@@ -712,6 +713,10 @@ class AdminTool(QMainWindow):
         aplicar_medida_borda_espaco(main_layout, 0, 0)
         self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
         self.barra_titulo.titulo.setText("Ferramenta Administrativa")
+        self.barra_titulo.set_help_callback(
+            lambda: context_help.show_help("admin", parent=self),
+            "Guia da ferramenta administrativa",
+        )
         main_layout.addWidget(self.barra_titulo)
         self.stacked_widget = QStackedWidget()
         main_layout.addWidget(self.stacked_widget)

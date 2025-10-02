@@ -24,11 +24,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 from shiboken6 import Shiboken
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
+from src.forms.common import context_help
 from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.controlador import (
     adicionar,
@@ -399,6 +399,10 @@ class FormManager:
 
         barra = BarraTitulo(new_form, tema=obter_tema_atual())
         barra.titulo.setText(barra_titulo)
+        barra.set_help_callback(
+            lambda: context_help.show_help("cadastro", parent=new_form),
+            "Atalhos e dicas do cadastro",
+        )
         vlayout.addWidget(barra)
 
         conteudo_widget = QWidget()

@@ -24,6 +24,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
+from src.forms.common import context_help
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
@@ -73,6 +74,10 @@ def _criar_barra_titulo(vlayout):
     else:
         barra.titulo.setText("Novo Usuário")
 
+    barra.set_help_callback(
+        lambda: context_help.show_help("autenticacao", parent=g.AUTEN_FORM),
+        "Guia rápido de autenticação",
+    )
     vlayout.addWidget(barra)
     return barra
 
