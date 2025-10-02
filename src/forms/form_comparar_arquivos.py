@@ -37,10 +37,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.forms.common import context_help
+
 # Integração com o ecossistema da aplicação
 from src.forms.common.file_tables import StyledFileTableWidget
 from src.forms.common.form_manager import BaseSingletonFormManager
-from src.forms.common import context_help
 from src.forms.common.ui_helpers import (
     attach_actions_with_progress,
     create_dialog_scaffold,
@@ -109,27 +110,27 @@ FILE_HANDLERS: dict[str, FileHandlerInfo] = {
     "STEP": {
         "extensions": ("*.step", "*.stp"),
         "available": PYTHON_OCC_AVAILABLE,
-        "tooltip": "Comparação geométrica de topologia, volume, área, etc.",
+        "tooltip": "Comparação geométrica de topologia, volume, área, etc. (Ctrl+Enter)",
     },
     "IGES": {
         "extensions": ("*.igs", "*.iges"),
         "available": PYTHON_OCC_AVAILABLE,
-        "tooltip": "Comparação geométrica de topologia, volume, área, etc.",
+        "tooltip": "Comparação geométrica de topologia, volume, área, etc. (Ctrl+Enter)",
     },
     "DXF": {
         "extensions": ("*.dxf",),
         "available": EZDXF_AVAILABLE,
-        "tooltip": "Comparação por contagem de entidades e extensões do desenho.",
+        "tooltip": "Comparação por contagem de entidades e extensões do desenho (Ctrl+Enter)",
     },
     "PDF": {
         "extensions": ("*.pdf",),
         "available": PYMUPDF_AVAILABLE,
-        "tooltip": "Comparação por metadados e hash do conteúdo de texto.",
+        "tooltip": "Comparação por metadados e hash do conteúdo de texto (Ctrl+Enter)",
     },
     "DWG": {
         "extensions": ("*.dwg",),
         "available": True,  # Comparação por hash sempre disponível
-        "tooltip": "Comparação por hash binário (identifica se os arquivos são idênticos).",
+        "tooltip": "Comparação por hash binário (Ctrl+Enter)",
     },
 }
 
@@ -524,16 +525,21 @@ class FormCompararArquivos(QDialog):
 
         action_layout = QHBoxLayout()
         self.btn_compare = QPushButton("🔄 Comparar")
-        self.btn_compare.setToolTip("Comparar arquivos presentes nas duas listas.")
+        self.btn_compare.setToolTip(
+            "Comparar arquivos presentes nas duas listas (Ctrl+Enter)"
+        )
+        self.btn_compare.setShortcut("Ctrl+Return")
         self.btn_compare.clicked.connect(self.iniciar_comparacao)
         aplicar_estilo_botao(self.btn_compare, "verde")
         self.btn_cancel = QPushButton("🛑 Cancelar")
-        self.btn_cancel.setToolTip("Cancelar a comparação em andamento.")
+        self.btn_cancel.setToolTip("Cancelar a comparação em andamento (Esc)")
+        self.btn_cancel.setShortcut("Esc")
         self.btn_cancel.clicked.connect(self._cancel_comparison)
         self.btn_cancel.setEnabled(False)
         aplicar_estilo_botao(self.btn_cancel, "laranja")
         self.btn_clear = QPushButton("🧹 Limpar")
-        self.btn_clear.setToolTip("Remover todos os itens das listas A e B.")
+        self.btn_clear.setToolTip("Remover todos os itens das listas A e B (Ctrl+L)")
+        self.btn_clear.setShortcut("Ctrl+L")
         self.btn_clear.clicked.connect(self._clear_all)
         aplicar_estilo_botao(self.btn_clear, "vermelho")
         action_layout.addWidget(self.btn_compare)
@@ -546,7 +552,8 @@ class FormCompararArquivos(QDialog):
         groupbox = QGroupBox(title)
         layout = QVBoxLayout(groupbox)
         btn_add = QPushButton(f"➕ Adicionar à {title}")
-        btn_add.setToolTip("Selecionar arquivos e adicioná-los à lista.")
+        btn_add.setToolTip("Selecionar arquivos e adicioná-los à lista (Ctrl+O)")
+        btn_add.setShortcut("Ctrl+O")
         btn_add.clicked.connect(lambda: self._select_files(table))
         aplicar_estilo_botao(btn_add, "cinza")
         layout.addWidget(btn_add)

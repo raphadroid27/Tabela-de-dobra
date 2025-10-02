@@ -42,9 +42,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.forms.common import context_help
 from src.forms.common.file_tables import StyledFileTableWidget
 from src.forms.common.form_manager import BaseSingletonFormManager
-from src.forms.common import context_help
 from src.forms.common.ui_helpers import (
     attach_actions_with_progress,
     create_dialog_scaffold,
@@ -147,25 +147,25 @@ MARGEM_LAYOUT_PRINCIPAL = 10
 CONVERSION_HANDLERS = {
     "DWG para PDF": {
         "extensions": ("*.dwg",),
-        "tooltip": "Converte DWG para PDF.",
+        "tooltip": "Converte DWG para PDF (Ctrl+Enter)",
         "enabled": ODA_CONVERTER_AVAILABLE and CAD_LIBS_AVAILABLE,
         "dependency_msg": "O ODA Converter e as bibliotecas ezdxf/matplotlib são necessários.",
     },
     "TIF para PDF": {
         "extensions": ("*.tif", "*.tiff"),
-        "tooltip": "Converte TIF para PDF.",
+        "tooltip": "Converte TIF para PDF (Ctrl+Enter)",
         "enabled": PIL_AVAILABLE,
         "dependency_msg": "A biblioteca 'Pillow' é necessária.",
     },
     "DXF para PDF": {
         "extensions": ("*.dxf",),
-        "tooltip": "Converte DXF para PDF.",
+        "tooltip": "Converte DXF para PDF (Ctrl+Enter)",
         "enabled": CAD_LIBS_AVAILABLE,
         "dependency_msg": "As bibliotecas 'ezdxf' e 'matplotlib' são necessárias.",
     },
     "PDF para DXF": {
         "extensions": ("*.pdf",),
-        "tooltip": "Converte PDF para DXF (suporta vetorial e imagem).",
+        "tooltip": "Converte PDF para DXF (Ctrl+Enter)",
         "enabled": INKSCAPE_AVAILABLE,
         "dependency_msg": "O software Inkscape (instalado e/ou no PATH) é necessário.",
     },
@@ -430,6 +430,26 @@ class FileTableWidget(StyledFileTableWidget):
     def on_files_added(self, added_paths: List[str]) -> None:  # type: ignore[override]
         self.files_added.emit(added_paths)
 
+    def keyPressEvent(self, event):
+        """Permite excluir linhas selecionadas com a tecla Delete."""
+        if event.key() == Qt.Key.Key_Delete:
+            selected_rows = sorted(
+                {index.row() for index in self.selectedIndexes()}, reverse=True
+            )
+            for row in selected_rows:
+                self.removeRow(row)
+            if selected_rows:
+                self._renumber_rows()
+        else:
+            super().keyPressEvent(event)
+
+    def _renumber_rows(self) -> None:
+        """Atualiza a numeração da primeira coluna após remoções."""
+        for row in range(self.rowCount()):
+            item = self.item(row, 0)
+            if item:
+                item.setText(str(row + 1))
+
 
 class FormConverterArquivos(QDialog):
     """Formulário para Conversão de Arquivos."""
@@ -474,6 +494,7 @@ class FormConverterArquivos(QDialog):
 
     def _setup_layouts(self, main_layout: QVBoxLayout):
         """Cria e organiza os widgets da UI."""
+        # Linha de seleção de tipo
         type_layout = QHBoxLayout()
         type_layout.addWidget(QLabel("Tipo de Conversão:"))
         self.cmb_conversion_type = QComboBox()
@@ -487,6 +508,7 @@ class FormConverterArquivos(QDialog):
         type_layout.addWidget(self.cmb_conversion_type, 1)
         main_layout.addLayout(type_layout)
 
+        # Área principal de tabelas
         tables_layout = QHBoxLayout()
         self.tabela_origem = FileTableWidget()
         self.tabela_origem.files_added.connect(self._on_files_added)
@@ -498,8 +520,10 @@ class FormConverterArquivos(QDialog):
             "Resultados gerados. Dê um duplo clique para abrir o arquivo de saída."
         )
 
+        # Botão de adicionar arquivos (atalho Ctrl+O)
         btn_add = QPushButton("➕ Adicionar Arquivos")
-        btn_add.setToolTip("Selecionar arquivos de origem.")
+        btn_add.setToolTip("Selecionar arquivos de origem (Ctrl+O)")
+        btn_add.setShortcut("Ctrl+O")
         btn_add.clicked.connect(self._select_files)
         aplicar_estilo_botao(btn_add, "cinza")
 
@@ -513,21 +537,31 @@ class FormConverterArquivos(QDialog):
         )
         main_layout.addLayout(tables_layout, 1)
 
+        # Barra de ações inferiores
         action_layout = QHBoxLayout()
         self.btn_converter = QPushButton("🚀 Converter")
-        self.btn_converter.setToolTip("Iniciar a conversão usando o tipo selecionado.")
+        self.btn_converter.setToolTip(
+            "Iniciar a conversão usando o tipo selecionado (Ctrl+Enter)"
+        )
+        self.btn_converter.setShortcut("Ctrl+Return")
         self.btn_converter.clicked.connect(self.executar_conversao)
         aplicar_estilo_botao(self.btn_converter, "verde")
+
         self.btn_cancel = QPushButton("🛑 Cancelar")
-        self.btn_cancel.setToolTip("Cancelar o processamento atual.")
+        self.btn_cancel.setToolTip("Cancelar o processamento atual (Esc)")
+        self.btn_cancel.setShortcut("Esc")
         self.btn_cancel.clicked.connect(self._cancel_conversion)
         self.btn_cancel.setEnabled(False)
         aplicar_estilo_botao(self.btn_cancel, "laranja")
+
         self.btn_limpar = QPushButton("🧹 Limpar")
         self.btn_limpar.setToolTip(
-            "Limpar listas de arquivos e reiniciar o formulário.")
+            "Limpar listas de arquivos e reiniciar o formulário (Ctrl+L)"
+        )
+        self.btn_limpar.setShortcut("Ctrl+L")
         self.btn_limpar.clicked.connect(self._clear_all)
         aplicar_estilo_botao(self.btn_limpar, "vermelho")
+
         action_layout.addWidget(self.btn_converter)
         action_layout.addWidget(self.btn_limpar)
         action_layout.addWidget(self.btn_cancel)
