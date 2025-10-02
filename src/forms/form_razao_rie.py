@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
+from src.forms.common import context_help
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.estilo import aplicar_estilo_table_widget, obter_tema_atual
@@ -51,6 +52,10 @@ class FormRazaoRIE(QDialog):
 
         barra = BarraTitulo(self, tema=obter_tema_atual())
         barra.titulo.setText("Raio/Espessura")
+        barra.set_help_callback(
+            lambda: context_help.show_help("razao_rie", parent=self),
+            "Como interpretar os valores",
+        )
         layout.addWidget(barra)
 
         conteudo = QWidget()

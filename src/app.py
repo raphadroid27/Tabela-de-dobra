@@ -28,9 +28,11 @@ from src.forms import (
     form_comparar_arquivos,
     form_converter_arquivos,
     form_impressao,
+    form_manual,
     form_razao_rie,
     form_sobre,
 )
+from src.forms.common import context_help
 from src.forms.form_universal import main as form_universal
 from src.models.models import Usuario
 from src.utils import ipc_manager
@@ -336,6 +338,9 @@ def _criar_menu_opcoes(menu_bar):
 def _criar_menu_ajuda(menu_bar):
     """Cria o menu Ajuda."""
     help_menu = menu_bar.addMenu("❓ Ajuda")
+    manual_action = QAction("📘 Manual de Uso", g.PRINC_FORM)
+    manual_action.triggered.connect(lambda: form_manual.main(g.PRINC_FORM))
+    help_menu.addAction(manual_action)
     sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
     help_menu.addAction(sobre_action)
@@ -351,6 +356,10 @@ def configurar_frames():
 
     tema_atual = getattr(g, "TEMA_ATUAL", "dark")
     g.BARRA_TITULO = BarraTitulo(g.PRINC_FORM, tema=tema_atual)
+    g.BARRA_TITULO.set_help_callback(
+        lambda: context_help.show_help("main", parent=g.PRINC_FORM),
+        "Guia rápido da tela principal",
+    )
     vlayout.addWidget(g.BARRA_TITULO)
 
     if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:

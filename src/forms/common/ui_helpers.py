@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Callable, Iterable, Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -40,6 +40,8 @@ def create_dialog_scaffold(
     """Configura o esqueleto base de diálogos com barra de título personalizada."""
     position = options.get("position")
     barra_title = options.get("barra_title")
+    help_callback: Optional[Callable[[], None]] = options.get("help_callback")
+    help_tooltip: Optional[str] = options.get("help_tooltip")
 
     dialog.setWindowTitle(title)
     dialog.setFixedSize(*size)
@@ -51,6 +53,7 @@ def create_dialog_scaffold(
 
     barra = BarraTitulo(dialog, tema=obter_tema_atual())
     barra.titulo.setText(barra_title or title)
+    barra.set_help_callback(help_callback, help_tooltip)
     layout.addWidget(barra)
 
     return layout

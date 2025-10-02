@@ -1,4 +1,6 @@
-"""Barra de título customizada com ícone, título, minimizar e fechar."""
+"""Barra de título customizada com ícone, título, minimizar, ajuda e fechar."""
+
+from typing import Callable, Optional
 
 import darkdetect
 from PySide6.QtCore import QEvent, QPoint, Qt
@@ -38,23 +40,40 @@ class BarraTitulo(QWidget):
         layout.addWidget(icone_label)
 
         self.titulo = QLabel("Calculadora de Dobra", self)
-        self.titulo.setStyleSheet("font-weight: bold; font-size: 12pt;")
+        self.titulo.setStyleSheet("QLabel { font-weight: bold; font-size: 12pt; }")
         layout.addWidget(self.titulo)
         layout.addStretch()
 
+        self._help_callback: Optional[Callable[[], None]] = None
+        self._help_button = QPushButton("?", self)
+        self._help_button.setFixedSize(32, 28)
+        base_style = (
+            "QPushButton { border: none; font-size: 11pt; font-family: Arial; }"
+        )
+        self._help_button.setStyleSheet(base_style)
+        self._help_button.setToolTip("Mostrar guia desta janela")
+        self._help_button.setVisible(False)
+        self._help_button.clicked.connect(self._emit_help)
+        layout.addWidget(self._help_button)
+
         btn_min = QPushButton("–", self)
         btn_min.setFixedSize(32, 28)
-        btn_min.setStyleSheet("border: none; font-size: 16pt;")
+        btn_min.setStyleSheet("QPushButton { border: none; font-size: 16pt; }")
+        btn_min.setToolTip("Minimizar janela")
         btn_min.clicked.connect(self.minimizar)
         layout.addWidget(btn_min)
 
         btn_close = QPushButton("×", self)
         btn_close.setFixedSize(32, 28)
-        btn_close.setStyleSheet("border: none; font-size: 16pt;")
+        btn_close.setStyleSheet("QPushButton { border: none; font-size: 16pt; }")
+        btn_close.setToolTip("Fechar janela")
         btn_close.clicked.connect(self.fechar)
         layout.addWidget(btn_close)
 
         self.setLayout(layout)
+
+        # Tooltip padrão do cabeçalho
+        self.setToolTip("Arraste para mover a janela")
 
         # Registrar esta barra de título para atualizações de tema
         self._registrar_barra_titulo()
@@ -97,9 +116,13 @@ class BarraTitulo(QWidget):
         self._is_updating_style = True
         try:
             if tema_real == "dark":
-                self.setStyleSheet("background-color: transparent; color: #fff;")
+                self.setStyleSheet(
+                    "QWidget { background-color: transparent; color: #fff; }"
+                )
             else:
-                self.setStyleSheet("background-color: transparent; color: #222;")
+                self.setStyleSheet(
+                    "QWidget { background-color: transparent; color: #222; }"
+                )
 
             self.real_theme_applied = tema_real
         finally:
@@ -125,6 +148,25 @@ class BarraTitulo(QWidget):
         super().changeEvent(event)
         if event.type() in [QEvent.Type.StyleChange, QEvent.Type.ThemeChange]:
             self.set_tema(self.current_theme)
+
+    def set_help_callback(
+        self, callback: Optional[Callable[[], None]], tooltip: Optional[str] = None
+    ) -> None:
+        """Configura o botão de ajuda opcional na barra de título."""
+        self._help_callback = callback
+        has_callback = callback is not None
+        self._help_button.setVisible(has_callback)
+
+        if not has_callback:
+            self._help_button.setToolTip("")
+            return
+
+        self._help_button.setToolTip(tooltip or "Mostrar guia desta janela")
+
+    def _emit_help(self) -> None:
+        """Dispara o callback associado ao botão de ajuda."""
+        if self._help_callback:
+            self._help_callback()
 
     def mousePressEvent(self, event):  # pylint: disable=invalid-name
         """Inicia o arrasto da janela ao pressionar o botão esquerdo do mouse."""

@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 # Integração com o ecossistema da aplicação
 from src.forms.common.file_tables import StyledFileTableWidget
 from src.forms.common.form_manager import BaseSingletonFormManager
+from src.forms.common import context_help
 from src.forms.common.ui_helpers import (
     attach_actions_with_progress,
     create_dialog_scaffold,
@@ -455,6 +456,8 @@ class FormCompararArquivos(QDialog):
             icon_path=ICON_PATH,
             barra_title="Comparador de Arquivos",
             position="direita",
+            help_callback=self._mostrar_ajuda,
+            help_tooltip="Guia de uso do comparador",
         )
 
         conteudo = QWidget()
@@ -465,6 +468,10 @@ class FormCompararArquivos(QDialog):
         self._check_dependencies()
         self._setup_layouts(layout_principal)
         self._on_file_type_changed()
+
+    def _mostrar_ajuda(self) -> None:
+        """Mostra as instruções rápidas desta janela."""
+        context_help.show_help("comparar", parent=self)
 
     def _check_dependencies(self):
         """Verifica as dependências e informa o utilizador sobre as que faltam."""
@@ -501,6 +508,12 @@ class FormCompararArquivos(QDialog):
         self.table_b_widget = FileTableWidget()
         self.table_a_widget.set_other_table(self.table_b_widget)
         self.table_b_widget.set_other_table(self.table_a_widget)
+        self.table_a_widget.setToolTip(
+            "Arraste arquivos ou use o botão acima para adicioná-los à Lista A."
+        )
+        self.table_b_widget.setToolTip(
+            "Arraste arquivos ou use o botão acima para adicioná-los à Lista B."
+        )
         lists_layout.addWidget(
             self._create_list_groupbox("Lista A", self.table_a_widget)
         )
@@ -511,13 +524,16 @@ class FormCompararArquivos(QDialog):
 
         action_layout = QHBoxLayout()
         self.btn_compare = QPushButton("🔄 Comparar")
+        self.btn_compare.setToolTip("Comparar arquivos presentes nas duas listas.")
         self.btn_compare.clicked.connect(self.iniciar_comparacao)
         aplicar_estilo_botao(self.btn_compare, "verde")
         self.btn_cancel = QPushButton("🛑 Cancelar")
+        self.btn_cancel.setToolTip("Cancelar a comparação em andamento.")
         self.btn_cancel.clicked.connect(self._cancel_comparison)
         self.btn_cancel.setEnabled(False)
         aplicar_estilo_botao(self.btn_cancel, "laranja")
         self.btn_clear = QPushButton("🧹 Limpar")
+        self.btn_clear.setToolTip("Remover todos os itens das listas A e B.")
         self.btn_clear.clicked.connect(self._clear_all)
         aplicar_estilo_botao(self.btn_clear, "vermelho")
         action_layout.addWidget(self.btn_compare)
@@ -530,6 +546,7 @@ class FormCompararArquivos(QDialog):
         groupbox = QGroupBox(title)
         layout = QVBoxLayout(groupbox)
         btn_add = QPushButton(f"➕ Adicionar à {title}")
+        btn_add.setToolTip("Selecionar arquivos e adicioná-los à lista.")
         btn_add.clicked.connect(lambda: self._select_files(table))
         aplicar_estilo_botao(btn_add, "cinza")
         layout.addWidget(btn_add)

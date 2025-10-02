@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
+from src.forms.common import context_help
 from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.models.models import Material
 from src.utils.banco_dados import get_session
@@ -36,6 +37,10 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
 
     barra = BarraTitulo(form_spring, tema=obter_tema_atual())
     barra.titulo.setText("Cálculo de Spring Back")
+    barra.set_help_callback(
+        lambda: context_help.show_help("spring_back", parent=form_spring),
+        "Guia de uso do spring back",
+    )
     vlayout.addWidget(barra)
 
     conteudo = QWidget()
