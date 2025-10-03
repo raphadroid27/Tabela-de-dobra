@@ -12,14 +12,12 @@ plano para manter a interface responsiva.
 
 # pylint: disable=R0902,R0911,R0913,R0914,R0915,R0917,C0103
 
-import hashlib
 import logging
 import os
 import sys
-import traceback
-from typing import Optional, Set, Tuple, TypedDict
+from typing import Optional, Set
 
-from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
@@ -38,9 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.forms.common import context_help
-
-# Integração com o ecossistema da aplicação
-from src.forms.common.file_tables import StyledFileTableWidget
+from src.forms.common.file_tables import ManagedFileTableWidget
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import (
     attach_actions_with_progress,
@@ -48,6 +44,11 @@ from src.forms.common.ui_helpers import (
     request_worker_cancel,
     stop_worker_on_error,
     update_processing_state,
+)
+from src.utils.comparar_worker import (
+    FILE_HANDLERS,
+    ComparisonWorker,
+    get_missing_dependencies,
 )
 from src.utils.estilo import aplicar_estilo_botao
 from src.utils.utilitarios import (
@@ -58,303 +59,13 @@ from src.utils.utilitarios import (
     show_warning,
 )
 
-# --- Verificação de Dependências ---
-# Tenta importar as bibliotecas da python-occ (STEP/IGES)
-try:
-    from OCC.Core.BRepGProp import brepgprop
-    from OCC.Core.GProp import GProp_GProps
-    from OCC.Core.IGESControl import IGESControl_Reader
-    from OCC.Core.STEPControl import STEPControl_Reader
-    from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_VERTEX
-    from OCC.Core.TopExp import TopExp_Explorer
-
-    PYTHON_OCC_AVAILABLE = True
-except ImportError:
-    PYTHON_OCC_AVAILABLE = False
-
-# Tenta importar a biblioteca ezdxf (DXF)
-try:
-    import ezdxf
-    from ezdxf.math import BoundingBox
-
-    EZDXF_AVAILABLE = True
-except ImportError:
-    EZDXF_AVAILABLE = False
-
-# Tenta importar a biblioteca PyMuPDF (PDF)
-try:
-    import fitz  # PyMuPDF
-
-    PYMUPDF_AVAILABLE = True
-except ImportError:
-    PYMUPDF_AVAILABLE = False
-
-
 # --- Constantes de Configuração ---
 LARGURA_FORM = 550
 ALTURA_FORM = 513
 MARGEM_LAYOUT = 10
 
-# --- Dicionário de Handlers de Arquivo ---
 
-
-class FileHandlerInfo(TypedDict):
-    """Estrutura com metadados de suporte para cada tipo de arquivo."""
-
-    extensions: Tuple[str, ...]
-    available: bool
-    tooltip: str
-
-
-FILE_HANDLERS: dict[str, FileHandlerInfo] = {
-    "STEP": {
-        "extensions": ("*.step", "*.stp"),
-        "available": PYTHON_OCC_AVAILABLE,
-        "tooltip": "Comparação geométrica de topologia, volume, área, etc. (Ctrl+Enter)",
-    },
-    "IGES": {
-        "extensions": ("*.igs", "*.iges"),
-        "available": PYTHON_OCC_AVAILABLE,
-        "tooltip": "Comparação geométrica de topologia, volume, área, etc. (Ctrl+Enter)",
-    },
-    "DXF": {
-        "extensions": ("*.dxf",),
-        "available": EZDXF_AVAILABLE,
-        "tooltip": "Comparação por contagem de entidades e extensões do desenho (Ctrl+Enter)",
-    },
-    "PDF": {
-        "extensions": ("*.pdf",),
-        "available": PYMUPDF_AVAILABLE,
-        "tooltip": "Comparação por metadados e hash do conteúdo de texto (Ctrl+Enter)",
-    },
-    "DWG": {
-        "extensions": ("*.dwg",),
-        "available": True,  # Comparação por hash sempre disponível
-        "tooltip": "Comparação por hash binário (Ctrl+Enter)",
-    },
-}
-
-
-class ComparisonWorker(QThread):
-    """Executa a comparação em segundo plano para não bloquear a UI."""
-
-    progress_updated = Signal(int)
-    row_compared = Signal(int, object, str, object, str, object)
-    comparison_finished = Signal(bool)
-    error_occurred = Signal(str)
-
-    def __init__(
-        self, files_a: list, files_b: list, file_type: str, parent: QObject = None
-    ):
-        """Inicializa o worker com as filas e o tipo de arquivo alvo."""
-        super().__init__(parent)
-        self.files_a = files_a
-        self.files_b = files_b
-        self.file_type = file_type
-        self._is_interrupted = False
-
-    def stop(self):
-        """Sinaliza à thread para interromper a execução."""
-        self._is_interrupted = True
-
-    # pylint: disable=broad-except
-    def run(self):
-        """Executa o loop de comparação emitindo os sinais necessários.
-
-        A cada iteração, processa um par de arquivos e atualiza a UI via sinais,
-        permitindo cancelar o processamento quando solicitado.
-        """
-        try:
-            max_count = max(len(self.files_a), len(self.files_b))
-            if max_count == 0:
-                self.comparison_finished.emit(self._is_interrupted)
-                return
-
-            for i in range(max_count):
-                if self._is_interrupted:
-                    break
-
-                path_a = self.files_a[i] if i < len(self.files_a) else None
-                path_b = self.files_b[i] if i < len(self.files_b) else None
-
-                # Verificação rápida de hash binário
-                if path_a and path_b:
-                    hash_a = self._get_file_hash(path_a)
-                    hash_b = self._get_file_hash(path_b)
-                    if hash_a is not None and hash_a == hash_b:
-                        props = ("Hash idêntico",)
-                        self.row_compared.emit(i, props, "OK", props, "OK", True)
-                        continue
-
-                props_a, status_a = (
-                    self._get_file_properties(path_a, self.file_type)
-                    if path_a
-                    else (None, "Sem par")
-                )
-                props_b, status_b = (
-                    self._get_file_properties(path_b, self.file_type)
-                    if path_b
-                    else (None, "Sem par")
-                )
-                are_equal = (props_a == props_b) if props_a and props_b else None
-                self.row_compared.emit(
-                    i, props_a, status_a, props_b, status_b, are_equal
-                )
-
-                percent = int(((i + 1) / max_count) * 100)
-                self.progress_updated.emit(percent)
-        except Exception as e:
-            logging.error("Ocorreu um erro inesperado na thread de comparação.")
-            logging.error(traceback.format_exc())
-            self.error_occurred.emit(f"Ocorreu um erro crítico na comparação:\n{e}")
-        finally:
-            self.comparison_finished.emit(self._is_interrupted)
-
-    def _get_file_hash(self, file_path: str) -> Optional[str]:
-        """Calcula o hash SHA256 do conteúdo de um arquivo."""
-        sha256 = hashlib.sha256()
-        try:
-            with open(file_path, "rb") as f:
-                for byte_block in iter(lambda: f.read(4096), b""):
-                    sha256.update(byte_block)
-            return sha256.hexdigest()
-        except IOError as e:
-            logging.warning(
-                "Não foi possível calcular o hash para '%s': %s", file_path, e
-            )
-            return None
-
-    def _get_cad_properties(
-        self, file_path: str, reader_class
-    ) -> Tuple[Optional[tuple], str]:
-        """Lê um arquivo CAD (STEP/IGES) e extrai propriedades geométricas."""
-        try:
-            reader = reader_class()
-            if reader.ReadFile(file_path) != 1:
-                msg = f"Falha ao ler o arquivo CAD: {file_path}"
-                logging.warning(msg)
-                return None, "Erro ao ler o arquivo"
-            reader.TransferRoots()
-            shape = reader.OneShape()
-            if shape is None or shape.IsNull():
-                msg = f"Nenhuma geometria encontrada no arquivo: {file_path}"
-                logging.warning(msg)
-                return None, "Nenhuma geometria encontrada"
-
-            num_faces, num_edges, num_vertices = 0, 0, 0
-            explorer = TopExp_Explorer(shape, TopAbs_FACE)
-            while explorer.More():
-                num_faces += 1
-                explorer.Next()
-            explorer.Init(shape, TopAbs_EDGE)
-            while explorer.More():
-                num_edges += 1
-                explorer.Next()
-            explorer.Init(shape, TopAbs_VERTEX)
-            while explorer.More():
-                num_vertices += 1
-                explorer.Next()
-
-            props_vol, props_surf = GProp_GProps(), GProp_GProps()
-            brepgprop.VolumeProperties(shape, props_vol)
-            brepgprop.SurfaceProperties(shape, props_surf)
-            com = props_vol.CentreOfMass()
-            i1, i2, i3 = props_vol.PrincipalProperties().Moments()
-
-            return (
-                f"{num_faces} F, {num_edges} A, {num_vertices} V",
-                round(props_vol.Mass(), 6),
-                round(props_surf.Mass(), 6),
-                f"({com.X():.3f}, {com.Y():.3f}, {com.Z():.3f})",
-                f"({i1:.3f}, {i2:.3f}, {i3:.3f})",
-            ), "OK"
-        except (IOError, RuntimeError, ValueError) as e:
-            logging.warning("Exceção ao processar arquivo CAD '%s': %s", file_path, e)
-            return None, f"Exceção: {e}"
-
-    def _get_dxf_properties(self, file_path: str) -> Tuple[Optional[tuple], str]:
-        """Extrai propriedades de um arquivo DXF."""
-        try:
-            doc = ezdxf.readfile(file_path)
-            msp = doc.modelspace()
-            bbox = BoundingBox(msp)
-            if bbox.has_data:
-                extmin_vec = (bbox.extmin.x, bbox.extmin.y)
-                extmax_vec = (bbox.extmax.x, bbox.extmax.y)
-            else:
-                extmin_vec = (0.0, 0.0)
-                extmax_vec = (0.0, 0.0)
-            return (
-                f"{len(msp)} entidades",
-                f"({extmin_vec[0]:.3f}, {extmin_vec[1]:.3f})",
-                f"({extmax_vec[0]:.3f}, {extmax_vec[1]:.3f})",
-            ), "OK"
-        except (IOError, ezdxf.DXFStructureError) as e:
-            logging.warning("Exceção ao processar arquivo DXF '%s': %s", file_path, e)
-            return None, f"Exceção: {e}"
-
-    def _get_pdf_properties(self, file_path: str) -> Tuple[Optional[tuple], str]:
-        """Extrai propriedades de um arquivo PDF, incluindo um hash de conteúdo robusto."""
-        try:
-            doc = fitz.open(file_path)
-            # pylint: disable=no-member
-            metadata = doc.metadata
-            content_hash = hashlib.sha256()
-            for page in doc:
-                content_hash.update(page.get_text("text", sort=True).encode("utf-8"))
-                drawings = sorted(
-                    page.get_cdrawings(),
-                    key=lambda d: (
-                        (d["rect"][1], d["rect"][0]) if d.get("rect") else (0, 0)
-                    ),
-                )
-                for drawing in drawings:
-                    rect = drawing.get("rect")
-                    sig_part = f"type:{drawing.get('type')};"
-                    if rect:
-                        sig_part += (
-                            f"rect:({rect[0]:.2f},{rect[1]:.2f},"
-                            f"{rect[2]:.2f},{rect[3]:.2f});"
-                        )
-                    sig_part += (
-                        f"color:{drawing.get('color')};fill:{drawing.get('fill')};"
-                        f"w:{drawing.get('width', 0):.2f}"
-                    )
-                    content_hash.update(sig_part.encode("utf-8"))
-            return (
-                doc.page_count,
-                metadata.get("author", "N/A"),
-                metadata.get("creator", "N/A"),
-                content_hash.hexdigest(),
-            ), "OK"
-        except (RuntimeError, ValueError, IOError) as e:
-            logging.warning("Exceção ao processar arquivo PDF '%s': %s", file_path, e)
-            return None, f"Erro: {e}"
-
-    def _get_file_properties(
-        self, file_path: str, file_type: str
-    ) -> Tuple[Optional[tuple], str]:
-        """Dispatcher que chama a função de extração correta."""
-        handlers = {
-            "STEP": (self._get_cad_properties, STEPControl_Reader),
-            "IGES": (self._get_cad_properties, IGESControl_Reader),
-            "DXF": (self._get_dxf_properties,),
-            "PDF": (self._get_pdf_properties,),
-        }
-        if file_type in handlers:
-            func, *args = handlers[file_type]
-            return func(file_path, *args)
-        if file_type == "DWG":
-            if file_hash := self._get_file_hash(file_path):
-                return (file_hash,), "OK"
-            logging.warning("Falha ao calcular hash para arquivo DWG: %s", file_path)
-            return None, "Erro ao calcular hash"
-
-        logging.warning("Tipo de arquivo não suportado para extração: %s", file_type)
-        return None, "Tipo não suportado"
-
-
-class FileTableWidget(StyledFileTableWidget):
+class FileTableWidget(ManagedFileTableWidget):
     """Tabela que aceita arquivos arrastados e permite reordenação e exclusão."""
 
     def __init__(self, parent=None):
@@ -413,24 +124,6 @@ class FileTableWidget(StyledFileTableWidget):
             logging.warning("Tentativa de abrir arquivo inexistente: %s", file_path)
         super().on_missing_file(file_path)
 
-    def keyPressEvent(self, event):
-        """Processa a tecla 'Delete' para remover linhas."""
-        if event.key() == Qt.Key.Key_Delete:
-            selected_rows = sorted(
-                {idx.row() for idx in self.selectedIndexes()}, reverse=True
-            )
-            for row in selected_rows:
-                self.removeRow(row)
-            self._renumber_rows()
-        else:
-            super().keyPressEvent(event)
-
-    def _renumber_rows(self) -> None:
-        for row in range(self.rowCount()):
-            item = self.item(row, 0)
-            if item:
-                item.setText(str(row + 1))
-
 
 class FormCompararArquivos(QDialog):
     """Formulário para Comparação de Arquivos."""
@@ -476,15 +169,7 @@ class FormCompararArquivos(QDialog):
 
     def _check_dependencies(self):
         """Verifica as dependências e informa o utilizador sobre as que faltam."""
-        missing = [
-            lib
-            for lib, available in [
-                ("python-occ-core (para STEP/IGES)", PYTHON_OCC_AVAILABLE),
-                ("ezdxf (para DXF)", EZDXF_AVAILABLE),
-                ("PyMuPDF (para PDF)", PYMUPDF_AVAILABLE),
-            ]
-            if not available
-        ]
+        missing = get_missing_dependencies()
         if missing:
             msg = "Bibliotecas opcionais não encontradas:\n\n- " + "\n- ".join(missing)
             msg += "\n\nFuncionalidades relacionadas estarão desativadas."
@@ -673,14 +358,29 @@ class FormCompararArquivos(QDialog):
             labels = ["Entidades", "Ext. Mínima", "Ext. Máxima"]
             lines = [f"  - {lbl}: {val}" for lbl, val in zip(labels, props)]
         elif file_type == "PDF":
-            labels = ["Páginas", "Autor", "Criador", "Hash Conteúdo"]
+            pages, author, creator, text_hash, image_count, image_hash, file_hash = (
+                props
+            )
             lines = [
-                f"  - {lbl}: {props[i][:24] if i == 3 else props[i]}..."
-                for i, lbl in enumerate(labels)
+                f"  - Páginas: {pages}",
+                f"  - Autor: {author}",
+                f"  - Criador: {creator}",
+                f"  - Hash Texto: {self._short_hash(text_hash)}",
+                f"  - Imagens: {image_count}",
             ]
+            if image_count:
+                lines.append(f"  - Hash Imagens: {self._short_hash(image_hash)}")
+            if file_hash:
+                lines.append(f"  - Hash Binário: {self._short_hash(file_hash)}")
         elif file_type == "DWG":
-            lines = [f"  - Hash SHA256: {props[0][:32]}..."]
+            lines = [f"  - Hash SHA256: {self._short_hash(props[0], 32)}"]
         return header + "\n".join(lines)
+
+    @staticmethod
+    def _short_hash(value: str, prefix: int = 24) -> str:
+        if not value:
+            return "-"
+        return value if len(value) <= prefix else f"{value[:prefix]}..."
 
     def _update_row_status(
         self,

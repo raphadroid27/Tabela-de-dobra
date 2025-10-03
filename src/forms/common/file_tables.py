@@ -224,3 +224,39 @@ class StyledFileTableWidget(FileDropTableWidget):
     def _insert_path(self, path: str) -> None:  # pragma: no cover
         """Permite que subclasses definam a inserção específica de linhas."""
         raise NotImplementedError
+
+
+class ManagedFileTableWidget(StyledFileTableWidget):  # pylint: disable=abstract-method
+    """Extensão de tabela estilizada com suporte a renumeração automática."""
+
+    def __init__(
+        self,
+        parent=None,
+        *,
+        path_column: int = 1,
+        number_column: int = 0,
+    ) -> None:
+        super().__init__(parent, path_column=path_column)
+        self._number_column = number_column
+
+    # pylint: disable=invalid-name
+    def keyPressEvent(self, event) -> None:  # type: ignore[override]
+        """Remove linhas com Delete e renumera restantes."""
+        if event.key() == Qt.Key.Key_Delete:
+            selected_rows = sorted(
+                {idx.row() for idx in self.selectedIndexes()}, reverse=True
+            )
+            for row in selected_rows:
+                self.removeRow(row)
+            if selected_rows:
+                self._renumber_rows()
+        else:
+            super().keyPressEvent(event)
+
+    # pylint: enable=invalid-name
+
+    def _renumber_rows(self) -> None:
+        for row in range(self.rowCount()):
+            item = self.item(row, self._number_column)
+            if item:
+                item.setText(str(row + 1))
