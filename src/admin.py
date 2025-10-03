@@ -17,6 +17,7 @@ import logging
 import os
 import sys
 import time
+from typing import Optional
 from datetime import datetime
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -45,7 +46,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.forms.common import context_help
+from src.forms.form_manual import ManualDialog, show_manual
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
@@ -713,9 +714,10 @@ class AdminTool(QMainWindow):
         aplicar_medida_borda_espaco(main_layout, 0, 0)
         self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
         self.barra_titulo.titulo.setText("Ferramenta Administrativa")
+        self._manual_dialog: Optional[ManualDialog] = None
         self.barra_titulo.set_help_callback(
-            lambda: context_help.show_help("admin", parent=self),
-            "Guia da ferramenta administrativa",
+            self._open_manual_dialog,
+            "Abrir manual da ferramenta administrativa",
         )
         main_layout.addWidget(self.barra_titulo)
         self.stacked_widget = QStackedWidget()
@@ -763,6 +765,15 @@ class AdminTool(QMainWindow):
         close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
         close_shortcut.activated.connect(self.close)
 
+    def _open_manual_dialog(self) -> None:
+        """Abre o manual de uso destacando a seção administrativa."""
+        if self._manual_dialog and self._manual_dialog.isVisible():
+            self._manual_dialog.raise_()
+            self._manual_dialog.activateWindow()
+            return
+
+        self._manual_dialog = show_manual(self, "admin")
+
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
         self.setFixedSize(380, 400)
@@ -771,6 +782,8 @@ class AdminTool(QMainWindow):
     def closeEvent(self, event):  # pylint: disable=C0103
         """Garante que o timer da aba de instâncias seja parado ao fechar."""
         self.instances_tab.stop_timer()
+        if self._manual_dialog:
+            self._manual_dialog.close()
         event.accept()
 
 
