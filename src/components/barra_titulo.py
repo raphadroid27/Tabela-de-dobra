@@ -18,16 +18,13 @@ class BarraTitulo(QWidget):
         """Inicializa a barra de título customizada."""
         super().__init__(parent)
         self._parent = parent
-        self.pressing = False
-        self.start = QPoint(0, 0)
+        self._drag_state = {"pressing": False, "start": QPoint(0, 0)}
         self.setFixedHeight(32)
         self.setAutoFillBackground(True)
 
-        self.current_theme = tema
-        self.real_theme_applied = None
-        self._is_updating_style = False
+        self._theme = {"current": tema, "applied": None, "updating": False}
 
-        self.set_tema(self.current_theme)
+        self.set_tema(tema)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(8, 0, 0, 0)
@@ -100,7 +97,7 @@ class BarraTitulo(QWidget):
 
     def set_tema(self, tema):
         """Define o tema visual da barra de título (dark, light ou auto)."""
-        self.current_theme = tema
+        self._theme["current"] = tema
 
         tema_real = tema
         if tema == "auto":
@@ -109,11 +106,11 @@ class BarraTitulo(QWidget):
             except (ImportError, TypeError):
                 tema_real = "dark"
 
-        if tema_real == self.real_theme_applied:
+        if tema_real == self._theme["applied"]:
             return
 
         # SOLUÇÃO: Define a flag para True antes de mudar o estilo.
-        self._is_updating_style = True
+        self._theme["updating"] = True
         try:
             if tema_real == "dark":
                 self.setStyleSheet(
@@ -124,10 +121,10 @@ class BarraTitulo(QWidget):
                     "QWidget { background-color: transparent; color: #222; }"
                 )
 
-            self.real_theme_applied = tema_real
+            self._theme["applied"] = tema_real
         finally:
             # SOLUÇÃO: Define a flag de volta para False, mesmo se ocorrer um erro.
-            self._is_updating_style = False
+            self._theme["updating"] = False
 
     def minimizar(self):
         """Minimiza a janela pai."""
@@ -142,12 +139,12 @@ class BarraTitulo(QWidget):
     def changeEvent(self, event):  # pylint: disable=invalid-name
         """Detecta a mudança de tema do sistema e atualiza a barra de título."""
         # SOLUÇÃO: Se a flag estiver ativa, ignora o evento para quebrar o loop.
-        if self._is_updating_style:
+        if self._theme["updating"]:
             return
 
         super().changeEvent(event)
         if event.type() in [QEvent.Type.StyleChange, QEvent.Type.ThemeChange]:
-            self.set_tema(self.current_theme)
+            self.set_tema(self._theme["current"])
 
     def set_help_callback(
         self, callback: Optional[Callable[[], None]], tooltip: Optional[str] = None
@@ -171,9 +168,9 @@ class BarraTitulo(QWidget):
     def mousePressEvent(self, event):  # pylint: disable=invalid-name
         """Inicia o arrasto da janela ao pressionar o botão esquerdo do mouse."""
         if event.button() == Qt.MouseButton.LeftButton:
-            self.pressing = True
+            self._drag_state["pressing"] = True
             if self._parent:
-                self.start = (
+                self._drag_state["start"] = (
                     event.globalPosition().toPoint()
                     - self._parent.frameGeometry().topLeft()
                 )
@@ -182,14 +179,16 @@ class BarraTitulo(QWidget):
     def mouseMoveEvent(self, event):  # pylint: disable=invalid-name
         """Move a janela enquanto o mouse é arrastado com o botão esquerdo."""
         if (
-            self.pressing
+            self._drag_state["pressing"]
             and event.buttons() == Qt.MouseButton.LeftButton
             and self._parent
         ):
-            self._parent.move(event.globalPosition().toPoint() - self.start)
+            self._parent.move(
+                event.globalPosition().toPoint() - self._drag_state["start"]
+            )
             event.accept()
 
     def mouseReleaseEvent(self, event):  # pylint: disable=invalid-name
         """Finaliza o arrasto da janela ao soltar o botão do mouse."""
-        self.pressing = False
+        self._drag_state["pressing"] = False
         event.accept()

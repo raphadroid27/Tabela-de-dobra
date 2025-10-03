@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Iterator, List, Tuple
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from PySide6.QtWidgets import QWidget
 
@@ -11,6 +11,9 @@ from src.utils.utilitarios import show_info
 # pylint: disable=C0301
 
 HelpEntry = Tuple[str, str]
+ManualLauncher = Callable[[Optional[QWidget], Optional[str], bool], object]
+
+_manual_launcher: ManualLauncher | None = None
 
 _DEFAULT_ENTRY: HelpEntry = (
     "Ajuda indisponível",
@@ -279,17 +282,25 @@ _HELP_CONTENT: Dict[str, HelpEntry] = {
 }
 
 
+def register_manual_launcher(launcher: ManualLauncher) -> None:
+    """Registra o callback responsável por abrir o manual completo."""
+
+    global _manual_launcher  # pylint: disable=global-statement
+    _manual_launcher = launcher
+
+
 def show_help(key: str, parent: QWidget | None = None) -> None:
     """Exibe o conteúdo de ajuda associado à chave fornecida."""
 
     try:
-        from src.forms import form_manual
+        if _manual_launcher is not None:
+            _manual_launcher(parent, key, True)
+            return
+    except RuntimeError:  # pragma: no cover - fallback
+        pass
 
-        form_manual.show_manual(parent, initial_key=key, block=True)
-        return
-    except (ImportError, RuntimeError):  # pragma: no cover - fallback
-        title, message = _HELP_CONTENT.get(key, _DEFAULT_ENTRY)
-        show_info(title, message, parent=parent)
+    title, message = _HELP_CONTENT.get(key, _DEFAULT_ENTRY)
+    show_info(title, message, parent=parent)
 
 
 def get_help_entry(key: str) -> HelpEntry:

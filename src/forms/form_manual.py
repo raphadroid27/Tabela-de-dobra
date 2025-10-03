@@ -101,7 +101,7 @@ def _build_sections() -> Iterable[Section]:
 class ManualDialog(QDialog):
     """Diálogo que apresenta o manual com navegação lateral."""
 
-# pylint: disable=R0915
+    # pylint: disable=R0915
     def __init__(
         self,
         parent: Optional[QWidget] = None,
@@ -280,6 +280,11 @@ def show_manual(
         dialog.activateWindow()
 
     return dialog
+
+
+context_help.register_manual_launcher(
+    lambda parent, key, block: show_manual(parent, key, block=block)
+)
 
 
 def main(root: Optional[QWidget]) -> ManualDialog:
