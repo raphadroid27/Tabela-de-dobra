@@ -49,7 +49,7 @@ _HELP_CONTENT: Dict[str, HelpEntry] = {
         "<li><b>📘 Manual de Uso</b> e <b>ℹ️ Sobre</b>: documentação e metadados.</li>"
         "</ul>"
         "<h4><b>⌨️ Atalhos Globais Principais</b></h4><ul>"
-        "<li><kbd>Ctrl+Shift+V</kbd> Expandir linhas • <kbd>Ctrl+H</kbd> Expandir colunas • <kbd>Ctrl+R</kbd> Limpar buscas • Clique em labels azuis/laranja p/ copiar.</li>"
+        "<li><kbd>Ctrl+Shift+V</kbd> Expandir linhas • <kbd>Ctrl+H</kbd> Expandir colunas • <kbd>Ctrl+D</kbd> Limpar Dobras • <kbd>Ctrl+T</kbd> Limpar Tudo • Clique em labels azuis/laranja p/ copiar.</li>"
         "</ul>"
         "<h3><b>Cabeçalho (Fluxo de Cálculo)</b></h3>"
         "<ol>"
@@ -75,8 +75,8 @@ _HELP_CONTENT: Dict[str, HelpEntry] = {
         "<li><b>Alerta de Aba Mínima</b>: entradas abaixo do limite são destacadas em <span style='color:white;background:red;padding:1px 3px;'>vermelho</span> para revisão dimensional.</li>"
         "<li><b>Expandir Vertical (Ctrl+Shift+V)</b>: aumenta linhas de 5 para 10.</li>"
         "<li><b>Expandir Horizontal (Ctrl+H)</b>: adiciona nova tabela paralela preservando valores existentes.</li>"
-        "<li><b>🧹 Limpar Dobras</b>: limpa apenas entradas e resultados da(s) tabela(s).</li>"
-        "<li><b>🗑️ Limpar Tudo</b>: limpa cabeçalho + tabelas (reseta contexto completo).</li>"
+        "<li>🧹 <b>Limpar Dobras</b> (<kbd>Ctrl+D</kbd>): limpa apenas entradas e resultados da(s) tabela(s).</li>"
+        "<li>🗑️ <b>Limpar Tudo</b> (<kbd>Ctrl+T</kbd>): limpa cabeçalho + tabelas (reseta contexto completo).</li>"
         "<li><b>Reatividade</b>: qualquer mudança no cabeçalho reprojeta todas as tabelas ativas.</li>"
         "</ul>"
         "<h3><b>Indicadores Visuais</b></h3><ul>"
@@ -168,6 +168,7 @@ _HELP_CONTENT: Dict[str, HelpEntry] = {
     "cadastro": (
         "<h2>Formulários de Cadastro</h2>",
         "<ol>"
+        "<li><b>Login necessário</b>: operações de inclusão, edição e exclusão exigem sessão ativa; sem login botões de ação permanecem desativados.</li>"
         "<li><b>Entenda a estrutura</b>: o painel superior concentra os filtros de busca, o centro reúne a lista paginada por tipo e a seção inferior exibe campos de inclusão/edição com os botões de ação correspondentes. Os títulos da janela e do quadro variam automaticamente entre <i>Adicionar</i> e <i>Editar/Excluir</i>, e os controles extras (✏️ Atualizar / 🗑️ Excluir) só surgem no modo edição.</li>"
         "<li><b>Localize registros rapidamente</b>: digite nos campos de busca ou ajuste as combos para filtrar em tempo real; a consulta é disparada automaticamente com debounce e preserva a ordenação. Use 🧹 <b>Limpar</b> (<kbd>Ctrl+R</kbd>) para zerar os filtros e recarregar a tabela.</li>"
         "<li><b>Inclua novos itens</b>: preencha os campos obrigatórios no quadro inferior e confirme com ➕ <b>Adicionar</b> (<kbd>Ctrl+Enter</kbd>). Em deduções, escolha primeiro Material/Espessura/Canal nas combos internas para relacionar o trio corretamente. O controlador valida duplicidades, converte números com vírgula/ponto e registra o log da operação; ao sucesso, os campos são limpos e as listas/combos de outros formulários são atualizadas via cache.</li>"
@@ -310,16 +311,29 @@ def get_help_entry(key: str) -> HelpEntry:
 
 def iter_help_entries(
     keys: Iterable[str] | None = None,
+    *,
+    include_missing: bool = True,
 ) -> Iterator[Tuple[str, HelpEntry]]:
-    """Itera sobre as entradas de ajuda, respeitando uma ordem opcional de chaves."""
+    """Itera sobre entradas de ajuda.
+
+    Args:
+        keys: ordem opcional de chaves desejadas.
+        include_missing: se True, chaves desconhecidas rendem fallback padrão.
+    """
 
     if keys is not None:
         seen: List[str] = []
         for key in keys:
             if key in seen:
                 continue
+            entry = _HELP_CONTENT.get(key)
+            if entry is None:
+                if include_missing:
+                    seen.append(key)
+                    yield key, _DEFAULT_ENTRY
+                continue
             seen.append(key)
-            yield key, _HELP_CONTENT.get(key, _DEFAULT_ENTRY)
+            yield key, entry
 
         for key, entry in _HELP_CONTENT.items():
             if key not in seen:

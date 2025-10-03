@@ -9,8 +9,8 @@ from __future__ import annotations
 import sys
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtGui import QFont, QTextDocument
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -30,8 +30,7 @@ from src.components.barra_titulo import BarraTitulo
 from src.forms.common import context_help
 from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.estilo import obter_tema_atual
-from src.utils.janelas import Janela
-from src.utils.utilitarios import ICON_PATH
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 Section = Tuple[str, str, str]
 
@@ -64,8 +63,7 @@ def _create_section_widget(title: str, body: str) -> QWidget:
     )
 
     layout = QVBoxLayout(container)
-    layout.setContentsMargins(18, 16, 18, 18)
-    layout.setSpacing(12)
+    aplicar_medida_borda_espaco(layout, 5, 0)
 
     header = QLabel(title)
     header_font = QFont()
@@ -92,10 +90,32 @@ def _format_help_message(message: str) -> str:
     return message
 
 
+def _clean_section_title(title: str) -> str:
+    if "<" not in title and ">" not in title:
+        return title.strip()
+    doc = QTextDocument()
+    doc.setHtml(title)
+    return doc.toPlainText().strip()
+
+
 def _build_sections() -> Iterable[Section]:
-    """Retorna conteúdo estruturado do manual."""
-    for key, (title, message) in context_help.iter_help_entries(SECTION_KEYS_ORDER):
+    """Gera tuplas (key, title, body) das seções do manual na ordem desejada."""
+    for key, (title, message) in context_help.iter_help_entries(
+        SECTION_KEYS_ORDER, include_missing=False
+    ):
         yield key, title, _format_help_message(message)
+
+
+class _ContentClickFilter(QObject):
+    def __init__(self, dialog: "ManualDialog") -> None:
+        super().__init__(dialog)
+        self._dialog = dialog
+
+    def eventFilter(self, obj, event):  # pylint: disable=C0103
+        """Intercepta cliques no conteúdo para recolher o menu de categorias."""
+        if event.type() == QEvent.Type.MouseButtonPress:
+            self._dialog.collapse_menu_on_content_click()
+        return super().eventFilter(obj, event)
 
 
 class ManualDialog(QDialog):
@@ -111,17 +131,15 @@ class ManualDialog(QDialog):
         self._keys: List[str] = []
         self._key_to_index: Dict[str, int] = {}
         self._current_key: Optional[str] = None
-
         self.setWindowTitle("Manual de Uso")
         self.setFixedSize(500, 513)
         configure_frameless_dialog(self, ICON_PATH)
-        self.setModal(True)
-
-        Janela.posicionar_janela(self, "centro")
+        self.setModal(False)
+        self.setWindowModality(Qt.WindowModality.NonModal)
+        self._content_click_filter = _ContentClickFilter(self)
 
         root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.setSpacing(0)
+        aplicar_medida_borda_espaco(root_layout, 0, 0)
 
         barra = BarraTitulo(self, tema=obter_tema_atual())
         barra.titulo.setText("Manual de Uso")
@@ -133,8 +151,8 @@ class ManualDialog(QDialog):
 
         controle = QWidget()
         controle_layout = QVBoxLayout(controle)
-        controle_layout.setContentsMargins(12, 12, 12, 12)
-        controle_layout.setSpacing(8)
+        controle_layout.setContentsMargins(10, 0, 0, 0)
+        controle_layout.setSpacing(0)
 
         self._menu_button = QToolButton()
         self._menu_button.setText("☰ Categorias")
@@ -152,36 +170,61 @@ class ManualDialog(QDialog):
 
         content_wrapper = QWidget()
         content_layout = QHBoxLayout(content_wrapper)
-        content_layout.setContentsMargins(12, 0, 12, 12)
-        content_layout.setSpacing(12)
+        content_layout.setContentsMargins(10, 5, 10, 10)
+        content_layout.setSpacing(0)
 
         self._categoria_container = QFrame()
-        self._categoria_container.setFrameShape(QFrame.Shape.StyledPanel)
+        self._categoria_container.setFrameShape(QFrame.Shape.NoFrame)
+        self._categoria_container.setObjectName("categoryContainer")
         self._categoria_container.setVisible(False)
         self._categoria_container.setMinimumWidth(0)
         self._categoria_container.setMaximumWidth(0)
+        self._categoria_container.setStyleSheet(
+            (
+                "QFrame#categoryContainer {"
+                " border: none;"
+                "}"
+            )
+        )
 
         categoria_layout = QVBoxLayout(self._categoria_container)
-        categoria_layout.setContentsMargins(10, 10, 10, 10)
-        categoria_layout.setSpacing(6)
-
-        categoria_titulo = QLabel("Categorias")
-        categoria_titulo.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        categoria_titulo.setStyleSheet("font-weight: bold; font-size: 13px;")
-        categoria_layout.addWidget(categoria_titulo)
+        categoria_layout.setContentsMargins(0, 0, 5, 0)
+        categoria_layout.setSpacing(0)
 
         self._category_list = QListWidget()
+        self._category_list.setObjectName("categoryList")
         self._category_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self._category_list.setUniformItemSizes(True)
-        self._category_list.setSpacing(2)
+        aplicar_medida_borda_espaco(self._category_list, 0, 0)
         self._category_list.currentRowChanged.connect(self._on_category_changed)
-        categoria_layout.addWidget(self._category_list, 1)
-        categoria_layout.addStretch(1)
+        _font = self._category_list.font()
+        _font.setPointSize(10)
+        _font.setBold(True)
+        self._category_list.setFont(_font)
+        # Estilo minimalista dos itens mantendo destaque de seleção
+        self._category_list.setStyleSheet(
+            (
+                "QListWidget#categoryList {"
+                " border: none;"
+                " background: transparent;"
+                " padding: 0;"
+                "}"
+                "QListWidget#categoryList::item {"
+                " border-radius: 6px;"
+                " padding: 2px 4px;"
+                " margin: 2px 0;"
+                "}"
+                "QListWidget#categoryList::item:selected {"
+                " background-color: rgba(80,160,255,120);"
+                " color: palette(light);"
+                "}"
+            )
+        )
+        categoria_layout.addWidget(self._category_list)
 
         content_layout.addWidget(self._categoria_container)
 
         self._stack = QStackedWidget()
-        self._stack.setContentsMargins(0, 0, 0, 0)
         content_layout.addWidget(self._stack, 1)
 
         root_layout.addWidget(content_wrapper)
@@ -200,9 +243,10 @@ class ManualDialog(QDialog):
             self._append_section(key, title, body)
 
     def _append_section(self, key: str, title: str, body: str) -> None:
-        item = QListWidgetItem(title)
+        display_title = _clean_section_title(title)
+        item = QListWidgetItem(display_title)
         item.setData(Qt.ItemDataRole.UserRole, key)
-        item.setToolTip(title)
+        item.setToolTip(display_title)
         self._category_list.addItem(item)
 
         section_widget = _create_section_widget(title, body)
@@ -210,6 +254,8 @@ class ManualDialog(QDialog):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         scroll.setWidget(section_widget)
+        scroll.viewport().installEventFilter(self._content_click_filter)
+        section_widget.installEventFilter(self._content_click_filter)
         self._stack.addWidget(scroll)
 
         index = self._stack.count() - 1
@@ -218,7 +264,7 @@ class ManualDialog(QDialog):
 
     def _toggle_menu(self, checked: bool) -> None:
         self._categoria_container.setVisible(checked)
-        target_width = 240 if checked else 0
+        target_width = 200 if checked else 0
         self._categoria_container.setMinimumWidth(target_width)
         self._categoria_container.setMaximumWidth(target_width)
         self._menu_button.setText("✖ Fechar categorias" if checked else "☰ Categorias")
@@ -233,6 +279,62 @@ class ManualDialog(QDialog):
         if item:
             key = item.data(Qt.ItemDataRole.UserRole)
             self._current_key = str(key) if key is not None else None
+
+    def collapse_menu_on_content_click(self) -> None:
+        """Recolhe o menu lateral caso esteja aberto ao clicar na área de conteúdo."""
+        if self._menu_button.isChecked():
+            self._menu_button.setChecked(False)
+
+    def position_near_parent(self, gap: int = 12) -> None:
+        """Posiciona a janela próxima à janela pai (se existir).
+
+        Estratégia:
+        1. Tenta posicionar à direita do parent com um espaçamento (gap).
+        2. Se não couber, tenta à esquerda.
+        3. Se nenhum dos lados couber integralmente, ajusta dentro da área disponível da tela.
+        4. Se não houver parent visível, centraliza na tela primária.
+
+        Parametros
+        ----------
+        gap: int
+            Espaço em pixels entre a borda do parent e esta janela.
+        """
+        anchor = self.parentWidget()
+        if anchor is None or not anchor.isVisible():
+            screen = QApplication.primaryScreen()
+            if screen:
+                geo = screen.availableGeometry()
+                self.move(
+                    geo.center().x() - self.width() // 2,
+                    geo.center().y() - self.height() // 2,
+                )
+            return
+
+        size = self.size()
+        if size.width() <= 0 or size.height() <= 0:
+            size = self.sizeHint()
+
+        screen = anchor.screen() or QApplication.primaryScreen()
+        if screen is None:
+            return
+        available = screen.availableGeometry()
+        anchor_geo = anchor.frameGeometry()
+
+        width = size.width()
+        height = size.height()
+
+        right_option = anchor_geo.right() + gap
+        left_option = anchor_geo.left() - gap - width
+
+        if right_option + width <= available.right():
+            x = right_option
+        elif left_option >= available.left():
+            x = left_option
+        else:
+            x = max(available.left(), min(right_option, available.right() - width))
+
+        y = max(available.top(), min(anchor_geo.top(), available.bottom() - height))
+        self.move(int(x), int(y))
 
     def select_section_by_key(
         self, key: str, *, ensure_menu_visible: bool = False
@@ -265,32 +367,27 @@ class ManualDialog(QDialog):
 def show_manual(
     root: Optional[QWidget],
     initial_key: Optional[str] = None,
-    *,
-    block: bool = False,
 ) -> ManualDialog:
     """Exibe o manual, opcionalmente destacando uma seção específica."""
 
     dialog = ManualDialog(root, initial_key)
-
-    if block:
-        dialog.exec()
-    else:
-        dialog.show()
-        dialog.raise_()
-        dialog.activateWindow()
+    dialog.position_near_parent()
+    dialog.show()
+    dialog.raise_()
+    dialog.activateWindow()
 
     return dialog
 
 
 context_help.register_manual_launcher(
-    lambda parent, key, block: show_manual(parent, key, block=block)
+    lambda parent, key, _block: show_manual(parent, key)
 )
 
 
 def main(root: Optional[QWidget]) -> ManualDialog:
     """Compatibilidade com chamadas existentes que abrem o manual."""
 
-    return show_manual(root, block=False)
+    return show_manual(root)
 
 
 if __name__ == "__main__":
