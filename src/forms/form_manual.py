@@ -7,7 +7,7 @@ um menu lateral no estilo sanduíche para navegar entre as categorias.
 from __future__ import annotations
 
 import sys
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QFont, QTextDocument
@@ -85,11 +85,6 @@ def _create_section_widget(title: str, body: str) -> QWidget:
     return container
 
 
-def _format_help_message(message: str) -> str:
-    """Ajusta o texto de ajuda para exibição em formato rich text."""
-    return message
-
-
 def _clean_section_title(title: str) -> str:
     if "<" not in title and ">" not in title:
         return title.strip()
@@ -103,7 +98,9 @@ def _build_sections() -> Iterable[Section]:
     for key, (title, message) in context_help.iter_help_entries(
         SECTION_KEYS_ORDER, include_missing=False
     ):
-        yield key, title, _format_help_message(message)
+        # Retornamos a mensagem diretamente; caso futuro exija transformação,
+        # inserir aqui (ex.: sanitização ou conversão markdown->HTML).
+        yield key, title, message
 
 
 class _ContentClickFilter(QObject):
@@ -128,9 +125,7 @@ class ManualDialog(QDialog):
         initial_key: Optional[str] = None,
     ) -> None:
         super().__init__(parent)
-        self._keys: List[str] = []
         self._key_to_index: Dict[str, int] = {}
-        self._current_key: Optional[str] = None
         self.setWindowTitle("Manual de Uso")
         self.setFixedSize(500, 513)
         configure_frameless_dialog(self, ICON_PATH)
@@ -232,8 +227,12 @@ class ManualDialog(QDialog):
         self._populate_sections()
 
         default_key = initial_key if initial_key in self._key_to_index else None
-        if default_key is None and self._keys:
-            default_key = self._keys[0]
+        if default_key is None and self._category_list.count() > 0:
+            first_item = self._category_list.item(0)
+            if first_item is not None:
+                data_key = first_item.data(Qt.ItemDataRole.UserRole)
+                if data_key is not None:
+                    default_key = str(data_key)
 
         if default_key:
             self.select_section_by_key(default_key)
@@ -259,14 +258,12 @@ class ManualDialog(QDialog):
         self._stack.addWidget(scroll)
 
         index = self._stack.count() - 1
-        self._keys.append(key)
         self._key_to_index[key] = index
 
     def _toggle_menu(self, checked: bool) -> None:
+        """Exibe ou oculta o painel de categorias ajustando largura fixa."""
         self._categoria_container.setVisible(checked)
-        target_width = 200 if checked else 0
-        self._categoria_container.setMinimumWidth(target_width)
-        self._categoria_container.setMaximumWidth(target_width)
+        self._categoria_container.setFixedWidth(200 if checked else 0)
         self._menu_button.setText("✖ Fechar categorias" if checked else "☰ Categorias")
 
     def _on_category_changed(self, row: int) -> None:
@@ -275,15 +272,11 @@ class ManualDialog(QDialog):
         if self._stack.currentIndex() != row:
             self._stack.setCurrentIndex(row)
 
-        item = self._category_list.item(row)
-        if item:
-            key = item.data(Qt.ItemDataRole.UserRole)
-            self._current_key = str(key) if key is not None else None
+    # Seleção já reflete estado; chave pode ser obtida por current_key.
 
     def collapse_menu_on_content_click(self) -> None:
-        """Recolhe o menu lateral caso esteja aberto ao clicar na área de conteúdo."""
-        if self._menu_button.isChecked():
-            self._menu_button.setChecked(False)
+        """Recolhe o menu lateral independentemente do estado (idempotente)."""
+        self._menu_button.setChecked(False)
 
     def position_near_parent(self, gap: int = 12) -> None:
         """Posiciona a janela próxima à janela pai (se existir).
@@ -355,13 +348,20 @@ class ManualDialog(QDialog):
             self._category_list.setCurrentRow(index)
             self._category_list.blockSignals(False)
 
-        self._current_key = key
-
         current_item = self._category_list.item(index)
         if current_item:
             self._category_list.scrollToItem(
                 current_item, QListWidget.ScrollHint.PositionAtCenter
             )
+
+    @property
+    def current_key(self) -> Optional[str]:
+        """Chave da seção atualmente selecionada (ou None)."""
+        item = self._category_list.currentItem()
+        if not item:
+            return None
+        data_key = item.data(Qt.ItemDataRole.UserRole)
+        return str(data_key) if data_key is not None else None
 
 
 def show_manual(
