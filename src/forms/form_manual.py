@@ -49,6 +49,9 @@ SECTION_KEYS_ORDER = (
 )
 
 
+_manual_instance: ManualDialog | None = None
+
+
 def _create_section_widget(title: str, body: str) -> QWidget:
     """Cria o conteúdo visual de uma seção do manual."""
     container = QFrame()
@@ -175,11 +178,7 @@ class ManualDialog(QDialog):
         self._categoria_container.setMinimumWidth(0)
         self._categoria_container.setMaximumWidth(0)
         self._categoria_container.setStyleSheet(
-            (
-                "QFrame#categoryContainer {"
-                " border: none;"
-                "}"
-            )
+            "QFrame#categoryContainer { border: none; }"
         )
 
         categoria_layout = QVBoxLayout(self._categoria_container)
@@ -359,19 +358,42 @@ class ManualDialog(QDialog):
         return str(data_key) if data_key is not None else None
 
 
+def _clear_manual_instance() -> None:
+    """Limpa a instância ativa registrada do manual."""
+
+    global _manual_instance  # pylint: disable=global-statement
+    _manual_instance = None
+
+
 def show_manual(
     root: Optional[QWidget],
     initial_key: Optional[str] = None,
 ) -> ManualDialog:
-    """Exibe o manual, opcionalmente destacando uma seção específica."""
+    """Exibe o manual, reutilizando a janela existente se já estiver aberta."""
 
-    dialog = ManualDialog(root, initial_key)
-    dialog.position_near_parent()
-    dialog.show()
-    dialog.raise_()
-    dialog.activateWindow()
+    global _manual_instance  # pylint: disable=global-statement
 
-    return dialog
+    if _manual_instance is None or not _manual_instance.isVisible():
+        if _manual_instance is not None:
+            try:
+                _manual_instance.deleteLater()
+            except RuntimeError:
+                pass
+        _manual_instance = ManualDialog(root, initial_key)
+        _manual_instance.destroyed.connect(_clear_manual_instance)
+        _manual_instance.position_near_parent()
+        _manual_instance.show()
+    else:
+        if initial_key:
+            _manual_instance.select_section_by_key(initial_key)
+
+    if initial_key:
+        _manual_instance.select_section_by_key(initial_key)
+
+    _manual_instance.raise_()
+    _manual_instance.activateWindow()
+
+    return _manual_instance
 
 
 context_help.register_manual_launcher(
