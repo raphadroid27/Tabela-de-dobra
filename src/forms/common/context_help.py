@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 from pathlib import Path
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from PySide6.QtWidgets import QWidget
 
@@ -64,7 +64,7 @@ def _load_help_contents() -> None:
             # Remover primeira ocorrência do título no início (ignorando espaços iniciais)
             stripped = body.lstrip()
             if stripped.startswith(title):
-                body = stripped[len(title):].lstrip()
+                body = stripped[len(title) :].lstrip()
         _HELP_CONTENT[key] = (title, body)
 
 
