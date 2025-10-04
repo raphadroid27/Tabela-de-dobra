@@ -1,1 +1,55 @@
-<h2>Conversor de Arquivos</h2><ol><li>Selecione o <b>Tipo de Conversão</b>; opções habilitadas dependem das bibliotecas detectadas (ODA, Pillow, ezdxf/matplotlib, Inkscape).</li><li>Monte a lista de origem:<ul><li>➕ <b>Adicionar Arquivos</b> abre diálogo filtrado pelo fluxo.</li><li>Arraste arquivos sobre a tabela; coluna <b>#</b> mantém a ordem.</li><li>Use <kbd>Delete</kbd> para remover seleção rapidamente.</li><li>Primeiro item sugere pasta de destino automaticamente.</li></ul></li><li>Defina a pasta de saída via 📁 <b>Procurar</b> ou digitando o caminho.</li><li>Dispare 🚀 <b>Converter</b>; barra inferior mostra progresso percentual.</li><li>Aba <b>Resultado</b>: ✓/✗ + tooltip de mensagem; duplo clique abre arquivo convertido.</li><li>Use 🛑 <b>Cancelar</b> para abortar e 🧹 <b>Limpar</b> para reiniciar listas e estado.</li></ol><h4><b>Indicadores Visuais</b></h4><ul><li>✓ conversão concluída com sucesso; ✗ falha — tooltip descreve a causa.</li><li>Progresso acumulado reflete itens processados / total.</li></ul><h4><b>Atalhos</b></h4><ul><li><kbd>Ctrl+O</kbd> Adicionar arquivos de origem.</li><li><kbd>Ctrl+Enter</kbd> Iniciar conversão (🚀 Converter).</li><li><kbd>Esc</kbd> Cancelar conversão em andamento.</li><li><kbd>Ctrl+L</kbd> Limpar tabelas e resetar formulário.</li><li><kbd>Delete</kbd> Remover itens selecionados na tabela de origem.</li></ul>
+<h2>Conversor de Arquivos</h2>
+<ol>
+    <li>Selecione o <b>Tipo de Conversão</b>; opções habilitadas dependem das bibliotecas e programas detectados (Pillow, ezdxf/matplotlib, ODA, Inkscape).</li>
+    <li>
+        Monte a lista de origem:
+        <ul>
+            <li>➕ <b>Adicionar Arquivos</b> abre diálogo filtrado pelo fluxo.</li>
+            <li>Arraste arquivos sobre a tabela; coluna <b>#</b> mantém a ordem.</li>
+            <li>Use <kbd>Delete</kbd> para remover seleção rapidamente.</li>
+            <li>Primeiro item sugere pasta de destino automaticamente.</li>
+        </ul>
+    </li>
+    <li>Defina a pasta de saída via 📁 <b>Procurar</b> ou digitando o caminho.</li>
+    <li>Dispare 🚀 <b>Converter</b>; barra inferior mostra progresso percentual.</li>
+    <li>Aba <b>Resultado</b>: ✓/✗ + tooltip de mensagem; duplo clique abre arquivo convertido.</li>
+    <li>Use 🛑 <b>Cancelar</b> para abortar e 🧹 <b>Limpar</b> para reiniciar listas e estado.</li>
+</ol>
+<h4><b>Indicadores Visuais</b></h4>
+<ul>
+    <li>✓ conversão concluída com sucesso; ✗ falha — tooltip descreve a causa.</li>
+    <li>Progresso acumulado reflete itens processados / total.</li>
+</ul>
+<h4><b>Atalhos</b></h4>
+<ul>
+    <li><kbd>Ctrl+O</kbd> Adicionar arquivos de origem.</li>
+    <li><kbd>Ctrl+Enter</kbd> Iniciar conversão (🚀 Converter).</li>
+    <li><kbd>Esc</kbd> Cancelar conversão em andamento.</li>
+    <li><kbd>Ctrl+L</kbd> Limpar tabelas e resetar formulário.</li>
+    <li><kbd>Delete</kbd> Remover itens selecionados na tabela de origem.</li>
+</ul>
+<h4><b>Dependências Externas (Instalação)</b></h4>
+<ul>
+    <li><b>ODA File Converter</b> (necessário para conversões DWG/DXF em certos fluxos):
+        <ol style="margin-top:4px;margin-bottom:4px;">
+            <li>Acesse o site oficial da Open Design Alliance (ODA): <a href="https://www.opendesign.com/guestfiles/oda_file_converter" target="_blank" rel="noopener noreferrer">Download ODA File Converter</a>.</li>
+            <li>Baixe o pacote “ODA File Converter” para Windows.</li>
+            <li>Extraia/instale e localize o executável <code>ODAFileConverter.exe</code>.</li>
+            <li>Opcional: adicione a pasta do executável ao PATH do Windows.</li>
+            <li>Após instalar, reinicie a aplicação para que a detecção seja refeita.</li>
+        </ol>
+    </li>
+    <li><b>Inkscape</b> (necessário para certas conversões envolvendo SVG/traçado):
+        <ol style="margin-top:4px;margin-bottom:4px;">
+            <li>Baixe do site oficial: <a href="https://inkscape.org/release/" target="_blank" rel="noopener noreferrer">Inkscape Releases</a> ou via <i>winget</i>:</li>
+        </ol>
+        <pre style="margin-top:0;margin-bottom:6px;"><code>winget install Inkscape.Inkscape</code></pre>
+        <ol start="2" style="margin-top:4px;margin-bottom:4px;">
+            <li>Certifique-se de que o executável <code>inkscape.exe</code> está acessível (PATH ou caminho configurado).</li>
+            <li>Reabra a aplicação para habilitar os tipos de conversão dependentes.</li>
+        </ol>
+    </li>
+    <li><b>Verificação:</b> Se uma opção de conversão não aparece, a aplicação não encontrou a dependência. Revise o PATH ou reinstale.</li>
+    <li><b>Segurança:</b> Baixe sempre de fontes oficiais.</li>
+    <li><b>Recomendação de Instalação:</b> Instale em <code>C:\Arquivos de Programas\</code> para detecção automática mais confiável.</li>
+</ul>
