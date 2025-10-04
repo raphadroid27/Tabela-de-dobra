@@ -21,6 +21,9 @@ from src.utils.utilitarios import (
     show_warning,
 )
 
+RESET_PASSWORD_SENTINEL = "nova_senha"
+RESET_PASSWORD_HASH = hashlib.sha256(RESET_PASSWORD_SENTINEL.encode()).hexdigest()
+
 
 def _obter_usuario_logado(session):
     """Obtém o usuário logado com verificação de segurança.
@@ -66,6 +69,8 @@ def novo_usuario():
         logging.error("Erro de DB ao criar usuário: %s", e)
         show_error("Erro", "Não foi possível criar o usuário.")
 
+# pylint: disable=R0912
+
 
 def login():
     """Realiza o login do usuário com o nome e senha fornecidos."""
@@ -85,20 +90,40 @@ def login():
                 show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
                 return
 
-            if usuario_obj.senha == "nova_senha":
+            senha_hash_informada = hashlib.sha256(usuario_senha.encode()).hexdigest()
+
+            if usuario_obj.senha == RESET_PASSWORD_HASH:
                 nova_senha = ask_string(
                     "Nova Senha", "Digite uma nova senha:", parent=parent_form
                 )
                 if nova_senha:
-                    usuario_obj.senha = hashlib.sha256(nova_senha.encode()).hexdigest()
-                    show_info(
-                        "Sucesso",
-                        "Senha alterada. Faça login novamente.",
+                    nova_senha = nova_senha.strip()
+                    if nova_senha:
+                        usuario_obj.senha = hashlib.sha256(
+                            nova_senha.encode()
+                        ).hexdigest()
+                        show_info(
+                            "Sucesso",
+                            "Senha alterada. Faça login novamente.",
+                            parent=parent_form,
+                        )
+                    else:
+                        show_warning(
+                            "Aviso",
+                            "Senha não pode ser vazia. "
+                            "Repita o processo de login para definir uma nova senha.",
+                            parent=parent_form,
+                        )
+                else:
+                    show_warning(
+                        "Aviso",
+                        "Senha não alterada. "
+                        "Repita o processo de login para definir uma nova senha.",
                         parent=parent_form,
                     )
-            elif (
-                usuario_obj.senha == hashlib.sha256(usuario_senha.encode()).hexdigest()
-            ):
+                return
+
+            if usuario_obj.senha == senha_hash_informada:
                 show_info("Login", "Login efetuado com sucesso.", parent=parent_form)
                 g.USUARIO_ID = usuario_obj.id
                 if parent_form:
@@ -108,14 +133,15 @@ def login():
                     g.PRINC_FORM.setWindowTitle(titulo)
                     if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
                         g.BARRA_TITULO.titulo.setText(titulo)
-            else:
-                show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
+                return
+
+            show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
 
     except SQLAlchemyError as e:
         logging.error("Erro de DB no login: %s", e)
         show_error("Erro", "Não foi possível realizar o login.", parent=parent_form)
-
-    Janela.estado_janelas(True)
+    finally:
+        Janela.estado_janelas(True)
 
 
 def logado(tipo):
@@ -174,12 +200,15 @@ def item_selecionado_usuario():
     """Retorna o ID do usuário selecionado na lista de usuários."""
     if g.LIST_USUARIO is None:
         return None
-    selected_items = g.LIST_USUARIO.selectedItems()
-    if not selected_items:
+    current_row = g.LIST_USUARIO.currentRow()
+    if current_row < 0:
+        return None
+    id_item = g.LIST_USUARIO.item(current_row, 0)
+    if id_item is None:
         return None
     try:
-        return int(selected_items[0].text(0))
-    except (ValueError, IndexError):
+        return int(id_item.text())
+    except (ValueError, TypeError):
         return None
 
 
@@ -196,8 +225,13 @@ def resetar_senha(parent=None):
         with get_session() as session:
             usuario_obj = session.get(Usuario, user_id)
             if usuario_obj:
-                usuario_obj.senha = "nova_senha"
-                show_info("Sucesso", "Senha resetada com sucesso.", parent=parent)
+                usuario_obj.senha = RESET_PASSWORD_HASH
+                show_info(
+                    "Sucesso",
+                    "Senha resetada. Ao fazer login, "
+                    "será solicitado que o usuário defina uma nova senha.",
+                    parent=parent,
+                )
                 return True
             show_error("Erro", "Usuário não encontrado.", parent=parent)
             return False
