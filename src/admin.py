@@ -17,8 +17,8 @@ import logging
 import os
 import sys
 import time
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
