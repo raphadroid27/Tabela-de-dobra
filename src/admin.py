@@ -65,6 +65,7 @@ from src.utils.session_manager import (
 )
 from src.utils.update_manager import get_installed_version, run_update_process
 from src.utils.usuarios import (
+    RESET_PASSWORD_HASH,
     alternar_permissao_editor,
     excluir_usuario,
     resetar_senha,
@@ -558,10 +559,14 @@ class UserManagementWidget(QWidget):
                     self.list_usuario.setItem(
                         row_position, 2, QTableWidgetItem(usuario.role)
                     )
-                    senha_resetada = "Sim" if usuario.senha == "nova_senha" else "Não"
+                    senha_resetada = (
+                        "Sim" if usuario.senha == RESET_PASSWORD_HASH else "Não"
+                    )
                     self.list_usuario.setItem(
                         row_position, 3, QTableWidgetItem(senha_resetada)
                     )
+                if self.list_usuario.rowCount() > 0:
+                    self.list_usuario.selectRow(0)
         except SQLAlchemyError as e:
             logging.error("Erro ao listar usuários: %s", e)
             show_error(
