@@ -201,17 +201,12 @@ class ManualDialog(QDialog):
             (
                 "QListWidget#categoryList {"
                 " border: none;"
-                " background: transparent;"
                 " padding: 0;"
                 "}"
                 "QListWidget#categoryList::item {"
                 " border-radius: 6px;"
                 " padding: 2px 4px;"
                 " margin: 2px 0;"
-                "}"
-                "QListWidget#categoryList::item:selected {"
-                " background-color: rgba(80,160,255,120);"
-                " color: palette(light);"
                 "}"
             )
         )
