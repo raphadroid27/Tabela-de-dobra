@@ -69,6 +69,7 @@ def novo_usuario():
         logging.error("Erro de DB ao criar usuário: %s", e)
         show_error("Erro", "Não foi possível criar o usuário.")
 
+
 # pylint: disable=R0912
 
 
