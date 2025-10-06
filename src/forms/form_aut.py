@@ -76,7 +76,7 @@ def _criar_barra_titulo(vlayout):
 
     barra.set_help_callback(
         lambda: context_help.show_help("autenticacao", parent=g.AUTEN_FORM),
-        "Guia rápido de autenticação",
+        "Guia de uso de autenticação",
     )
     vlayout.addWidget(barra)
     return barra
