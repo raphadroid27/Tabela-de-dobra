@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Set
 
 from PySide6.QtCore import QEvent, QObject, Qt, QTimer
 from PySide6.QtWidgets import QApplication, QWidget
+from shiboken6 import isValid
 
 from src.config import globals as g
 
@@ -77,6 +78,19 @@ class Janela:
     _event_filters: Dict[int, TransparencyEventFilter] = {}
     _configured_windows: Set[int] = set()
     _monitor_timer: Optional[QTimer] = None
+    _FORM_ATTRS = (
+        "PRINC_FORM",
+        "DEDUC_FORM",
+        "MATER_FORM",
+        "CANAL_FORM",
+        "ESPES_FORM",
+        "SOBRE_FORM",
+        "AUTEN_FORM",
+        "USUAR_FORM",
+        "RIE_FORM",
+        "IMPRESSAO_FORM",
+        "COMPARAR_FORM",
+    )
 
     @staticmethod
     def _get_all_app_windows() -> List[QWidget]:
@@ -273,11 +287,20 @@ class Janela:
 
     @staticmethod
     def estado_janelas(estado: bool) -> None:
-        """Define o estado de habilitação das janelas."""
-        forms = [g.PRINC_FORM, g.DEDUC_FORM, g.ESPES_FORM, g.MATER_FORM, g.CANAL_FORM]
-        for form in forms:
-            if form is not None:
+        """Define o estado de habilitação das janelas, ignorando formulários inválidos."""
+        for attr in Janela._FORM_ATTRS:
+            form = getattr(g, attr, None)
+            if form is None:
+                continue
+
+            if not isValid(form):
+                setattr(g, attr, None)
+                continue
+
+            try:
                 form.setEnabled(estado)
+            except RuntimeError:
+                setattr(g, attr, None)
 
     @staticmethod
     def remover_janelas_orfas() -> None:
@@ -289,19 +312,7 @@ class Janela:
                 return
             main_window = g.PRINC_FORM if hasattr(g, "PRINC_FORM") else None
             active_forms = []
-            form_vars = [
-                "DEDUC_FORM",
-                "MATER_FORM",
-                "CANAL_FORM",
-                "ESPES_FORM",
-                "SOBRE_FORM",
-                "AUTEN_FORM",
-                "USUAR_FORM",
-                "RIE_FORM",
-                "IMPRESSAO_FORM",
-                "COMPARAR_FORM",
-            ]
-            for form_var in form_vars:
+            for form_var in Janela._FORM_ATTRS:
                 form = getattr(g, form_var, None)
                 if form and hasattr(form, "isVisible") and form.isVisible():
                     active_forms.append(form)
