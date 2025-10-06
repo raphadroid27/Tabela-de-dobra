@@ -60,6 +60,29 @@ def obter_dir_icone():
     return os.path.join(base_path, "assets", "icone_2.ico")
 
 
+def obter_dir_help_content() -> Path:
+    """Retorna o diretório onde os HTMLs de ajuda estão armazenados."""
+    candidates = []
+
+    meipass_dir = getattr(sys, "_MEIPASS", None)
+    if meipass_dir:
+        candidates.append(Path(meipass_dir) / "forms" / "common" / "help_content")
+
+    candidates.extend(
+        [
+            Path(BASE_DIR) / "forms" / "common" / "help_content",
+            Path(BASE_DIR) / "src" / "forms" / "common" / "help_content",
+            Path(__file__).resolve().parents[2] / "forms" / "common" / "help_content",
+        ]
+    )
+
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
+
+    return candidates[0]
+
+
 # --- Constantes de Caminhos Globais ---
 
 
