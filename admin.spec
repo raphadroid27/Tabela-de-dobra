@@ -5,7 +5,11 @@ a = Analysis(
     ['src\\admin.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets\\icone_2.ico', 'assets'), ('src\\__init__.py', 'src')],
+    datas=[
+        ('assets\\icone_2.ico', 'assets'),
+        ('src\\__init__.py', 'src'),
+        ('src\\forms\\common\\help_content', 'forms/common/help_content'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
