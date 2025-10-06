@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from PySide6.QtWidgets import QWidget
 
-from src.utils.utilitarios import show_info
+from src.utils.utilitarios import obter_dir_help_content, show_info
 
 # pylint: disable=C0301
 
@@ -23,8 +22,8 @@ _DEFAULT_ENTRY: HelpEntry = (
 
 _HELP_CONTENT: Dict[str, HelpEntry] = {}
 
-# Diretório onde os arquivos HTML externos residem
-_HELP_DIR = Path(__file__).parent / "help_content"
+# Diretório onde os arquivos HTML externos residem (script ou executável)
+_HELP_DIR = obter_dir_help_content()
 
 _SECTION_FILE_MAP = {
     "main": "main.html",
