@@ -358,7 +358,7 @@ def configurar_frames():
     g.BARRA_TITULO = BarraTitulo(g.PRINC_FORM, tema=tema_atual)
     g.BARRA_TITULO.set_help_callback(
         lambda: context_help.show_help("main", parent=g.PRINC_FORM),
-        "Guia rápido da tela principal",
+        "Guia de uso da tela principal",
     )
     vlayout.addWidget(g.BARRA_TITULO)
 
