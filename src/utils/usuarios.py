@@ -21,7 +21,7 @@ from src.utils.utilitarios import (
     show_warning,
 )
 
-RESET_PASSWORD_SENTINEL = "nova_senha"
+RESET_PASSWORD_SENTINEL = ""
 RESET_PASSWORD_HASH = hashlib.sha256(RESET_PASSWORD_SENTINEL.encode()).hexdigest()
 
 
