@@ -20,17 +20,23 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from shiboken6 import isValid  # Já importado no topo
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.forms.common import context_help
+from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.usuarios import login, novo_usuario
-from src.utils.utilitarios import aplicar_medida_borda_espaco, show_error
+from src.utils.utilitarios import (
+    ICON_PATH,
+    aplicar_medida_borda_espaco,
+    show_error,
+)
 
 # Constantes para configuração da interface
 JANELA_LARGURA = 200
@@ -40,9 +46,9 @@ JANELA_ALTURA_CADASTRO = 180
 
 def _configurar_janela_base(root):
     """Configura a janela base do formulário de autenticação."""
-    if g.AUTEN_FORM:
+    if g.AUTEN_FORM and isValid(g.AUTEN_FORM):
         g.AUTEN_FORM.close()
-        g.AUTEN_FORM = None
+    g.AUTEN_FORM = None
 
     g.AUTEN_FORM = QDialog(root)
     g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
@@ -50,6 +56,7 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM.setWindowFlags(
         Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
     )
+    configure_frameless_dialog(g.AUTEN_FORM, ICON_PATH)
 
     def close_event(event):
         Janela.estado_janelas(True)
