@@ -261,17 +261,28 @@ def _criar_entradas_e_resultados(layout, w):
 
 def _criar_labels_blank(layout, w):
     """Cria os labels do blank com widgets auto-ajustáveis."""
-    # Label "Medida do Blank:"
-    blank_label = QLabel("Medida do Blank:")
+    # Label "Totais:"
+    blank_label = QLabel("Totais:")
     blank_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     blank_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-    layout.addWidget(blank_label, g.N, 0, 1, 2)
+    layout.addWidget(blank_label, g.N + 1, 0, 1, 1)
 
-    # Label da medida do blank
+    # Label da medida do blank (sobe para a mesma linha g.N+1, colunas 1-3)
+    config_total_abas = ConfigLabelResultado(
+        layout=layout,
+        nome_global=f"total_abas_label_{w}",
+        pos=(g.N + 1, 1),
+        tooltip_text="Soma das medidas externas das abas.",
+        i=g.N,
+        w=w,
+        copy_type="total_abas",
+    )
+    criar_label_resultado(config_total_abas)
+
     config_blank = ConfigLabelResultado(
         layout=layout,
         nome_global=f"medida_blank_label_{w}",
-        pos=(g.N, 2),
+        pos=(g.N + 1, 2),
         tooltip_text="Clique para copiar a medida do blank.",
         i=g.N,
         w=w,
@@ -283,7 +294,7 @@ def _criar_labels_blank(layout, w):
     config_metade_blank = ConfigLabelResultado(
         layout=layout,
         nome_global=f"metade_blank_label_{w}",
-        pos=(g.N, 3),
+        pos=(g.N + 1, 3),
         tooltip_text="Clique para copiar a metade do blank.",
         i=g.N,
         w=w,

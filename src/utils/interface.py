@@ -703,6 +703,7 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
         for i in range(1, g.N)
     ]
     res = calculos.CalculoDobra().calcular_coluna(valores, deducao_usada)
+    total_abas = res.get("total_abas", 0) if res else 0
     blank = res.get("blank_total", 0) if res else 0
 
     for i in range(1, g.N):
@@ -723,6 +724,10 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                 else f"Digite o valor da medida externa para a dobra {i} (Use ↑↓ para navegar)"
             )
 
+    _atualizar_label(
+        getattr(g, f"total_abas_label_{w}",
+                None), total_abas if total_abas > 0 else None
+    )
     _atualizar_label(
         getattr(g, f"medida_blank_label_{w}", None), blank if blank > 0 else None
     )

@@ -308,13 +308,18 @@ class CalculoDobra:
         if bloco_atual:
             blocos.append(bloco_atual)
 
+        # Calcula total_abas antes do loop para garantir que sempre exista
+        total_abas = sum(v for v in valores_dobras if v > 0)
+
         resultados, blank_total = [], 0
         for i, dobra_valor in enumerate(valores_dobras):
             if dobra_valor <= 0:
                 resultados.append({"medida": None, "metade": None})
                 continue
+
             medida = self._calcular_medida_individual(dobra_valor, deducao, i, blocos)
             metade = medida / 2
             blank_total += medida
             resultados.append({"medida": medida, "metade": metade})
-        return {"resultados": resultados, "blank_total": blank_total}
+
+        return {"total_abas": total_abas, "resultados": resultados, "blank_total": blank_total}
