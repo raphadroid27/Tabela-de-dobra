@@ -25,8 +25,6 @@ from src.components.menu_custom import MenuCustom
 from src.config import globals as g
 from src.forms import (
     form_aut,
-    form_comparar_arquivos,
-    form_converter_arquivos,
     form_impressao,
     form_manual,
     form_razao_rie,
@@ -274,11 +272,6 @@ def configurar_menu(menu_custom):
         "🔧 Recursos": [
             ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(None)),
             ("🖨️ Impressão em Lote", lambda: form_impressao.main(None)),
-            ("📊 Comparar Arquivos", lambda: form_comparar_arquivos.main(None)),
-            (
-                "🔄 Converter Arquivos",
-                lambda: form_converter_arquivos.main(None),
-            ),
         ],
         "👤 Usuário": [
             ("🔐 Login", partial(_executar_autenticacao, True)),
