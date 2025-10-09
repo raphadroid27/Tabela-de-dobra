@@ -60,7 +60,7 @@ from src.utils.utilitarios import (
 )
 
 # --- Constantes de Configuração ---
-LARGURA_FORM = 550
+LARGURA_FORM = 600
 ALTURA_FORM = 513
 MARGEM_LAYOUT = 10
 
