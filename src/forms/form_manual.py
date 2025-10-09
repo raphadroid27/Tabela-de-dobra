@@ -372,6 +372,21 @@ def show_manual(
     """Exibe o manual, reutilizando a janela existente se já estiver aberta."""
 
     global _manual_instance  # pylint: disable=global-statement
+    # Se root não for fornecido (ex.: chamado a partir do menu), tentar localizar a
+    # janela principal do aplicativo para usar como âncora de posicionamento.
+    if root is None:
+        # Preferir a janela ativa do QApplication
+        root = QApplication.activeWindow()
+        if root is None:
+            # Fallback: procurar o primeiro top-level widget visível que não seja
+            # o próprio diálogo do manual (caso já exista)
+            for w in QApplication.topLevelWidgets():
+                # Evitar usar a instância do manual como âncora
+                if w is _manual_instance:
+                    continue
+                if isinstance(w, QWidget) and w.isVisible():
+                    root = w
+                    break
 
     if _manual_instance is None or not _manual_instance.isVisible():
         if _manual_instance is not None:
@@ -381,6 +396,7 @@ def show_manual(
                 pass
         _manual_instance = ManualDialog(root, initial_key)
         _manual_instance.destroyed.connect(_clear_manual_instance)
+        # Posiciona o diálogo próximo ao parent (se houver) ou centraliza
         _manual_instance.position_near_parent()
         _manual_instance.show()
     else:
