@@ -151,6 +151,7 @@ WIDGETS_ENTRADA_CABECALHO = [
 # Prefixos para categorização de widgets de dobras
 WIDGETS_DOBRAS = [
     "aba",
+    "total_abas",
     "medidadobra",
     "metadedobra",
     "blank",
