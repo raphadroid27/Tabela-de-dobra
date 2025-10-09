@@ -87,7 +87,7 @@ def verificar_admin_existente():
                 logging.warning(
                     "Nenhum administrador encontrado. Abrindo formulário de autorização."
                 )
-                form_aut.main(g.PRINC_FORM)
+                form_aut.main(None)
             else:
                 logging.info("Administrador encontrado.")
     except SQLAlchemyError as e:
@@ -205,13 +205,13 @@ def configurar_janela_principal(config):
 def abrir_formulario(form_type, edit_flag_name, is_edit_mode):
     """Abre um formulário genérico, configurando a flag de edição."""
     setattr(g, edit_flag_name, is_edit_mode)
-    form_universal(form_type, g.PRINC_FORM)
+    form_universal(form_type, None)
 
 
 def _executar_autenticacao(is_login):
     """Abre o formulário de autenticação para login ou novo usuário."""
     setattr(g, "LOGIN", is_login)
-    form_aut.main(g.PRINC_FORM)
+    form_aut.main(None)
 
 
 def _on_toggle_no_topo(checked: bool, transparencia_action: QAction):
@@ -272,12 +272,12 @@ def configurar_menu(menu_custom):
             ),
         ],
         "🔧 Recursos": [
-            ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(g.PRINC_FORM)),
-            ("🖨️ Impressão em Lote", lambda: form_impressao.main(g.PRINC_FORM)),
-            ("📊 Comparar Arquivos", lambda: form_comparar_arquivos.main(g.PRINC_FORM)),
+            ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(None)),
+            ("🖨️ Impressão em Lote", lambda: form_impressao.main(None)),
+            ("📊 Comparar Arquivos", lambda: form_comparar_arquivos.main(None)),
             (
                 "🔄 Converter Arquivos",
-                lambda: form_converter_arquivos.main(g.PRINC_FORM),
+                lambda: form_converter_arquivos.main(None),
             ),
         ],
         "👤 Usuário": [
@@ -339,10 +339,10 @@ def _criar_menu_ajuda(menu_bar):
     """Cria o menu Ajuda."""
     help_menu = menu_bar.addMenu("❓ Ajuda")
     manual_action = QAction("📘 Manual de Uso", g.PRINC_FORM)
-    manual_action.triggered.connect(lambda: form_manual.main(g.PRINC_FORM))
+    manual_action.triggered.connect(lambda: form_manual.main(None))
     help_menu.addAction(manual_action)
     sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
-    sobre_action.triggered.connect(lambda: form_sobre.main(g.PRINC_FORM))
+    sobre_action.triggered.connect(lambda: form_sobre.main(None))
     help_menu.addAction(sobre_action)
 
 
