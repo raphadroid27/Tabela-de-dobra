@@ -153,6 +153,7 @@ def fechar_aplicativo():
     """Fecha o aplicativo de forma segura."""
     logging.info("Iniciando o processo de fechamento do aplicativo.")
     try:
+        Janela.fechar_janelas_dependentes()
         if g.PRINC_FORM:
             salvar_estado_final()
             g.PRINC_FORM.close()
@@ -176,10 +177,23 @@ def configurar_janela_principal(config):
         except (RuntimeError, AttributeError):
             pass
 
-    g.PRINC_FORM = QMainWindow()
+    class MainWindow(QMainWindow):
+        """Janela principal da aplicação com tratamento personalizado de fechamento."""
+
+        def __init__(self):
+            super().__init__()
+            self.is_main_window = True
+
+        def closeEvent(self, event):  # pylint: disable=invalid-name
+            """Evento chamado quando a janela principal está sendo fechada."""
+            logging.info("CloseEvent da janela principal chamado.")
+            Janela.fechar_janelas_dependentes()
+            salvar_estado_final()
+            event.accept()
+
+    g.PRINC_FORM = MainWindow()
     g.PRINC_FORM.setWindowTitle(f"Calculadora de Dobra - v{APP_VERSION}")
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
-    g.PRINC_FORM.is_main_window = True
     g.PRINC_FORM.setWindowFlags(
         Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
     )
