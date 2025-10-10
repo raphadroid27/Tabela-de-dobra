@@ -336,6 +336,45 @@ class Janela:
             pass
 
     @staticmethod
+    def fechar_janelas_dependentes():
+        """Fecha todas as janelas dependentes da aplicação."""
+        logging.info("Fechando janelas dependentes.")
+        try:
+            for attr in Janela._FORM_ATTRS:
+                # Pula a janela principal, pois ela será fechada separadamente
+                if attr == "PRINC_FORM":
+                    continue
+
+                form = getattr(g, attr, None)
+                if form and hasattr(form, "close") and form.isVisible():
+                    try:
+                        form.close()
+                        logging.info("Janela %s fechada.", attr)
+                    except (RuntimeError, AttributeError) as e:
+                        logging.warning("Erro ao fechar janela %s: %s", attr, e)
+
+            # Também fechar qualquer outra janela top-level que não seja a principal
+            app = QApplication.instance()
+            if isinstance(app, QApplication):
+                for widget in app.topLevelWidgets():
+                    if (
+                        widget != g.PRINC_FORM
+                        and hasattr(widget, "isVisible")
+                        and widget.isVisible()
+                        and hasattr(widget, "close")
+                    ):
+                        try:
+                            widget.close()
+                            logging.info(
+                                "Janela adicional fechada: %s", widget.windowTitle()
+                            )
+                        except (RuntimeError, AttributeError) as e:
+                            logging.warning("Erro ao fechar janela adicional: %s", e)
+
+        except (RuntimeError, AttributeError) as e:
+            logging.error("Erro ao fechar janelas dependentes: %s", e)
+
+    @staticmethod
     def janela_flags() -> Qt.WindowType:
         """Retorna as flags da janela principal."""
         return (
