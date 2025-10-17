@@ -1,7 +1,7 @@
 """Cabeçalho da interface com campos de entrada e rótulos."""
 
-from PySide6.QtCore import QLocale, Qt
-from PySide6.QtGui import QDoubleValidator
+from PySide6.QtCore import QRegularExpression, Qt
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QGridLayout, QGroupBox, QLabel, QLineEdit
 
 from src.config import globals as g
@@ -117,10 +117,8 @@ def _criar_linha_1(layout):
     esp_comb = criar_widget_cabecalho(layout, "combobox", "ESP_COMB", (1, 1))
     canal_comb = criar_widget_cabecalho(layout, "combobox", "CANAL_COMB", (1, 2))
     compr_entry = criar_widget_cabecalho(layout, "entry", "COMPR_ENTRY", (1, 3))
-    # Validador numérico (aceita vírgula conforme locale PT-BR)
-    val_c = QDoubleValidator(0.0, 999999.0, 3)
-    val_c.setNotation(QDoubleValidator.Notation.StandardNotation)
-    val_c.setLocale(QLocale(QLocale.Language.Portuguese, QLocale.Country.Brazil))
+    # Validador numérico (aceita vírgula ou ponto como separador decimal, sem negativos)
+    val_c = QRegularExpressionValidator(QRegularExpression(r"^\d*([.,]\d*)?$"))
     compr_entry.setValidator(val_c)
 
     # Tooltips
@@ -145,10 +143,8 @@ def _criar_linha_2(layout):
     criar_label(layout, "Offset:", (2, 3))
 
     ri_entry = criar_widget_cabecalho(layout, "entry", "RI_ENTRY", (3, 0))
-    # Validador numérico (aceita vírgula conforme locale PT-BR)
-    val_r = QDoubleValidator(0.0, 999999.0, 3)
-    val_r.setNotation(QDoubleValidator.Notation.StandardNotation)
-    val_r.setLocale(QLocale(QLocale.Language.Portuguese, QLocale.Country.Brazil))
+    # Validador numérico (aceita vírgula ou ponto como separador decimal, sem negativos)
+    val_r = QRegularExpressionValidator(QRegularExpression(r"^\d*([.,]\d*)?$"))
     ri_entry.setValidator(val_r)
     k_lbl = criar_widget_cabecalho(layout, "label", "K_LBL", (3, 1))
     ded_lbl = criar_widget_cabecalho(layout, "label", "DED_LBL", (3, 2))
@@ -181,6 +177,9 @@ def _criar_linha_3(layout):
     criar_label(layout, "Força (t/m):", (4, 3))
 
     ded_espec_entry = criar_widget_cabecalho(layout, "entry", "DED_ESPEC_ENTRY", (5, 0))
+    # Validador numérico (aceita vírgula ou ponto como separador decimal, sem negativos)
+    val_d = QRegularExpressionValidator(QRegularExpression(r"^\d*([.,]\d*)?$"))
+    ded_espec_entry.setValidator(val_d)
     aba_ext_lbl = criar_widget_cabecalho(layout, "label", "ABA_EXT_LBL", (5, 1))
     z_ext_lbl = criar_widget_cabecalho(layout, "label", "Z_EXT_LBL", (5, 2))
     forca_lbl = criar_widget_cabecalho(layout, "label", "FORCA_LBL", (5, 3))
