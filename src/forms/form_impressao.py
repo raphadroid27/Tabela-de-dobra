@@ -10,9 +10,11 @@ e adicionando um worker thread para impressão controlada, evitando sobrecarga d
 """
 
 import os
+import re
 import subprocess  # nosec B404
 import sys
 import time
+import unicodedata
 from typing import List, Optional
 
 from PySide6.QtCore import QThread, QTimer, Signal
@@ -110,7 +112,42 @@ class PrintManager:
         """Extrai a parte principal do nome do arquivo."""
         if not arquivo or not isinstance(arquivo, str):
             return ""
-        return arquivo.split(" - ")[0].strip() if " - " in arquivo else arquivo.strip()
+
+        # Se o texto contém ' - ' (formato antigo), mantém comportamento anterior
+        if " - " in arquivo:
+            return arquivo.split(" - ")[0].strip()
+
+        # Procura um token inicial que represente o identificador do arquivo
+        m = re.match(r"^([\w\.-]+)", arquivo.strip())
+        if m:
+            return m.group(1)
+
+        return arquivo.strip()
+
+    def _normalizar_texto(self, texto: str) -> str:
+        """Normaliza texto para comparação:
+
+        - Remove acentuação
+        - Converte para minúsculas
+        - Normaliza espaços, pontos e hífens
+        """
+        if not texto:
+            return ""
+
+        # remover acentos
+        nfkd = unicodedata.normalize("NFKD", texto)
+        sem_acento = "".join(c for c in nfkd if not unicodedata.combining(c))
+
+        txt = sem_acento.lower()
+
+        # normalizar espaços
+        txt = re.sub(r"\s+", " ", txt).strip()
+
+        # normalizar sinais
+        txt = re.sub(r"\s*\.\s*", ".", txt)
+        txt = re.sub(r"\s*-\s*", "-", txt)
+
+        return txt
 
     def _procurar_arquivo(self, diretorio: str, nome_base: str) -> Optional[str]:
         """Procura um arquivo específico no diretório."""
@@ -120,11 +157,30 @@ class PrintManager:
             diretorio = os.path.normpath(diretorio)
             if not os.path.isdir(diretorio):
                 return None
-            arquivos_pdf = [
-                f
-                for f in os.listdir(diretorio)
-                if nome_base.lower() in f.lower() and f.lower().endswith(".pdf")
-            ]
+            arquivos = os.listdir(diretorio)
+
+            # Prepara candidatos de comparação a partir do nome_base com normalização
+            nome_base_clean = self._normalizar_texto(nome_base)
+            candidatos = {
+                nome_base_clean,
+                nome_base_clean.replace(" ", ""),
+                (nome_base_clean.split()[0] if nome_base_clean.split() else ""),
+            }
+
+            arquivos_pdf = []
+            for f in arquivos:
+                if not f.lower().endswith(".pdf"):
+                    continue
+                nome_sem_ext = os.path.splitext(f)[0]
+                nome_sem_ext_norm = self._normalizar_texto(nome_sem_ext)
+
+                # correspondência flexível: candidato contido no nome do arquivo ou vice-versa
+                if any(
+                    c and (c in nome_sem_ext_norm or nome_sem_ext_norm in c)
+                    for c in candidatos
+                ):
+                    arquivos_pdf.append(f)
+
             return arquivos_pdf[0] if arquivos_pdf else None
         except (OSError, PermissionError):
             return None
