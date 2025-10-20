@@ -107,25 +107,48 @@ class PrintManager:
                 self.arquivos_nao_encontrados.append(arquivo)
 
     def _extrair_nome_base(self, arquivo: str) -> str:
-        """Extrai a parte principal do nome do arquivo."""
+        """Extrai a parte principal do nome do arquivo de forma robusta."""
         if not arquivo or not isinstance(arquivo, str):
             return ""
-        return arquivo.split(" - ")[0].strip() if " - " in arquivo else arquivo.strip()
+
+        # Normaliza diferentes tipos de hífens para o hífen padrão
+        # e normaliza todos os tipos de espaços em excesso.
+        temp_arquivo = arquivo.replace("–", "-").replace("—", "-")
+        temp_arquivo = " ".join(temp_arquivo.split())
+
+        # Prioriza a divisão por " - "
+        if " - " in temp_arquivo:
+            return temp_arquivo.split(" - ", maxsplit=1)[0].strip()
+
+        # Caso contrário, divide pelo primeiro espaço
+        return temp_arquivo.split(" ", maxsplit=1)[0].strip()
 
     def _procurar_arquivo(self, diretorio: str, nome_base: str) -> Optional[str]:
-        """Procura um arquivo específico no diretório."""
+        """Procura um arquivo específico no diretório com mais precisão."""
         if not diretorio or not nome_base:
             return None
         try:
             diretorio = os.path.normpath(diretorio)
             if not os.path.isdir(diretorio):
                 return None
-            arquivos_pdf = [
-                f
-                for f in os.listdir(diretorio)
-                if nome_base.lower() in f.lower() and f.lower().endswith(".pdf")
-            ]
-            return arquivos_pdf[0] if arquivos_pdf else None
+
+            nome_base_lower = nome_base.lower()
+
+            # 1ª Tentativa: Busca por correspondência exata do nome do arquivo (sem extensão)
+            for f in os.listdir(diretorio):
+                if f.lower().endswith(".pdf"):
+                    nome_arquivo_sem_ext, _ = os.path.splitext(f)
+                    if nome_arquivo_sem_ext.lower() == nome_base_lower:
+                        return f  # Encontrou correspondência exata
+
+            # 2ª Tentativa: Se não achou exato, busca por arquivos que começam com o nome base
+            # (útil para casos como 'CODIGO-REV1.pdf' ao buscar 'CODIGO')
+            for f in os.listdir(diretorio):
+                if f.lower().startswith(nome_base_lower) and f.lower().endswith(".pdf"):
+                    return f  # Retorna a primeira correspondência parcial encontrada
+
+            return None  # Nenhum arquivo encontrado
+
         except (OSError, PermissionError):
             return None
 
