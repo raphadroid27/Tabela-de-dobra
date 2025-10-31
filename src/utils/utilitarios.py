@@ -104,7 +104,7 @@ APPDATA_DIR = os.environ.get(
 )
 
 # Diretórios para comunicação entre processos (IPC) - mantidos no diretório base
-RUNTIME_DIR = os.path.join(BASE_DIR, ".runtime")
+RUNTIME_DIR = os.path.join(BASE_DIR, ".runtime", "calculadora_dobra")
 SESSION_DIR = os.path.join(RUNTIME_DIR, "sessions")
 COMMAND_DIR = os.path.join(RUNTIME_DIR, "commands")
 
