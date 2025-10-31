@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Sequence, Union
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QInputDialog, QLayout, QLineEdit, QMessageBox, QWidget
 
 from src.config import globals as g
@@ -284,6 +284,29 @@ def show_info(title: str, message: str, parent: Optional[QWidget] = None) -> Non
 def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> None:
     """Mostra uma mensagem de aviso usando QMessageBox."""
     _show_message_box(QMessageBox.Icon.Warning, title, message, parent)
+
+
+def show_timed_message_box(parent, title, message, timeout_ms=10000):
+    """Mostra uma caixa de mensagem com timeout automático."""
+    msg_box = QMessageBox(
+        QMessageBox.Icon.Information,
+        title,
+        message,
+        QMessageBox.StandardButton.Ok,
+        parent,
+    )
+
+    # Timer para fechar automaticamente
+    timer = QTimer(parent)
+    timer.timeout.connect(msg_box.accept)
+    timer.setSingleShot(True)
+    timer.start(timeout_ms)
+
+    # Mostrar diálogo (modal)
+    msg_box.exec()
+
+    # Parar timer se ainda rodando
+    timer.stop()
 
 
 def _resolve_executable(executable: str) -> str:

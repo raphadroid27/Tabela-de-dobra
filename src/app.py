@@ -60,6 +60,7 @@ from src.utils.utilitarios import (
     ICON_PATH,
     aplicar_medida_borda_espaco,
     setup_logging,
+    show_timed_message_box,
 )
 
 # Constantes para configuração da aplicação
@@ -423,7 +424,15 @@ def system_tick():
     """
     if verificar_comando_sistema():
         logging.info("Comando de encerramento recebido. Fechando a aplicação.")
-        fechar_aplicativo()
+        show_timed_message_box(
+            g.PRINC_FORM,
+            "Sistema",
+            "O administrador solicitou o fechamento do sistema.\n"
+            "A aplicação será encerrada.",
+            10000,
+        )
+        # Agendar o fechamento da aplicação após a mensagem ser exibida
+        QTimer.singleShot(500, QApplication.quit)
         return
 
     atualizar_heartbeat_sessao()
