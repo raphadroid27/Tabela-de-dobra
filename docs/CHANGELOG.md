@@ -2,19 +2,15 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
-## 2.4.2 (12/09/2025)
+## 2.5.0 (10/10/2025)
 
-- Refatorações gerais para melhorar performance, usabilidade e organização do código:
-    - Aplicação de estilos visuais consistentes em QTreeWidget e remoção de ordenação automática.
-    - Implementação de sistema de cache para dados do banco com persistência e invalidação inteligente.
-    - Adição de validações para integridade de dados e limpeza de deduções órfãs.
-    - Melhorias na interface com tooltips, atalhos de teclado e debounce em buscas.
-    - Otimização de timeouts para operações de banco de dados.
-    - Migração de cache e configurações para AppData do usuário.
-    - Implementação de analisador de bloqueios com dashboard de recovery.
-    - Unificação de importações e ajustes de responsividade da interface.
-    - Padronização de docstrings e comentários para maior clareza.
-    - Remoção de dependências desnecessárias e simplificação do código.
+- Refatorações gerais de janelas e UI: fechamento seguro de janelas dependentes, suporte a janelas sem borda e de sistema, melhor posicionamento, ajustes de tamanhos/atributos de formulários e seleção estendida em tabelas.
+- Ajuda e manual: conteúdos HTML externos, exibição otimizada do manual, ajuda contextual integrada a vários formulários e melhoria da legibilidade/estrutura da documentação de uso.
+- Conversão e comparação de arquivos: novos formulários e menu para comparação geométrica (STEP) e conversão (PDF↔DXF via Inkscape, DWG→PDF em duas etapas), tratamento de erros, cancelamento, atalhos e reordenação de botões.
+- Usabilidade e estilo: novos atalhos e tooltips, cor de botão laranja com estados, estilos aplicados a tabelas (QTableWidget), melhorias de responsividade e acessibilidade de teclado.
+- Dependências e build: atualização de requirements (pillow, matplotlib, ezdxf, PyMuPDF, PyQtDarkTheme-fork), remoção de scripts obsoletos e atualização de versão.
+- Performance, cache e banco: implementação de cache com persistência/invalidação, otimização de timeouts, validações de integridade (limpeza de deduções órfãs) e simplificação da gestão de instâncias.
+- Limpeza e manutenção: renomeações, padronização de imports/docstrings, remoção de dependências e de código legado, e aprimoramentos gerais de legibilidade e organização do projeto.
 
 ## 2.4.1 (02/09/2025)
 
