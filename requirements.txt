@@ -8,3 +8,17 @@ ezdxf
 PyMuPDF
 pillow
 matplotlib
+
+# requerimentos de desenvolvimento
+black
+isort
+autoflake
+pylint
+flake8
+pydocstyle
+vulture
+mypy
+bandit
+safety
+radon
+copydetect
