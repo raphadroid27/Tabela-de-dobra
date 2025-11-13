@@ -20,7 +20,6 @@ from PySide6.QtWidgets import (
 from sqlalchemy.exc import SQLAlchemyError
 
 from src import __version__
-from src.components.barra_titulo import BarraTitulo
 from src.components.menu_custom import MenuCustom
 from src.config import globals as g
 from src.forms import (
@@ -195,9 +194,7 @@ def configurar_janela_principal(config):
     g.PRINC_FORM = MainWindow()
     g.PRINC_FORM.setWindowTitle(f"Calculadora de Dobra - v{APP_VERSION}")
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
-    g.PRINC_FORM.setWindowFlags(
-        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
-    )
+    g.PRINC_FORM.setWindowFlags(Qt.WindowType.Window)
 
     if "geometry" in config and isinstance(config["geometry"], str):
         parts = config["geometry"].split("+")
@@ -368,17 +365,6 @@ def configurar_frames():
     g.PRINC_FORM.setCentralWidget(central_widget)
     vlayout = QVBoxLayout(central_widget)
     aplicar_medida_borda_espaco(vlayout, LAYOUT_MARGEM, LAYOUT_ESPACAMENTO)
-
-    tema_atual = getattr(g, "TEMA_ATUAL", "dark")
-    g.BARRA_TITULO = BarraTitulo(g.PRINC_FORM, tema=tema_atual)
-    g.BARRA_TITULO.set_help_callback(
-        lambda: context_help.show_help("main", parent=g.PRINC_FORM),
-        "Guia de uso da tela principal",
-    )
-    vlayout.addWidget(g.BARRA_TITULO)
-
-    if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
-        g.BARRA_TITULO.set_tema(obter_tema_atual())
 
     menu_custom = MenuCustom(g.PRINC_FORM)
     vlayout.addWidget(menu_custom)

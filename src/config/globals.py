@@ -9,9 +9,6 @@ EXP_H: Optional[bool] = None
 USUARIO_ID: Optional[int] = None
 USUARIO_NOME: Optional[str] = None
 TEMA_ATUAL: Optional[str] = None
-BARRA_TITULO: Any = None
-# Lista para rastrear todas as barras de título ativas
-BARRAS_TITULO_ATIVAS: List[Any] = []
 SESSION_ID: Optional[str] = None
 UPDATE_INFO: Optional[Dict[str, Any]] = None
 UPDATE_ACTION: Optional[str] = None

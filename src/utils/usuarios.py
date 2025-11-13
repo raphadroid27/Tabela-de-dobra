@@ -132,8 +132,6 @@ def login():
                 if g.PRINC_FORM:
                     titulo = f"Calculadora de Dobra - {usuario_obj.nome}"
                     g.PRINC_FORM.setWindowTitle(titulo)
-                    if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
-                        g.BARRA_TITULO.titulo.setText(titulo)
                 return
 
             show_error("Erro", "Usuário ou senha incorretos.", parent=parent_form)
@@ -192,8 +190,6 @@ def logout():
     if g.PRINC_FORM:
         titulo = "Calculadora de Dobra"
         g.PRINC_FORM.setWindowTitle(titulo)
-        if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
-            g.BARRA_TITULO.titulo.setText(titulo)
     show_info("Logout", "Logout efetuado com sucesso.")
 
 

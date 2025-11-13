@@ -278,62 +278,8 @@ def registrar_tema_actions(actions_dict):
 
 
 def aplicar_tema_qdarktheme(nome_tema):
-    """Aplica o tema qdarktheme e atualiza barras de título ativas."""
+    """Aplica o tema qdarktheme."""
     gerenciador_temas.aplicar_tema_qdarktheme(nome_tema)
-    # Atualizar barra de título customizada, se existir
-    if hasattr(g, "BARRA_TITULO") and g.BARRA_TITULO:
-        g.BARRA_TITULO.set_tema(nome_tema)
-
-    # Atualizar todas as barras de título ativas dos formulários abertos
-    atualizar_barras_titulo_ativas(nome_tema)
-
-
-def atualizar_barras_titulo_ativas(tema):
-    """
-    Atualiza o tema de todas as barras de título ativas nos formulários abertos.
-
-    Args:
-        tema: Nome do tema a ser aplicado
-    """
-    if not hasattr(g, "BARRAS_TITULO_ATIVAS"):
-        return
-
-    # Criar uma cópia da lista para evitar problemas de modificação durante iteração
-    barras_ativas = g.BARRAS_TITULO_ATIVAS.copy()
-
-    for barra in barras_ativas:
-        try:
-            # Verificar se a barra ainda existe e é válida
-            if barra and hasattr(barra, "set_tema"):
-                barra.set_tema(tema)
-        except (RuntimeError, AttributeError) as e:
-            # Se a barra não é mais válida, removê-la da lista
-            logger.warning("Removendo barra de título inválida: %s", e)
-            if barra in g.BARRAS_TITULO_ATIVAS:
-                g.BARRAS_TITULO_ATIVAS.remove(barra)
-
-
-def limpar_barras_titulo_inativas():
-    """
-    Remove barras de título inativas da lista global.
-    Útil para limpeza periódica ou quando há suspeita de vazamentos de memória.
-    """
-    if not hasattr(g, "BARRAS_TITULO_ATIVAS"):
-        return
-
-    barras_validas = []
-    for barra in g.BARRAS_TITULO_ATIVAS:
-        try:
-            # Tentar acessar uma propriedade para verificar se o objeto ainda é válido
-            if barra and hasattr(barra, "set_tema") and hasattr(barra, "_parent"):
-                barras_validas.append(barra)
-        except (RuntimeError, AttributeError):
-            # Objeto não é mais válido
-            pass
-
-    # Atualizar a lista com apenas as barras válidas
-    g.BARRAS_TITULO_ATIVAS = barras_validas
-    logger.info("Limpeza de barras de título: %d barras mantidas", len(barras_validas))
 
 
 def aplicar_tema_inicial(tema=None):

@@ -23,13 +23,11 @@ from PySide6.QtWidgets import (
 from shiboken6 import isValid  # Já importado no topo
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.forms.common import context_help
 from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
-from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
+from src.utils.estilo import aplicar_estilo_botao
 from src.utils.janelas import Janela
 from src.utils.usuarios import login, novo_usuario
 from src.utils.utilitarios import (
@@ -53,9 +51,7 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM = QDialog(root)
     g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
     g.AUTEN_FORM.setModal(True)
-    g.AUTEN_FORM.setWindowFlags(
-        Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window
-    )
+    g.AUTEN_FORM.setWindowFlags(Qt.WindowType.Window)
     configure_frameless_dialog(g.AUTEN_FORM, ICON_PATH)
 
     def close_event(event):
@@ -70,23 +66,6 @@ def _criar_layout_principal():
     vlayout = QVBoxLayout(g.AUTEN_FORM)
     aplicar_medida_borda_espaco(vlayout, 5)
     return vlayout
-
-
-def _criar_barra_titulo(vlayout):
-    """Cria e configura a barra de título."""
-    barra = BarraTitulo(g.AUTEN_FORM, tema=obter_tema_atual())
-
-    if g.LOGIN:
-        barra.titulo.setText("Login")
-    else:
-        barra.titulo.setText("Novo Usuário")
-
-    barra.set_help_callback(
-        lambda: context_help.show_help("autenticacao", parent=g.AUTEN_FORM),
-        "Guia de uso de autenticação",
-    )
-    vlayout.addWidget(barra)
-    return barra
 
 
 def _criar_campos_usuario_senha(main_layout):
@@ -216,6 +195,5 @@ def main(root):
     """Função principal que cria a janela de autenticação."""
     _configurar_janela_base(root)
     vlayout = _criar_layout_principal()
-    _criar_barra_titulo(vlayout)
     _criar_conteudo_principal(vlayout)
     _finalizar_configuracao()

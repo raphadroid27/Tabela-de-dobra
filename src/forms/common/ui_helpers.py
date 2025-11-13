@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Iterable, Optional
+from typing import Iterable
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -14,15 +14,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.components.barra_titulo import BarraTitulo
-from src.utils.estilo import obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 
 def configure_frameless_dialog(dialog: QWidget, icon_path: str) -> None:
-    """Aplica configuração padrão de janelas sem moldura."""
-    dialog.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+    """Aplica configuração padrão de janelas com barra de título nativa."""
+    dialog.setWindowFlags(Qt.WindowType.Window)
     if Janela.get_on_top_state():
         dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
     dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -37,24 +35,17 @@ def create_dialog_scaffold(
     icon_path: str,
     **options,
 ) -> QVBoxLayout:
-    """Configura o esqueleto base de diálogos com barra de título personalizada."""
+    """Configura o esqueleto base de diálogos com barra de título nativa."""
     position = options.get("position")
     barra_title = options.get("barra_title")
-    help_callback: Optional[Callable[[], None]] = options.get("help_callback")
-    help_tooltip: Optional[str] = options.get("help_tooltip")
 
-    dialog.setWindowTitle(title)
+    dialog.setWindowTitle(barra_title or title)
     dialog.setFixedSize(*size)
     configure_frameless_dialog(dialog, icon_path)
     Janela.posicionar_janela(dialog, position)
 
     layout = QVBoxLayout(dialog)
     aplicar_medida_borda_espaco(layout, 0)
-
-    barra = BarraTitulo(dialog, tema=obter_tema_atual())
-    barra.titulo.setText(barra_title or title)
-    barra.set_help_callback(help_callback, help_tooltip)
-    layout.addWidget(barra)
 
     return layout
 

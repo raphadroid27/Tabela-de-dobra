@@ -34,11 +34,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.components.barra_titulo import BarraTitulo
 from src.forms.common import context_help
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import configure_frameless_dialog
-from src.utils.estilo import aplicar_estilo_botao, obter_tema_atual
+from src.utils.estilo import aplicar_estilo_botao
 from src.utils.janelas import Janela
 from src.utils.utilitarios import (
     ICON_PATH,
@@ -350,11 +349,6 @@ class FormImpressao(QDialog):
         vlayout = QVBoxLayout(self)
         vlayout.setContentsMargins(0, 0, 0, 0)
         vlayout.setSpacing(0)
-
-        barra = BarraTitulo(self, tema=obter_tema_atual())
-        barra.titulo.setText("Impressão em Lote de PDFs")
-        barra.set_help_callback(self._mostrar_ajuda, "Guia de uso da impressão")
-        vlayout.addWidget(barra)
 
         conteudo = QWidget()
         layout_principal = QGridLayout(conteudo)

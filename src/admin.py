@@ -44,7 +44,6 @@ from PySide6.QtWidgets import (
 )
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
 from src.forms.form_manual import ManualDialog, show_manual
 from src.models.models import Usuario
@@ -56,7 +55,6 @@ from src.utils.estilo import (
     aplicar_estilo_widget_auto_ajustavel,
     aplicar_tema_inicial,
     obter_estilo_progress_bar,
-    obter_tema_atual,
 )
 from src.utils.interface_manager import safe_process_events
 from src.utils.session_manager import (
@@ -712,19 +710,11 @@ class AdminTool(QMainWindow):
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        self.setWindowFlags(Qt.WindowType.Window)
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         aplicar_medida_borda_espaco(main_layout, 0, 0)
-        self.barra_titulo = BarraTitulo(self, tema=obter_tema_atual())
-        self.barra_titulo.titulo.setText("Ferramenta Administrativa")
-        self._manual_dialog: Optional[ManualDialog] = None
-        self.barra_titulo.set_help_callback(
-            self._open_manual_dialog,
-            "Abrir manual da ferramenta administrativa",
-        )
-        main_layout.addWidget(self.barra_titulo)
         self.stacked_widget = QStackedWidget()
         main_layout.addWidget(self.stacked_widget)
         self.auth_widget = AdminAuthWidget()
@@ -770,15 +760,6 @@ class AdminTool(QMainWindow):
         close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
         close_shortcut.activated.connect(self.close)
 
-    def _open_manual_dialog(self) -> None:
-        """Abre o manual de uso destacando a seção administrativa."""
-        if self._manual_dialog and self._manual_dialog.isVisible():
-            self._manual_dialog.raise_()
-            self._manual_dialog.activateWindow()
-            return
-
-        self._manual_dialog = show_manual(self, "admin")
-
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
         self.setFixedSize(380, 400)
@@ -787,8 +768,6 @@ class AdminTool(QMainWindow):
     def closeEvent(self, event):  # pylint: disable=C0103
         """Garante que o timer da aba de instâncias seja parado ao fechar."""
         self.instances_tab.stop_timer()
-        if self._manual_dialog:
-            self._manual_dialog.close()
         event.accept()
 
 

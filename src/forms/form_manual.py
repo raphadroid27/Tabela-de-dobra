@@ -26,10 +26,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.components.barra_titulo import BarraTitulo
 from src.forms.common import context_help
 from src.forms.common.ui_helpers import configure_frameless_dialog
-from src.utils.estilo import obter_tema_atual
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 Section = Tuple[str, str, str]
@@ -138,14 +136,6 @@ class ManualDialog(QDialog):
 
         root_layout = QVBoxLayout(self)
         aplicar_medida_borda_espaco(root_layout, 0, 0)
-
-        barra = BarraTitulo(self, tema=obter_tema_atual())
-        barra.titulo.setText("Manual de Uso")
-        barra.set_help_callback(
-            lambda: self.select_section_by_key("manual", ensure_menu_visible=True),
-            "Dicas de navegação do manual",
-        )
-        root_layout.addWidget(barra)
 
         controle = QWidget()
         controle_layout = QVBoxLayout(controle)

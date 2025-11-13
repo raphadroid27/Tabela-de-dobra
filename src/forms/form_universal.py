@@ -26,9 +26,7 @@ from PySide6.QtWidgets import (
 )
 from shiboken6 import Shiboken
 
-from src.components.barra_titulo import BarraTitulo
 from src.config import globals as g
-from src.forms.common import context_help
 from src.forms.common.ui_helpers import configure_frameless_dialog
 from src.utils.controlador import (
     adicionar,
@@ -41,7 +39,6 @@ from src.utils.estilo import (
     ALTURA_PADRAO_COMPONENTE,
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
-    obter_tema_atual,
 )
 from src.utils.interface import (
     FormWidgetUpdater,
@@ -374,9 +371,19 @@ class FormManager:
         return new_form
 
     def _create_dialog(self):
-        """Cria o diálogo do formulário com barra de título customizada."""
+        """Cria o diálogo do formulário com barra de título nativa."""
         new_form = QDialog(self.root)
-        new_form.setWindowTitle(self.config["titulo"])
+        is_edit = getattr(g, self.config["global_edit"], False)
+        if is_edit:
+            nome = self.config["titulo"].split(" ")[-1]
+            titulo_janela = f"Editar/Excluir {nome}"
+        else:
+            if self.tipo == "espessura":
+                titulo_janela = "Adicionar Espessura"
+            else:
+                nome = self.config["titulo"].split(" ")[-1]
+                titulo_janela = f"Adicionar {nome}"
+        new_form.setWindowTitle(titulo_janela)
         new_form.resize(*self.config["size"])
         new_form.setFixedSize(*self.config["size"])
 
@@ -385,25 +392,6 @@ class FormManager:
         vlayout = QVBoxLayout(new_form)
         vlayout.setContentsMargins(0, 0, 0, 0)
         vlayout.setSpacing(0)
-
-        is_edit = getattr(g, self.config["global_edit"], False)
-        if is_edit:
-            nome = self.config["titulo"].split(" ")[-1]
-            barra_titulo = f"Editar/Excluir {nome}"
-        else:
-            if self.tipo == "espessura":
-                barra_titulo = "Adicionar Espessura"
-            else:
-                nome = self.config["titulo"].split(" ")[-1]
-                barra_titulo = f"Adicionar {nome}"
-
-        barra = BarraTitulo(new_form, tema=obter_tema_atual())
-        barra.titulo.setText(barra_titulo)
-        barra.set_help_callback(
-            lambda: context_help.show_help("cadastro", parent=new_form),
-            "Atalhos e dicas do cadastro",
-        )
-        vlayout.addWidget(barra)
 
         conteudo_widget = QWidget()
         vlayout.addWidget(conteudo_widget)

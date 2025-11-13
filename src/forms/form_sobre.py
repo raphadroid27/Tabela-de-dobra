@@ -11,10 +11,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QWidget
 
 from src import __version__
-from src.components.barra_titulo import BarraTitulo
-from src.forms.common import context_help
 from src.forms.common.ui_helpers import configure_frameless_dialog
-from src.utils.estilo import obter_tema_atual
 from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
@@ -33,15 +30,6 @@ def main(root: Optional[QWidget]) -> None:
     layout = QVBoxLayout(sobre_form)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
-
-    # Barra de título customizada
-    barra = BarraTitulo(sobre_form, tema=obter_tema_atual())
-    barra.titulo.setText("Sobre")
-    barra.set_help_callback(
-        lambda: context_help.show_help("sobre", parent=sobre_form),
-        "Informações sobre a aplicação",
-    )
-    layout.addWidget(barra)
 
     # Widget de conteúdo principal
     conteudo = QWidget()
