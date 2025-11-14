@@ -434,6 +434,19 @@ def get_widgets_styles() -> str:
         color: palette(text);
         border: 1px solid palette(dark);
     }}
+
+    QMenuBar {{
+        background-color: palette(window);
+        color: palette(window-text);
+        padding: 5px 0px;
+        font-size: 10pt;
+        spacing: 3px;
+    }}
+
+        QMenu {{
+            font-size: 10pt;
+    }}
+
     """
 
 
