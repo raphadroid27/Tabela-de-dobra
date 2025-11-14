@@ -450,7 +450,7 @@ class FormImpressao(QDialog):
         aplicar_medida_borda_espaco(layout)
 
         label_lista = QLabel("Lista de arquivos (um por linha):")
-        label_lista.setObjectName("titulo")
+        label_lista.setObjectName("label_titulo")
         label_lista.setStyleSheet(STYLE_LABEL_BOLD)
         layout.addWidget(label_lista, 0, 0, 1, 3)
 
@@ -477,7 +477,7 @@ class FormImpressao(QDialog):
         layout.addWidget(limpar_text_btn, 2, 2)
 
         label_arquivos = QLabel("Arquivos na lista:")
-        label_arquivos.setObjectName("titulo")
+        label_arquivos.setObjectName("label_titulo")
         label_arquivos.setStyleSheet(STYLE_LABEL_BOLD)
         layout.addWidget(label_arquivos, 3, 0, 1, 3)
 

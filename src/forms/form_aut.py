@@ -71,14 +71,14 @@ def _criar_layout_principal():
 def _criar_campos_usuario_senha(main_layout):
     """Cria os campos de usuário e senha."""
     label_usuario = QLabel("Usuário:")
-    label_usuario.setObjectName("titulo")
+    label_usuario.setObjectName("label_titulo")
     main_layout.addWidget(label_usuario, 0, 0)
     g.USUARIO_ENTRY = QLineEdit()
     g.USUARIO_ENTRY.setToolTip("Digite seu nome de usuário")
     main_layout.addWidget(g.USUARIO_ENTRY, 0, 1)
 
     label_senha = QLabel("Senha:")
-    label_senha.setObjectName("titulo")
+    label_senha.setObjectName("label_titulo")
     main_layout.addWidget(label_senha, 1, 0)
     g.SENHA_ENTRY = QLineEdit()
     g.SENHA_ENTRY.setEchoMode(QLineEdit.EchoMode.Password)
@@ -129,7 +129,7 @@ def _configurar_checkbox_admin(main_layout):
     """Configura o checkbox de administrador."""
     g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_CADASTRO)
     label_admin = QLabel("Admin:")
-    label_admin.setObjectName("titulo")
+    label_admin.setObjectName("label_titulo")
     main_layout.addWidget(label_admin, 2, 0)
     admin_checkbox = QCheckBox()
     admin_checkbox.setToolTip("Marque para criar usuário administrador (Ctrl+A)")

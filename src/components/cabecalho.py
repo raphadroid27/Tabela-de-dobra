@@ -28,7 +28,7 @@ def criar_label(layout, texto, linha_coluna):
     linha, coluna = linha_coluna
     label = QLabel(texto)
     label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-    label.setObjectName("titulo")  # Classe CSS para títulos
+    label.setObjectName("label_titulo")  # Classe CSS para títulos
     layout.addWidget(label, linha, coluna)
     return label
 

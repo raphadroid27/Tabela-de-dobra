@@ -450,7 +450,7 @@ def criar_label(layout, texto, pos):
     """Cria um rótulo (QLabel) no layout especificado."""
     linha, coluna = pos
     label = QLabel(texto)
-    label.setObjectName("titulo")
+    label.setObjectName("label_titulo")
     label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
     layout.addWidget(label, linha, coluna)
     return label
@@ -583,7 +583,7 @@ def criar_frame_edicoes(config):
     )
 
     frame_edicoes = QGroupBox(titulo)
-    frame_edicoes.setObjectName("titulo")
+    frame_edicoes.setObjectName("label_titulo")
     layout = QGridLayout(frame_edicoes)
     aplicar_medida_borda_espaco(layout)
 

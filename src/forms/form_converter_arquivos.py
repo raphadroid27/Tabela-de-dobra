@@ -143,7 +143,7 @@ class FormConverterArquivos(QDialog):
         # Linha de seleção de tipo
         type_layout = QHBoxLayout()
         label_tipo = QLabel("Tipo de Conversão:")
-        label_tipo.setObjectName("titulo")
+        label_tipo.setObjectName("label_titulo")
         type_layout.addWidget(label_tipo)
         self.cmb_conversion_type = QComboBox()
         self.cmb_conversion_type.addItems(CONVERSION_HANDLERS.keys())

@@ -180,7 +180,7 @@ class FormCompararArquivos(QDialog):
         """Configura os layouts internos do formulário."""
         type_layout = QHBoxLayout()
         label_tipo = QLabel("Tipo de Arquivo:")
-        label_tipo.setObjectName("titulo")
+        label_tipo.setObjectName("label_titulo")
         type_layout.addWidget(label_tipo)
         self.cmb_file_type = QComboBox()
         for name, data in FILE_HANDLERS.items():

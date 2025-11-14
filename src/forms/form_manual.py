@@ -67,7 +67,7 @@ def _create_section_widget(title: str, body: str) -> QWidget:
     aplicar_medida_borda_espaco(layout, 5, 0)
 
     header = QLabel(title)
-    header.setObjectName("titulo")
+    header.setObjectName("label_titulo")
     header_font = QFont()
     header_font.setPointSize(16)
     header_font.setBold(True)

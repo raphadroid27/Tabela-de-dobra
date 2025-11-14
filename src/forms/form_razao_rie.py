@@ -63,7 +63,7 @@ class FormRazaoRIE(QDialog):
         aplicar_medida_borda_espaco(main_layout, 10)
 
         label_razao = QLabel("Raio Int. / Esp.: ")
-        label_razao.setObjectName("titulo")
+        label_razao.setObjectName("label_titulo")
         main_layout.addWidget(label_razao, 0, 0)
         main_layout.addWidget(self._criar_label_resultado(), 0, 1)
         main_layout.addWidget(self._criar_tabela(), 1, 0, 1, 2)

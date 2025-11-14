@@ -53,7 +53,7 @@ def criar_label_header(layout, texto, pos):
     """
     linha, coluna = pos
     header_label = QLabel(texto)
-    header_label.setObjectName("titulo")
+    header_label.setObjectName("label_titulo")
     header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(header_label, linha, coluna)
     return header_label
@@ -73,7 +73,7 @@ def criar_label_aba(layout, texto, pos):
     """
     linha, coluna = pos
     aba_label = QLabel(texto)
-    aba_label.setObjectName("titulo")
+    aba_label.setObjectName("label_titulo")
     aba_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(aba_label, linha, coluna)
     return aba_label
