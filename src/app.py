@@ -37,11 +37,10 @@ from src.models.models import Usuario
 from src.utils import ipc_manager
 from src.utils.banco_dados import get_session, inicializar_banco_dados
 from src.utils.estilo import (
-    aplicar_tema_inicial,
-    aplicar_tema_qdarktheme,
-    obter_tema_atual,
-    obter_temas_disponiveis,
-    registrar_tema_actions,
+    aplicar_estilo_botao,
+    aplicar_estilo_table_widget,
+    aplicar_estilo_widget_auto_ajustavel,
+    obter_estilo_progress_bar,
 )
 from src.utils.interface_manager import carregar_interface
 from src.utils.janelas import Janela
@@ -114,17 +113,6 @@ def salvar_configuracao(config):
         json.dump(config, f, indent=4)
 
 
-def salvar_tema_atual(tema):
-    """Salva o tema atual no arquivo de configuração."""
-    try:
-        config = carregar_configuracao()
-        config["tema"] = tema
-        salvar_configuracao(config)
-        logging.info("Tema salvo: %s", tema)
-    except (OSError, IOError, json.JSONDecodeError) as e:
-        logging.error("Erro ao salvar tema: %s", e)
-
-
 def salvar_estado_final():
     """Salva a geometria da janela e outras configurações antes de fechar."""
     logging.info("Salvando estado final do aplicativo.")
@@ -134,19 +122,10 @@ def salvar_estado_final():
             geometry_string = f"+{pos.x()}+{pos.y()}"
             config = carregar_configuracao()
             config["geometry"] = geometry_string
-            tema_atual = obter_tema_atual()
-            if tema_atual:
-                config["tema"] = tema_atual
             salvar_configuracao(config)
             logging.info("Estado final salvo com geometria: %s", geometry_string)
     except (OSError, IOError, json.JSONDecodeError) as e:
         logging.error("Erro ao salvar o estado final: %s", e, exc_info=True)
-
-
-def _aplicar_e_salvar_tema(tema):
-    """Aplica um tema e salva automaticamente a escolha."""
-    aplicar_tema_qdarktheme(tema)
-    salvar_tema_atual(tema)
 
 
 def fechar_aplicativo():
@@ -334,17 +313,6 @@ def _criar_menu_opcoes(menu_bar):
     opcoes_menu.addAction(no_topo_action)
     opcoes_menu.addAction(transparencia_action)
     transparencia_action.setVisible(no_topo_action.isChecked())
-    opcoes_menu.addSeparator()
-
-    temas_menu = opcoes_menu.addMenu("🎨 Temas")
-    temas_actions = {}
-    for tema in obter_temas_disponiveis():
-        action = QAction(tema.capitalize(), g.PRINC_FORM, checkable=True)
-        action.setChecked(tema == getattr(g, "TEMA_ATUAL", "dark"))
-        action.triggered.connect(lambda checked, t=tema: _aplicar_e_salvar_tema(t))
-        temas_menu.addAction(action)
-        temas_actions[tema] = action
-    registrar_tema_actions(temas_actions)
 
 
 def _criar_menu_ajuda(menu_bar):
@@ -457,9 +425,9 @@ def main():
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
         app = QApplication(sys.argv)
+        app.setStyle("Fusion")  # Definir style para garantir compatibilidade
         config = carregar_configuracao()
         tema_salvo = config.get("tema", "dark")
-        aplicar_tema_inicial(tema_salvo)
 
         app.aboutToQuit.connect(salvar_estado_final)
         app.aboutToQuit.connect(remover_sessao)

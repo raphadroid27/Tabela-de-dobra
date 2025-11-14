@@ -63,8 +63,8 @@ def criar_widget_cabecalho(layout, tipo, nome_global, pos, **kwargs):
         widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
     elif tipo == "combobox":
         widget = QComboBox(**kwargs)
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
         widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
+        widget.setMinimumHeight(ALTURA_PADRAO_COMPONENTE)  # Garantir altura mínima
         aplicar_estilo_widget_auto_ajustavel(widget, "combobox")
     elif tipo == "entry":
         widget = QLineEdit(**kwargs)

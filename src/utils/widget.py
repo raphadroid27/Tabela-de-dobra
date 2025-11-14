@@ -178,9 +178,8 @@ class WidgetStateManager:
         return f"Cache: {cabecalho_count} widgets de cabeçalho, {dobras_count} widgets de dobras"
 
 
-def _create_combo_base(height: int = ALTURA_PADRAO_COMPONENTE) -> QComboBox:
+def _create_combo_base() -> QComboBox:
     combo = QComboBox()
-    combo.setFixedHeight(height)
     return combo
 
 

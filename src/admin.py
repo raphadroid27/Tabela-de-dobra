@@ -53,7 +53,6 @@ from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
     aplicar_estilo_widget_auto_ajustavel,
-    aplicar_tema_inicial,
     obter_estilo_progress_bar,
 )
 from src.utils.interface_manager import safe_process_events
@@ -776,7 +775,7 @@ def main():
     setup_logging("admin.log", log_to_console=True)
     logging.info("Ferramenta Administrativa iniciada.")
     app = QApplication(sys.argv)
-    aplicar_tema_inicial()
+    app.setStyle("Fusion")  # Definir style para garantir compatibilidade
     window = AdminTool()
     window.show()
     sys.exit(app.exec())

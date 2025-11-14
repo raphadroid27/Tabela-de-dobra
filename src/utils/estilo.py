@@ -1,30 +1,18 @@
 """Este módulo fornece funções utilitárias para retornar estilos CSS personalizados.
 
-Fornece estilos para botões do PySide6 (QPushButton) em diferentes cores temáticas,
-além de gerenciar temas globais da aplicação usando qdarktheme.
+Fornece estilos para botões do PySide6 (QPushButton) em diferentes cores temáticas.
 
 Funcionalidades:
-- Gerenciamento de temas qdarktheme
 - Estilos CSS para botões coloridos
 - Widgets auto-ajustáveis para interface
-- Correções de CSS para compatibilidade com temas
+- Correções de CSS para compatibilidade
 """
 
 import logging
 
-from src.config import globals as g
-
-try:
-    import qdarktheme
-
-    QDARKTHEME_DISPONIVEL = True
-except ImportError:
-    qdarktheme = None
-    QDARKTHEME_DISPONIVEL = False
-
 logger = logging.getLogger(__name__)
 
-TEMA_ATUAL_PADRAO = "dark"
+TEMA_ATUAL_PADRAO = "light"
 
 ALTURA_PADRAO_COMPONENTE = 20
 LARGURA_MINIMA_COMPONENTE = 60
@@ -66,42 +54,19 @@ class GerenciadorTemas:
 
     def aplicar_tema_qdarktheme(self, nome_tema):
         """
-        Aplica um tema qdarktheme com CSS de correção para widgets desproporcionais.
+        Tema qdarktheme descontinuado. Não faz nada.
 
         Args:
-            nome_tema: Nome do tema a ser aplicado ("dark", "light", "auto")
+            nome_tema: Nome do tema (ignorado)
         """
-        if not QDARKTHEME_DISPONIVEL:
-            logger.warning("qdarktheme não está disponível.")
-            return
+        logger.info("Tema qdarktheme descontinuado. Usando tema padrão do sistema.")
+        self.tema_atual = nome_tema
 
-        css_correcao = obter_css_correcao_widgets()
-
-        try:
-            if hasattr(qdarktheme, "enable"):
-                qdarktheme.enable(theme=nome_tema, additional_qss=css_correcao)
-            elif hasattr(qdarktheme, "setup_theme"):
-                qdarktheme.setup_theme(nome_tema, additional_qss=css_correcao)
-            else:
-                logger.error(
-                    "qdarktheme não possui métodos conhecidos para aplicar tema."
-                )
-                return
-
-            self.tema_atual = nome_tema
-
-            # Atualizar checkboxes dos menus se registrados
-            if self.temas_actions:
-                for tema, action in self.temas_actions.items():
-                    if hasattr(action, "setChecked"):
-                        action.setChecked(tema == nome_tema)
-
-            logger.info("Tema '%s' aplicado com sucesso.", nome_tema)
-
-        except ImportError as e:
-            logger.error("Erro ao importar qdarktheme: %s", e)
-        except (AttributeError, TypeError, ValueError) as e:
-            logger.error("Erro ao aplicar tema: %s", e)
+        # Atualizar checkboxes dos menus se registrados
+        if self.temas_actions:
+            for tema, action in self.temas_actions.items():
+                if hasattr(action, "setChecked"):
+                    action.setChecked(tema == nome_tema)
 
     def aplicar_tema_inicial(self, tema=None):
         """
@@ -113,25 +78,8 @@ class GerenciadorTemas:
         if tema is None:
             tema = TEMA_ATUAL_PADRAO
 
-        if not QDARKTHEME_DISPONIVEL:
-            logger.warning(
-                "qdarktheme não encontrado. O tema escuro não será aplicado."
-            )
-            return
-
-        try:
-            css_correcao = obter_css_correcao_widgets()
-
-            if hasattr(qdarktheme, "setup_theme"):
-                qdarktheme.setup_theme(tema, additional_qss=css_correcao)
-            elif hasattr(qdarktheme, "enable"):
-                qdarktheme.enable(theme=tema, additional_qss=css_correcao)
-
-            self.tema_atual = tema
-            logger.info("Tema inicial '%s' aplicado com correções de CSS.", tema)
-
-        except (AttributeError, TypeError, ValueError) as e:
-            logger.error("Erro ao aplicar tema inicial: %s", e)
+        logger.info("Aplicando tema padrão do sistema. Tema qdarktheme descontinuado.")
+        self.tema_atual = tema
 
 
 # Instância global do gerenciador
@@ -140,8 +88,7 @@ gerenciador_temas = GerenciadorTemas()
 
 def obter_css_correcao_widgets():
     """
-    Retorna CSS para corrigir tamanhos desproporcionais dos widgets
-    quando usado com qdarktheme.
+    Retorna CSS para corrigir tamanhos desproporcionais dos widgets.
 
     Returns:
         str: CSS para correção de tamanhos
@@ -149,9 +96,25 @@ def obter_css_correcao_widgets():
     return f"""
     QComboBox {{
         min-height: 1em;
-        max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: 2px 4px;
         font-size: 10pt;
+    }}
+    QComboBox::drop-down {{
+        border: none;
+    }}
+    QComboBox::down-arrow {{
+        image: none;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 4px solid #000;
+        margin-right: 4px;
+    }}
+    QComboBox QAbstractItemView {{
+        border: 1px solid #ccc;
+        selection-background-color: #007acc;
+        selection-color: white;
+        min-height: 100px;
+        max-height: 200px;
     }}
     QLineEdit {{
         min-height: 1em;
@@ -172,8 +135,8 @@ def obter_css_correcao_widgets():
     }}
 
     QToolTip {{
-        color: white;
-        background-color: #2d2d2d;
+        color: black;
+        background-color: #f0f0f0;
         border-radius: 3px;
         padding: 4px 6px;
         font-size: 9pt;
@@ -194,7 +157,6 @@ def obter_css_widgets_auto_ajustaveis():
             QComboBox {{
                 min-width: {LARGURA_MINIMA_COMPONENTE}px;
                 min-height: 1em;
-                max-height: {ALTURA_PADRAO_COMPONENTE}px;
                 padding: {PADDING_INTERNO_COMPONENTE};
                 font-size: 10pt;
             }}
@@ -258,17 +220,12 @@ def configurar_layout_flexivel(layout):
 
 def obter_temas_disponiveis():
     """
-    Retorna lista de temas disponíveis do qdarktheme.
+    Retorna lista de temas disponíveis (qdarktheme descontinuado).
 
     Returns:
         list: Lista de temas disponíveis
     """
-    if not QDARKTHEME_DISPONIVEL:
-        return ["dark", "light"]
-
-    if hasattr(qdarktheme, "get_themes"):
-        return qdarktheme.get_themes()
-    return ["dark", "light", "auto"]
+    return ["light"]
 
 
 # Funções de conveniência para compatibilidade com código existente
@@ -428,7 +385,7 @@ def obter_estilo_table_widget():
     """
     return """
         QTableWidget {
-            background-color: {COR_FUNDO_CLARO if obter_tema_atual() == 'light' else COR_FUNDO_ESCURO};
+            background-color: #f8f9fa;
             font-size: 10pt;
         }
         QTableWidget::item {
