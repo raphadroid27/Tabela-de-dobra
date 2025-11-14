@@ -376,8 +376,13 @@ def get_widgets_styles() -> str:
         max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
         font-size: 10pt;
-        padding: 2px 4px;
     }}
+
+    QComboBox QAbstractItemView {{
+        background-color: palette(base);
+        color: palette(text);
+    }}
+
     QLineEdit {{
         background-color: palette(base);
         color: palette(text);
@@ -396,19 +401,28 @@ def get_widgets_styles() -> str:
         padding: {PADDING_INTERNO_COMPONENTE};
 
     }}
-    QLabel#titulo {{
+    QLabel#label_titulo {{
         font-size: 10pt;
         color: palette(window-text);
         padding: 0px 0px;
     }}
+
+    QLabel#label_texto {{
+        font-size: 10pt;
+        color: palette(window-text);
+        padding: 0px 0px;
+        min-height: auto;
+        max-height: auto;
+
+    }}
+
     QGroupBox {{
         color: palette(window-text);
-        border: none;
         margin-top: 20px; /* espaço para o título */
     }}
-    QGroupBox#titulo {{
+    QGroupBox#sem_borda {{
         color: palette(window-text);
-        border: 1px ridge palette(light);
+        border: none;
     }}
     QGroupBox::title {{
         subcontrol-origin: margin;

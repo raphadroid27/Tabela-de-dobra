@@ -241,6 +241,7 @@ def cabecalho():
         QGroupBox contendo o cabeçalho completo.
     """
     frame_cabecalho = QGroupBox()
+    frame_cabecalho.setObjectName("sem_borda")
     frame_cabecalho.setFlat(True)
     frame_cabecalho.setStyleSheet("QGroupBox { margin-top: 0px; }")
     layout = QGridLayout(frame_cabecalho)

@@ -169,6 +169,7 @@ def dobras(w):
         QGroupBox configurado com os campos de dobras auto-ajustáveis.
     """
     frame_dobra = QGroupBox()
+    frame_dobra.setObjectName("sem_borda")
     frame_dobra.setFlat(True)
     frame_dobra.setStyleSheet("QGroupBox { margin-top: 0px; }")
     layout = QGridLayout(frame_dobra)
@@ -249,7 +250,7 @@ def _criar_labels_blank(layout, w):
     """Cria os labels do blank com widgets auto-ajustáveis."""
     # Label "Totais:"
     blank_label = QLabel("Totais:")
-    blank_label.setObjectName("titulo")
+    blank_label.setObjectName("label_titulo")
     blank_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(blank_label, g.N + 1, 0, 1, 1)
 
