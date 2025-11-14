@@ -38,7 +38,9 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     with get_session() as session:
         materiais = [str(material.nome) for material in session.query(Material).all()]
 
-    layout.addWidget(QLabel("Material:"), 0, 0)
+    label_material = QLabel("Material:")
+    label_material.setObjectName("titulo")
+    layout.addWidget(label_material, 0, 0)
     g.MAT_COMB = QComboBox()
     g.MAT_COMB.addItems(materiais)
     layout.addWidget(g.MAT_COMB, 1, 0)

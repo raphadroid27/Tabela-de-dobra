@@ -31,17 +31,11 @@ from src.forms import (
     form_razao_rie,
     form_sobre,
 )
-from src.forms.common import context_help
 from src.forms.form_universal import main as form_universal
 from src.models.models import Usuario
 from src.utils import ipc_manager
 from src.utils.banco_dados import get_session, inicializar_banco_dados
-from src.utils.estilo import (
-    aplicar_estilo_botao,
-    aplicar_estilo_table_widget,
-    aplicar_estilo_widget_auto_ajustavel,
-    obter_estilo_progress_bar,
-)
+from src.utils.theme_manager import theme_manager
 from src.utils.interface_manager import carregar_interface
 from src.utils.janelas import Janela
 from src.utils.session_manager import (
@@ -51,6 +45,7 @@ from src.utils.session_manager import (
     remover_sessao,
     verificar_comando_sistema,
 )
+from src.utils.theme_manager import theme_manager
 from src.utils.update_manager import set_installed_version
 from src.utils.usuarios import logout
 from src.utils.utilitarios import (
@@ -219,6 +214,17 @@ def _on_toggle_transparencia(checked: bool):
     Janela.set_transparency_state(checked)
 
 
+def _on_tema_selecionado(tema: str, checked: bool):
+    """Aplica o tema selecionado."""
+    if checked:
+        # Aplica o tema via ThemeManager (paleta + estilos globais)
+        try:
+            theme_manager.apply_theme(tema)
+            logging.info("Tema '%s' aplicado.", tema)
+        except Exception as e:
+            logging.error("Falha ao aplicar tema '%s': %s", tema, e, exc_info=True)
+
+
 def configurar_menu(menu_custom):
     """Configura o menu superior da janela principal."""
     if menu_custom is None:
@@ -313,6 +319,25 @@ def _criar_menu_opcoes(menu_bar):
     opcoes_menu.addAction(no_topo_action)
     opcoes_menu.addAction(transparencia_action)
     transparencia_action.setVisible(no_topo_action.isChecked())
+
+    # Submenu de temas
+    tema_menu = opcoes_menu.addMenu("🎨 Tema")
+    tema_actions = {}
+    for tema in theme_manager.available_themes():
+        action = QAction(tema.capitalize(), g.PRINC_FORM, checkable=True)
+        action.setChecked(tema == theme_manager.current_mode)
+        action.triggered.connect(
+            lambda checked, t=tema: _on_tema_selecionado(t, checked)
+        )
+        tema_menu.addAction(action)
+        tema_actions[tema] = action
+
+    # Registrar actions no theme_manager para sincronização automática
+    try:
+        theme_manager.register_actions(tema_actions)
+    except Exception:
+        # Fallback silêncioso caso o theme_manager não suporte registro
+        pass
 
 
 def _criar_menu_ajuda(menu_bar):
@@ -425,9 +450,8 @@ def main():
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
         app = QApplication(sys.argv)
-        app.setStyle("Fusion")  # Definir style para garantir compatibilidade
         config = carregar_configuracao()
-        tema_salvo = config.get("tema", "dark")
+        theme_manager.initialize()  # Inicializa o tema salvo
 
         app.aboutToQuit.connect(salvar_estado_final)
         app.aboutToQuit.connect(remover_sessao)

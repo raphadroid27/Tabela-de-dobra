@@ -36,7 +36,6 @@ from src.utils.controlador import (
     preencher_campos,
 )
 from src.utils.estilo import (
-    ALTURA_PADRAO_COMPONENTE,
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
 )
@@ -451,6 +450,7 @@ def criar_label(layout, texto, pos):
     """Cria um rótulo (QLabel) no layout especificado."""
     linha, coluna = pos
     label = QLabel(texto)
+    label.setObjectName("titulo")
     label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
     layout.addWidget(label, linha, coluna)
     return label
@@ -460,10 +460,8 @@ def criar_widget(layout, tipo, nome_global, pos, **kwargs):
     """Cria e configura um widget, o adiciona ao layout e o armazena em g."""
     if tipo == "entry":
         widget = QLineEdit()
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     elif tipo == "combobox":
         widget = QComboBox()
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     else:
         return None
 
@@ -585,6 +583,7 @@ def criar_frame_edicoes(config):
     )
 
     frame_edicoes = QGroupBox(titulo)
+    frame_edicoes.setObjectName("titulo")
     layout = QGridLayout(frame_edicoes)
     aplicar_medida_borda_espaco(layout)
 

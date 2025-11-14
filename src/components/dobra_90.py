@@ -7,11 +7,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QLineEdit
 
 from src.config import globals as g
-from src.utils.estilo import (
-    ALTURA_PADRAO_COMPONENTE,
-    LARGURA_MINIMA_COMPONENTE,
-    aplicar_estilo_widget_auto_ajustavel,
-)
 from src.utils.interface import (
     calcular_valores,
     copiar,
@@ -58,8 +53,7 @@ def criar_label_header(layout, texto, pos):
     """
     linha, coluna = pos
     header_label = QLabel(texto)
-    header_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-    header_label.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
+    header_label.setObjectName("titulo")
     header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(header_label, linha, coluna)
     return header_label
@@ -79,8 +73,7 @@ def criar_label_aba(layout, texto, pos):
     """
     linha, coluna = pos
     aba_label = QLabel(texto)
-    aba_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-    aba_label.setFixedWidth(50)  # Largura fixa menor para labels de aba
+    aba_label.setObjectName("titulo")
     aba_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
     layout.addWidget(aba_label, linha, coluna)
     return aba_label
@@ -127,10 +120,6 @@ def criar_entry_dobra(config: ConfigEntry):
     linha, coluna = config.pos
     entry = QLineEdit()
     entry.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    entry.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-    entry.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
-
-    aplicar_estilo_widget_auto_ajustavel(entry, "lineedit")
 
     setattr(g, config.nome_global, entry)
     config.layout.addWidget(entry, linha, coluna)
@@ -154,8 +143,6 @@ def criar_label_resultado(config: ConfigLabelResultado):
     label = QLabel()
     label.setFrameShape(QLabel.Shape.Panel)
     label.setFrameShadow(QLabel.Shadow.Sunken)
-    label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-    label.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
     label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     setattr(g, config.nome_global, label)
@@ -207,7 +194,6 @@ def _configurar_layout_dobra(layout):
     # Configurar colunas de dados com expansão proporcional
     for col in range(1, 4):
         layout.setColumnStretch(col, 1)
-        layout.setColumnMinimumWidth(col, LARGURA_MINIMA_COMPONENTE)
 
     # Configurar espaçamento
     layout.setHorizontalSpacing(5)
@@ -263,8 +249,8 @@ def _criar_labels_blank(layout, w):
     """Cria os labels do blank com widgets auto-ajustáveis."""
     # Label "Totais:"
     blank_label = QLabel("Totais:")
+    blank_label.setObjectName("titulo")
     blank_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    blank_label.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     layout.addWidget(blank_label, g.N + 1, 0, 1, 1)
 
     # Label da medida do blank (sobe para a mesma linha g.N+1, colunas 1-3)

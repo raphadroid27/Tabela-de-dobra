@@ -725,8 +725,8 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
             )
 
     _atualizar_label(
-        getattr(g, f"total_abas_label_{w}",
-                None), total_abas if total_abas > 0 else None
+        getattr(g, f"total_abas_label_{w}", None),
+        total_abas if total_abas > 0 else None,
     )
     _atualizar_label(
         getattr(g, f"medida_blank_label_{w}", None), blank if blank > 0 else None

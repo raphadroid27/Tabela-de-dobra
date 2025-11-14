@@ -38,6 +38,7 @@ def main(root: Optional[QWidget]) -> None:
 
     # Título
     label_titulo = QLabel("Calculadora de Dobra")
+    label_titulo.setObjectName("titulo")
     font_titulo = QFont("Arial", 16)
     font_titulo.setBold(True)
     label_titulo.setFont(font_titulo)

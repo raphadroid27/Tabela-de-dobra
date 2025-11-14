@@ -322,4 +322,8 @@ class CalculoDobra:
             blank_total += medida
             resultados.append({"medida": medida, "metade": metade})
 
-        return {"total_abas": total_abas, "resultados": resultados, "blank_total": blank_total}
+        return {
+            "total_abas": total_abas,
+            "resultados": resultados,
+            "blank_total": blank_total,
+        }

@@ -18,7 +18,6 @@ import os
 import sys
 import time
 from datetime import datetime
-from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
@@ -45,16 +44,15 @@ from PySide6.QtWidgets import (
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
-from src.forms.form_manual import ManualDialog, show_manual
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
-    aplicar_estilo_widget_auto_ajustavel,
     obter_estilo_progress_bar,
 )
+from src.utils.theme_manager import theme_manager
 from src.utils.interface_manager import safe_process_events
 from src.utils.session_manager import (
     force_shutdown_all_instances,
@@ -121,14 +119,12 @@ class AdminAuthWidget(QWidget):
         grid_layout.addWidget(QLabel("Usuário:"), 0, 0)
         self.usuario_entry.setPlaceholderText("Digite o usuário")
         self.usuario_entry.setToolTip("Digite seu nome de usuário de administrador")
-        aplicar_estilo_widget_auto_ajustavel(self.usuario_entry, "lineedit")
         grid_layout.addWidget(self.usuario_entry, 0, 1)
 
         grid_layout.addWidget(QLabel("Senha:"), 1, 0)
         self.senha_entry.setPlaceholderText("Digite a senha")
         self.senha_entry.setToolTip("Digite sua senha de administrador")
         self.senha_entry.setEchoMode(QLineEdit.EchoMode.Password)
-        aplicar_estilo_widget_auto_ajustavel(self.senha_entry, "lineedit")
         grid_layout.addWidget(self.senha_entry, 1, 1)
         main_layout.addLayout(grid_layout)
 
@@ -775,7 +771,11 @@ def main():
     setup_logging("admin.log", log_to_console=True)
     logging.info("Ferramenta Administrativa iniciada.")
     app = QApplication(sys.argv)
-    app.setStyle("Fusion")  # Definir style para garantir compatibilidade
+    # Inicializa o tema salvo via ThemeManager
+    try:
+        theme_manager.initialize()
+    except Exception:
+        pass
     window = AdminTool()
     window.show()
     sys.exit(app.exec())

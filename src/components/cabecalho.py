@@ -5,12 +5,6 @@ from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QGridLayout, QGroupBox, QLabel, QLineEdit
 
 from src.config import globals as g
-from src.utils.estilo import (
-    ALTURA_PADRAO_COMPONENTE,
-    LARGURA_MINIMA_COMPONENTE,
-    aplicar_estilo_widget_auto_ajustavel,
-    configurar_layout_flexivel,
-)
 from src.utils.interface import (
     WidgetUpdater,
     calcular_valores,
@@ -34,6 +28,7 @@ def criar_label(layout, texto, linha_coluna):
     linha, coluna = linha_coluna
     label = QLabel(texto)
     label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+    label.setObjectName("titulo")  # Classe CSS para títulos
     layout.addWidget(label, linha, coluna)
     return label
 
@@ -58,20 +53,12 @@ def criar_widget_cabecalho(layout, tipo, nome_global, pos, **kwargs):
         widget = QLabel(kwargs.pop("text", ""))
         widget.setFrameShape(QLabel.Shape.Panel)
         widget.setFrameShadow(QLabel.Shadow.Sunken)
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
         widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
     elif tipo == "combobox":
         widget = QComboBox(**kwargs)
-        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
-        widget.setMinimumHeight(ALTURA_PADRAO_COMPONENTE)  # Garantir altura mínima
-        aplicar_estilo_widget_auto_ajustavel(widget, "combobox")
     elif tipo == "entry":
         widget = QLineEdit(**kwargs)
-        widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
-        widget.setMinimumWidth(LARGURA_MINIMA_COMPONENTE)
         widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        aplicar_estilo_widget_auto_ajustavel(widget, "lineedit")
     else:
         return None
 
@@ -98,7 +85,6 @@ def criar_widget_observacao(layout, nome_global, pos, **kwargs):
     widget = QLabel(kwargs.pop("text", ""))
     widget.setFrameShape(QLabel.Shape.Panel)
     widget.setFrameShadow(QLabel.Shadow.Sunken)
-    widget.setFixedHeight(ALTURA_PADRAO_COMPONENTE)
     widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     layout.addWidget(widget, *pos)
@@ -260,8 +246,6 @@ def cabecalho():
     layout = QGridLayout(frame_cabecalho)
     layout.setContentsMargins(10, 0, 10, 0)
     layout.setSpacing(5)
-
-    configurar_layout_flexivel(layout)
 
     mat_comb, esp_comb, canal_comb, compr_entry = _criar_linha_1(layout)
     _criar_linha_2(layout)

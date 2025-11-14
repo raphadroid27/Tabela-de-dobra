@@ -142,7 +142,9 @@ class FormConverterArquivos(QDialog):
         """Cria e organiza os widgets da UI."""
         # Linha de seleção de tipo
         type_layout = QHBoxLayout()
-        type_layout.addWidget(QLabel("Tipo de Conversão:"))
+        label_tipo = QLabel("Tipo de Conversão:")
+        label_tipo.setObjectName("titulo")
+        type_layout.addWidget(label_tipo)
         self.cmb_conversion_type = QComboBox()
         self.cmb_conversion_type.addItems(CONVERSION_HANDLERS.keys())
         self.cmb_conversion_type.setToolTip(
