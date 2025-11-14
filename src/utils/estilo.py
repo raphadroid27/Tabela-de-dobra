@@ -351,7 +351,6 @@ def get_table_widget_style() -> str:
     """
     return """
         QTableWidget {
-            background-color: palette(base);
             color: palette(text);
             font-size: 10pt;
         }
@@ -360,7 +359,6 @@ def get_table_widget_style() -> str:
         }
         QHeaderView::section {
             padding: 0px;
-            background-color: palette(button);
             color: palette(button-text);
         }
     """

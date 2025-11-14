@@ -613,7 +613,7 @@ def _estilo(data: UIData):
     g.K_LBL.setToolTip(
         "Fator K calculado com base no raio interno. Clique para copiar."
     )
-    return ""
+    return "QLabel {color: palette(text);}"
 
 
 def _atualizar_k_offset_ui(data: UIData, deducao_usada: float):
@@ -716,7 +716,8 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
         if WidgetManager.is_widget_valid(entry):
             invalida = aba_min is not None and 0 < valores[i - 1] < aba_min
             entry.setStyleSheet(
-                "color: white; background-color: red;" if invalida else ""
+                "color: white; background-color: red;" if invalida
+                else "color: palette(text); background-color: palette(base);"
             )
             entry.setToolTip(
                 f"Aba ({valores[i - 1]}) menor que a mínima ({aba_min:.0f})."
