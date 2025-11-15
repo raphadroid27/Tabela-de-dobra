@@ -35,35 +35,27 @@ class ThemeManager:
 
     def __init__(self) -> None:
         """Inicializa o gerenciador de temas."""
-        self._settings = QSettings()
-        # Define o estilo Fusion para melhor suporte a paletas
-        saved_style = self._settings.value(
-            self._STYLE_SETTINGS_KEY, self._DEFAULT_STYLE
-        )
-        if not isinstance(saved_style, str):
-            saved_style = self._DEFAULT_STYLE
-        self._style = saved_style
-        # Garante que seja salvo
-        self._settings.setValue(self._STYLE_SETTINGS_KEY, self._style)
-        QApplication.setStyle(self._style)
-        saved_mode = self._settings.value(self._SETTINGS_KEY, self._DEFAULT_MODE)
-        self._mode = (
-            saved_mode
-            if isinstance(saved_mode, str) and saved_mode in self._VALID_MODES
-            else self._DEFAULT_MODE
-        )
-        saved_color = self._settings.value(
-            self._COLOR_SETTINGS_KEY, self._DEFAULT_COLOR
-        )
-        if not isinstance(saved_color, str) or saved_color not in self._COLOR_OPTIONS:
-            saved_color = self._DEFAULT_COLOR
-        self._color = saved_color
+        self._settings = None
+        # Valores padrão
+        self._style = self._DEFAULT_STYLE
+        self._mode = self._DEFAULT_MODE
+        self._color = self._DEFAULT_COLOR
         self._listeners: List[Callable[[str], None]] = []
         self._color_listeners: List[Callable[[str], None]] = []
         # Dicionário opcional para armazenar ações do menu {cor_key: QAction-like}
         self._color_actions: Dict[str, Any] = {}
         # Dicionário opcional para armazenar ações do menu {tema: QAction-like}
         self._actions: Dict[str, Any] = {}
+        # Dicionário opcional para armazenar ações do menu {cor_key: QAction-like}
+        self._color_actions: Dict[str, Any] = {}
+        # Dicionário opcional para armazenar ações do menu {tema: QAction-like}
+        self._actions: Dict[str, Any] = {}
+
+    def _get_settings(self) -> QSettings:
+        """Retorna a instância de QSettings, criando se necessário."""
+        if self._settings is None:
+            self._settings = QSettings()
+        return self._settings
 
     @classmethod
     def instance(cls) -> "ThemeManager":
@@ -89,6 +81,29 @@ class ThemeManager:
 
     def initialize(self) -> None:
         """Aplica o tema salvo sem sobrescrever a preferência."""
+        # Carrega os valores salvos
+        saved_style = self._get_settings().value(
+            self._STYLE_SETTINGS_KEY, self._DEFAULT_STYLE
+        )
+        if not isinstance(saved_style, str):
+            saved_style = self._DEFAULT_STYLE
+        self._style = saved_style
+        # Garante que seja salvo
+        self._get_settings().setValue(self._STYLE_SETTINGS_KEY, self._style)
+        self._get_settings().sync()
+        QApplication.setStyle(self._style)
+        saved_mode = self._get_settings().value(self._SETTINGS_KEY, self._DEFAULT_MODE)
+        self._mode = (
+            saved_mode
+            if isinstance(saved_mode, str) and saved_mode in self._VALID_MODES
+            else self._DEFAULT_MODE
+        )
+        saved_color = self._get_settings().value(
+            self._COLOR_SETTINGS_KEY, self._DEFAULT_COLOR
+        )
+        if not isinstance(saved_color, str) or saved_color not in self._COLOR_OPTIONS:
+            saved_color = self._DEFAULT_COLOR
+        self._color = saved_color
         self._apply_theme(self._mode, persist=False)
 
     def apply_theme(self, mode: str) -> None:
@@ -102,7 +117,8 @@ class ThemeManager:
         if color_key == self._color:
             return
         self._color = color_key
-        self._settings.setValue(self._COLOR_SETTINGS_KEY, color_key)
+        self._get_settings().setValue(self._COLOR_SETTINGS_KEY, color_key)
+        self._get_settings().sync()
         self._apply_theme(self._mode, persist=False)
         self._notify_color_listeners()
 
@@ -111,7 +127,8 @@ class ThemeManager:
         if style == self._style:
             return
         self._style = style
-        self._settings.setValue(self._STYLE_SETTINGS_KEY, style)
+        self._get_settings().setValue(self._STYLE_SETTINGS_KEY, style)
+        self._get_settings().sync()
         QApplication.setStyle(style)
         # Força atualização de todos os widgets para aplicar o novo estilo
         for widget in QApplication.allWidgets():
@@ -230,7 +247,8 @@ class ThemeManager:
         # Atualiza o modo independente da existência de QApplication
         self._mode = selected
         if persist:
-            self._settings.setValue(self._SETTINGS_KEY, selected)
+            self._get_settings().setValue(self._SETTINGS_KEY, selected)
+            self._get_settings().sync()
         for callback in list(self._listeners):
             callback(selected)
         # Atualiza actions de menu, se houver
@@ -299,7 +317,6 @@ class ThemeManager:
             callback(self._color)
 
 
-# Instância global
 # Instância global
 # pylint: disable=C0103
 theme_manager = ThemeManager.instance()

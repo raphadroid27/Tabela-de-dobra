@@ -169,8 +169,6 @@ APP_EXECUTABLE_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE_NAME)
 APPDATA_DIR = os.environ.get(
     "APPDATA", os.path.join(os.environ["USERPROFILE"], "AppData", "Roaming")
 )
-CONFIG_DIR = os.path.join(APPDATA_DIR, "Calculadora de Dobra")
-CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 
 def ensure_dirs_exist() -> None:
@@ -179,7 +177,6 @@ def ensure_dirs_exist() -> None:
     """
     os.makedirs(DATABASE_DIR, exist_ok=True)
     os.makedirs(LOG_DIR, exist_ok=True)
-    os.makedirs(CONFIG_DIR, exist_ok=True)
     os.makedirs(CACHE_DIR, exist_ok=True)
     # Diretórios de IPC são criados pelo ipc_manager
 

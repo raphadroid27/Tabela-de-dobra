@@ -1,6 +1,5 @@
 """Formulário principal do aplicativo de Calculadora de Dobra."""
 
-import json
 import logging
 import os
 import signal
@@ -8,7 +7,7 @@ import sys
 import traceback
 from functools import partial
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QSettings, Qt, QTimer
 from PySide6.QtGui import QAction, QIcon, QPixmap, QColor, QPainter
 from PySide6.QtWidgets import (
     QApplication,
@@ -49,7 +48,6 @@ from src.utils.session_manager import (
 from src.utils.update_manager import set_installed_version
 from src.utils.usuarios import logout
 from src.utils.utilitarios import (
-    CONFIG_FILE,
     ICON_PATH,
     aplicar_medida_borda_espaco,
     setup_logging,
@@ -64,6 +62,47 @@ TIMER_SISTEMA_INTERVALO = 10000  # 10s para verificação mais rápida de comand
 LAYOUT_ESPACAMENTO = 0
 LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
+
+
+class MainWindow(QMainWindow):
+    """Janela principal da aplicação com tratamento personalizado de fechamento."""
+
+    def __init__(self):
+        super().__init__()
+        self.is_main_window = True
+        # Inicializa a lista de callbacks de resize
+        self._resize_handlers = []
+
+    def closeEvent(self, event):  # pylint: disable=invalid-name
+        """Evento chamado quando a janela principal está sendo fechada."""
+        logging.info("CloseEvent da janela principal chamado.")
+        Janela.fechar_janelas_dependentes()
+        salvar_estado_final()
+        event.accept()
+
+    # Pequeno hook para permitir callbacks quando a janela for redimensionada
+    def add_resize_handler(self, callback):
+        """Registra um callback a ser chamado em eventos de resize.
+
+        O callback receberá o evento de resize como único argumento.
+        Use para atualizar dinamicamente elementos que dependem da largura/altura
+        da janela (por exemplo: rótulos de menu compactos).
+        """
+        self._resize_handlers.append(callback)
+
+    def resizeEvent(self, event):  # pylint: disable=invalid-name
+        """Dispara os callbacks registrados quando a janela é redimensionada.
+
+        A implementação chama os callbacks de forma segura, ignorando
+        exceções para não interromper o fluxo da UI.
+        """
+        super().resizeEvent(event)
+        for cb in list(self._resize_handlers):
+            try:
+                cb(event)
+            except Exception:  # pylint: disable=broad-except
+                # Não propagar exceções de callbacks de UI
+                pass
 
 
 TIMER_SISTEMA = QTimer()
@@ -89,37 +128,18 @@ def verificar_admin_existente():
         fechar_aplicativo()
 
 
-def carregar_configuracao():
-    """Carrega a configuração do aplicativo."""
-    logging.info("Carregando configurações de %s", CONFIG_FILE)
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    logging.warning(
-        "Arquivo de configuração não encontrado. Usando configuração padrão."
-    )
-    return {"tema": "dark", "geometry": None}
-
-
-def salvar_configuracao(config):
-    """Salva a configuração do aplicativo."""
-    logging.info("Salvando configurações em %s", CONFIG_FILE)
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
-
-
 def salvar_estado_final():
-    """Salva a geometria da janela e outras configurações antes de fechar."""
+    """Salva a geometria da janela usando QSettings."""
     logging.info("Salvando estado final do aplicativo.")
     try:
         if g.PRINC_FORM:
+            settings = QSettings()
             pos = g.PRINC_FORM.pos()
-            geometry_string = f"+{pos.x()}+{pos.y()}"
-            config = carregar_configuracao()
-            config["geometry"] = geometry_string
-            salvar_configuracao(config)
-            logging.info("Estado final salvo com geometria: %s", geometry_string)
-    except (OSError, IOError, json.JSONDecodeError) as e:
+            settings.setValue("app/pos_x", pos.x())
+            settings.setValue("app/pos_y", pos.y())
+            settings.sync()  # Força a sincronização
+            logging.info("Estado final salvo com posição: x=%d, y=%d", pos.x(), pos.y())
+    except (OSError, IOError, RuntimeError) as e:
         logging.error("Erro ao salvar o estado final: %s", e, exc_info=True)
 
 
@@ -139,7 +159,7 @@ def fechar_aplicativo():
         sys.exit(0)
 
 
-def configurar_janela_principal(config):
+def configurar_janela_principal():
     """Configura a janela principal do aplicativo."""
     logging.info("Configurando a janela principal.")
     Janela.remover_janelas_orfas()
@@ -151,59 +171,19 @@ def configurar_janela_principal(config):
         except (RuntimeError, AttributeError):
             pass
 
-    class MainWindow(QMainWindow):
-        """Janela principal da aplicação com tratamento personalizado de fechamento."""
-
-        def __init__(self):
-            super().__init__()
-            self.is_main_window = True
-            # Inicializa a lista de callbacks de resize
-            self._resize_handlers = []
-
-        def closeEvent(self, event):  # pylint: disable=invalid-name
-            """Evento chamado quando a janela principal está sendo fechada."""
-            logging.info("CloseEvent da janela principal chamado.")
-            Janela.fechar_janelas_dependentes()
-            salvar_estado_final()
-            event.accept()
-
-        # Pequeno hook para permitir callbacks quando a janela for redimensionada
-        def add_resize_handler(self, callback):
-            """Registra um callback a ser chamado em eventos de resize.
-
-            O callback receberá o evento de resize como único argumento.
-            Use para atualizar dinamicamente elementos que dependem da largura/altura
-            da janela (por exemplo: rótulos de menu compactos).
-            """
-            self._resize_handlers.append(callback)
-
-        def resizeEvent(self, event):  # pylint: disable=invalid-name
-            """Dispara os callbacks registrados quando a janela é redimensionada.
-
-            A implementação chama os callbacks de forma segura, ignorando
-            exceções para não interromper o fluxo da UI.
-            """
-            super().resizeEvent(event)
-            for cb in list(self._resize_handlers):
-                try:
-                    cb(event)
-                except Exception:  # pylint: disable=broad-except
-                    # Não propagar exceções de callbacks de UI
-                    pass
-
     g.PRINC_FORM = MainWindow()
     g.PRINC_FORM.setWindowTitle(f"Calculadora de Dobra - v{APP_VERSION}")
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.setWindowFlags(Qt.WindowType.Window)
 
-    if "geometry" in config and isinstance(config["geometry"], str):
-        parts = config["geometry"].split("+")
-        if len(parts) >= 3:
-            try:
-                x, y = int(parts[1]), int(parts[2])
-                g.PRINC_FORM.move(x, y)
-            except (ValueError, IndexError):
-                logging.warning("Geometria salva inválida: %s", config["geometry"])
+    # Carrega a posição da janela usando QSettings
+    settings = QSettings()
+    x = settings.value("app/pos_x", type=int)
+    y = settings.value("app/pos_y", type=int)
+    if x is not None and y is not None:
+        g.PRINC_FORM.move(x, y)
+    else:
+        logging.warning("Posição da janela não encontrada em QSettings. Usando padrão.")
 
     if ICON_PATH and os.path.exists(ICON_PATH):
         g.PRINC_FORM.setWindowIcon(QIcon(ICON_PATH))
@@ -529,13 +509,14 @@ def main():
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()
         app = QApplication(sys.argv)
-        config = carregar_configuracao()
+        app.setOrganizationName("raphadroid27")
+        app.setApplicationName("Tabela-de-dobra")
         theme_manager.initialize()  # Inicializa o tema salvo
 
         app.aboutToQuit.connect(salvar_estado_final)
         app.aboutToQuit.connect(remover_sessao)
 
-        configurar_janela_principal(config)
+        configurar_janela_principal()
         menu_custom = configurar_frames()
         configurar_menu(menu_custom)
         registrar_sessao()
@@ -562,7 +543,7 @@ def main():
         return 1
     except SQLAlchemyError as e:
         logging.critical("ERRO CRÍTICO na inicialização (DB): %s", e, exc_info=True)
-    except (OSError, IOError, json.JSONDecodeError, RuntimeError) as e:
+    except (OSError, IOError, RuntimeError) as e:
         logging.critical("ERRO CRÍTICO na inicialização: %s", e, exc_info=True)
 
     if app:
