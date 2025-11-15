@@ -9,7 +9,7 @@ import traceback
 from functools import partial
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction, QIcon, QPixmap, QColor, QPainter
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -45,7 +45,7 @@ from src.utils.session_manager import (
     remover_sessao,
     verificar_comando_sistema,
 )
-from src.utils.theme_manager import theme_manager
+# theme_manager is used for applying palettes and styles
 from src.utils.update_manager import set_installed_version
 from src.utils.usuarios import logout
 from src.utils.utilitarios import (
@@ -221,7 +221,8 @@ def _on_tema_selecionado(tema: str, checked: bool):
         try:
             theme_manager.apply_theme(tema)
             logging.info("Tema '%s' aplicado.", tema)
-        except Exception as e:
+        except (AttributeError, RuntimeError, TypeError) as e:
+            # Registrar erros específicos — evita capturar exceções muito genéricas
             logging.error("Falha ao aplicar tema '%s': %s", tema, e, exc_info=True)
 
 
@@ -323,8 +324,13 @@ def _criar_menu_opcoes(menu_bar):
     # Submenu de temas
     tema_menu = opcoes_menu.addMenu("🎨 Tema")
     tema_actions = {}
+    # Mapeamento para rótulos do menu em Português
+    tema_rotulos = {"light": "Claro", "dark": "Escuro"}
+
     for tema in theme_manager.available_themes():
-        action = QAction(tema.capitalize(), g.PRINC_FORM, checkable=True)
+        # Usa rótulo localizado quando disponível
+        label = tema_rotulos.get(tema, tema.capitalize())
+        action = QAction(label, g.PRINC_FORM, checkable=True)
         action.setChecked(tema == theme_manager.current_mode)
         action.triggered.connect(
             lambda checked, t=tema: _on_tema_selecionado(t, checked)
@@ -335,8 +341,40 @@ def _criar_menu_opcoes(menu_bar):
     # Registrar actions no theme_manager para sincronização automática
     try:
         theme_manager.register_actions(tema_actions)
-    except Exception:
+    except AttributeError:
         # Fallback silêncioso caso o theme_manager não suporte registro
+        pass
+
+    # Submenu de cor de destaque dentro do menu Tema
+    cor_menu = tema_menu.addMenu("🌈 Cor de destaque")
+    cor_actions = {}
+    try:
+        for cor_key, (rotulo, cor_hex) in theme_manager.color_options().items():
+            # Criar um ícone swatch pequeno com a cor de destaque
+            try:
+                pix = QPixmap(14, 14)
+                pix.fill(QColor(cor_hex))
+                p = QPainter(pix)
+                # Desenhar borda sutil para legibilidade
+                p.setPen(QColor(0, 0, 0, 120))
+                p.drawRect(0, 0, pix.width() - 1, pix.height() - 1)
+                p.end()
+                icon = QIcon(pix)
+            except (TypeError, ValueError, RuntimeError):
+                # Caso algo falhe, usar um ícone em branco
+                icon = QIcon()
+            action = QAction(rotulo, g.PRINC_FORM, checkable=True)
+            action.setIcon(icon)
+            action.setChecked(cor_key == theme_manager.current_color)
+            # Connect only when checked to avoid redundant calls
+            action.triggered.connect(
+                lambda checked, c=cor_key: theme_manager.apply_color(c) if checked else None)
+            cor_menu.addAction(action)
+            cor_actions[cor_key] = action
+        # Registrar actions ao theme_manager para que fiquem sincronizadas
+        theme_manager.register_color_actions(cor_actions)
+    except AttributeError:
+        # Fallback: silencioso caso não seja possível aplicar cores
         pass
 
 

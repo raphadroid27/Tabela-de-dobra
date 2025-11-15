@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, ClassVar, Dict, List, Optional, cast
+from typing import Any, Callable, ClassVar, Dict, List, cast
 
 from PySide6.QtCore import QSettings
 from PySide6.QtGui import QColor, QPalette
@@ -60,6 +60,8 @@ class ThemeManager:
         self._color = saved_color
         self._listeners: List[Callable[[str], None]] = []
         self._color_listeners: List[Callable[[str], None]] = []
+        # Dicionário opcional para armazenar ações do menu {cor_key: QAction-like}
+        self._color_actions: Dict[str, Any] = {}
         # Dicionário opcional para armazenar ações do menu {tema: QAction-like}
         self._actions: Dict[str, Any] = {}
 
@@ -135,6 +137,33 @@ class ThemeManager:
         if callback in self._color_listeners:
             self._color_listeners.remove(callback)
 
+    def register_color_actions(self, actions: Dict[str, Any]) -> None:
+        """Registra ações de menu para as cores de destaque.
+
+        O dicionário deve mapear a chave da cor (ex: 'verde') para um objeto tipo
+        QAction que suporte `setChecked(bool)`. Será chamado `_update_color_actions`
+        para sincronizar o estado inicial.
+        """
+        self._color_actions = dict(actions)
+        self._update_color_actions()
+
+    def unregister_color_actions(self) -> None:
+        """Remove o registro de actions de cor."""
+        self._color_actions = {}
+
+    def _update_color_actions(self) -> None:
+        """Marca/desmarca as actions de cor conforme `_color` atual."""
+        actions = getattr(self, "_color_actions", None)
+        if not actions:
+            return
+        for cor_key, action in actions.items():
+            try:
+                if hasattr(action, "setChecked"):
+                    action.setChecked(cor_key == self._color)
+            except (AttributeError, RuntimeError, TypeError):
+                # Não deixar erro externo quebrar a aplicação do tema
+                continue
+
     def _create_light_palette(self, accent_color: QColor) -> QPalette:
         """Cria uma paleta clara nativa com cor de destaque."""
         palette = QPalette()
@@ -187,6 +216,8 @@ class ThemeManager:
             app.setPalette(palette)
 
             # Aplicar estilos CSS globais que usam palette()
+            # Import local para evitar import circular — aceitável aqui.
+            # pylint: disable=import-outside-toplevel
             from .estilo import get_widgets_styles
 
             global_styles = get_widgets_styles()
@@ -206,6 +237,7 @@ class ThemeManager:
         # Atualiza actions de menu, se houver (ignora erros específicos)
         try:
             self._update_actions()
+            self._update_color_actions()
         except (AttributeError, RuntimeError, TypeError):
             # Não falhar a aplicação do tema por erro ao atualizar actions
             pass
@@ -240,7 +272,7 @@ class ThemeManager:
         if not actions:
             return
         # Primeiro, garantir que todos fiquem desmarcados
-        for tema, action in actions.items():
+        for action in actions.values():
             try:
                 if hasattr(action, "setChecked"):
                     action.setChecked(False)
@@ -268,4 +300,6 @@ class ThemeManager:
 
 
 # Instância global
+# Instância global
+# pylint: disable=C0103
 theme_manager = ThemeManager.instance()

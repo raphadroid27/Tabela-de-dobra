@@ -182,7 +182,7 @@ def obter_temas_disponiveis():
     # Delega ao ThemeManager para evitar duplicação
     try:
         return theme_manager.available_themes()
-    except Exception:
+    except (AttributeError, RuntimeError):
         return ["light", "dark"]
 
 
@@ -191,9 +191,21 @@ def registrar_tema_actions(actions_dict):
     """Registra as ações de tema para controle de estado no menu."""
     try:
         theme_manager.register_actions(actions_dict)
-    except Exception:
+    except (AttributeError, RuntimeError):
         # Fallback: manter compatibilidade com o gerenciador local
         gerenciador_temas.registrar_tema_actions(actions_dict)
+
+
+def registrar_cor_actions(actions_dict):
+    """Registra ações de menu para cores de destaque (compatibilidade).
+
+    O dicionário deve mapear a chave da cor (ex: 'verde') para um QAction-like.
+    """
+    try:
+        theme_manager.register_color_actions(actions_dict)
+    except (AttributeError, RuntimeError):
+        # Fallback: apenas ignore se não suportado
+        pass
 
 
 def aplicar_tema_inicial(tema=None):
@@ -203,7 +215,7 @@ def aplicar_tema_inicial(tema=None):
             theme_manager.initialize()
         else:
             theme_manager.apply_theme(tema)
-    except Exception:
+    except (AttributeError, RuntimeError):
         gerenciador_temas.aplicar_tema_inicial(tema)
 
 
@@ -211,8 +223,16 @@ def obter_tema_atual():
     """Retorna o tema atual (delegado ao ThemeManager)."""
     try:
         return theme_manager.current_mode
-    except Exception:
+    except (AttributeError, RuntimeError):
         return gerenciador_temas.obter_tema_atual()
+
+
+def obter_cores_disponiveis():
+    """Retorna as cores de destaque disponíveis (chave -> (rótulo, hex))."""
+    try:
+        return theme_manager.color_options()
+    except (AttributeError, RuntimeError):
+        return {}
 
 
 def obter_estilo_botao(cor: str) -> str:
@@ -440,7 +460,7 @@ def get_widgets_styles() -> str:
         color: palette(window-text);
         padding: 5px 0px;
         font-size: 10pt;
-        spacing: 3px;
+        spacing: 1px;
     }}
 
         QMenu {{
