@@ -13,6 +13,9 @@ SESSION_ID: Optional[str] = None
 UPDATE_INFO: Optional[Dict[str, Any]] = None
 UPDATE_ACTION: Optional[str] = None
 
+# Largura (px) abaixo da qual os menus de topo ficam em modo compacto (icone-only)
+MENU_COMPACT_WIDTH: int = 450
+
 # Flag para controlar quando a interface está sendo recarregada
 INTERFACE_RELOADING: bool = False
 

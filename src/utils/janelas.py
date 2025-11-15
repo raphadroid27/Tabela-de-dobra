@@ -385,3 +385,54 @@ class Janela:
             | Qt.WindowType.WindowMaximizeButtonHint
             | Qt.WindowType.WindowCloseButtonHint
         )
+
+    @staticmethod
+    def register_compact_menu(
+        opcoes_menu, help_menu=None, threshold: int = 450
+    ) -> None:
+        """Registra menus para modo compacto quando janela for estreita.
+
+        Quando a largura da janela principal for menor que 'threshold', os
+        rótulos do menu serão reduzidos para mostrar apenas o emoji (ícone).
+
+        Args:
+            opcoes_menu: objeto QAction-like ou QMenu para o menu de Opções.
+            help_menu: (opcional) menu de Ajuda.
+            threshold: largura (px) abaixo da qual o menu fica compacto.
+        """
+
+        def _update(_event=None):
+            try:
+                compact = g.PRINC_FORM.width() < threshold
+                # opcoes_menu é um QMenu
+                if opcoes_menu is not None:
+                    opcoes_menu.setTitle("⚙️" if compact else "⚙️ Opções")
+                if help_menu is not None:
+                    help_menu.setTitle("❓" if compact else "❓ Ajuda")
+            except Exception:  # pylint: disable=broad-except
+                # ignore failures to avoid breaking the UI
+                pass
+
+        # update immediately and register the callback if possible
+        try:
+            _update()
+            # Registra o handler na janela principal via wrapper Janela
+            if g.PRINC_FORM and hasattr(g.PRINC_FORM, "add_resize_handler"):
+                g.PRINC_FORM.add_resize_handler(_update)
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+    @staticmethod
+    def add_resize_handler(callback) -> None:
+        """Registra um callback de resize na janela principal, se disponível.
+
+        Este método é um wrapper que delega para `g.PRINC_FORM.add_resize_handler`
+        quando a janela principal tiver esse atributo.
+        """
+        try:
+            if g.PRINC_FORM and hasattr(g.PRINC_FORM, "add_resize_handler"):
+                g.PRINC_FORM.add_resize_handler(callback)
+        except Exception:  # pylint: disable=broad-except
+            # silencioso: não desejar interromper a inicialização por um
+            # detalhe de registro
+            pass

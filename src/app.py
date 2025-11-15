@@ -157,6 +157,8 @@ def configurar_janela_principal(config):
         def __init__(self):
             super().__init__()
             self.is_main_window = True
+            # Inicializa a lista de callbacks de resize
+            self._resize_handlers = []
 
         def closeEvent(self, event):  # pylint: disable=invalid-name
             """Evento chamado quando a janela principal está sendo fechada."""
@@ -164,6 +166,30 @@ def configurar_janela_principal(config):
             Janela.fechar_janelas_dependentes()
             salvar_estado_final()
             event.accept()
+
+        # Pequeno hook para permitir callbacks quando a janela for redimensionada
+        def add_resize_handler(self, callback):
+            """Registra um callback a ser chamado em eventos de resize.
+
+            O callback receberá o evento de resize como único argumento.
+            Use para atualizar dinamicamente elementos que dependem da largura/altura
+            da janela (por exemplo: rótulos de menu compactos).
+            """
+            self._resize_handlers.append(callback)
+
+        def resizeEvent(self, event):  # pylint: disable=invalid-name
+            """Dispara os callbacks registrados quando a janela é redimensionada.
+
+            A implementação chama os callbacks de forma segura, ignorando
+            exceções para não interromper o fluxo da UI.
+            """
+            super().resizeEvent(event)
+            for cb in list(self._resize_handlers):
+                try:
+                    cb(event)
+                except Exception:  # pylint: disable=broad-except
+                    # Não propagar exceções de callbacks de UI
+                    pass
 
     g.PRINC_FORM = MainWindow()
     g.PRINC_FORM.setWindowTitle(f"Calculadora de Dobra - v{APP_VERSION}")
@@ -377,6 +403,13 @@ def _criar_menu_opcoes(menu_bar):
         # Fallback: silencioso caso não seja possível aplicar cores
         pass
 
+    # Registrar menus para modo compacto via utilitário Janela
+    try:
+        Janela.register_compact_menu(opcoes_menu, threshold=g.MENU_COMPACT_WIDTH)
+    except AttributeError:
+        # Se por algum motivo a função não estiver disponível, seguir com o fluxo
+        pass
+
 
 def _criar_menu_ajuda(menu_bar):
     """Cria o menu Ajuda."""
@@ -387,6 +420,14 @@ def _criar_menu_ajuda(menu_bar):
     sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
     sobre_action.triggered.connect(lambda: form_sobre.main(None))
     help_menu.addAction(sobre_action)
+
+    # Registrar menus para modo compacto via utilitário Janela (inclui ajuda)
+    try:
+        Janela.register_compact_menu(
+            opcoes_menu=None, help_menu=help_menu, threshold=g.MENU_COMPACT_WIDTH)
+    except AttributeError:
+        # fallback
+        pass
 
 
 def configurar_frames():
