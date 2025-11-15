@@ -172,7 +172,7 @@ def configurar_janela_principal():
             pass
 
     g.PRINC_FORM = MainWindow()
-    g.PRINC_FORM.setWindowTitle(f"Calculadora de Dobra - v{APP_VERSION}")
+    g.PRINC_FORM.setWindowTitle("Calculadora de Dobra")
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.setWindowFlags(Qt.WindowType.Window)
 
