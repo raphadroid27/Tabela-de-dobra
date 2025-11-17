@@ -423,6 +423,7 @@ def get_widgets_styles() -> str:
         font-size: 10pt;
         color: palette(window-text);
         padding: 0px 0px;
+        min-width: auto;
     }}
 
     QLabel#label_texto {{
