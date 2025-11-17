@@ -701,11 +701,12 @@ class AdminTool(QMainWindow):
     def __init__(self):
         """Inicializa a janela principal."""
         super().__init__()
-        self.setFixedSize(380, 185)
+        self.setMinimumSize(380, 185)
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
-        self.setWindowFlags(Qt.WindowType.Window)
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowMinimizeButtonHint |
+                            Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
@@ -757,7 +758,7 @@ class AdminTool(QMainWindow):
 
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
-        self.setFixedSize(380, 400)
+        self.setMinimumSize(380, 400)
         self.stacked_widget.setCurrentWidget(self.main_tool_widget)
 
     def closeEvent(self, event):  # pylint: disable=C0103

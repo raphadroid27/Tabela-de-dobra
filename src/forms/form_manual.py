@@ -129,7 +129,7 @@ class ManualDialog(QDialog):
         super().__init__(parent)
         self._key_to_index: Dict[str, int] = {}
         self.setWindowTitle("Manual de Uso")
-        self.setFixedSize(500, 500)
+        self.setMinimumSize(500, 500)
         configure_frameless_dialog(self, ICON_PATH)
         self.setModal(False)
         self.setWindowModality(Qt.WindowModality.NonModal)

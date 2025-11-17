@@ -341,7 +341,7 @@ class FormImpressao(QDialog):
     def _inicializar_ui(self):
         """Inicializa a interface do usuário."""
         self.setWindowTitle("Impressão em Lote de PDFs")
-        self.setFixedSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
+        self.setMinimumSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
         configure_frameless_dialog(self, ICON_PATH)
 
         Janela.posicionar_janela(self, None)

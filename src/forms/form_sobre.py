@@ -20,7 +20,7 @@ def main(root: Optional[QWidget]) -> None:
     """Create and display the About dialog with custom title bar."""
     sobre_form = QDialog(root)
     sobre_form.setWindowTitle("Sobre")
-    sobre_form.setFixedSize(300, 210)
+    sobre_form.setMinimumSize(300, 210)
     configure_frameless_dialog(sobre_form, ICON_PATH)
     sobre_form.setModal(True)
 

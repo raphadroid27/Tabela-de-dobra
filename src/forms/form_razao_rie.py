@@ -41,7 +41,7 @@ class FormRazaoRIE(QDialog):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Raio/Espessura")
-        self.setFixedSize(JANELA_LARGURA, JANELA_ALTURA)
+        self.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA)
         configure_frameless_dialog(self, ICON_PATH)
         Janela.posicionar_janela(self, None)
 

@@ -49,7 +49,7 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM = None
 
     g.AUTEN_FORM = QDialog(root)
-    g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
+    g.AUTEN_FORM.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
     g.AUTEN_FORM.setModal(True)
     g.AUTEN_FORM.setWindowFlags(Qt.WindowType.Window)
     configure_frameless_dialog(g.AUTEN_FORM, ICON_PATH)
@@ -127,7 +127,7 @@ def _configurar_modo_login(main_layout):
 
 def _configurar_checkbox_admin(main_layout):
     """Configura o checkbox de administrador."""
-    g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_CADASTRO)
+    g.AUTEN_FORM.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA_CADASTRO)
     label_admin = QLabel("Admin:")
     label_admin.setObjectName("label_titulo")
     main_layout.addWidget(label_admin, 2, 0)

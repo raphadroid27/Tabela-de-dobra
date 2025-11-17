@@ -24,7 +24,7 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     """Create the Spring Back form using QDialog with custom title bar."""
     form_spring = QDialog(root)
     form_spring.setWindowTitle("Cálculo de Spring Back")
-    form_spring.setFixedSize(300, 150)
+    form_spring.setMinimumSize(300, 150)
     configure_frameless_dialog(form_spring, ICON_PATH)
 
     # Layout vertical: barra de título customizada + conteúdo grid

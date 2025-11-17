@@ -384,7 +384,7 @@ class FormManager:
                 titulo_janela = f"Adicionar {nome}"
         new_form.setWindowTitle(titulo_janela)
         new_form.resize(*self.config["size"])
-        new_form.setFixedSize(*self.config["size"])
+        new_form.setMinimumSize(*self.config["size"])
 
         configure_frameless_dialog(new_form, ICON_PATH)
 
