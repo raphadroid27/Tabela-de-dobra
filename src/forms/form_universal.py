@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 from shiboken6 import Shiboken
 
 from src.config import globals as g
-from src.forms.common.ui_helpers import configure_frameless_dialog
+from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.controlador import (
     adicionar,
     buscar_debounced,
@@ -386,7 +386,7 @@ class FormManager:
         new_form.resize(*self.config["size"])
         new_form.setMinimumSize(*self.config["size"])
 
-        configure_frameless_dialog(new_form, ICON_PATH)
+        configurar_dialogo_padrao(new_form, ICON_PATH)
 
         vlayout = QVBoxLayout(new_form)
         vlayout.setContentsMargins(0, 0, 0, 0)

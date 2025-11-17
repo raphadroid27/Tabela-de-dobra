@@ -24,7 +24,7 @@ from shiboken6 import isValid  # Já importado no topo
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
-from src.forms.common.ui_helpers import configure_frameless_dialog
+from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.estilo import aplicar_estilo_botao
@@ -52,7 +52,7 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
     g.AUTEN_FORM.setModal(True)
     g.AUTEN_FORM.setWindowFlags(Qt.WindowType.Window)
-    configure_frameless_dialog(g.AUTEN_FORM, ICON_PATH)
+    configurar_dialogo_padrao(g.AUTEN_FORM, ICON_PATH)
 
     def close_event(event):
         Janela.estado_janelas(True)

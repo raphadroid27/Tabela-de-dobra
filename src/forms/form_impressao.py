@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 
 from src.forms.common import context_help
 from src.forms.common.form_manager import BaseSingletonFormManager
-from src.forms.common.ui_helpers import configure_frameless_dialog
+from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.estilo import aplicar_estilo_botao
 from src.utils.janelas import Janela
 from src.utils.utilitarios import (
@@ -342,7 +342,7 @@ class FormImpressao(QDialog):
         """Inicializa a interface do usuário."""
         self.setWindowTitle("Impressão em Lote de PDFs")
         self.setMinimumSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
-        configure_frameless_dialog(self, ICON_PATH)
+        configurar_dialogo_padrao(self, ICON_PATH)
 
         Janela.posicionar_janela(self, None)
 

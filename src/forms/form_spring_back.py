@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.config import globals as g
-from src.forms.common.ui_helpers import configure_frameless_dialog
+from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.models.models import Material
 from src.utils.banco_dados import get_session
 from src.utils.utilitarios import ICON_PATH
@@ -25,7 +25,7 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
     form_spring = QDialog(root)
     form_spring.setWindowTitle("Cálculo de Spring Back")
     form_spring.setMinimumSize(300, 150)
-    configure_frameless_dialog(form_spring, ICON_PATH)
+    configurar_dialogo_padrao(form_spring, ICON_PATH)
 
     # Layout vertical: barra de título customizada + conteúdo grid
     vlayout = QVBoxLayout(form_spring)

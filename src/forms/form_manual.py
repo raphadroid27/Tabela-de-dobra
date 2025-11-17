@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.forms.common import context_help
-from src.forms.common.ui_helpers import configure_frameless_dialog
+from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 Section = Tuple[str, str, str]
@@ -130,7 +130,7 @@ class ManualDialog(QDialog):
         self._key_to_index: Dict[str, int] = {}
         self.setWindowTitle("Manual de Uso")
         self.setMinimumSize(500, 500)
-        configure_frameless_dialog(self, ICON_PATH)
+        configurar_dialogo_padrao(self, ICON_PATH)
         self.setModal(False)
         self.setWindowModality(Qt.WindowModality.NonModal)
         self._content_click_filter = _ContentClickFilter(self)

@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from src.config import globals as g
 from src.forms.common.form_manager import BaseSingletonFormManager
-from src.forms.common.ui_helpers import configure_frameless_dialog
+from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.estilo import aplicar_estilo_table_widget
 from src.utils.interface import calcular_valores
 from src.utils.janelas import Janela
@@ -42,7 +42,7 @@ class FormRazaoRIE(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Raio/Espessura")
         self.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA)
-        configure_frameless_dialog(self, ICON_PATH)
+        configurar_dialogo_padrao(self, ICON_PATH)
         Janela.posicionar_janela(self, None)
 
         layout = QVBoxLayout(self)

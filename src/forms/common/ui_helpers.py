@@ -18,10 +18,12 @@ from src.utils.janelas import Janela
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 
-def configure_frameless_dialog(dialog: QWidget, icon_path: str) -> None:
+def configurar_dialogo_padrao(dialog: QWidget, icon_path: str) -> None:
     """Aplica configuração padrão de janelas com barra de título nativa."""
-    dialog.setWindowFlags(Qt.WindowType.Window | Qt.WindowMinimizeButtonHint |
-                          Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
+    dialog.setWindowFlags(Qt.WindowType.Window |
+                          Qt.WindowType.WindowMinimizeButtonHint |
+                          Qt.WindowType.WindowMaximizeButtonHint |
+                          Qt.WindowType.WindowCloseButtonHint)
     if Janela.get_on_top_state():
         dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
     dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -42,7 +44,7 @@ def create_dialog_scaffold(
 
     dialog.setWindowTitle(barra_title or title)
     dialog.setMinimumSize(*size)
-    configure_frameless_dialog(dialog, icon_path)
+    configurar_dialogo_padrao(dialog, icon_path)
     Janela.posicionar_janela(dialog, position)
 
     layout = QVBoxLayout(dialog)
