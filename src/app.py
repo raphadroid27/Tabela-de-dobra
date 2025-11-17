@@ -173,9 +173,9 @@ def configurar_janela_principal():
 
     g.PRINC_FORM = MainWindow()
     g.PRINC_FORM.setWindowTitle("Calculadora de Dobra")
-    g.PRINC_FORM.resize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
-    g.PRINC_FORM.setWindowFlags(Qt.WindowType.Window | Qt.WindowMinimizeButtonHint |
-                                Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
+    g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
+    g.PRINC_FORM.setWindowFlags(
+        Qt.WindowType.Window | Qt.WindowType.WindowMinimizeButtonHint | Qt.WindowType.WindowCloseButtonHint)
 
     # Carrega a posição da janela usando QSettings
     settings = QSettings()
