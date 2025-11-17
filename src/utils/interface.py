@@ -599,7 +599,7 @@ def _estilo(data: UIData):
             g.K_LBL.setToolTip(
                 "Fator K calculado com base no raio interno. Clique para copiar."
             )
-        return ""
+        return "QLabel {color: palette(text);}"
     if data.deducao_espec > 0:
         g.K_LBL.setToolTip(
             "Fator K calculado com dedução específica. Clique para copiar."
@@ -691,7 +691,7 @@ def _atualizar_forca_ui(data: UIData):
     else:
         _atualizar_label(g.FORCA_LBL, None)
         if g.COMPR_ENTRY:
-            g.COMPR_ENTRY.setStyleSheet("")
+            g.COMPR_ENTRY.setStyleSheet("QLineEdit{color: palette(window-text);}")
 
 
 def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
