@@ -57,7 +57,7 @@ from src.utils.utilitarios import (
 # Constantes para configuração da aplicação
 APP_VERSION = __version__
 JANELA_PRINCIPAL_LARGURA = 360
-JANELA_PRINCIPAL_ALTURA = 513
+JANELA_PRINCIPAL_ALTURA = 500
 TIMER_SISTEMA_INTERVALO = 10000  # 10s para verificação mais rápida de comandos
 LAYOUT_ESPACAMENTO = 0
 LAYOUT_MARGEM = 0
