@@ -43,7 +43,7 @@ def create_dialog_scaffold(
     barra_title = options.get("barra_title")
 
     dialog.setWindowTitle(barra_title or title)
-    dialog.setMinimumSize(*size)
+    dialog.resize(*size)
     configurar_dialogo_padrao(dialog, icon_path)
     Janela.posicionar_janela(dialog, position)
 
