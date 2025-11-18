@@ -32,7 +32,6 @@ LABEL_ALTURA = 20
 COLUNA_RAZAO_LARGURA = 100
 COLUNA_FATOR_K_LARGURA = 100
 AVISO_ALTURA_MAXIMA = 70
-AVISO_LARGURA_MAXIMA = 220
 
 
 class FormRazaoRIE(QDialog):
@@ -42,6 +41,7 @@ class FormRazaoRIE(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Raio/Espessura")
         self.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA)
+        self.resize(JANELA_LARGURA, JANELA_ALTURA)
         configurar_dialogo_padrao(self, ICON_PATH)
         Janela.posicionar_janela(self, None)
 
@@ -136,7 +136,6 @@ class FormRazaoRIE(QDialog):
         """
         )
         aviso_browser.setMaximumHeight(AVISO_ALTURA_MAXIMA)
-        aviso_browser.setMaximumWidth(AVISO_LARGURA_MAXIMA)
         aviso_browser.setFrameStyle(0)
         aviso_browser.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         aviso_browser.setHorizontalScrollBarPolicy(
