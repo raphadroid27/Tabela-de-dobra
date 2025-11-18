@@ -10,6 +10,7 @@ import os
 import shutil
 import subprocess  # nosec B404 - integração controlada com ferramentas externas
 import sys
+import unicodedata  # Importado para normalização de texto
 from pathlib import Path
 from typing import Optional, Sequence, Union
 
@@ -186,6 +187,36 @@ ensure_dirs_exist()
 
 
 # --- 2. FUNÇÕES UTILITÁRIAS ---
+
+
+def _normalize_text(text: str) -> str:
+    """
+    Remove espaços em branco das bordas e caracteres invisíveis (como ZWSP),
+    mas PRESERVA quebras de linha e tabulações importantes para formatação.
+    """
+    if not text:
+        return ""
+
+    # Normaliza e remove caracteres de controle e formato (incluindo ZWSP)
+    # ZWSP é \u200B, Categoria Cf (Format).
+    # Cc (Control) inclui \n e \t, por isso precisamos salvá-los.
+
+    safe_chars = {"\n", "\r", "\t"}
+
+    try:
+        normalized = "".join(
+            ch
+            for ch in unicodedata.normalize("NFC", text)
+            if (unicodedata.category(ch) not in ("Cf", "Cc", "Cs")) or (ch in safe_chars)
+        )
+    except TypeError:
+        # Fallback se o texto for inválido
+        normalized = text
+
+    # Remove espaços em branco normais das bordas
+    return normalized.strip()
+
+
 def aplicar_medida_borda_espaco(
     layout_ou_widget: Union[QLayout, QWidget],
     margem: int = MARGEM_PADRAO,
@@ -239,23 +270,48 @@ def _show_message_box(
     msg.setIcon(icon)
     msg.setWindowTitle(title)
 
-    main_text = ""
-    informative_text = ""
+    main_text_raw = ""
+    informative_text_raw = ""
 
     if isinstance(message, (list, tuple)):
         # Se for uma tupla/lista, assume-se (principal, informativo)
-        main_text = str(message[0]) if message else ""
-        informative_text = str(message[1]) if len(message) > 1 else ""
+        main_text_raw = str(message[0]) if message and len(message) > 0 else ""
+        informative_text_raw = str(message[1]) if len(message) > 1 else ""
+    elif message is None:
+        main_text_raw = ""
+        informative_text_raw = ""
     else:
         # Se for uma string, divide na primeira quebra de linha
         parts = str(message).split("\n", 1)
-        main_text = parts[0]
+        main_text_raw = parts[0]
         if len(parts) > 1:
-            informative_text = parts[1].strip()
+            informative_text_raw = parts[1]
 
-    msg.setText(f"{main_text}")
-    if informative_text:
-        msg.setInformativeText(informative_text)
+    # --- NOVO AJUSTE ---
+    # Normaliza e limpa os textos para remover caracteres invisíveis
+    # mas agora mantendo as quebras de linha
+    main_text_limpo = _normalize_text(main_text_raw)
+    informative_text_limpo = _normalize_text(informative_text_raw)
+
+    # Aplica fallback se o texto principal estiver vazio APÓS a limpeza
+    if not main_text_limpo:
+        if icon == QMessageBox.Icon.Critical:
+            main_text_limpo = "Ocorreu um erro."
+        elif icon == QMessageBox.Icon.Warning:
+            # Vimos que um ícone de Aviso pode ter o título "Erro"
+            if "erro" in title.lower():
+                main_text_limpo = "Ocorreu um erro."
+            else:
+                main_text_limpo = "Aviso."
+        elif icon == QMessageBox.Icon.Information:
+            main_text_limpo = "Informação."
+        else:
+            main_text_limpo = "Operação concluída."
+    # --- FIM DO AJUSTE ---
+
+    msg.setText(main_text_limpo)
+    if informative_text_limpo:
+        msg.setInformativeText(informative_text_limpo)
 
     # Garante que o monitor de janelas não altere o diálogo
     marcar_widget_como_sistema(msg)
@@ -279,7 +335,7 @@ def show_info(title: str, message: str, parent: Optional[QWidget] = None) -> Non
 
 
 def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> None:
-    """Mostra uma mensagem de aviso usando QMessageBox."""
+    """Mostimra uma mensagem de aviso usando QMessageBox."""
     _show_message_box(QMessageBox.Icon.Warning, title, message, parent)
 
 
@@ -292,6 +348,10 @@ def show_timed_message_box(parent, title, message, timeout_ms=10000):
         QMessageBox.StandardButton.Ok,
         parent,
     )
+
+    # Adiciona fallback se a mensagem estiver vazia (após limpeza)
+    if not _normalize_text(message):
+        msg_box.setText("Operação concluída.")
 
     # Timer para fechar automaticamente
     timer = QTimer(parent)
@@ -370,23 +430,32 @@ def ask_yes_no(
     msg.setWindowTitle(title)
 
     # Aplicar a mesma lógica de _show_message_box para tratar a mensagem
-    main_text = ""
-    informative_text = ""
+    main_text_raw = ""
+    informative_text_raw = ""
 
     if isinstance(message, (list, tuple)):
-        # Se for uma tupla/lista, assume-se (principal, informativo)
-        main_text = str(message[0]) if message else ""
-        informative_text = str(message[1]) if len(message) > 1 else ""
+        main_text_raw = str(message[0]) if message and len(message) > 0 else ""
+        informative_text_raw = str(message[1]) if len(message) > 1 else ""
+    elif message is None:
+        main_text_raw = ""
+        informative_text_raw = ""
     else:
-        # Se for uma string, divide na primeira quebra de linha
         parts = str(message).split("\n", 1)
-        main_text = parts[0]
+        main_text_raw = parts[0]
         if len(parts) > 1:
-            informative_text = parts[1].strip()
+            informative_text_raw = parts[1]
 
-    msg.setText(f"{main_text}")
-    if informative_text:
-        msg.setInformativeText(informative_text)
+    # Limpa os textos
+    main_text_limpo = _normalize_text(main_text_raw)
+    informative_text_limpo = _normalize_text(informative_text_raw)
+
+    # Fallback se vazio
+    if not main_text_limpo:
+        main_text_limpo = "Deseja continuar?"
+
+    msg.setText(main_text_limpo)
+    if informative_text_limpo:
+        msg.setInformativeText(informative_text_limpo)
 
     msg.setStandardButtons(
         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No

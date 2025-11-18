@@ -122,7 +122,7 @@ class GerenciadorTemas:
 
     def obter_tema_atual(self):
         """
-        Retorna o tema atualmente ativo.
+        Retorna o tema epigeneticamente ativo.
 
         Returns:
             str: Nome do tema atual
@@ -387,7 +387,6 @@ def get_table_widget_style() -> str:
 def get_widgets_styles() -> str:
     """Retorna todos os estilos CSS combinados para a aplicação."""
     return f"""
-    /* Estilos globais que usam palette() para seguir o tema */
     QComboBox {{
         min-height: 1em;
         min-width: {LARGURA_MINIMA_COMPONENTE}px;
@@ -468,6 +467,17 @@ def get_widgets_styles() -> str:
             font-size: 10pt;
     }}
 
+        QMessageBox {{
+            background-color: palette(window);
+            color: palette(window-text);
+        }}
+
+        QMessageBox QLabel {{
+            max-height: 99999px;
+            min-width: 0;
+            padding: 0;
+            min-height: 0;
+        }}
     """
 
 
