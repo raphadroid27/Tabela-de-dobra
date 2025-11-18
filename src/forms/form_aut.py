@@ -38,8 +38,8 @@ from src.utils.utilitarios import (
 
 # Constantes para configuração da interface
 JANELA_LARGURA = 200
-JANELA_ALTURA_LOGIN = 160
-JANELA_ALTURA_CADASTRO = 180
+JANELA_ALTURA_LOGIN = 115
+JANELA_ALTURA_CADASTRO = 143
 
 
 def _configurar_janela_base(root):
@@ -49,10 +49,10 @@ def _configurar_janela_base(root):
     g.AUTEN_FORM = None
 
     g.AUTEN_FORM = QDialog(root)
-    g.AUTEN_FORM.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
+    g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
     g.AUTEN_FORM.setModal(True)
-    g.AUTEN_FORM.setWindowFlags(Qt.WindowType.Window)
     configurar_dialogo_padrao(g.AUTEN_FORM, ICON_PATH)
+    g.AUTEN_FORM.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
 
     def close_event(event):
         Janela.estado_janelas(True)
@@ -64,7 +64,7 @@ def _configurar_janela_base(root):
 def _criar_layout_principal():
     """Cria o layout principal da janela."""
     vlayout = QVBoxLayout(g.AUTEN_FORM)
-    aplicar_medida_borda_espaco(vlayout, 5)
+    aplicar_medida_borda_espaco(vlayout, 10)
     return vlayout
 
 
@@ -127,7 +127,7 @@ def _configurar_modo_login(main_layout):
 
 def _configurar_checkbox_admin(main_layout):
     """Configura o checkbox de administrador."""
-    g.AUTEN_FORM.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA_CADASTRO)
+    g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_CADASTRO)
     label_admin = QLabel("Admin:")
     label_admin.setObjectName("label_titulo")
     main_layout.addWidget(label_admin, 2, 0)
@@ -176,6 +176,8 @@ def _criar_conteudo_principal(vlayout):
 
     conteudo.setLayout(main_layout)
     vlayout.addWidget(conteudo)
+
+    aplicar_medida_borda_espaco(main_layout, 0, 10)
 
 
 def _finalizar_configuracao():
