@@ -207,7 +207,8 @@ def _normalize_text(text: str) -> str:
         normalized = "".join(
             ch
             for ch in unicodedata.normalize("NFC", text)
-            if (unicodedata.category(ch) not in ("Cf", "Cc", "Cs")) or (ch in safe_chars)
+            if (unicodedata.category(ch) not in ("Cf", "Cc", "Cs"))
+            or (ch in safe_chars)
         )
     except TypeError:
         # Fallback se o texto for inválido

@@ -8,7 +8,7 @@ import traceback
 from functools import partial
 
 from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtGui import QAction, QIcon, QPixmap, QColor, QPainter
+from PySide6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -34,7 +34,6 @@ from src.forms.form_universal import main as form_universal
 from src.models.models import Usuario
 from src.utils import ipc_manager
 from src.utils.banco_dados import get_session, inicializar_banco_dados
-from src.utils.theme_manager import theme_manager
 from src.utils.interface_manager import carregar_interface
 from src.utils.janelas import Janela
 from src.utils.session_manager import (
@@ -44,6 +43,8 @@ from src.utils.session_manager import (
     remover_sessao,
     verificar_comando_sistema,
 )
+from src.utils.theme_manager import theme_manager
+
 # theme_manager is used for applying palettes and styles
 from src.utils.update_manager import set_installed_version
 from src.utils.usuarios import logout
@@ -175,7 +176,10 @@ def configurar_janela_principal():
     g.PRINC_FORM.setWindowTitle("Calculadora de Dobra")
     g.PRINC_FORM.setFixedSize(JANELA_PRINCIPAL_LARGURA, JANELA_PRINCIPAL_ALTURA)
     g.PRINC_FORM.setWindowFlags(
-        Qt.WindowType.Window | Qt.WindowType.WindowMinimizeButtonHint | Qt.WindowType.WindowCloseButtonHint)
+        Qt.WindowType.Window
+        | Qt.WindowType.WindowMinimizeButtonHint
+        | Qt.WindowType.WindowCloseButtonHint
+    )
 
     # Carrega a posição da janela usando QSettings
     settings = QSettings()
@@ -375,7 +379,10 @@ def _criar_menu_opcoes(menu_bar):
             action.setChecked(cor_key == theme_manager.current_color)
             # Connect only when checked to avoid redundant calls
             action.triggered.connect(
-                lambda checked, c=cor_key: theme_manager.apply_color(c) if checked else None)
+                lambda checked, c=cor_key: (
+                    theme_manager.apply_color(c) if checked else None
+                )
+            )
             cor_menu.addAction(action)
             cor_actions[cor_key] = action
         # Registrar actions ao theme_manager para que fiquem sincronizadas
@@ -405,7 +412,8 @@ def _criar_menu_ajuda(menu_bar):
     # Registrar menus para modo compacto via utilitário Janela (inclui ajuda)
     try:
         Janela.register_compact_menu(
-            opcoes_menu=None, help_menu=help_menu, threshold=g.MENU_COMPACT_WIDTH)
+            opcoes_menu=None, help_menu=help_menu, threshold=g.MENU_COMPACT_WIDTH
+        )
     except AttributeError:
         # fallback
         pass

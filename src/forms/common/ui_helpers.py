@@ -20,10 +20,12 @@ from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 def configurar_dialogo_padrao(dialog: QWidget, icon_path: str) -> None:
     """Aplica configuração padrão de janelas com barra de título nativa."""
-    dialog.setWindowFlags(Qt.WindowType.Window |
-                          Qt.WindowType.WindowMinimizeButtonHint |
-                          Qt.WindowType.WindowMaximizeButtonHint |
-                          Qt.WindowType.WindowCloseButtonHint)
+    dialog.setWindowFlags(
+        Qt.WindowType.Window
+        | Qt.WindowType.WindowMinimizeButtonHint
+        | Qt.WindowType.WindowMaximizeButtonHint
+        | Qt.WindowType.WindowCloseButtonHint
+    )
     if Janela.get_on_top_state():
         dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
     dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)

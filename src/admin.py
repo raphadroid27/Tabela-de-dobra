@@ -52,12 +52,12 @@ from src.utils.estilo import (
     aplicar_estilo_table_widget,
     obter_estilo_progress_bar,
 )
-from src.utils.theme_manager import theme_manager
 from src.utils.interface_manager import safe_process_events
 from src.utils.session_manager import (
     force_shutdown_all_instances,
     obter_sessoes_ativas,
 )
+from src.utils.theme_manager import theme_manager
 from src.utils.update_manager import get_installed_version, run_update_process
 from src.utils.usuarios import (
     RESET_PASSWORD_HASH,
@@ -705,8 +705,12 @@ class AdminTool(QMainWindow):
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
-        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowMinimizeButtonHint |
-                            Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(
+            Qt.WindowType.Window
+            | Qt.WindowMinimizeButtonHint
+            | Qt.WindowMaximizeButtonHint
+            | Qt.WindowCloseButtonHint
+        )
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)

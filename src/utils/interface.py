@@ -716,7 +716,8 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
         if WidgetManager.is_widget_valid(entry):
             invalida = aba_min is not None and 0 < valores[i - 1] < aba_min
             entry.setStyleSheet(
-                "color: white; background-color: red;" if invalida
+                "color: white; background-color: red;"
+                if invalida
                 else "color: palette(text); background-color: palette(base);"
             )
             entry.setToolTip(
