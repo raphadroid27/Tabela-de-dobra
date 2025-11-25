@@ -414,6 +414,7 @@ def get_widgets_styles() -> str:
         color: palette(window-text);
         font-size: 10pt;
         min-width: {LARGURA_MINIMA_COMPONENTE}px;
+        min-height: {ALTURA_PADRAO_COMPONENTE}px;
         max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
 
