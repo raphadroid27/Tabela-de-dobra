@@ -53,8 +53,6 @@ PAUSA_ENTRE_IMPRESSOES_SEGUNDOS = 2  # Pausa para não sobrecarregar o spooler
 ALTURA_FORM_IMPRESSAO = 500
 LARGURA_FORM_IMPRESSAO = 500
 MARGEM_LAYOUT_PRINCIPAL = 10
-ALTURA_MAXIMA_LISTA = 100
-ALTURA_MAXIMA_LISTA_WIDGET = 120
 
 # Métodos de impressão em ordem de prioridade
 METODOS_IMPRESSAO = ["foxit", "impressora_padrao", "adobe"]
@@ -341,6 +339,7 @@ class FormImpressao(QDialog):
     def _inicializar_ui(self):
         """Inicializa a interface do usuário."""
         self.setWindowTitle("Impressão em Lote de PDFs")
+        self.resize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
         self.setMinimumSize(LARGURA_FORM_IMPRESSAO, ALTURA_FORM_IMPRESSAO)
         configurar_dialogo_padrao(self, ICON_PATH)
 
@@ -365,7 +364,7 @@ class FormImpressao(QDialog):
 
         layout_principal.setRowStretch(0, 0)
         layout_principal.setRowStretch(1, 1)
-        layout_principal.setRowStretch(2, 0)
+        layout_principal.setRowStretch(2, 1)
 
         vlayout.addWidget(conteudo)
 
@@ -449,13 +448,23 @@ class FormImpressao(QDialog):
         layout = QGridLayout(frame)
         aplicar_medida_borda_espaco(layout)
 
+        layout.setRowStretch(0, 0)  # título da lista (linha 0)
+        layout.setRowStretch(1, 1)  # QTextEdit (parte 1)
+        layout.setRowStretch(2, 1)  # QTextEdit (parte 2 - span)
+        layout.setRowStretch(3, 0)  # label 'Arquivos na lista' (fixo)
+        layout.setRowStretch(4, 2)  # QListWidget (recebe mais espaço)
+
+        # Colunas: coluna 0 e 1 são conteúdo expansível; coluna 2 é coluna de botões fixa
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(2, 0)
+
         label_lista = QLabel("Lista de arquivos (um por linha):")
         label_lista.setObjectName("label_titulo")
         label_lista.setStyleSheet(STYLE_LABEL_BOLD)
         layout.addWidget(label_lista, 0, 0, 1, 3)
 
         self.lista_text = QTextEdit()
-        self.lista_text.setMaximumHeight(ALTURA_MAXIMA_LISTA)
         self.lista_text.setPlaceholderText(PLACEHOLDER_LISTA_ARQUIVOS_1)
         self.lista_text.setAcceptDrops(False)
         layout.addWidget(self.lista_text, 1, 0, 2, 2)
@@ -483,7 +492,6 @@ class FormImpressao(QDialog):
 
         # Lista com suporte a arrastar/soltar arquivos PDF
         self.lista_arquivos_widget = QListWidget()
-        self.lista_arquivos_widget.setMaximumHeight(ALTURA_MAXIMA_LISTA_WIDGET)
         self.lista_arquivos_widget.setToolTip(TOOLTIP_LISTA_ARQUIVOS_2)
         self.lista_arquivos_widget.setAcceptDrops(True)
         self.lista_arquivos_widget.setDragDropMode(
@@ -547,11 +555,13 @@ class FormImpressao(QDialog):
         layout = QGridLayout(frame)
         aplicar_medida_borda_espaco(layout)
         self.resultado_text = QTextBrowser()
-        self.resultado_text.setMaximumHeight(ALTURA_MAXIMA_LISTA)
         self.resultado_text.setToolTip(
             "Exibe o progresso e resultado da impressão dos arquivos"
         )
         layout.addWidget(self.resultado_text, 0, 0)
+
+        # Permitir expansão vertical do texto de resultado
+        layout.setRowStretch(0, 1)
 
         # Barra de progresso da impressão
         self.progress_bar = QProgressBar()
