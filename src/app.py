@@ -8,7 +8,7 @@ import traceback
 from functools import partial
 
 from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap
+from PySide6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -30,6 +30,7 @@ from src.forms import (
     form_razao_rie,
     form_sobre,
 )
+from src.forms.common import context_help
 from src.forms.form_universal import main as form_universal
 from src.models.models import Usuario
 from src.utils import ipc_manager
@@ -315,6 +316,8 @@ def _adicionar_acoes_ao_menu(menu, acoes):
             action.triggered.connect(funcao)
             menu.addAction(action)
 
+# pylint: disable=too-many-locals
+
 
 def _criar_menu_opcoes(menu_bar):
     """Cria o menu Opções."""
@@ -491,7 +494,7 @@ def iniciar_timers():
     TIMER_SISTEMA.start(TIMER_SISTEMA_INTERVALO)
 
 
-def main():
+def main():  # pylint: disable=too-many-locals
     """Função principal que inicializa e executa a aplicação."""
     setup_logging("app.log", log_to_console=True)
     app = None
@@ -526,6 +529,12 @@ def main():
         app.aboutToQuit.connect(remover_sessao)
 
         configurar_janela_principal()
+
+        # Adicionar atalho F1 para ajuda na janela principal
+        shortcut = QShortcut(QKeySequence("F1"), g.PRINC_FORM)
+        shortcut.activated.connect(
+            lambda: context_help.show_help("main", parent=g.PRINC_FORM))
+
         menu_custom = configurar_frames()
         configurar_menu(menu_custom)
         registrar_sessao()

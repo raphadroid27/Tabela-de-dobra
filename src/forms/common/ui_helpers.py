@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Iterable
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QProgressBar,
@@ -43,6 +43,7 @@ def create_dialog_scaffold(
     """Configura o esqueleto base de diálogos com barra de título nativa."""
     position = options.get("position")
     barra_title = options.get("barra_title")
+    help_callback = options.get("help_callback")
 
     dialog.setWindowTitle(barra_title or title)
     dialog.setMinimumSize(*size)
@@ -52,6 +53,11 @@ def create_dialog_scaffold(
 
     layout = QVBoxLayout(dialog)
     aplicar_medida_borda_espaco(layout, 0)
+
+    # Adicionar atalho F1 para ajuda se help_callback for fornecido
+    if help_callback:
+        shortcut = QShortcut(QKeySequence("F1"), dialog)
+        shortcut.activated.connect(help_callback)
 
     return layout
 

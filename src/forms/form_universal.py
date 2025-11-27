@@ -8,7 +8,7 @@ Versão atualizada com botões de ação fora do grid para melhor organização 
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -28,6 +28,7 @@ from shiboken6 import Shiboken
 
 from src.config import globals as g
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
+from src.forms.common import context_help
 from src.utils.controlador import (
     adicionar,
     buscar_debounced,
@@ -636,6 +637,11 @@ def main(tipo, root):
     _config_componentes_form(gerenciador_form, layout_principal)
 
     _executar_pos_inicio(config, tipo)
+
+    # Adicionar atalho F1 para ajuda
+    shortcut = QShortcut(QKeySequence("F1"), novo_form)
+    shortcut.activated.connect(
+        lambda: context_help.show_help("cadastro", parent=novo_form))
 
     novo_form.show()
 

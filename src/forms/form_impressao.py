@@ -335,6 +335,10 @@ class FormImpressao(QDialog):
 
         self._inicializar_ui()
 
+        # Adicionar atalho F1 para ajuda
+        shortcut = QShortcut(QKeySequence("F1"), self)
+        shortcut.activated.connect(self._mostrar_ajuda)
+
     def _inicializar_ui(self):
         """Inicializa a interface do usuário."""
         self.setWindowTitle("Impressão em Lote de PDFs")

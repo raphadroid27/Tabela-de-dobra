@@ -3,6 +3,7 @@
 import sys
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -20,6 +21,7 @@ from PySide6.QtWidgets import (
 from src.config import globals as g
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
+from src.forms.common import context_help
 from src.utils.estilo import aplicar_estilo_table_widget
 from src.utils.interface import calcular_valores
 from src.utils.janelas import Janela
@@ -31,7 +33,7 @@ JANELA_ALTURA = 280
 LABEL_ALTURA = 20
 COLUNA_RAZAO_LARGURA = 100
 COLUNA_FATOR_K_LARGURA = 100
-AVISO_ALTURA_MAXIMA = 70
+AVISO_ALTURA_MAXIMA = 80
 
 
 class FormRazaoRIE(QDialog):
@@ -53,6 +55,10 @@ class FormRazaoRIE(QDialog):
         aplicar_medida_borda_espaco(conteudo_layout, 0)
         conteudo_layout.addWidget(self._criar_main_frame())
         layout.addWidget(conteudo)
+
+        # Adicionar atalho F1 para ajuda
+        shortcut = QShortcut(QKeySequence("F1"), self)
+        shortcut.activated.connect(self._mostrar_ajuda)
 
     def _criar_main_frame(self) -> QWidget:
         frame = QWidget()
@@ -142,6 +148,10 @@ class FormRazaoRIE(QDialog):
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
         return aviso_browser
+
+    def _mostrar_ajuda(self) -> None:
+        """Mostra as instruções de ajuda para este formulário."""
+        context_help.show_help("razao_rie", parent=self)
 
 
 class FormManager(BaseSingletonFormManager):

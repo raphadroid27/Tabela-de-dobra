@@ -239,7 +239,7 @@ class ManualDialog(QDialog):
         """Recolhe o menu lateral independentemente do estado (idempotente)."""
         self._menu_button.setChecked(False)
 
-    def position_near_parent(self, gap: int = 12) -> None:
+    def position_near_parent(self, gap: int = 10) -> None:
         """Posiciona a janela próxima à janela pai (se existir).
 
         Estratégia:
