@@ -296,18 +296,14 @@ def _show_message_box(
 
     # Aplica fallback se o texto principal estiver vazio APÓS a limpeza
     if not main_text_limpo:
-        if icon == QMessageBox.Icon.Critical:
-            main_text_limpo = "Ocorreu um erro."
-        elif icon == QMessageBox.Icon.Warning:
-            # Vimos que um ícone de Aviso pode ter o título "Erro"
-            if "erro" in title.lower():
-                main_text_limpo = "Ocorreu um erro."
-            else:
-                main_text_limpo = "Aviso."
-        elif icon == QMessageBox.Icon.Information:
-            main_text_limpo = "Informação."
+        fallbacks = {
+            QMessageBox.Icon.Critical: "Ocorreu um erro.",
+            QMessageBox.Icon.Information: "Informação.",
+        }
+        if icon == QMessageBox.Icon.Warning:
+            main_text_limpo = "Ocorreu um erro." if "erro" in title.lower() else "Aviso."
         else:
-            main_text_limpo = "Operação concluída."
+            main_text_limpo = fallbacks.get(icon, "Operação concluída.")
     # --- FIM DO AJUSTE ---
 
     msg.setText(main_text_limpo)

@@ -13,8 +13,6 @@ import logging
 
 from PySide6.QtGui import QColor
 
-from .theme_manager import theme_manager
-
 logger = logging.getLogger(__name__)
 
 TEMA_ATUAL_PADRAO = "light"
@@ -76,17 +74,10 @@ class GerenciadorTemas:
 
     def __init__(self):
         """Inicializa o gerenciador de temas."""
-        self.tema_atual = theme_manager.current_mode
+        self.tema_atual = "light"  # Default
         self.temas_actions = {}
         self.accent_color = QColor(0, 122, 204)  # Azul padrão
-        # Registra listener para sincronizar ações do menu quando o tema mudar
-        try:
-            theme_manager.register_listener(self._on_tema_alterado)
-        except AttributeError:
-            # Se o theme_manager não expor register_listener por algum motivo,
-            # ignoramos a falha — a sincronização será feita quando
-            # `registrar_tema_actions` for chamado.
-            pass
+        # Registra listener - será feito quando registrar_tema_actions for chamado
 
     def registrar_tema_actions(self, actions_dict):
         """
@@ -127,7 +118,7 @@ class GerenciadorTemas:
         Returns:
             str: Nome do tema atual
         """
-        return theme_manager.current_mode
+        return self.tema_atual
 
     def aplicar_tema_inicial(self, tema=None):
         """
@@ -139,7 +130,6 @@ class GerenciadorTemas:
         if tema is None:
             tema = TEMA_ATUAL_PADRAO
 
-        theme_manager.apply_theme(tema)
         self.tema_atual = tema
         logger.info("Tema inicial '%s' aplicado.", tema)
 
@@ -179,21 +169,14 @@ def obter_temas_disponiveis():
     Returns:
         list: Lista de temas disponíveis
     """
-    # Delega ao ThemeManager para evitar duplicação
-    try:
-        return theme_manager.available_themes()
-    except (AttributeError, RuntimeError):
-        return ["light", "dark"]
+    # Fallback: retorna temas padrão
+    return ["light", "dark"]
 
 
 # Funções de conveniência para compatibilidade com código existente
 def registrar_tema_actions(actions_dict):
     """Registra as ações de tema para controle de estado no menu."""
-    try:
-        theme_manager.register_actions(actions_dict)
-    except (AttributeError, RuntimeError):
-        # Fallback: manter compatibilidade com o gerenciador local
-        gerenciador_temas.registrar_tema_actions(actions_dict)
+    gerenciador_temas.registrar_tema_actions(actions_dict)
 
 
 def registrar_cor_actions(actions_dict):
@@ -201,38 +184,23 @@ def registrar_cor_actions(actions_dict):
 
     O dicionário deve mapear a chave da cor (ex: 'verde') para um QAction-like.
     """
-    try:
-        theme_manager.register_color_actions(actions_dict)
-    except (AttributeError, RuntimeError):
-        # Fallback: apenas ignore se não suportado
-        pass
+    # Fallback: apenas ignore se não suportado
+    _ = actions_dict  # Ignorar parâmetro não utilizado
 
 
 def aplicar_tema_inicial(tema=None):
     """Aplica o tema inicial (delegado ao ThemeManager)."""
-    try:
-        if tema is None:
-            theme_manager.initialize()
-        else:
-            theme_manager.apply_theme(tema)
-    except (AttributeError, RuntimeError):
-        gerenciador_temas.aplicar_tema_inicial(tema)
+    gerenciador_temas.aplicar_tema_inicial(tema)
 
 
 def obter_tema_atual():
     """Retorna o tema atual (delegado ao ThemeManager)."""
-    try:
-        return theme_manager.current_mode
-    except (AttributeError, RuntimeError):
-        return gerenciador_temas.obter_tema_atual()
+    return gerenciador_temas.obter_tema_atual()
 
 
 def obter_cores_disponiveis():
     """Retorna as cores de destaque disponíveis (chave -> (rótulo, hex))."""
-    try:
-        return theme_manager.color_options()
-    except (AttributeError, RuntimeError):
-        return {}
+    return {}
 
 
 def obter_estilo_botao(cor: str) -> str:

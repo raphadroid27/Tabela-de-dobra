@@ -8,9 +8,12 @@ from PySide6.QtCore import QSettings
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
 
+from .estilo import get_widgets_styles
+
 
 class ThemeManager:
     """Aplica e persiste o tema visual da aplicação."""
+    # pylint: disable=too-many-instance-attributes
 
     _INSTANCE: ClassVar["ThemeManager | None"] = None
     _VALID_MODES: ClassVar[set[str]] = {"light", "dark"}
@@ -42,10 +45,6 @@ class ThemeManager:
         self._color = self._DEFAULT_COLOR
         self._listeners: List[Callable[[str], None]] = []
         self._color_listeners: List[Callable[[str], None]] = []
-        # Dicionário opcional para armazenar ações do menu {cor_key: QAction-like}
-        self._color_actions: Dict[str, Any] = {}
-        # Dicionário opcional para armazenar ações do menu {tema: QAction-like}
-        self._actions: Dict[str, Any] = {}
         # Dicionário opcional para armazenar ações do menu {cor_key: QAction-like}
         self._color_actions: Dict[str, Any] = {}
         # Dicionário opcional para armazenar ações do menu {tema: QAction-like}
@@ -235,8 +234,6 @@ class ThemeManager:
             # Aplicar estilos CSS globais que usam palette()
             # Import local para evitar import circular — aceitável aqui.
             # pylint: disable=import-outside-toplevel
-            from .estilo import get_widgets_styles
-
             global_styles = get_widgets_styles()
             app.setStyleSheet(global_styles)
 

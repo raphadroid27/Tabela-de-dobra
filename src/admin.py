@@ -779,7 +779,7 @@ def main():
     # Inicializa o tema salvo via ThemeManager
     try:
         theme_manager.initialize()
-    except Exception:
+    except (AttributeError, RuntimeError):
         pass
     window = AdminTool()
     window.show()
