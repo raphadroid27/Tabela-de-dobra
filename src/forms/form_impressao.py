@@ -58,7 +58,6 @@ MARGEM_LAYOUT_PRINCIPAL = 10
 METODOS_IMPRESSAO = ["foxit", "impressora_padrao", "adobe"]
 
 # Strings de interface
-STYLE_LABEL_BOLD = "font-weight: bold; font-size: 10pt;"
 PLACEHOLDER_LISTA_ARQUIVOS_1 = (
     "Digite os nomes dos arquivos, um por linha. Exemplo:\n010464516\n010464519"
 )
@@ -460,8 +459,7 @@ class FormImpressao(QDialog):
         layout.setColumnStretch(2, 0)
 
         label_lista = QLabel("Lista de arquivos (um por linha):")
-        label_lista.setObjectName("label_titulo")
-        label_lista.setStyleSheet(STYLE_LABEL_BOLD)
+        label_lista.setObjectName("label_titulo_negrito")
         layout.addWidget(label_lista, 0, 0, 1, 3)
 
         self.lista_text = QTextEdit()
@@ -486,8 +484,7 @@ class FormImpressao(QDialog):
         layout.addWidget(limpar_text_btn, 2, 2)
 
         label_arquivos = QLabel("Arquivos na lista:")
-        label_arquivos.setObjectName("label_titulo")
-        label_arquivos.setStyleSheet(STYLE_LABEL_BOLD)
+        label_arquivos.setObjectName("label_titulo_negrito")
         layout.addWidget(label_arquivos, 3, 0, 1, 3)
 
         # Lista com suporte a arrastar/soltar arquivos PDF

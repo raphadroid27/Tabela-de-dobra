@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Iterable, Optional, Tuple
 
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QFont, QTextDocument
+from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -23,6 +23,8 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QToolButton,
     QVBoxLayout,
+    QTextBrowser,
+    QSizePolicy,
     QWidget,
 )
 
@@ -31,6 +33,9 @@ from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 Section = Tuple[str, str, str]
+
+ALTURA_FORM_PADRAO = 510
+LARGURA_FORM_PADRAO = 500
 
 SECTION_KEYS_ORDER = (
     "main",
@@ -52,37 +57,27 @@ _manual_instance: ManualDialog | None = None
 
 def _create_section_widget(title: str, body: str) -> QWidget:
     """Cria o conteúdo visual de uma seção do manual."""
-    container = QFrame()
-    container.setObjectName("manualSectionContainer")
-    container.setFrameShape(QFrame.Shape.StyledPanel)
-    container.setStyleSheet(
-        "#manualSectionContainer {"
-        " border: 1px solid rgba(120, 120, 120, 80);"
-        " border-radius: 8px;"
-        " background-color: rgba(255, 255, 255, 8);"
-        "}"
-    )
+    container = QWidget()
+    container.setObjectName("container_manual")
 
     layout = QVBoxLayout(container)
-    aplicar_medida_borda_espaco(layout, 5, 0)
+    layout.setContentsMargins(5, 0, 0, 5)
+    layout.setSpacing(0)
 
     header = QLabel(title)
-    header.setObjectName("label_titulo")
-    header_font = QFont()
-    header_font.setPointSize(16)
-    header_font.setBold(True)
-    header.setFont(header_font)
-    header.setAlignment(Qt.AlignmentFlag.AlignLeft)
-    layout.addWidget(header)
+    header.setObjectName("label_titulo_h4")
 
-    body_label = QLabel(body)
-    body_label.setWordWrap(True)
-    body_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-    body_label.setTextFormat(Qt.TextFormat.RichText)
-    body_label.setOpenExternalLinks(True)
-    body_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-    body_label.setMinimumHeight(120)
-    layout.addWidget(body_label, 1)
+    layout.addWidget(header, 1)
+
+    body_widget = QTextBrowser()
+    body_widget.setHtml(body)
+    body_widget.setOpenExternalLinks(True)
+    body_widget.setReadOnly(True)
+    body_widget.setFrameShape(QFrame.Shape.NoFrame)
+    body_widget.setSizePolicy(
+        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
+    )
+    layout.addWidget(body_widget, 1)
 
     return container
 
@@ -129,7 +124,7 @@ class ManualDialog(QDialog):
         super().__init__(parent)
         self._key_to_index: Dict[str, int] = {}
         self.setWindowTitle("Manual de Uso")
-        self.setMinimumSize(500, 500)
+        self.setMinimumSize(LARGURA_FORM_PADRAO, ALTURA_FORM_PADRAO)
         configurar_dialogo_padrao(self, ICON_PATH)
         self.setModal(False)
         self.setWindowModality(Qt.WindowModality.NonModal)
@@ -140,7 +135,7 @@ class ManualDialog(QDialog):
 
         controle = QWidget()
         controle_layout = QVBoxLayout(controle)
-        controle_layout.setContentsMargins(10, 0, 0, 0)
+        controle_layout.setContentsMargins(10, 5, 0, 0)
         controle_layout.setSpacing(0)
 
         self._menu_button = QToolButton()
@@ -162,22 +157,17 @@ class ManualDialog(QDialog):
         content_layout.setContentsMargins(10, 5, 10, 10)
         content_layout.setSpacing(0)
 
-        self._categoria_container = QFrame()
-        self._categoria_container.setFrameShape(QFrame.Shape.NoFrame)
-        self._categoria_container.setObjectName("categoryContainer")
+        self._categoria_container = QWidget()
         self._categoria_container.setVisible(False)
         self._categoria_container.setMinimumWidth(0)
         self._categoria_container.setMaximumWidth(0)
-        self._categoria_container.setStyleSheet(
-            "QFrame#categoryContainer { border: none; }"
-        )
 
         categoria_layout = QVBoxLayout(self._categoria_container)
         categoria_layout.setContentsMargins(0, 0, 5, 0)
         categoria_layout.setSpacing(0)
 
         self._category_list = QListWidget()
-        self._category_list.setObjectName("categoryList")
+        self._category_list.setObjectName("lista_categoria")
         self._category_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self._category_list.setUniformItemSizes(True)
         aplicar_medida_borda_espaco(self._category_list, 0, 0)
@@ -186,20 +176,6 @@ class ManualDialog(QDialog):
         _font.setPointSize(10)
         _font.setBold(True)
         self._category_list.setFont(_font)
-        # Estilo minimalista dos itens mantendo destaque de seleção
-        self._category_list.setStyleSheet(
-            (
-                "QListWidget#categoryList {"
-                " border: none;"
-                " padding: 0;"
-                "}"
-                "QListWidget#categoryList::item {"
-                " border-radius: 6px;"
-                " padding: 2px 4px;"
-                " margin: 2px 0;"
-                "}"
-            )
-        )
         categoria_layout.addWidget(self._category_list)
 
         content_layout.addWidget(self._categoria_container)

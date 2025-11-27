@@ -20,9 +20,10 @@ def main(root: Optional[QWidget]) -> None:
     """Create and display the About dialog with custom title bar."""
     sobre_form = QDialog(root)
     sobre_form.setWindowTitle("Sobre")
-    sobre_form.setMinimumSize(300, 210)
+    sobre_form.setFixedSize(280, 190)
     configurar_dialogo_padrao(sobre_form, ICON_PATH)
     sobre_form.setModal(True)
+    sobre_form.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
 
     Janela.posicionar_janela(sobre_form, "centro")
 
@@ -38,10 +39,7 @@ def main(root: Optional[QWidget]) -> None:
 
     # Título
     label_titulo = QLabel("Calculadora de Dobra")
-    label_titulo.setObjectName("label_titulo")
-    font_titulo = QFont("Arial", 16)
-    font_titulo.setBold(True)
-    label_titulo.setFont(font_titulo)
+    label_titulo.setObjectName("label_titulo_h4")
     label_titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_titulo)
 
@@ -60,6 +58,7 @@ def main(root: Optional[QWidget]) -> None:
 
     # Descrição
     label_desc = QLabel("Aplicativo para cálculo de dobras em\nchapas metálicas.")
+    label_desc.setObjectName("label_texto")
     label_desc.setFont(font_normal)
     label_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_desc)
@@ -76,7 +75,8 @@ def main(root: Optional[QWidget]) -> None:
     conteudo.setLayout(conteudo_layout)
     layout.addWidget(conteudo)
 
-    sobre_form.show()
+    sobre_form.exec()
+    return sobre_form
 
 
 if __name__ == "__main__":

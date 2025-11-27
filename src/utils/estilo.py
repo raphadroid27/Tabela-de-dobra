@@ -393,6 +393,7 @@ def get_widgets_styles() -> str:
         max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
         font-size: 10pt;
+        font-weight: bold;
     }}
 
     QComboBox QAbstractItemView {{
@@ -408,7 +409,9 @@ def get_widgets_styles() -> str:
         max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
         font-size: 10pt;
+        font-weight: bold
     }}
+
     QLabel {{
         background-color: palette(window);
         color: palette(window-text);
@@ -417,14 +420,26 @@ def get_widgets_styles() -> str:
         min-height: {ALTURA_PADRAO_COMPONENTE}px;
         max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
+        font-weight: bold;
 
     }}
     QLabel#label_titulo {{
         font-size: 10pt;
         color: palette(window-text);
+        background-color: transparent;
         padding: 0px 0px;
         min-width: auto;
+        font-weight: normal;
     }}
+
+    QLabel#label_titulo_negrito {{
+            font-size: 10pt;
+            color: palette(window-text);
+            padding: 0px 0px;
+            min-width: auto;
+            font-weight: bold;
+        }}
+
 
     QLabel#label_texto {{
         font-size: 10pt;
@@ -432,12 +447,27 @@ def get_widgets_styles() -> str:
         padding: 0px 0px;
         min-height: auto;
         max-height: auto;
+        font-weight: normal;
 
+    }}
+
+    QLabel#label_titulo_h4 {{
+        font-weight: bold;
+        font-size: 16pt;
+        color: palette(window-text);
+        background-color: transparent;
+        min-width: auto;
+        min-height: auto;
+        margin-top: 0px;
+        margin-bottom: 10px;
+        padding: 0px 0px;
     }}
 
     QGroupBox {{
         color: palette(window-text);
-        margin-top: 20px; /* espaço para o título */
+        margin-top: 10px; /* espaço para o título */
+        font-weight: bold;
+
     }}
     QGroupBox#sem_borda {{
         color: palette(window-text);
@@ -448,8 +478,9 @@ def get_widgets_styles() -> str:
         left: 7px;
         padding: 0 3px 0 3px;
         color: palette(window-text);
-        background: transparent;
+        background: palette(window);
     }}
+
     QToolTip {{
         background-color: palette(base);
         color: palette(text);
@@ -478,8 +509,48 @@ def get_widgets_styles() -> str:
             min-width: 0;
             padding: 0;
             min-height: 0;
+            font-size: 10pt;
+            font-weight: normal;
         }}
-    """
+
+        QListWidget#lista_categoria {{
+            border: none;
+            font-size: 10pt;
+            background-color: palette(window);
+        }}
+
+        QListWidget#lista_categoria::item {{
+            color: palette(text);
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin: 3px 0;
+        }}
+
+        QListWidget#lista_categoria::item:hover {{
+            background-color: palette(base);
+            color: palette(text);
+        }}
+
+        QListWidget#lista_categoria::item:selected {{
+            background-color: palette(highlight);
+            color: palette(highlighted-text);
+            padding-left: 5px;
+            padding-right: 5px;
+            border-radius: 6px;
+        }}
+
+        QWidget#container_manual {{
+            border: none;
+            border-radius: 5px;
+            background-color: palette(base);
+            margin-top: 0px;
+        }}
+
+        QTextBrowser {{
+            font-size: 10pt;
+        }}
+
+        """
 
 
 def get_layout_config() -> dict[str, int]:
