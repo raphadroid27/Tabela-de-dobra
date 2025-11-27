@@ -43,7 +43,7 @@ def _load_help_contents() -> None:
     """Carrega o conteúdo HTML dos arquivos externos para o dicionário interno.
 
     Caso um arquivo não exista, a chave é ignorada (ou poderia receber fallback).
-    O título (primeiro elemento do HelpEntry) é derivado da primeira tag <h2> encontrada
+    O título (primeiro elemento do HelpEntry) é derivado da primeira tag <h4> encontrada
     ou, se ausente, do nome da chave capitalizado.
     """
     if _HELP_CONTENT:  # já carregado
@@ -57,24 +57,24 @@ def _load_help_contents() -> None:
         except OSError:
             continue
         # Extrair título rudimentar
-        title = _extract_title(text) or f"<h2>{key.title()}</h2>"
+        title = _extract_title(text) or f"<h4>{key.title()}</h4>"
         body = text
         if title:
             # Remover primeira ocorrência do título no início (ignorando espaços iniciais)
             stripped = body.lstrip()
             if stripped.startswith(title):
-                body = stripped[len(title) :].lstrip()
+                body = stripped[len(title):].lstrip()
         _HELP_CONTENT[key] = (title, body)
 
 
 def _extract_title(html: str) -> Optional[str]:
-    start = html.find("<h2")
+    start = html.find("<h4")
     if start == -1:
         return None
-    end = html.find("</h2>", start)
+    end = html.find("</h4>", start)
     if end == -1:
         return None
-    end += len("</h2>")
+    end += len("</h4>")
     return html[start:end]
 
 
