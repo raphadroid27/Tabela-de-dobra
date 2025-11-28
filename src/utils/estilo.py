@@ -352,7 +352,7 @@ def get_table_widget_style() -> str:
     """
 
 
-def get_widgets_styles() -> str:
+def get_widgets_styles(theme: str = "light") -> str:
     """Retorna todos os estilos CSS combinados para a aplicação."""
     return f"""
     
@@ -551,7 +551,7 @@ def get_widgets_styles() -> str:
 
     QCheckBox::indicator:checked {{
         border: 1px solid palette(midlight);
-        background: palette(light);
+        background: {"palette(base)" if theme == "light" else "palette(light)"};
         background-image: url("assets/check.svg");
         background-repeat: no-repeat;
         background-position: center;

@@ -234,7 +234,7 @@ class ThemeManager:
             # Aplicar estilos CSS globais que usam palette()
             # Import local para evitar import circular — aceitável aqui.
             # pylint: disable=import-outside-toplevel
-            global_styles = get_widgets_styles()
+            global_styles = get_widgets_styles(selected)
             app.setStyleSheet(global_styles)
 
             # Força atualização de todos os widgets para aplicar a nova paleta
