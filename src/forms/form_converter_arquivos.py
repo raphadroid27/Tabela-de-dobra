@@ -65,7 +65,7 @@ from src.utils.utilitarios import (
 
 # --- Configuração da UI ---
 LARGURA_FORM_CONVERSAO = 500
-ALTURA_FORM_CONVERSAO = 500
+ALTURA_FORM_CONVERSAO = 510
 MARGEM_LAYOUT_PRINCIPAL = 10
 
 
