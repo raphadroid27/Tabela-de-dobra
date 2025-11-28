@@ -124,6 +124,7 @@ class ManualDialog(QDialog):
         super().__init__(parent)
         self._key_to_index: Dict[str, int] = {}
         self.setWindowTitle("Manual de Uso")
+        self.resize(LARGURA_FORM_PADRAO, ALTURA_FORM_PADRAO)
         self.setMinimumSize(LARGURA_FORM_PADRAO, ALTURA_FORM_PADRAO)
         configurar_dialogo_padrao(self, ICON_PATH)
         self.setModal(False)

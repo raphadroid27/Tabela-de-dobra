@@ -50,7 +50,7 @@ from src.utils.utilitarios import (
 # --- Constantes de Configuração ---
 TIMEOUT_IMPRESSAO = 30
 PAUSA_ENTRE_IMPRESSOES_SEGUNDOS = 2  # Pausa para não sobrecarregar o spooler
-ALTURA_FORM_IMPRESSAO = 500
+ALTURA_FORM_IMPRESSAO = 510
 LARGURA_FORM_IMPRESSAO = 500
 MARGEM_LAYOUT_PRINCIPAL = 10
 
