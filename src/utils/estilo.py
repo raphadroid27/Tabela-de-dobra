@@ -355,6 +355,7 @@ def get_table_widget_style() -> str:
 def get_widgets_styles() -> str:
     """Retorna todos os estilos CSS combinados para a aplicação."""
     return f"""
+    
     QComboBox {{
         min-height: 1em;
         min-width: {LARGURA_MINIMA_COMPONENTE}px;
@@ -364,10 +365,20 @@ def get_widgets_styles() -> str:
         font-weight: bold;
     }}
 
+
     QComboBox QAbstractItemView {{
         background-color: palette(base);
         color: palette(text);
     }}
+
+
+    QComboBox::item {{
+    }}
+
+
+    QComboBox::item:selected {{
+    }}
+
 
     QLineEdit {{
         background-color: palette(base);
@@ -380,6 +391,7 @@ def get_widgets_styles() -> str:
         font-weight: bold
     }}
 
+
     QLabel {{
         background-color: palette(window);
         color: palette(window-text);
@@ -389,8 +401,9 @@ def get_widgets_styles() -> str:
         max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
         font-weight: bold;
-
     }}
+
+
     QLabel#label_titulo {{
         font-size: 10pt;
         color: palette(window-text);
@@ -400,13 +413,14 @@ def get_widgets_styles() -> str:
         font-weight: normal;
     }}
 
+
     QLabel#label_titulo_negrito {{
-            font-size: 10pt;
-            color: palette(window-text);
-            padding: 0px 0px;
-            min-width: auto;
-            font-weight: bold;
-        }}
+        font-size: 10pt;
+        color: palette(window-text);
+        padding: 0px 0px;
+        min-width: auto;
+        font-weight: bold;
+    }}
 
 
     QLabel#label_texto {{
@@ -416,8 +430,8 @@ def get_widgets_styles() -> str:
         min-height: auto;
         max-height: auto;
         font-weight: normal;
-
     }}
+
 
     QLabel#label_titulo_h4 {{
         font-weight: bold;
@@ -431,16 +445,20 @@ def get_widgets_styles() -> str:
         padding: 0px 0px;
     }}
 
+
     QGroupBox {{
         color: palette(window-text);
         margin-top: 10px; /* espaço para o título */
         font-weight: bold;
-
     }}
+
+
     QGroupBox#sem_borda {{
         color: palette(window-text);
         border: none;
     }}
+
+
     QGroupBox::title {{
         subcontrol-origin: margin;
         left: 7px;
@@ -449,11 +467,13 @@ def get_widgets_styles() -> str:
         background: palette(window);
     }}
 
+
     QToolTip {{
         background-color: palette(base);
         color: palette(text);
         border: 1px solid palette(dark);
     }}
+
 
     QMenuBar {{
         background-color: palette(window);
@@ -463,62 +483,91 @@ def get_widgets_styles() -> str:
         spacing: 1px;
     }}
 
-        QMenu {{
-            font-size: 10pt;
+
+    QMenuBar::item:selected {{
+        background-color: palette(highlight);
+        color: palette(highlighted-text);
+        border-radius: 5px;
     }}
 
-        QMessageBox {{
-            background-color: palette(window);
-            color: palette(window-text);
-        }}
 
-        QMessageBox QLabel {{
-            max-height: 99999px;
-            min-width: 0;
-            padding: 0;
-            min-height: 0;
-            font-size: 10pt;
-            font-weight: normal;
-        }}
+    QMenu {{
+        font-size: 10pt;
+    }}
 
-        QListWidget#lista_categoria {{
-            border: none;
-            font-size: 10pt;
-            background-color: palette(window);
-        }}
 
-        QListWidget#lista_categoria::item {{
-            color: palette(text);
-            border-radius: 5px;
-            padding: 4px 8px;
-            margin: 3px 0;
-        }}
+    QMenu::item {{
+        padding: 5px 10px;
+    }}
 
-        QListWidget#lista_categoria::item:hover {{
-            background-color: palette(base);
-            color: palette(text);
-        }}
 
-        QListWidget#lista_categoria::item:selected {{
-            background-color: palette(highlight);
-            color: palette(highlighted-text);
-            padding-left: 5px;
-            padding-right: 5px;
-            border-radius: 6px;
-        }}
+    QMenu::item:selected {{
+        background-color: palette(highlight);
+        color: palette(highlighted-text);
+        border-radius: 5px;
+        margin: 2px 0px;
+    }}
 
-        QWidget#container_manual {{
-            border: none;
-            border-radius: 5px;
-            background-color: palette(base);
-            margin-top: 0px;
-        }}
 
-        QTextBrowser {{
-            font-size: 10pt;
-        }}
+    QMessageBox {{
+        background-color: palette(window);
+        color: palette(window-text);
+    }}
 
-        """
+
+    QMessageBox QLabel {{
+        max-height: 99999px;
+        min-width: 0;
+        padding: 0;
+        min-height: 0;
+        font-size: 10pt;
+        font-weight: normal;
+    }}
+
+
+    QListWidget#lista_categoria {{
+        border: none;
+        font-size: 10pt;
+        background-color: palette(window);
+    }}
+
+
+    QListWidget#lista_categoria::item {{
+        color: palette(text);
+        border-radius: 5px;
+        padding: 4px 8px;
+        margin: 3px 0;
+    }}
+
+
+    QListWidget#lista_categoria::item:hover {{
+        background-color: palette(base);
+        color: palette(text);
+    }}
+
+
+    QListWidget#lista_categoria::item:selected {{
+        background-color: palette(highlight);
+        color: palette(highlighted-text);
+        padding-left: 5px;
+        padding-right: 5px;
+        border-radius: 6px;
+    }}
+
+
+    QWidget#container_manual {{
+        border: none;
+        border-radius: 5px;
+        background-color: palette(base);
+        margin-top: 0px;
+    }}
+
+
+    QTextBrowser {{
+        font-size: 10pt;
+    }}
+
+    """
 
 
 def get_layout_config() -> dict[str, int]:
