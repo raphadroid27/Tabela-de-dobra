@@ -508,6 +508,55 @@ def get_widgets_styles() -> str:
         margin: 2px 0px;
     }}
 
+    QMenu::indicator:non-exclusive:unchecked {{
+        width: 11px;
+        height: 11px;
+        border: 1px solid palette(midlight);
+        background: palette(base);
+        margin-left: 5px;
+    }}
+
+
+    QMenu::indicator:non-exclusive:checked {{
+        width: 11px;
+        height: 11px;
+        border: 1px solid palette(midlight);
+        background: palette(light);
+        margin-left: 5px;
+        background-image: url("assets/check.svg");
+        background-repeat: no-repeat;
+        background-position: center;
+
+    }}
+
+
+    QCheckBox {{
+        spacing: 8px;
+        font-size: 10pt;
+        font-weight: normal;
+    }}
+
+
+    QCheckBox::indicator {{
+        width: 11px;
+        height: 11px;
+    }}
+
+
+    QCheckBox::indicator:unchecked {{
+        border: 1px solid palette(midlight);
+        background: palette(base);
+    }}
+
+
+    QCheckBox::indicator:checked {{
+        border: 1px solid palette(midlight);
+        background: palette(light);
+        background-image: url("assets/check.svg");
+        background-repeat: no-repeat;
+        background-position: center;
+    }}
+
 
     QMessageBox {{
         background-color: palette(window);
