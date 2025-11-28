@@ -358,9 +358,9 @@ def get_widgets_styles() -> str:
     QComboBox {{
         min-height: 1em;
         min-width: {LARGURA_MINIMA_COMPONENTE}px;
-        max-height: {ALTURA_PADRAO_COMPONENTE}px;
+        min-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
-        font-size: 10pt;
+        font-size: 9pt;
         font-weight: bold;
     }}
 
@@ -489,7 +489,7 @@ def get_widgets_styles() -> str:
 
         QListWidget#lista_categoria::item {{
             color: palette(text);
-            border-radius: 4px;
+            border-radius: 5px;
             padding: 4px 8px;
             margin: 3px 0;
         }}
