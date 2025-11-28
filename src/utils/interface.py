@@ -86,9 +86,9 @@ class CopyManager:
             return
 
         pyperclip.copy(texto_original)
-        label.setText(f"{texto_original} Copiado!")
+        label.setText("Copiado!")
         label.setStyleSheet("QLabel { color: green; }")
-        QTimer.singleShot(5000, partial(self._restaurar_label, label, texto_original))
+        QTimer.singleShot(500, partial(self._restaurar_label, label, texto_original))
 
     def _restaurar_label(self, label, texto):
         """Restaura o texto e estilo original do label."""
@@ -680,6 +680,24 @@ def _atualizar_forca_ui(data: UIData):
         forca_valor = res_forca.get("forca") if res_forca else "N/A"
         _atualizar_label(g.FORCA_LBL, forca_valor, formato="{:.0f}")
 
+        # Aplicar cor baseada no valor da força
+        if WidgetManager.is_widget_valid(g.FORCA_LBL) and forca_valor != "N/A":
+            try:
+                forca_num = float(forca_valor)
+                if forca_num <= 250:
+                    g.FORCA_LBL.setStyleSheet(
+                        "QLabel { color: palette(text); }")  # Cor original
+                elif 250 < forca_num <= 280:
+                    g.FORCA_LBL.setStyleSheet("QLabel { color: yellow; }")
+                else:  # acima de 280
+                    g.FORCA_LBL.setStyleSheet("QLabel { color: red; }")
+            except (ValueError, TypeError):
+                # Fallback para cor original
+                g.FORCA_LBL.setStyleSheet("QLabel { color: palette(text); }")
+        else:
+            # Cor original se inválido ou N/A
+            g.FORCA_LBL.setStyleSheet("QLabel { color: palette(text); }")
+
         compr_total = res_forca.get("comprimento_total") if res_forca else None
         excedido = (
             data.comprimento > 0
@@ -690,6 +708,8 @@ def _atualizar_forca_ui(data: UIData):
             g.COMPR_ENTRY.setStyleSheet("QLineEdit {color: red;}" if excedido else "")
     else:
         _atualizar_label(g.FORCA_LBL, None)
+        if WidgetManager.is_widget_valid(g.FORCA_LBL):
+            g.FORCA_LBL.setStyleSheet("")  # Cor original
         if g.COMPR_ENTRY:
             g.COMPR_ENTRY.setStyleSheet("QLineEdit{color: palette(window-text);}")
 
