@@ -44,8 +44,10 @@ class FormRazaoRIE(QDialog):
         self.setWindowTitle("Raio/Espessura")
         self.setMinimumSize(JANELA_LARGURA, JANELA_ALTURA)
         self.resize(JANELA_LARGURA, JANELA_ALTURA)
+        self.setMaximumSize(JANELA_LARGURA, 510)
         configurar_dialogo_padrao(self, ICON_PATH)
         Janela.posicionar_janela(self, None)
+        self.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
 
         layout = QVBoxLayout(self)
         aplicar_medida_borda_espaco(layout, 0)
@@ -65,7 +67,11 @@ class FormRazaoRIE(QDialog):
         main_layout = QGridLayout(frame)
         main_layout.setRowStretch(0, 0)
         main_layout.setRowStretch(1, 1)
-        main_layout.setRowStretch(2, 0)
+        main_layout.setRowStretch(2, 1)
+
+        main_layout.setColumnStretch(0, 0)
+        main_layout.setColumnStretch(1, 1)
+
         aplicar_medida_borda_espaco(main_layout, 10)
 
         label_razao = QLabel("Raio Int. / Esp.: ")
@@ -95,12 +101,13 @@ class FormRazaoRIE(QDialog):
         header = tabela.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        aplicar_estilo_table_widget(tabela)
         tabela.setAlternatingRowColors(True)
         tabela.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         tabela.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         tabela.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         tabela.verticalHeader().setVisible(False)
+
+        aplicar_estilo_table_widget(tabela)
 
         dados = g.RAIO_K
         try:
@@ -128,6 +135,9 @@ class FormRazaoRIE(QDialog):
             tabela.setRowCount(1)
             tabela.setItem(0, 0, QTableWidgetItem(str(dados)))
             tabela.setItem(0, 1, QTableWidgetItem(""))
+
+        # Evitar seleção automática da primeira linha
+        tabela.setCurrentCell(-1, -1)
 
         return tabela
 
