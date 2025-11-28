@@ -97,7 +97,7 @@ class FormRazaoRIE(QDialog):
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         aplicar_estilo_table_widget(tabela)
         tabela.setAlternatingRowColors(True)
-        tabela.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        tabela.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         tabela.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         tabela.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         tabela.verticalHeader().setVisible(False)

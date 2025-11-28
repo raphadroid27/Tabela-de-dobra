@@ -561,6 +561,7 @@ def criar_lista(config, tipo):
     table_widget.setHorizontalHeaderLabels(config["lista"]["headers"])
     table_widget.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
     table_widget.setAlternatingRowColors(True)
+    table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
     table_widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
     table_widget.verticalHeader().setVisible(False)
