@@ -372,16 +372,23 @@ def get_widgets_styles(theme: str = "light") -> str:
 
 
     QComboBox QAbstractItemView {{
+        border: none;
         background-color: palette(base);
         color: palette(text);
     }}
 
 
     QComboBox::item {{
+        max-height: 26px;
+        padding-left: -20px;
     }}
 
 
     QComboBox::item:selected {{
+        background-color: palette(highlight);
+        color: palette(highlighted-text);
+        border-radius: 5px;
+        margin: 2px 0px;
     }}
 
 
@@ -486,6 +493,7 @@ def get_widgets_styles(theme: str = "light") -> str:
         padding: 5px 0px;
         font-size: 10pt;
         spacing: 1px;
+
     }}
 
 
@@ -497,6 +505,7 @@ def get_widgets_styles(theme: str = "light") -> str:
 
 
     QMenu {{
+        border: none;
         font-size: 10pt;
     }}
 
