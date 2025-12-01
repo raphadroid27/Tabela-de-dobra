@@ -354,6 +354,11 @@ def get_table_widget_style() -> str:
 
 def get_widgets_styles(theme: str = "light") -> str:
     """Retorna todos os estilos CSS combinados para a aplicação."""
+    tema_normalizado = (theme or "light").lower()
+    check_icon = "assets/check.svg"
+    if tema_normalizado == "dark":
+        check_icon = "assets/check_white.svg"
+
     return f"""
     
     QComboBox {{
@@ -508,29 +513,46 @@ def get_widgets_styles(theme: str = "light") -> str:
         margin: 2px 0px;
     }}
 
+
+    QMenu::indicator:non-exclusive {{
+        width: 12px;
+        height: 12px;
+        margin-left: 6px;
+        border-radius: 3px;
+    }}
+
+
     QMenu::indicator:non-exclusive:unchecked {{
-        width: 11px;
-        height: 11px;
         border: 1px solid palette(midlight);
-        background: palette(base);
-        margin-left: 5px;
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 palette(button),
+                                    stop:1 palette(base));
+    }}
+
+
+    QMenu::indicator:non-exclusive:hover {{
+        border: 1px solid palette(highlight);
     }}
 
 
     QMenu::indicator:non-exclusive:checked {{
-        width: 11px;
-        height: 11px;
         border: 1px solid palette(midlight);
-        background: palette(light);
-        margin-left: 5px;
-        background-image: url("assets/check.svg");
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 palette(button),
+                                    stop:1 palette(base));
+        background-image: url("{check_icon}");
         background-repeat: no-repeat;
         background-position: center;
-
     }}
 
 
-    QCheckBox {{
+    QMenu::indicator:non-exclusive:hover {{
+        border: 1px solid palette(mid);
+        background-color: palette(midlight);
+    }}
+
+
+   QCheckBox {{
         spacing: 8px;
         font-size: 10pt;
         font-weight: normal;
@@ -538,23 +560,42 @@ def get_widgets_styles(theme: str = "light") -> str:
 
 
     QCheckBox::indicator {{
-        width: 11px;
-        height: 11px;
+        width: 12px;
+        height: 12px;
+        margin-left: 6px;
+        border-radius: 3px;
     }}
 
 
     QCheckBox::indicator:unchecked {{
         border: 1px solid palette(midlight);
-        background: palette(base);
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 palette(button),
+                                    stop:1 palette(base));
+    }}
+
+
+    QCheckBox::indicator:unchecked:hover,
+    QCheckBox::indicator:checked:hover {{
+        border: 1px solid palette(highlight);
     }}
 
 
     QCheckBox::indicator:checked {{
         border: 1px solid palette(midlight);
-        background: {"palette(base)" if theme == "light" else "palette(light)"};
-        background-image: url("assets/check.svg");
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 palette(button),
+                                    stop:1 palette(base));
+        background-image: url("{check_icon}");
         background-repeat: no-repeat;
         background-position: center;
+    }}
+
+
+    QCheckBox::indicator:checked:disabled,
+    QCheckBox::indicator:unchecked:disabled {{
+        border: 1px solid palette(mid);
+        background-color: palette(midlight);
     }}
 
 
