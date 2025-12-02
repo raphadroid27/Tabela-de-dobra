@@ -50,7 +50,6 @@ from src.utils.controlador import buscar_debounced
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
-    obter_estilo_progress_bar,
 )
 from src.utils.interface_manager import safe_process_events
 from src.utils.session_manager import (
@@ -454,7 +453,6 @@ class UpdaterWidget(QWidget):
         self.progress_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progress_status_label.setStyleSheet("font-size: 16px;")
         self.progress_bar.setTextVisible(False)
-        self.progress_bar.setStyleSheet(obter_estilo_progress_bar())
         layout.addStretch(1)
         layout.addWidget(self.progress_status_label)
         layout.addWidget(self.progress_bar)
