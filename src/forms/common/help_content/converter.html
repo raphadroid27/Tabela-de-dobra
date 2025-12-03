@@ -11,6 +11,13 @@
         </ul>
     </li>
     <li>Defina a pasta de saída via 📁 <b>Procurar</b> ou digitando o caminho.</li>
+    <li>
+        <b>Para DWG → DWG 2013:</b> Marque ⚠️ <b>Substituir arquivo original</b> para sobrescrever o arquivo de entrada com a versão 2013 convertida (backup .bak é criado automaticamente na pasta de destino).
+        <ul>
+            <li>Se desmarcar: arquivo convertido é salvo normalmente na pasta de destino.</li>
+            <li>Backup é sempre criado em caso de sucesso.</li>
+        </ul>
+    </li>
     <li>Dispare 🚀 <b>Converter</b>; barra inferior mostra progresso percentual.</li>
     <li>Aba <b>Resultado</b>: ✓/✗ + tooltip de mensagem; duplo clique abre arquivo convertido.</li>
     <li>Use 🛑 <b>Cancelar</b> para abortar e 🧹 <b>Limpar</b> para reiniciar listas e estado.</li>
@@ -20,9 +27,18 @@
     <li>✓ conversão concluída com sucesso; ✗ falha — tooltip descreve a causa.</li>
     <li>Progresso acumulado reflete itens processados / total.</li>
 </ul>
+<h4><b>Tipos de Conversão Disponíveis</b></h4>
+<ul>
+    <li><b>TIF → PDF:</b> Converte imagens TIFF (multiplas páginas) para PDF otimizado.</li>
+    <li><b>DWG → PDF:</b> Converte desenhos AutoCAD para PDF renderizado (requer ODA + ezdxf/matplotlib).</li>
+    <li><b>DWG → DWG 2013:</b> Converte DWG para formato AutoCAD 2013 com opção de substituição; cria backup .bak automaticamente (requer ODA).</li>
+    <li><b>PDF → DXF:</b> Exporta páginas PDF como desenhos DXF vetoriais (requer Inkscape).</li>
+    <li><b>DXF → PDF:</b> Renderiza desenhos DXF para PDF com suporte a multiplos layouts (requer ezdxf/matplotlib ou PyMuPDF).</li>
+</ul>
 <h4><b>Atalhos</b></h4>
 <ul>
     <li><kbd>Ctrl+O</kbd> Adicionar arquivos de origem.</li>
+    <li><kbd>Ctrl+F</kbd> Procurar pasta de destino (📁 Procurar).</li>
     <li><kbd>Ctrl+Enter</kbd> Iniciar conversão (🚀 Converter).</li>
     <li><kbd>Esc</kbd> Cancelar conversão em andamento.</li>
     <li><kbd>Ctrl+L</kbd> Limpar tabelas e resetar formulário.</li>
@@ -37,6 +53,7 @@
             <li>Extraia/instale e localize o executável <code>ODAFileConverter.exe</code>.</li>
             <li>Opcional: adicione a pasta do executável ao PATH do Windows.</li>
             <li>Após instalar, reinicie a aplicação para que a detecção seja refeita.</li>
+            <li><b>Nota:</b> Versão 2013 é detectada automaticamente; use <b>DWG → DWG 2013</b> para conversão entre versões.</li>
         </ol>
     </li>
     <li><b>Inkscape</b> (necessário para certas conversões envolvendo SVG/traçado):

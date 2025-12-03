@@ -18,6 +18,8 @@ from typing import Any, Callable, List, Optional, Tuple
 
 from PySide6.QtCore import QThread, Signal
 
+from src.forms.dwg_converter import converter_dwg_para_dwg_2013
+from src.forms.tif_converter import converter_tif_para_pdf
 from src.utils.utilitarios import run_trusted_command
 
 
@@ -26,12 +28,8 @@ class DXFConversionError(RuntimeError):
 
 
 try:  # Pillow
-    from PIL import Image, ImageSequence, UnidentifiedImageError
-
     PIL_AVAILABLE = True
 except ImportError:
-    Image = None  # type: ignore[assignment]
-    UnidentifiedImageError = None  # type: ignore[assignment]
     PIL_AVAILABLE = False
 
 # Valores padrão para módulos opcionais
@@ -223,6 +221,12 @@ CONVERSION_HANDLERS = {
             " (Matplotlib ou PyMuPDF) são necessários."
         ),
     },
+    "DWG para DWG 2013": {
+        "extensions": ("*.dwg",),
+        "tooltip": "Converte DWG para DWG versão 2013 (Ctrl+Enter)",
+        "enabled": ODA_CONVERTER_AVAILABLE,
+        "dependency_msg": "O ODA Converter é necessário.",
+    },
     "TIF para PDF": {
         "extensions": ("*.tif", "*.tiff"),
         "tooltip": "Converte TIF para PDF (Ctrl+Enter)",
@@ -261,11 +265,13 @@ class ConversionWorker(QThread):
         files_to_process: list,
         conversion_type: str,
         parent=None,
+        substituir_original: bool = False,
     ) -> None:
         super().__init__(parent)
         self.pasta_destino = pasta_destino
         self.files = files_to_process
         self.conversion_type = conversion_type
+        self.substituir_original = substituir_original
         self._is_interrupted = False
         self._conversion_handlers = self._build_conversion_handlers()
 
@@ -327,6 +333,7 @@ class ConversionWorker(QThread):
         return {
             "TIF para PDF": self._convert_tif_to_pdf,
             "DWG para PDF": self._convert_dwg_to_pdf,
+            "DWG para DWG 2013": self._convert_dwg_to_dwg_2013,
             "PDF para DXF": self._convert_pdf_to_dxf,
             "DXF para PDF": self._convert_dxf_to_pdf_handler,
         }
@@ -360,6 +367,23 @@ class ConversionWorker(QThread):
                 )
                 msg = f"Falha na etapa DWG->DXF: {getattr(exc, 'stderr', exc)}"
                 self.file_processed.emit(row, "", False, msg)
+
+    def _convert_dwg_to_dwg_2013(self, row: int, path_origem: str) -> None:
+        """Converte DWG para DWG versão 2013 utilizando o ODA Converter."""
+        sucesso, mensagem, arquivos = converter_dwg_para_dwg_2013(
+            path_origem=path_origem,
+            pasta_destino=self.pasta_destino,
+            oda_executable=ODA_CONVERTER_EXECUTABLE,
+            substituir_original=self.substituir_original,
+            ensure_unique_path_func=self._ensure_unique_path,
+        )
+
+        if sucesso:
+            path_resultado = arquivos[0] if arquivos else ""
+            self.file_processed.emit(row, path_resultado, True, mensagem)
+        else:
+            path_resultado = arquivos[0] if arquivos else ""
+            self.file_processed.emit(row, path_resultado, sucesso, mensagem)
 
     def _generate_intermediate_dxf(
         self, path_origem: str, nome_arquivo: str, path_dxf_temp: str
@@ -409,39 +433,12 @@ class ConversionWorker(QThread):
 
     def _convert_tif_to_pdf(self, row: int, path_origem: str) -> None:
         """Converte um único arquivo TIF para PDF."""
-        if not PIL_AVAILABLE or Image is None:
-            self.file_processed.emit(row, "", False, "Biblioteca Pillow indisponível")
-            return
-
-        nome_arquivo = os.path.basename(path_origem)
-        nome_pdf = os.path.splitext(nome_arquivo)[0] + ".pdf"
-        path_destino = self._ensure_unique_path(
-            os.path.join(self.pasta_destino, nome_pdf)
+        sucesso, mensagem, path_destino = converter_tif_para_pdf(
+            path_origem=path_origem,
+            pasta_destino=self.pasta_destino,
+            ensure_unique_path_func=self._ensure_unique_path,
         )
-        try:
-            frames_rgb = []
-            with Image.open(path_origem) as img:
-                for frame in ImageSequence.Iterator(img):
-                    frames_rgb.append(frame.convert("RGB"))
-
-            if not frames_rgb:
-                raise UnidentifiedImageError("Arquivo TIF sem páginas utilizáveis.")
-
-            primeira_pagina, *demais_paginas = frames_rgb
-            save_kwargs = {
-                "save_all": bool(demais_paginas),
-                "append_images": demais_paginas,
-                "optimize": True,
-            }
-            primeira_pagina.save(path_destino, "PDF", **save_kwargs)
-
-            self.file_processed.emit(row, path_destino, True, "Conversão bem-sucedida")
-        except (IOError, UnidentifiedImageError, OSError, MemoryError) as exc:
-            logging.error("FALHA na conversão de %s.", nome_arquivo, exc_info=True)
-            self.file_processed.emit(row, "", False, str(exc))
-        finally:
-            for pagina in frames_rgb:
-                pagina.close()
+        self.file_processed.emit(row, path_destino or "", sucesso, mensagem)
 
     def _convert_dxf_to_pdf(
         self, row: int, path_dxf: str, path_original_para_nome: str

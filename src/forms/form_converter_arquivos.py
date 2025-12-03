@@ -22,6 +22,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QCheckBox,
     QComboBox,
     QDialog,
     QFileDialog,
@@ -111,6 +112,7 @@ class FormConverterArquivos(QDialog):
         self.btn_cancel: Optional[QPushButton] = None
         self.btn_limpar: Optional[QPushButton] = None
         self.progress_bar: Optional[QProgressBar] = None
+        self.chk_substituir_original: Optional[QCheckBox] = None
         self._inicializar_ui()
 
     def _inicializar_ui(self):
@@ -185,6 +187,19 @@ class FormConverterArquivos(QDialog):
         )
         main_layout.addLayout(tables_layout, 1)
 
+        # Opções adicionais (apenas para DWG para DWG 2013)
+        opcoes_layout = QHBoxLayout()
+        self.chk_substituir_original = QCheckBox("⚠️ Substituir arquivo original")
+        self.chk_substituir_original.setToolTip(
+            "Substitui o arquivo DWG original pelo arquivo convertido para versão 2013.\n"
+            "O arquivo original será salvo na pasta de destino com extensão .bak como backup."
+        )
+        self.chk_substituir_original.setChecked(True)
+        self.chk_substituir_original.setVisible(False)
+        opcoes_layout.addWidget(self.chk_substituir_original)
+        opcoes_layout.addStretch()
+        main_layout.addLayout(opcoes_layout)
+
         # Barra de ações inferiores
         action_layout = QHBoxLayout()
         self.btn_converter = QPushButton("🚀 Converter")
@@ -239,7 +254,9 @@ class FormConverterArquivos(QDialog):
             "Informe a pasta onde os arquivos convertidos serão salvos."
         )
         btn_destino = QPushButton("📁 Procurar")
-        btn_destino.setToolTip("Selecionar uma pasta de destino pelo explorador.")
+        btn_destino.setToolTip(
+            "Selecionar uma pasta de destino pelo explorador (Ctrl+F)")
+        btn_destino.setShortcut("Ctrl+F")
         btn_destino.clicked.connect(self._selecionar_pasta_destino)
         aplicar_estilo_botao(btn_destino, "cinza")
         widget = QWidget()
@@ -294,6 +311,10 @@ class FormConverterArquivos(QDialog):
             self.btn_converter.setEnabled(handler["enabled"])
             if not handler["enabled"]:
                 show_warning("Dependência em Falta", handler["dependency_msg"], self)
+
+            # Mostrar/ocultar opção de substituição apenas para DWG para DWG 2013
+            self.chk_substituir_original.setVisible(conv_type == "DWG para DWG 2013")
+            self.chk_substituir_original.setChecked(True)
 
     def _selecionar_pasta_destino(self):
         """Abre um diálogo para selecionar a pasta de destino."""
@@ -353,7 +374,13 @@ class FormConverterArquivos(QDialog):
             self.tabela_resultado.setItem(row, 2, QTableWidgetItem("..."))
 
         conv_type = self.cmb_conversion_type.currentText()
-        self.worker = ConversionWorker(self.destino_entry.text(), files, conv_type)
+        substituir_original = self.chk_substituir_original.isChecked()
+        self.worker = ConversionWorker(
+            self.destino_entry.text(),
+            files,
+            conv_type,
+            substituir_original=substituir_original
+        )
         self.worker.progress_percent.connect(self.progress_bar.setValue)
         self.worker.file_processed.connect(self._update_file_status)
         self.worker.processo_finalizado.connect(self._on_conversion_finished)
