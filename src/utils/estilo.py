@@ -23,6 +23,7 @@ LARGURA_MINIMA_COMPONENTE = 70
 PADDING_INTERNO_COMPONENTE = "2px 4px"
 ALTURA_PADRAO_BOTAO = 25
 LARGURA_MINIMA_BOTAO = 20
+ALTURA_PADRAO_MENU = 18
 
 COR_FUNDO_BRANCO = "#f0f0f0"
 COR_FUNDO_ESCURO = "#161719"
@@ -261,21 +262,30 @@ def _get_button_style(color: str) -> str:
     """
 
 
-def _get_progress_bar_style() -> str:
-    """Retorna o estilo CSS para a barra de progresso."""
-    return """
-        QProgressBar {
-            border: 1px solid palette(dark);
+def _get_progress_bar_style(theme: str = "light") -> str:
+    """Retorna o estilo CSS para a barra de progresso.
+
+    Args:
+        theme: Tema atual ('light' ou 'dark') para determinar cor da borda
+    """
+    # Define cor da borda - mesma lógica do QComboBox e QLineEdit
+    border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
+
+    return f"""
+        QProgressBar {{
+            border: 1px solid {border_color};
             border-radius: 5px;
             text-align: center;
-            height: 10px;
+            height: {ALTURA_PADRAO_BOTAO}px;
             background-color: palette(base);
             color: palette(text);
-        }
-        QProgressBar::chunk {
+            font-size: 10pt;
+        }}
+
+        QProgressBar::chunk {{
             background-color: palette(highlight);
-            border-radius: 5px;
-        }
+            border-radius: 4px;
+        }}
     """
 
 
@@ -301,8 +311,17 @@ def _get_table_widget_style() -> str:
     """
 
 
-def _get_combo_box_style() -> str:
-    """Retorna CSS para QComboBox."""
+def _get_combo_box_style(theme: str = "light") -> str:
+    """Retorna CSS para QComboBox.
+
+    Args:
+        theme: Tema atual ('light' ou 'dark') para determinar cor da seta
+    """
+    # Seleciona a seta apropriada baseada no tema
+    arrow_file = "./assets/arrow_down_white.svg" if theme == "dark" else "./assets/arrow_down.svg"
+    # Define cor da borda
+    border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
+
     return f"""
     QComboBox {{
         min-width: {LARGURA_MINIMA_COMPONENTE}px;
@@ -310,15 +329,34 @@ def _get_combo_box_style() -> str:
         padding: {PADDING_INTERNO_COMPONENTE};
         font-size: 9pt;
         font-weight: bold;
+        border: 1px solid {border_color};
+        border-radius: none;
+        background-color: palette(base);
+        color: palette(text);
+    }}
+
+    QComboBox::drop-down {{
+        border: none;
+        background-color: transparent;
+    }}
+
+    QComboBox::down-arrow {{
+        image: url("{arrow_file}");
+        width: 10px;
+        height: 10px;
     }}
 
     QComboBox QAbstractItemView {{
         background-color: palette(base);
         color: palette(text);
+        border: none;
+        selection-background-color: palette(highlight);
+        selection-color: palette(highlighted-text);
     }}
 
     QComboBox::item {{
-        max-height: {ALTURA_PADRAO_COMPONENTE}px;
+        min-height: {ALTURA_PADRAO_MENU}px;
+        max-height: {ALTURA_PADRAO_MENU}px;
         padding: 5px 10px 5px -20px;
     }}
 
@@ -328,11 +366,22 @@ def _get_combo_box_style() -> str:
         border-radius: 5px;
         margin: 2px 0px;
     }}
+
+    QComboBox:hover {{
+        border: 1px solid palette(highlight);
+    }}
     """
 
 
-def _get_line_edit_style() -> str:
-    """Retorna CSS para QLineEdit."""
+def _get_line_edit_style(theme: str = "light") -> str:
+    """Retorna CSS para QLineEdit.
+
+    Args:
+        theme: Tema atual ('light' ou 'dark') para determinar cor da borda
+    """
+    # Define cor da borda
+    border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
+
     return f"""
     QLineEdit {{
         background-color: palette(base);
@@ -342,7 +391,17 @@ def _get_line_edit_style() -> str:
         max-height: {ALTURA_PADRAO_COMPONENTE}px;
         padding: {PADDING_INTERNO_COMPONENTE};
         font-size: 10pt;
-        font-weight: bold
+        font-weight: bold;
+        border: 1px solid {border_color};
+        border-radius: none;
+    }}
+
+    QLineEdit:hover {{
+        border: 1px solid palette(highlight);
+    }}
+
+    QLineEdit:focus {{
+        border: 1px solid palette(highlight);
     }}
     """
 
@@ -432,6 +491,7 @@ def _get_tooltip_style() -> str:
         background-color: palette(base);
         color: palette(text);
         border: 1px solid palette(dark);
+        font-size: 10pt;
     }
     """
 
@@ -445,7 +505,8 @@ def _get_menu_bar_style() -> str:
         padding: 5px 0px;
         font-size: 10pt;
         spacing: 1px;
-
+        min-height: {ALTURA_PADRAO_MENU}px;
+        max-height: {ALTURA_PADRAO_MENU}px;
     }
 
     QMenuBar::item:selected {
@@ -466,7 +527,8 @@ def _get_menu_style(check_icon: str) -> str:
     }}
 
     QMenu::item {{
-        min-height: {ALTURA_PADRAO_COMPONENTE}px;
+        min-height: {ALTURA_PADRAO_MENU}px;
+        max-height: {ALTURA_PADRAO_MENU}px;
         padding: 5px 10px;
     }}
 
@@ -641,8 +703,8 @@ def get_widgets_styles(theme: str = "light") -> str:
         check_icon = "assets/check_white.svg"
 
     return f"""
-    {_get_combo_box_style()}
-    {_get_line_edit_style()}
+    {_get_combo_box_style(tema_normalizado)}
+    {_get_line_edit_style(tema_normalizado)}
     {_get_label_style()}
     {_get_group_box_style()}
     {_get_tooltip_style()}
@@ -653,4 +715,5 @@ def get_widgets_styles(theme: str = "light") -> str:
     {_get_list_widget_style()}
     {_get_container_manual_style()}
     {_get_text_browser_style()}
+    {_get_progress_bar_style(tema_normalizado)}
     """
