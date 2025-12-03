@@ -1,0 +1,28 @@
+<h4>Editar e Remover Itens</h4>
+<ol>
+    <li><b>Login necessário</b>: operações de edição e exclusão exigem sessão ativa.</li>
+    <li><b>Entenda a estrutura</b>: o painel superior concentra os filtros de busca, o centro reúne a lista paginada por tipo e a seção inferior exibe campos de edição com os botões de ação correspondentes. Os títulos da janela e do quadro refletem o modo de edição/exclusão.</li>
+    <li><b>Localize registros rapidamente</b> (opcional): digite nos campos de busca ou ajuste as combos para filtrar em tempo real; a consulta é disparada automaticamente e preserva a ordenação. Use 🧹 <b>Limpar</b> (<kbd>Ctrl+R</kbd>) para zerar os filtros e recarregar a tabela.</li>
+    <li><b>Edite com segurança</b>: ao abrir este formulário, escolha uma linha na lista para que os campos sejam preenchidos automaticamente com os valores atuais.
+        <ul>
+            <li>Ajuste os valores desejados nos campos do quadro inferior.</li>
+            <li>Confirme com ✏️ <b>Atualizar</b> (<kbd>Ctrl+S</kbd>).</li>
+            <li>Uma caixa de confirmação precede a gravação das alterações.</li>
+            <li>Se nada mudar, o sistema informa que não houve alterações.</li>
+        </ul>
+    </li>
+    <li><b>Exclua registros</b>: selecione a linha e use 🗑️ <b>Excluir</b> (<kbd>Delete</kbd>). 
+        <ul>
+            <li>Materiais, espessuras e canais removem as deduções associadas em cascata.</li>
+            <li>Deduções isoladas afetam apenas o par escolhido.</li>
+            <li>Todas as ações geram logs e invalidam o cache correspondente para refletir no restante da aplicação.</li>
+        </ul>
+    </li>
+</ol>
+<h4><b>Atalhos</b></h4>
+<ul>
+    <li><kbd>F1</kbd> Abrir ajuda desta janela (modo edição).</li>
+    <li><kbd>Ctrl+R</kbd> Limpar filtros e recarregar lista.</li>
+    <li><kbd>Ctrl+S</kbd> Confirmar edição (✏️ Atualizar).</li>
+    <li><kbd>Delete</kbd> Excluir item selecionado (🗑️ Excluir).</li>
+</ul>

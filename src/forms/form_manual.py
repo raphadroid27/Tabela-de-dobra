@@ -43,6 +43,8 @@ SECTION_KEYS_ORDER = (
     "comparar",
     "converter",
     "cadastro",
+    "cadastro_adicao",
+    "cadastro_edicao",
     "spring_back",
     "razao_rie",
     "autenticacao",

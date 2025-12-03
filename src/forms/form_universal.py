@@ -348,6 +348,7 @@ class FormManager:
         self.tipo = tipo
         self.config = config
         self.root = root
+        self.is_edit = getattr(g, config["global_edit"], False)
 
     def setup_window(self):
         """Configura a janela principal do formulário."""
@@ -639,10 +640,11 @@ def main(tipo, root):
 
     _executar_pos_inicio(config, tipo)
 
-    # Adicionar atalho F1 para ajuda
+    # Adicionar atalho F1 para ajuda - diferenciado por modo (adição ou edição)
+    modo_help = "cadastro_edicao" if gerenciador_form.is_edit else "cadastro_adicao"
     shortcut = QShortcut(QKeySequence("F1"), novo_form)
     shortcut.activated.connect(
-        lambda: context_help.show_help("cadastro", parent=novo_form)
+        lambda: context_help.show_help(modo_help, parent=novo_form)
     )
 
     novo_form.show()

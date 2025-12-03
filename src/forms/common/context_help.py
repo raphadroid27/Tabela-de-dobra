@@ -31,6 +31,8 @@ _SECTION_FILE_MAP = {
     "comparar": "comparar.html",
     "converter": "converter.html",
     "cadastro": "cadastro.html",
+    "cadastro_adicao": "cadastro_adicao.html",
+    "cadastro_edicao": "cadastro_edicao.html",
     "razao_rie": "razao_rie.html",
     "autenticacao": "autenticacao.html",
     "manual": "manual.html",
@@ -63,7 +65,7 @@ def _load_help_contents() -> None:
             # Remover primeira ocorrência do título no início (ignorando espaços iniciais)
             stripped = body.lstrip()
             if stripped.startswith(title):
-                body = stripped[len(title) :].lstrip()
+                body = stripped[len(title):].lstrip()
         _HELP_CONTENT[key] = (title, body)
 
 
