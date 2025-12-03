@@ -19,9 +19,9 @@ from PySide6.QtWidgets import (
 )
 
 from src.config import globals as g
+from src.forms.common import context_help
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
-from src.forms.common import context_help
 from src.utils.estilo import aplicar_estilo_table_widget
 from src.utils.interface import calcular_valores
 from src.utils.janelas import Janela

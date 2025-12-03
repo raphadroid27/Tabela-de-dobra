@@ -20,11 +20,11 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QScrollArea,
+    QSizePolicy,
     QStackedWidget,
+    QTextBrowser,
     QToolButton,
     QVBoxLayout,
-    QTextBrowser,
-    QSizePolicy,
     QWidget,
 )
 

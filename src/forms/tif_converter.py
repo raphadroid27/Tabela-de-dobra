@@ -8,6 +8,8 @@ import logging
 import os
 from typing import Optional
 
+from src.forms.common.converters_common import get_file_destination
+
 try:
     from PIL import Image, ImageSequence, UnidentifiedImageError
 
@@ -39,13 +41,11 @@ def converter_tif_para_pdf(
     nome_arquivo = os.path.basename(path_origem)
     nome_pdf = os.path.splitext(nome_arquivo)[0] + ".pdf"
 
-    path_destino = None
-    if ensure_unique_path_func:
-        path_destino = ensure_unique_path_func(
-            os.path.join(pasta_destino, nome_pdf)
-        )
-    else:
-        path_destino = os.path.join(pasta_destino, nome_pdf)
+    path_destino = get_file_destination(
+        pasta_destino,
+        nome_pdf,
+        ensure_unique_path_func,
+    )
 
     try:
         frames_rgb = []
@@ -67,9 +67,7 @@ def converter_tif_para_pdf(
         return (True, "Conversão bem-sucedida", path_destino)
 
     except (IOError, UnidentifiedImageError, OSError, MemoryError) as exc:
-        logging.error(
-            "FALHA na conversão de %s.", nome_arquivo, exc_info=True
-        )
+        logging.error("FALHA na conversão de %s.", nome_arquivo, exc_info=True)
         return (False, str(exc), None)
     finally:
         for pagina in frames_rgb:

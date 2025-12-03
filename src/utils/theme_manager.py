@@ -13,6 +13,7 @@ from .estilo import get_widgets_styles
 
 class ThemeManager:
     """Aplica e persiste o tema visual da aplicação."""
+
     # pylint: disable=too-many-instance-attributes
 
     _INSTANCE: ClassVar["ThemeManager | None"] = None

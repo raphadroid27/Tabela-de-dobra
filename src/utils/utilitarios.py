@@ -301,7 +301,9 @@ def _show_message_box(
             QMessageBox.Icon.Information: "Informação.",
         }
         if icon == QMessageBox.Icon.Warning:
-            main_text_limpo = "Ocorreu um erro." if "erro" in title.lower() else "Aviso."
+            main_text_limpo = (
+                "Ocorreu um erro." if "erro" in title.lower() else "Aviso."
+            )
         else:
             main_text_limpo = fallbacks.get(icon, "Operação concluída.")
     # --- FIM DO AJUSTE ---

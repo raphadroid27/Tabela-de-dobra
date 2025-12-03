@@ -10,7 +10,6 @@ import logging
 import os
 import shutil
 import subprocess  # nosec B404 - necessário para integração com conversores externos
-import sys
 import tempfile
 import traceback
 from pathlib import Path
@@ -18,13 +17,12 @@ from typing import Any, Callable, List, Optional, Tuple
 
 from PySide6.QtCore import QThread, Signal
 
+from src.forms.common.converters_common import run_oda_command
 from src.forms.dwg_converter import converter_dwg_para_dwg_2013
+from src.forms.dwg_pdf_converter import converter_dwg_para_pdf
+from src.forms.dxf_pdf_converter import converter_dxf_para_pdf
+from src.forms.pdf_dxf_converter import converter_pdf_para_dxf
 from src.forms.tif_converter import converter_tif_para_pdf
-from src.utils.utilitarios import run_trusted_command
-
-
-class DXFConversionError(RuntimeError):
-    """Erro controlado para problemas de leitura de arquivos DXF."""
 
 
 try:  # Pillow
@@ -186,18 +184,6 @@ def _search_globbed_program(path_pattern: str, executable_name: str) -> Optional
     return None
 
 
-def _prepare_startupinfo() -> Optional[subprocess.STARTUPINFO]:
-    """Cria o objeto STARTUPINFO configurado para ocultar janelas no Windows."""
-
-    if sys.platform != "win32":
-        return None
-
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    startupinfo.wShowWindow = subprocess.SW_HIDE
-    return startupinfo
-
-
 INKSCAPE_EXECUTABLE = find_external_program(
     "Inkscape", "inkscape.exe", ["C:/Program Files/Inkscape/bin"]
 )
@@ -261,17 +247,20 @@ class ConversionWorker(QThread):
 
     def __init__(
         self,
-        pasta_destino: str,
-        files_to_process: list,
-        conversion_type: str,
+        conversion_config: dict,
         parent=None,
-        substituir_original: bool = False,
     ) -> None:
+        """Inicializa ConversionWorker com configuração centralizada.
+
+        Args:
+            conversion_config: Dict com {pasta_destino, files, conversion_type, substituir_original}
+            parent: Widget pai (QObject)
+        """
         super().__init__(parent)
-        self.pasta_destino = pasta_destino
-        self.files = files_to_process
-        self.conversion_type = conversion_type
-        self.substituir_original = substituir_original
+        self.pasta_destino = conversion_config["pasta_destino"]
+        self.files = conversion_config["files"]
+        self.conversion_type = conversion_config["conversion_type"]
+        self.substituir_original = conversion_config.get("substituir_original", False)
         self._is_interrupted = False
         self._conversion_handlers = self._build_conversion_handlers()
 
@@ -342,31 +331,17 @@ class ConversionWorker(QThread):
         self._convert_dxf_to_pdf(row, path_origem, path_origem)
 
     def _convert_dwg_to_pdf(self, row: int, path_origem: str) -> None:
-        """Converte DWG para PDF em duas etapas: DWG -> DXF, depois DXF -> PDF."""
-        nome_arquivo = os.path.basename(path_origem)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            path_dxf_temp = os.path.join(temp_dir, "intermediario.dxf")
-            try:
-                self._generate_intermediate_dxf(
-                    path_origem, nome_arquivo, path_dxf_temp
-                )
-                if self._is_interrupted:
-                    return
+        """Converte DWG para PDF delegando ao helper especializado."""
+        sucesso, mensagem, path_resultado = converter_dwg_para_pdf(
+            path_origem=path_origem,
+            generate_dxf_func=self._generate_intermediate_dxf,
+            convert_dxf_to_pdf_func=self._convert_dxf_temp_to_pdf,
+        )
 
-                self._convert_dxf_to_pdf(row, path_dxf_temp, path_origem)
+        if self._is_interrupted:
+            return
 
-            except (
-                subprocess.CalledProcessError,
-                subprocess.TimeoutExpired,
-                FileNotFoundError,
-            ) as exc:
-                logging.error(
-                    "FALHA na etapa DWG->DXF para %s.",
-                    nome_arquivo,
-                    exc_info=True,
-                )
-                msg = f"Falha na etapa DWG->DXF: {getattr(exc, 'stderr', exc)}"
-                self.file_processed.emit(row, "", False, msg)
+        self.file_processed.emit(row, path_resultado or "", sucesso, mensagem)
 
     def _convert_dwg_to_dwg_2013(self, row: int, path_origem: str) -> None:
         """Converte DWG para DWG versão 2013 utilizando o ODA Converter."""
@@ -387,11 +362,11 @@ class ConversionWorker(QThread):
 
     def _generate_intermediate_dxf(
         self, path_origem: str, nome_arquivo: str, path_dxf_temp: str
-    ) -> None:
+    ) -> tuple[bool, str]:
         """Executa o ODA Converter para gerar um DXF temporário."""
 
         if not ODA_CONVERTER_EXECUTABLE:
-            raise FileNotFoundError("ODA Converter não está configurado corretamente.")
+            return (False, "ODA Converter não está configurado corretamente.")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             command = [
@@ -405,15 +380,7 @@ class ConversionWorker(QThread):
                 nome_arquivo,
             ]
 
-            result = run_trusted_command(
-                command,
-                description="ODA Converter DWG->DXF",
-                capture_output=True,
-                timeout=300,
-                startupinfo=_prepare_startupinfo(),
-                text=True,
-                encoding="utf-8",
-            )
+            result = run_oda_command(command, "ODA Converter DWG->DXF")
 
             _log_subprocess_output(result, "ODA Converter", stderr_level=logging.DEBUG)
 
@@ -421,15 +388,32 @@ class ConversionWorker(QThread):
             expected_dxf = Path(temp_dir, f"{nome_base}.dxf")
             if expected_dxf.exists():
                 shutil.move(str(expected_dxf), path_dxf_temp)
-                return
+                return (True, "DXF intermediário gerado")
 
             fallback = next(Path(temp_dir).glob("*.dxf"), None)
             if fallback:
                 shutil.move(str(fallback), path_dxf_temp)
-                return
+                return (True, "DXF intermediário gerado")
 
             logging.error("FALHA: Arquivo DXF intermediário não foi criado.")
-            raise FileNotFoundError("Arquivo DXF intermediário não foi criado.")
+            return (False, "Arquivo DXF intermediário não foi criado.")
+
+    def _convert_dxf_temp_to_pdf(
+        self, path_dxf: str, path_original_para_nome: str
+    ) -> tuple[bool, str, Optional[str]]:
+        """Encaminha conversão DXF->PDF para o helper compartilhado."""
+
+        nome_destino_base = os.path.splitext(
+            os.path.basename(path_original_para_nome)
+        )[0]
+        return converter_dxf_para_pdf(
+            path_dxf=path_dxf,
+            pasta_destino=self.pasta_destino,
+            select_layout_func=self._select_layout_for_render,
+            render_layout_func=self._render_layout_to_pdf,
+            ensure_unique_path_func=self._ensure_unique_path,
+            nome_base_override=nome_destino_base,
+        )
 
     def _convert_tif_to_pdf(self, row: int, path_origem: str) -> None:
         """Converte um único arquivo TIF para PDF."""
@@ -443,87 +427,12 @@ class ConversionWorker(QThread):
     def _convert_dxf_to_pdf(
         self, row: int, path_dxf: str, path_original_para_nome: str
     ) -> None:
-        """Converte um arquivo DXF para PDF."""
-        nome_arquivo = os.path.basename(path_original_para_nome)
-        nome_base = os.path.splitext(nome_arquivo)[0]
-        nome_pdf = nome_base + ".pdf"
-        path_destino = self._ensure_unique_path(
-            os.path.join(self.pasta_destino, nome_pdf)
+        """Converte um arquivo DXF para PDF via helper especializado."""
+        sucesso, mensagem, path_destino = self._convert_dxf_temp_to_pdf(
+            path_dxf,
+            path_original_para_nome,
         )
-        try:
-            doc, recovered = self._load_dxf_document(path_dxf)
-            layout_obj, layout_name = self._select_layout_for_render(doc)
-            self._render_layout_to_pdf(doc, layout_obj, path_destino)
-
-            mensagem = (
-                "Conversão bem-sucedida"
-                if layout_name == "Model"
-                else f"Conversão bem-sucedida (layout: {layout_name})"
-            )
-            if recovered:
-                mensagem += " — DXF recuperado"
-            self.file_processed.emit(row, path_destino, True, mensagem)
-        except DXFConversionError as exc:
-            logging.warning(
-                "Conversão cancelada para %s: %s",
-                nome_arquivo,
-                exc,
-            )
-            self.file_processed.emit(row, "", False, str(exc))
-        except (IOError, ezdxf.DXFStructureError, OSError, RuntimeError) as exc:
-            logging.error("FALHA na conversão de %s.", nome_arquivo, exc_info=True)
-            self.file_processed.emit(row, "", False, str(exc))
-
-    def _load_dxf_document(self, path_dxf: str) -> Tuple[Any, bool]:
-        if not EZDXF_AVAILABLE or ezdxf is None:
-            raise RuntimeError("Biblioteca 'ezdxf' indisponível para renderização.")
-
-        try:
-            return ezdxf.readfile(path_dxf), False
-        except (ezdxf.DXFStructureError, ValueError) as exc:
-            logging.warning(
-                "Falha na leitura direta do DXF '%s': %s. Tentando recover...",
-                path_dxf,
-                exc,
-            )
-            if EZDXF_RECOVER is None:
-                raise DXFConversionError(
-                    self._format_dxf_error_message(path_dxf, exc)
-                ) from exc
-
-            try:
-                doc, auditor = EZDXF_RECOVER.readfile(
-                    path_dxf
-                )  # type: ignore[call-arg]
-            except (ezdxf.DXFStructureError, ValueError) as recover_exc:
-                raise DXFConversionError(
-                    self._format_dxf_error_message(path_dxf, recover_exc)
-                ) from recover_exc
-
-            if auditor is not None:
-                errors = list(getattr(auditor, "errors", []) or [])
-                if getattr(auditor, "has_errors", bool(errors)) and errors:
-                    preview = "; ".join(str(err) for err in errors[:3])
-                    logging.warning(
-                        "DXF '%s' recuperado com %d erro(s). Exemplos: %s",
-                        path_dxf,
-                        len(errors),
-                        preview,
-                    )
-
-            return doc, True
-
-    @staticmethod
-    def _format_dxf_error_message(path_dxf: str, error: Exception) -> str:
-        message = str(error)
-        normalized = message.lower()
-        if "invalid handle 0" in normalized:
-            return (
-                "DXF corrompido: identificador '0' inválido.\n"
-                "Reexporte o arquivo a partir da origem (ex.: salvar como DXF R12)\n"
-                "ou utilize a função de auditoria do CAD."
-            )
-        return f"Falha ao recuperar DXF '{os.path.basename(path_dxf)}': {message}"
+        self.file_processed.emit(row, path_destino or "", sucesso, mensagem)
 
     def _select_layout_for_render(self, doc):
         model = doc.modelspace()
@@ -764,131 +673,14 @@ class ConversionWorker(QThread):
 
         return page_sources, total_pages, use_page_numbers
 
-    def _execute_inkscape_export(
-        self,
-        page_source: str,
-        temp_dxf_path: str,
-        page_index: int,
-        use_page_numbers: bool,
-    ):
-        command = [
-            INKSCAPE_EXECUTABLE,
-            page_source,
-            f"--export-filename={temp_dxf_path}",
-            "--export-type=dxf",
-            "--export-overwrite",
-            "--export-area-drawing",
-            "--pdf-poppler",
-        ]
-        if use_page_numbers:
-            command.append(f"--pdf-page={page_index}")
-
-        return run_trusted_command(
-            command,
-            description="Inkscape PDF->DXF",
-            capture_output=True,
-            text=True,
-            timeout=240,
-            encoding="utf-8",
-        )
-
-    @staticmethod
-    def _finalize_inkscape_export(
-        temp_dxf_path: str,
-        path_destino_final: str,
-        arquivos_gerados: List[str],
-        page_index: int,
-    ) -> None:
-        if os.path.exists(temp_dxf_path) and os.path.getsize(temp_dxf_path) > 0:
-            shutil.move(temp_dxf_path, path_destino_final)
-            arquivos_gerados.append(path_destino_final)
-            logging.debug(
-                "Página %d exportada para %s.",
-                page_index,
-                path_destino_final,
-            )
-            return
-
-        logging.error(
-            "FALHA: Arquivo de saída não foi criado ou está vazio (página %d).",
-            page_index,
-        )
-        raise FileNotFoundError("Arquivo DXF temporário não foi criado.")
-
-    # pylint: disable=too-many-statements
     def _convert_pdf_to_dxf(self, row: int, path_origem: str) -> None:
-        nome_arquivo = os.path.basename(path_origem)
-        nome_base = os.path.splitext(nome_arquivo)[0]
+        sucesso, mensagem, arquivos_gerados = converter_pdf_para_dxf(
+            path_origem=path_origem,
+            pasta_destino=self.pasta_destino,
+            inkscape_executable=INKSCAPE_EXECUTABLE,
+            prepare_pdf_pages_func=self._prepare_pdf_page_sources,
+            ensure_unique_path_func=self._ensure_unique_path,
+        )
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            try:
-                temp_pdf_path = os.path.join(temp_dir, "entrada.pdf")
-                shutil.copy(path_origem, temp_pdf_path)
-
-                page_sources, _, use_page_numbers = self._prepare_pdf_page_sources(
-                    temp_pdf_path, nome_arquivo
-                )
-
-                arquivos_gerados: List[str] = []
-                for page_index, page_source in enumerate(page_sources, start=1):
-                    temp_dxf_path = os.path.join(temp_dir, f"saida_{page_index}.dxf")
-                    nome_destino = (
-                        f"{nome_base}.dxf"
-                        if len(page_sources) == 1
-                        else f"{nome_base}_p{page_index}.dxf"
-                    )
-                    path_destino_final = self._ensure_unique_path(
-                        os.path.join(self.pasta_destino, nome_destino)
-                    )
-
-                    result = self._execute_inkscape_export(
-                        page_source,
-                        temp_dxf_path,
-                        page_index,
-                        use_page_numbers,
-                    )
-
-                    _log_subprocess_output(
-                        result,
-                        f"Inkscape (página {page_index})",
-                        stderr_level=logging.WARNING,
-                    )
-                    self._finalize_inkscape_export(
-                        temp_dxf_path,
-                        path_destino_final,
-                        arquivos_gerados,
-                        page_index,
-                    )
-
-                if not arquivos_gerados:
-                    raise FileNotFoundError(
-                        "Nenhum arquivo DXF foi gerado pelo Inkscape."
-                    )
-
-                mensagem = (
-                    "Conversão bem-sucedida"
-                    if len(arquivos_gerados) == 1
-                    else (
-                        f"{len(arquivos_gerados)} páginas convertidas: "
-                        + ", ".join(os.path.basename(p) for p in arquivos_gerados)
-                    )
-                )
-                self.file_processed.emit(row, arquivos_gerados, True, mensagem)
-
-            except (
-                subprocess.CalledProcessError,
-                subprocess.TimeoutExpired,
-                FileNotFoundError,
-            ) as exc:
-                logging.error("FALHA na conversão de %s.", nome_arquivo, exc_info=True)
-                error_output = "Comando falhou."
-                if hasattr(exc, "stderr") and exc.stderr:
-                    error_output = exc.stderr
-                elif hasattr(exc, "stdout") and exc.stdout:
-                    error_output = exc.stdout
-                else:
-                    error_output = str(exc)
-
-                logging.error("Detalhes do erro do subprocesso: %s", error_output)
-                msg = f"Erro do Inkscape: {error_output.strip()}"
-                self.file_processed.emit(row, "", False, msg)
+        resultado = arquivos_gerados if arquivos_gerados else ""
+        self.file_processed.emit(row, resultado, sucesso, mensagem)

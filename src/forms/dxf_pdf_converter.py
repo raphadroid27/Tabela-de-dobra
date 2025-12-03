@@ -6,7 +6,9 @@ utilizando renderização com ezdxf (Matplotlib ou PyMuPDF).
 
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
+
+from src.forms.common.converters_common import get_file_destination
 
 # Importações opcionais de ezdxf
 try:
@@ -31,7 +33,9 @@ def converter_dxf_para_pdf(
     select_layout_func=None,
     render_layout_func=None,
     ensure_unique_path_func=None,
+    nome_base_override: Optional[str] = None,
 ) -> tuple[bool, str, Optional[str]]:
+    # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     """Converte um arquivo DXF para PDF.
 
     Args:
@@ -52,18 +56,15 @@ def converter_dxf_para_pdf(
         )
 
     nome_arquivo = os.path.basename(path_dxf)
-    nome_base = os.path.splitext(nome_arquivo)[0]
+    nome_base = nome_base_override or os.path.splitext(nome_arquivo)[0]
     nome_pdf = nome_base + ".pdf"
 
-    path_destino = None
-    if ensure_unique_path_func:
-        path_destino = ensure_unique_path_func(
-            os.path.join(pasta_destino, nome_pdf)
-        )
-    else:
-        path_destino = os.path.join(pasta_destino, nome_pdf)
-
     try:
+        path_destino = get_file_destination(
+            pasta_destino,
+            nome_pdf,
+            ensure_unique_path_func,
+        )
         doc, recovered = _load_dxf_document(path_dxf)
 
         if select_layout_func:
@@ -75,9 +76,7 @@ def converter_dxf_para_pdf(
         if render_layout_func:
             render_layout_func(doc, layout_obj, path_destino)
         else:
-            raise RuntimeError(
-                "Nenhuma função de renderização foi fornecida."
-            )
+            raise RuntimeError("Nenhuma função de renderização foi fornecida.")
 
         mensagem = (
             "Conversão bem-sucedida"
@@ -107,7 +106,7 @@ def converter_dxf_para_pdf(
 
 def _load_dxf_document(
     path_dxf: str,
-) -> tuple[any, bool]:
+) -> tuple[Any, bool]:
     """Carrega um documento DXF com recuperação de erros.
 
     Args:
@@ -130,14 +129,14 @@ def _load_dxf_document(
 
         if EZDXF_RECOVER is None:
             raise DXFConversionError(
-                f"Não foi possível recuperar o arquivo DXF: {exc}"
+                _format_dxf_error_message(path_dxf, exc)
             ) from exc
 
         try:
             doc, auditor = EZDXF_RECOVER.readfile(path_dxf)
         except (ezdxf.DXFStructureError, ValueError) as recover_exc:
             raise DXFConversionError(
-                f"Não foi possível recuperar o arquivo DXF: {recover_exc}"
+                _format_dxf_error_message(path_dxf, recover_exc)
             ) from recover_exc
 
         if auditor is not None:
@@ -152,3 +151,15 @@ def _load_dxf_document(
                 )
 
         return doc, True
+
+
+def _format_dxf_error_message(path_dxf: str, error: Exception) -> str:
+    message = str(error)
+    normalized = message.lower()
+    if "invalid handle 0" in normalized:
+        return (
+            "DXF corrompido: identificador '0' inválido.\n"
+            "Reexporte o arquivo a partir da origem (ex.: salvar como DXF R12)\n"
+            "ou utilize a função de auditoria do CAD."
+        )
+    return f"Falha ao recuperar DXF '{os.path.basename(path_dxf)}': {message}"

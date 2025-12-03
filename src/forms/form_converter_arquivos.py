@@ -255,7 +255,8 @@ class FormConverterArquivos(QDialog):
         )
         btn_destino = QPushButton("📁 Procurar")
         btn_destino.setToolTip(
-            "Selecionar uma pasta de destino pelo explorador (Ctrl+F)")
+            "Selecionar uma pasta de destino pelo explorador (Ctrl+F)"
+        )
         btn_destino.setShortcut("Ctrl+F")
         btn_destino.clicked.connect(self._selecionar_pasta_destino)
         aplicar_estilo_botao(btn_destino, "cinza")
@@ -376,10 +377,12 @@ class FormConverterArquivos(QDialog):
         conv_type = self.cmb_conversion_type.currentText()
         substituir_original = self.chk_substituir_original.isChecked()
         self.worker = ConversionWorker(
-            self.destino_entry.text(),
-            files,
-            conv_type,
-            substituir_original=substituir_original
+            {
+                "pasta_destino": self.destino_entry.text(),
+                "files": files,
+                "conversion_type": conv_type,
+                "substituir_original": substituir_original,
+            }
         )
         self.worker.progress_percent.connect(self.progress_bar.setValue)
         self.worker.file_processed.connect(self._update_file_status)

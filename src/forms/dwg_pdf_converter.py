@@ -4,23 +4,21 @@ Este módulo concentra a lógica de conversão de DWG para PDF,
 utilizando o ODA Converter (DWG->DXF) e depois renderizando para PDF.
 """
 
-import logging
 import os
 import subprocess
-import sys
 import tempfile
 from typing import Optional
 
+from src.forms.common.converters_common import (
+    build_subprocess_failure,
+    log_os_error,
+)
 
-def _prepare_startupinfo() -> Optional[subprocess.STARTUPINFO]:
-    """Cria o objeto STARTUPINFO configurado para ocultar janelas no Windows."""
-    if sys.platform != "win32":
-        return None
-
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    startupinfo.wShowWindow = subprocess.SW_HIDE
-    return startupinfo
+SUBPROCESS_ERRORS = (
+    subprocess.CalledProcessError,
+    subprocess.TimeoutExpired,
+    FileNotFoundError,
+)
 
 
 def converter_dwg_para_pdf(
@@ -57,22 +55,7 @@ def converter_dwg_para_pdf(
             )
             return (sucesso_pdf, msg_pdf, path_pdf)
 
-    except (
-        subprocess.CalledProcessError,
-        subprocess.TimeoutExpired,
-        FileNotFoundError,
-    ) as exc:
-        logging.error(
-            "FALHA na etapa DWG->DXF para %s.",
-            nome_arquivo,
-            exc_info=True,
-        )
-        msg = f"Falha na etapa DWG->DXF: {getattr(exc, 'stderr', exc)}"
-        return (False, msg, None)
+    except SUBPROCESS_ERRORS as exc:
+        return build_subprocess_failure(exc, nome_arquivo, "conversão DWG->PDF")
     except OSError as exc:
-        logging.error(
-            "Erro de arquivo na conversão de %s.",
-            nome_arquivo,
-            exc_info=True,
-        )
-        return (False, str(exc), None)
+        return (False, log_os_error(exc, nome_arquivo), None)

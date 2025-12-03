@@ -318,7 +318,11 @@ def _get_combo_box_style(theme: str = "light") -> str:
         theme: Tema atual ('light' ou 'dark') para determinar cor da seta
     """
     # Seleciona a seta apropriada baseada no tema
-    arrow_file = "./assets/arrow_down_white.svg" if theme == "dark" else "./assets/arrow_down.svg"
+    arrow_file = (
+        "./assets/arrow_down_white.svg"
+        if theme == "dark"
+        else "./assets/arrow_down.svg"
+    )
     # Define cor da borda
     border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
 

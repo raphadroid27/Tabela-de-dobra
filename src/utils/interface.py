@@ -686,7 +686,8 @@ def _atualizar_forca_ui(data: UIData):
                 forca_num = float(forca_valor)
                 if forca_num <= 250:
                     g.FORCA_LBL.setStyleSheet(
-                        "QLabel { color: palette(text); }")  # Cor original
+                        "QLabel { color: palette(text); }"
+                    )  # Cor original
                 elif 250 < forca_num <= 280:
                     g.FORCA_LBL.setStyleSheet("QLabel { color: yellow; }")
                 else:  # acima de 280

@@ -8,7 +8,15 @@ import traceback
 from functools import partial
 
 from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPixmap, QShortcut
+from PySide6.QtGui import (
+    QAction,
+    QColor,
+    QIcon,
+    QKeySequence,
+    QPainter,
+    QPixmap,
+    QShortcut,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -316,6 +324,7 @@ def _adicionar_acoes_ao_menu(menu, acoes):
             action.triggered.connect(funcao)
             menu.addAction(action)
 
+
 # pylint: disable=too-many-locals
 
 
@@ -533,7 +542,8 @@ def main():  # pylint: disable=too-many-locals
         # Adicionar atalho F1 para ajuda na janela principal
         shortcut = QShortcut(QKeySequence("F1"), g.PRINC_FORM)
         shortcut.activated.connect(
-            lambda: context_help.show_help("main", parent=g.PRINC_FORM))
+            lambda: context_help.show_help("main", parent=g.PRINC_FORM)
+        )
 
         menu_custom = configurar_frames()
         configurar_menu(menu_custom)
