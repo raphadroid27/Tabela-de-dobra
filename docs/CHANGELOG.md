@@ -2,15 +2,22 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
-## 2.5.0 (10/10/2025)
+## 2.6.0 (04/12/2025)
 
-- Refatorações gerais de janelas e UI: fechamento seguro de janelas dependentes, suporte a janelas sem borda e de sistema, melhor posicionamento, ajustes de tamanhos/atributos de formulários e seleção estendida em tabelas.
-- Ajuda e manual: conteúdos HTML externos, exibição otimizada do manual, ajuda contextual integrada a vários formulários e melhoria da legibilidade/estrutura da documentação de uso.
-- Conversão e comparação de arquivos: novos formulários e menu para comparação geométrica (STEP) e conversão (PDF↔DXF via Inkscape, DWG→PDF em duas etapas), tratamento de erros, cancelamento, atalhos e reordenação de botões.
-- Usabilidade e estilo: novos atalhos e tooltips, cor de botão laranja com estados, estilos aplicados a tabelas (QTableWidget), melhorias de responsividade e acessibilidade de teclado.
-- Dependências e build: atualização de requirements (pillow, matplotlib, ezdxf, PyMuPDF, PyQtDarkTheme-fork), remoção de scripts obsoletos e atualização de versão.
-- Performance, cache e banco: implementação de cache com persistência/invalidação, otimização de timeouts, validações de integridade (limpeza de deduções órfãs) e simplificação da gestão de instâncias.
-- Limpeza e manutenção: renomeações, padronização de imports/docstrings, remoção de dependências e de código legado, e aprimoramentos gerais de legibilidade e organização do projeto.
+- Refatoração e Interface:
+    - Reestruturação completa dos módulos de conversão, separando lógica de negócio da interface.
+    - Implementação de gerenciamento centralizado de temas, com suporte a cores de destaque e paletas dinâmicas, removendo a dependência `qdarktheme`.
+    - Ajustes visuais extensivos: remoção de barras de título customizadas em favor das nativas, padronização de estilos (QMenu, QTableWidget, QGroupBox), novos ícones SVG e melhor suporte a temas claro/escuro.
+    - Melhorias de layout e redimensionamento: definição de tamanhos mínimos, persistência de geometria de janelas e ajustes de altura em diversos formulários.
+    - Implementação de monitoramento de inatividade para a ferramenta administrativa e formulário de autenticação.
+- Funcionalidades e Ferramentas:
+    - Melhorias nos módulos de conversão DWG e PDF: suporte a conversão para DWG 2013, opção de substituição de arquivo original e melhor tratamento de erros.
+    - Adição de script para geração automática de picks em arquivos DXF.
+    - Novos atalhos de teclado: `F1` para manual de uso (global e admin), atalhos para listas de comparador e ajuda contextual em formulários de cadastro/edição.
+    - Atualização do conteúdo de ajuda e manual, incluindo informações sobre a ferramenta administrativa.
+- Manutenção e Código:
+    - Limpeza de código: remoção de funções de estilo obsoletas, scripts de banco de dados antigos e normalização de textos/mensagens.
+    - Ajustes técnicos: diretório de runtime atualizado, nova função para mensagens com timeout (`show_timed_message_box`) e adição de requerimentos de desenvolvimento.
 
 ## 2.4.1 (02/09/2025)
 
