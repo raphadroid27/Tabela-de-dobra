@@ -37,7 +37,7 @@ from src.utils.utilitarios import (
 )
 
 # Constantes para configuração da interface
-JANELA_LARGURA = 200
+JANELA_LARGURA = 210
 JANELA_ALTURA_LOGIN = 115
 JANELA_ALTURA_CADASTRO = 143
 LOGIN_INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000
