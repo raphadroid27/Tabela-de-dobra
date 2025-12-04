@@ -128,9 +128,7 @@ def _load_dxf_document(
         )
 
         if EZDXF_RECOVER is None:
-            raise DXFConversionError(
-                _format_dxf_error_message(path_dxf, exc)
-            ) from exc
+            raise DXFConversionError(_format_dxf_error_message(path_dxf, exc)) from exc
 
         try:
             doc, auditor = EZDXF_RECOVER.readfile(path_dxf)

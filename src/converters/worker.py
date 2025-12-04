@@ -24,7 +24,6 @@ from src.converters.dxf_pdf import converter_dxf_para_pdf
 from src.converters.pdf_dxf import converter_pdf_para_dxf
 from src.converters.tif import converter_tif_para_pdf
 
-
 try:  # Pillow
     PIL_AVAILABLE = True
 except ImportError:
@@ -403,9 +402,9 @@ class ConversionWorker(QThread):
     ) -> tuple[bool, str, Optional[str]]:
         """Encaminha conversão DXF->PDF para o helper compartilhado."""
 
-        nome_destino_base = os.path.splitext(
-            os.path.basename(path_original_para_nome)
-        )[0]
+        nome_destino_base = os.path.splitext(os.path.basename(path_original_para_nome))[
+            0
+        ]
         return converter_dxf_para_pdf(
             path_dxf=path_dxf,
             pasta_destino=self.pasta_destino,

@@ -8,7 +8,7 @@ com a biblioteca PySide6, utilizando o módulo globals para variáveis globais e
 módulo funcoes para operações auxiliares. O banco de dados é gerenciado com SQLAlchemy.
 """
 
-from PySide6.QtCore import Qt, QEvent, QObject, QTimer
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,

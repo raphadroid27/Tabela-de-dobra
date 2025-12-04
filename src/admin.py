@@ -555,9 +555,7 @@ class UserManagementWidget(QWidget):
         g.LIST_USUARIO.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows
         )
-        g.LIST_USUARIO.setSelectionMode(
-            QAbstractItemView.SelectionMode.SingleSelection
-        )
+        g.LIST_USUARIO.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         g.LIST_USUARIO.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         g.LIST_USUARIO.verticalHeader().setVisible(False)
         main_layout.addWidget(g.LIST_USUARIO)

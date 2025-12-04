@@ -234,7 +234,9 @@ class FormCompararArquivos(QDialog):
         action_layout.addWidget(self.btn_cancel)
         self.progress_bar = attach_actions_with_progress(main_layout, action_layout)
 
-    def _create_list_groupbox(self, title: str, table: FileTableWidget, shortcut: str) -> QGroupBox:
+    def _create_list_groupbox(
+        self, title: str, table: FileTableWidget, shortcut: str
+    ) -> QGroupBox:
         """Cria um QGroupBox contendo uma tabela e um botão de adicionar."""
         groupbox = QGroupBox(title)
         layout = QVBoxLayout(groupbox)

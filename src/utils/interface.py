@@ -820,22 +820,44 @@ def canal_tooltip():
                 (c for c in canais if str(c.get("valor")) == str(canal_str)), None
             )
             if canal_info:
-                largura = canal_info.get("largura") if canal_info.get(
-                    "largura") is not None else "N/A"
-                altura = canal_info.get("altura") if canal_info.get(
-                    "altura") is not None else "N/A"
-                comp = canal_info.get("comprimento_total") if canal_info.get(
-                    "comprimento_total") is not None else "N/A"
-                obs = canal_info.get("observacao") if canal_info.get(
-                    "observacao") else "N/A"
+                largura = (
+                    canal_info.get("largura")
+                    if canal_info.get("largura") is not None
+                    else "N/A"
+                )
+                altura = (
+                    canal_info.get("altura")
+                    if canal_info.get("altura") is not None
+                    else "N/A"
+                )
+                comp = (
+                    canal_info.get("comprimento_total")
+                    if canal_info.get("comprimento_total") is not None
+                    else "N/A"
+                )
+                obs = (
+                    canal_info.get("observacao")
+                    if canal_info.get("observacao")
+                    else "N/A"
+                )
                 tooltip = f"Largura: {largura}\nAltura: {altura}\nComprimento total: {comp}\nObs: {obs}"
             else:
                 with get_session() as session:
                     canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
                     if canal_obj:
-                        largura = canal_obj.largura if canal_obj.largura is not None else "N/A"
-                        altura = canal_obj.altura if canal_obj.altura is not None else "N/A"
-                        comp = canal_obj.comprimento_total if canal_obj.comprimento_total is not None else "N/A"
+                        largura = (
+                            canal_obj.largura
+                            if canal_obj.largura is not None
+                            else "N/A"
+                        )
+                        altura = (
+                            canal_obj.altura if canal_obj.altura is not None else "N/A"
+                        )
+                        comp = (
+                            canal_obj.comprimento_total
+                            if canal_obj.comprimento_total is not None
+                            else "N/A"
+                        )
                         obs = canal_obj.observacao if canal_obj.observacao else "N/A"
                         tooltip = f"Largura: {largura}\nAltura: {altura}\nComprimento total: {comp}\nObs: {obs}"
                     else:

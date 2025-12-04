@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.converters import CONVERSION_HANDLERS, ConversionWorker
 from src.forms.common import context_help
 from src.forms.common.file_tables import ManagedFileTableWidget
 from src.forms.common.form_manager import BaseSingletonFormManager
@@ -49,7 +50,6 @@ from src.forms.common.ui_helpers import (
     stop_worker_on_error,
     update_processing_state,
 )
-from src.converters import CONVERSION_HANDLERS, ConversionWorker
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,

@@ -324,7 +324,9 @@ def _get_combo_box_style(theme: str = "light") -> str:
         obter_caminho_svg("arrow_down_white.svg")
         if theme == "dark"
         else obter_caminho_svg("arrow_down.svg")
-    ).replace("\\", "/")  # Converte para barras normais no CSS
+    ).replace(
+        "\\", "/"
+    )  # Converte para barras normais no CSS
     # Define cor da borda
     border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
 
