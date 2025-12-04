@@ -2,6 +2,70 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.6.0 (04/12/2025)
+
+- refatora: reestrutura módulos de conversão separando lógica de negócio da interface
+- refatora: adiciona atalho de teclado F1 para abrir o manual de uso na ferramenta administrativa
+- refatora: adiciona atalho de teclado F1 ao manual de uso no menu de ajuda
+- refatora: ajusta a largura da janela de autenticação para 210 pixels
+- refatora: adiciona atalhos de teclado para adicionar arquivos nas listas do comparador
+- refatora: atualiza conteúdo de ajuda com melhorias nos atalhos e informações sobre a ferramenta administrativa
+- refatora: adiciona persistência da geometria da janela administrativa e melhora a seleção de itens
+- refatora: implementa monitoramento de inatividade para a ferramenta administrativa e formulário de autenticação
+- refatora: simplifica o módulo de autenticação e melhora a gestão de janelas
+- refatora: adiciona ajuda contextual para os formulários de cadastro, inclusão e edição
+- refatora: adiciona atalhos de ajuda em várias páginas de conteúdo
+- refatora: melhora módulos de conversão DWG e PDF para tratamento de erros e organização de código.
+- refatora: adiciona suporte à conversão DWG para DWG 2013 e implementa opção de substituição do arquivo original
+- refatora: adiciona novos ícones SVG e ajusta estilos de componentes para suporte a temas claro e escuro
+- refatora: remove funções obsoletas de estilo e reorganiza a aplicação de estilos CSS
+- refatora: ajusta estilos de QComboBox e QMenu, melhorando a formatação e a aparência
+- refatora: ajusta ícones de verificação e implementa suporte a tema claro e escuro
+- refatora: ajusta função get_widgets_styles para aceitar tema como parâmetro
+- refatora: adiciona ícone de verificação e ajusta estilos de indicadores em QMenu e QCheckBox
+- refatora: ajusta estilos de widgets, adicionando seletores e melhorando a formatação
+- refatora: ajusta altura do formulário de impressão e define tamanho padrão no manual
+- refatora: ajusta estilos de widgets, alterando alturas mínimas e tamanho da fonte
+- refatora: simplifica mensagem de cópia e ajusta temporizador, além de aplicar cores dinâmicas na força
+- refatora: ajusta limites de tamanho da janela e melhora layout da tabela
+- refatora: altera modo de seleção das tabelas para seleção única
+- refatora: ajusta altura dos formulários de comparação e conversão para melhor layout
+- refatora: melhora tratamento de exceções e simplifica lógica de fallback em utilitários
+- refatora: adiciona atalhos de teclado para ajuda em vários formulários
+- refatora: ajusta estilos e dimensões de formulários para melhor consistência e layout
+- refatora: altera títulos de seções de <h2> para <h4> para consistência no formato de ajuda
+- refatora: ajusta tamanhos de formulários utilizando constantes para melhor manutenção
+- refatora: ajusta alturas de janelas e componentes para melhor layout
+- refatora: ajusta layout e dimensões do formulário de impressão
+- refatora: ajusta formatação de flags de janela e normaliza código
+- refatora: ajusta tamanhos de janelas e configura redimensionamento mínimo
+- refatora: altera o redimensionamento do diálogo para ajustar o tamanho mínimo
+- refatora: ajusta tamanhos fixos e margens na janela de autenticação
+- refatora: normaliza textos em mensagens de diálogo e ajusta fallback para mensagens vazias
+- refatora: altera redimensionamento da janela principal para tamanho fixo
+- refatora: renomeia função de configuração de janelas para português
+- refatora: ajusta estilos de widgets para utilizar paletas de cores dinâmicas
+- refatora: altera tamanhos fixos para tamanhos mínimos em várias janelas e formulários
+- refatora: ajusta a largura mínima dos estilos de widgets para permitir flexibilidade
+- refatora: ajusta a altura de várias janelas e formulários para 500
+- refatora: remove a versão do título da janela principal
+- refatora: implementa gerenciamento de estado da janela e otimiza o carregamento de temas
+- refatora: adiciona suporte para menus compactos e gerenciamento de eventos de redimensionamento
+- refatora: adiciona suporte para cores de destaque e aprimora gerenciamento de temas
+- refatora: adiciona estilos personalizados para QMenuBar e QMenu
+- refatora: ajusta estilos de QTableWidget e QLabel para utilizar paletas de cores
+- refatora: ajusta estilos de QGroupBox e QLabel para remover bordas e padronizar rótulos
+- refatora: renomeia objetos de título para label_titulo em diversos formulários e componentes
+- refatora: ajusta componentes de interface e implementa gerenciamento centralizado de tema
+- refatora: remove gerenciamento de temas qdarktheme e ajusta estilos de widgets
+- refatora: remove a barra de título customizada e ajusta janelas para usar a barra de título nativa
+- recurso: adiciona requerimentos de desenvolvimento ao arquivo requirements.txt
+- recurso: adiciona script para adicionar dados de espessura, canal e dedução de materiais ao banco de dados
+- refatora: remove arquivos obsoletos e scripts de adição de materiais do banco de dados
+- refatora: adiciona função show_timed_message_box para exibir mensagens com timeout e atualiza o fechamento do aplicativo
+- refatora: ajusta diretório de runtime para incluir subpasta 'calculadora_dobra'
+- recurso: adiciona script para geração automática de picks em arquivos DXF
+
 ## 2.5.0 (10/10/2025)
 
 - Refatorações gerais de janelas e UI: fechamento seguro de janelas dependentes, suporte a janelas sem borda e de sistema, melhor posicionamento, ajustes de tamanhos/atributos de formulários e seleção estendida em tabelas.
