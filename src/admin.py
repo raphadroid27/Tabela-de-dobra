@@ -18,7 +18,7 @@ import sys
 import time
 from datetime import datetime
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QEvent, QObject, QTimer
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -72,6 +72,34 @@ from src.utils.utilitarios import (
     show_error,
     show_info,
 )
+
+ADMIN_INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000
+
+_INACTIVITY_EVENTS = {
+    QEvent.Type.MouseButtonPress,
+    QEvent.Type.MouseButtonRelease,
+    QEvent.Type.MouseMove,
+    QEvent.Type.KeyPress,
+    QEvent.Type.KeyRelease,
+    QEvent.Type.Wheel,
+    QEvent.Type.FocusIn,
+}
+
+
+class _InactivityEventFilter(QObject):
+    """Reinicia o timer quando eventos de interação são detectados."""
+
+    def __init__(self, on_activity):
+        super().__init__()
+        self._on_activity = on_activity
+
+    def eventFilter(  # pylint: disable=invalid-name
+        self, obj, event
+    ):  # pylint: disable=unused-argument
+        """Intercepta eventos de UI para reiniciar o timer de inatividade."""
+        if event.type() in _INACTIVITY_EVENTS:
+            self._on_activity()
+        return super().eventFilter(obj, event)
 
 
 def obter_dir_base_local():
@@ -624,6 +652,7 @@ class AdminTool(QMainWindow):
         self._setup_main_tool_ui()
         self._setup_global_shortcuts()
         self._autenticado = False
+        self._setup_inactivity_timer()
         QTimer.singleShot(0, self._solicitar_autenticacao_admin)
 
     def _setup_main_tool_ui(self):
@@ -657,6 +686,29 @@ class AdminTool(QMainWindow):
 
         close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
         close_shortcut.activated.connect(self.close)
+
+    def _setup_inactivity_timer(self):
+        self._inactivity_timer = QTimer(self)
+        self._inactivity_timer.setInterval(ADMIN_INACTIVITY_TIMEOUT_MS)
+        self._inactivity_timer.setSingleShot(True)
+        self._inactivity_timer.timeout.connect(self._handle_inactivity_timeout)
+        self._inactivity_filter = _InactivityEventFilter(self._reset_inactivity_timer)
+        self._install_filter_recursively(self, self._inactivity_filter)
+        self._reset_inactivity_timer()
+
+    @staticmethod
+    def _install_filter_recursively(widget, filtro):
+        widget.installEventFilter(filtro)
+        for child in widget.findChildren(QWidget):
+            child.installEventFilter(filtro)
+
+    def _reset_inactivity_timer(self):
+        if hasattr(self, "_inactivity_timer"):
+            self._inactivity_timer.start()
+
+    def _handle_inactivity_timeout(self):
+        logging.warning("Fechando ferramenta administrativa por inatividade.")
+        self.close()
 
     def _solicitar_autenticacao_admin(self):
         """Abre o formulário compartilhado de autenticação para validar admins."""
@@ -729,8 +781,10 @@ class AdminTool(QMainWindow):
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
         if self._autenticado:
+            self._reset_inactivity_timer()
             return
         self._autenticado = True
+        self._reset_inactivity_timer()
         self.setMinimumSize(380, 400)
         self.show()
         self.raise_()
@@ -738,6 +792,8 @@ class AdminTool(QMainWindow):
 
     def closeEvent(self, event):  # pylint: disable=C0103
         """Garante que o timer da aba de instâncias seja parado ao fechar."""
+        if hasattr(self, "_inactivity_timer"):
+            self._inactivity_timer.stop()
         self.instances_tab.stop_timer()
         event.accept()
 

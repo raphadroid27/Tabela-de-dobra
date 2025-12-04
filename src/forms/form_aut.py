@@ -8,7 +8,7 @@ com a biblioteca PySide6, utilizando o módulo globals para variáveis globais e
 módulo funcoes para operações auxiliares. O banco de dados é gerenciado com SQLAlchemy.
 """
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QEvent, QObject, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -40,6 +40,59 @@ from src.utils.utilitarios import (
 JANELA_LARGURA = 200
 JANELA_ALTURA_LOGIN = 115
 JANELA_ALTURA_CADASTRO = 143
+LOGIN_INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000
+
+_INACTIVITY_EVENTS = {
+    QEvent.Type.MouseButtonPress,
+    QEvent.Type.MouseButtonRelease,
+    QEvent.Type.MouseMove,
+    QEvent.Type.KeyPress,
+    QEvent.Type.KeyRelease,
+    QEvent.Type.Wheel,
+    QEvent.Type.FocusIn,
+}
+
+
+class _InactivityEventFilter(QObject):
+    """Reinicia o timer de inatividade quando eventos relevantes ocorrem."""
+
+    def __init__(self, on_activity):
+        super().__init__()
+        self._on_activity = on_activity
+
+    def eventFilter(  # pylint: disable=invalid-name
+        self, obj, event
+    ):  # pylint: disable=unused-argument
+        """Intercepta eventos de interação e reinicia o timer."""
+        if event.type() in _INACTIVITY_EVENTS:
+            self._on_activity()
+        return super().eventFilter(obj, event)
+
+
+def _instalar_filtro_recursivo(widget, filtro):
+    widget.installEventFilter(filtro)
+    for child in widget.findChildren(QWidget):
+        child.installEventFilter(filtro)
+
+
+def _ativar_monitor_inatividade():
+    if not g.AUTEN_FORM:
+        return
+
+    timer = QTimer(g.AUTEN_FORM)
+    timer.setInterval(LOGIN_INACTIVITY_TIMEOUT_MS)
+    timer.setSingleShot(True)
+
+    def fechar_por_inatividade():
+        if g.AUTEN_FORM:
+            g.AUTEN_FORM.close()
+
+    timer.timeout.connect(fechar_por_inatividade)
+    filtro = _InactivityEventFilter(timer.start)
+    _instalar_filtro_recursivo(g.AUTEN_FORM, filtro)
+    g.AUTEN_FORM.inactivity_timer = timer  # type: ignore[attr-defined]
+    g.AUTEN_FORM.inactivity_filter = filtro  # type: ignore[attr-defined]
+    timer.start()
 
 
 def _configurar_janela_base(root):
@@ -195,6 +248,7 @@ def _finalizar_configuracao():
 
     if g.USUARIO_ENTRY:
         g.USUARIO_ENTRY.setFocus()
+    _ativar_monitor_inatividade()
 
 
 def main(root):
