@@ -414,7 +414,7 @@ def _criar_menu_opcoes(menu_bar):
 def _criar_menu_ajuda(menu_bar):
     """Cria o menu Ajuda."""
     help_menu = menu_bar.addMenu("❓ Ajuda")
-    manual_action = QAction("📘 Manual de Uso", g.PRINC_FORM)
+    manual_action = QAction("📘 Manual de Uso (F1)", g.PRINC_FORM)
     manual_action.triggered.connect(lambda: form_manual.main(None))
     help_menu.addAction(manual_action)
     sobre_action = QAction(f"ℹ️ Sobre (v{APP_VERSION})", g.PRINC_FORM)
