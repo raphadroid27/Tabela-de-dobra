@@ -14,18 +14,18 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
 from src.models.models import Base, Log
+from src.utils.utilitarios import DB_PATH, DATABASE_DIR
 
-# Configuração do banco de dados
-DATABASE_DIR = os.path.abspath("database")
+# Garante a existência do diretório de banco compartilhado
 os.makedirs(DATABASE_DIR, exist_ok=True)
 
 # Timeout reduzido para conexões SQLAlchemy (10 segundos)
 SQLALCHEMY_TIMEOUT = 10
 
-# Configuração do Engine do SQLAlchemy
+# Configuração do Engine do SQLAlchemy usando caminho único centralizado
 engine = create_engine(
-    f'sqlite:///{os.path.join(DATABASE_DIR, "tabela_de_dobra.db")}',
-    connect_args={"timeout": 30},
+    f"sqlite:///{DB_PATH}",
+    connect_args={"timeout": SQLALCHEMY_TIMEOUT},
 )
 
 

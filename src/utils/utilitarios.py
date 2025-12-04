@@ -185,11 +185,6 @@ UPDATE_TEMP_DIR = os.path.join(BASE_DIR, "update_temp")
 APP_EXECUTABLE_NAME = "Calculadora de Dobra.exe"
 APP_EXECUTABLE_PATH = os.path.join(BASE_DIR, APP_EXECUTABLE_NAME)
 
-# Arquivos de configuração do usuário (movido para AppData)
-APPDATA_DIR = os.environ.get(
-    "APPDATA", os.path.join(os.environ["USERPROFILE"], "AppData", "Roaming")
-)
-
 
 def ensure_dirs_exist() -> None:
     """
