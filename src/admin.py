@@ -18,7 +18,7 @@ import sys
 import time
 from datetime import datetime
 
-from PySide6.QtCore import Qt, QEvent, QObject, QTimer
+from PySide6.QtCore import QEvent, QObject, QSettings, Qt, QTimer
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -152,6 +152,9 @@ class InstancesWidget(QWidget):
         self.table_sessoes.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows
         )
+        self.table_sessoes.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
         self.table_sessoes.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table_sessoes.verticalHeader().setVisible(False)
 
@@ -234,6 +237,7 @@ class InstancesWidget(QWidget):
                 self.table_sessoes.setItem(
                     row_position, 2, QTableWidgetItem(sessao.get("last_updated", "N/A"))
                 )
+            self.table_sessoes.setCurrentCell(-1, -1)
         except (KeyError, AttributeError, TypeError) as e:
             logging.error("Erro ao carregar sessões: %s", e)
             self._set_status_message("Erro ao carregar sessões.")
@@ -487,8 +491,8 @@ class UserManagementWidget(QWidget):
                     self.list_usuario.setItem(
                         row_position, 3, QTableWidgetItem(senha_resetada)
                     )
-                if self.list_usuario.rowCount() > 0:
-                    self.list_usuario.selectRow(0)
+                self.list_usuario.setCurrentCell(-1, -1)
+                self._update_buttons_state()
         except SQLAlchemyError as e:
             logging.error("Erro ao listar usuários: %s", e)
             show_error(
@@ -549,6 +553,9 @@ class UserManagementWidget(QWidget):
         g.LIST_USUARIO.setAlternatingRowColors(True)
         g.LIST_USUARIO.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        g.LIST_USUARIO.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
         )
         g.LIST_USUARIO.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         g.LIST_USUARIO.verticalHeader().setVisible(False)
@@ -630,7 +637,7 @@ class AdminTool(QMainWindow):
     def __init__(self):
         """Inicializa a janela principal."""
         super().__init__()
-        self.setMinimumSize(380, 185)
+        self.setWindowTitle("Ferramenta Administrativa")
         if ICON_PATH and os.path.exists(ICON_PATH):
             self.setWindowIcon(QIcon(ICON_PATH))
 
@@ -640,6 +647,7 @@ class AdminTool(QMainWindow):
             | Qt.WindowMaximizeButtonHint
             | Qt.WindowCloseButtonHint
         )
+        self._restore_window_state()
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
@@ -686,6 +694,21 @@ class AdminTool(QMainWindow):
 
         close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
         close_shortcut.activated.connect(self.close)
+
+    def _restore_window_state(self):
+        """Restaura posição e tamanho salvos da janela administrativa."""
+        settings = QSettings()
+        geometry = settings.value("admin/geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+        else:
+            self.setMinimumSize(380, 400)
+            self.resize(380, 400)
+
+    def _save_window_state(self):
+        """Persiste a geometria atual para reutilização futura."""
+        settings = QSettings()
+        settings.setValue("admin/geometry", self.saveGeometry())
 
     def _setup_inactivity_timer(self):
         self._inactivity_timer = QTimer(self)
@@ -785,13 +808,13 @@ class AdminTool(QMainWindow):
             return
         self._autenticado = True
         self._reset_inactivity_timer()
-        self.setMinimumSize(380, 400)
         self.show()
         self.raise_()
         self.activateWindow()
 
     def closeEvent(self, event):  # pylint: disable=C0103
         """Garante que o timer da aba de instâncias seja parado ao fechar."""
+        self._save_window_state()
         if hasattr(self, "_inactivity_timer"):
             self._inactivity_timer.stop()
         self.instances_tab.stop_timer()
@@ -803,6 +826,8 @@ def main():
     setup_logging("admin.log", log_to_console=True)
     logging.info("Ferramenta Administrativa iniciada.")
     app = QApplication(sys.argv)
+    app.setOrganizationName("raphadroid27")
+    app.setApplicationName("Tabela-de-dobra")
     # Inicializa o tema salvo via ThemeManager
     try:
         theme_manager.initialize()
