@@ -15,10 +15,9 @@ O acesso à ferramenta requer autenticação de administrador.
 import logging
 import os
 import sys
-import time
 from datetime import datetime
 
-from PySide6.QtCore import QEvent, QObject, QSettings, Qt, QTimer
+from PySide6.QtCore import QEvent, QObject, QSettings, Qt, QTimer, QThread, Signal, Slot
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -47,6 +46,7 @@ from src.forms import form_aut
 from src.forms.form_manual import show_manual
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
+from src.utils import ipc_manager
 from src.utils.controlador import buscar_debounced
 from src.utils.estilo import (
     aplicar_estilo_botao,
@@ -293,6 +293,26 @@ class InstancesWidget(QWidget):
         self.timer_atualizacao.stop()
 
 
+class UpdateWorker(QObject):
+    """Executa o processo de atualização em thread separada."""
+
+    progress = Signal(str, int)
+    finished = Signal()
+    failed = Signal(str)
+
+    def __init__(self, file_path: str):
+        super().__init__()
+        self._file_path = file_path
+
+    @Slot()
+    def run(self):
+        try:
+            run_update_process(self._file_path, self.progress.emit)
+            self.finished.emit()
+        except Exception as exc:  # pylint: disable=broad-except
+            self.failed.emit(str(exc))
+
+
 class UpdaterWidget(QWidget):
     """Widget para a aba de Atualização."""
 
@@ -307,6 +327,8 @@ class UpdaterWidget(QWidget):
         self.progress_view = self._create_progress_view()
         self.main_view = self._create_main_view()
         self.stacked_widget = QStackedWidget()
+        self.worker_thread = None
+        self.worker = None
         self._setup_ui()
         self._load_current_version()
 
@@ -423,17 +445,39 @@ class UpdaterWidget(QWidget):
 
         self.stacked_widget.setCurrentWidget(self.progress_view)
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        try:
-            run_update_process(self.selected_file_path, self._update_progress_ui)
-            self._update_progress_ui("Concluído!", 100)
-            time.sleep(2)
-            self._reset_widget_state()
-        except (ValueError, ConnectionError, RuntimeError, IOError) as e:
-            logging.error("Erro no processo de atualização: %s", e)
-            show_error("Erro de Atualização", f"Ocorreu um erro: {e}", parent=self)
-            self._reset_widget_state()
-        finally:
-            QApplication.restoreOverrideCursor()
+        self._start_update_worker()
+
+    def _start_update_worker(self):
+        """Inicia o worker em thread separada mantendo a UI responsiva."""
+        self.worker_thread = QThread()
+        self.worker = UpdateWorker(self.selected_file_path)
+        self.worker.moveToThread(self.worker_thread)
+        self.worker.progress.connect(self._update_progress_ui)
+        self.worker.finished.connect(self._on_update_success)
+        self.worker.failed.connect(self._on_update_error)
+        self.worker_thread.started.connect(self.worker.run)
+        self.worker_thread.start()
+
+    def _on_update_success(self):
+        self._update_progress_ui("Concluído!", 100)
+        self._cleanup_worker()
+        QTimer.singleShot(500, self._reset_widget_state)
+
+    def _on_update_error(self, message: str):
+        logging.error("Erro no processo de atualização: %s", message)
+        self._cleanup_worker()
+        show_error("Erro de Atualização", f"Ocorreu um erro: {message}", parent=self)
+        self._reset_widget_state()
+
+    def _cleanup_worker(self):
+        QApplication.restoreOverrideCursor()
+        if self.worker_thread:
+            self.worker_thread.quit()
+            self.worker_thread.wait()
+            self.worker_thread = None
+        if self.worker:
+            self.worker.deleteLater()
+            self.worker = None
 
 
 class UserManagementWidget(QWidget):
@@ -827,6 +871,7 @@ def main():
     """Função principal para iniciar a aplicação."""
     setup_logging("admin.log", log_to_console=True)
     logging.info("Ferramenta Administrativa iniciada.")
+    ipc_manager.ensure_ipc_dirs_exist()
     app = QApplication(sys.argv)
     app.setOrganizationName("raphadroid27")
     app.setApplicationName("Tabela-de-dobra")
