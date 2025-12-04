@@ -689,7 +689,7 @@ def _atualizar_forca_ui(data: UIData):
                         "QLabel { color: palette(text); }"
                     )  # Cor original
                 elif 250 < forca_num <= 280:
-                    g.FORCA_LBL.setStyleSheet("QLabel { color: yellow; }")
+                    g.FORCA_LBL.setStyleSheet("QLabel { color: orange; }")
                 else:  # acima de 280
                     g.FORCA_LBL.setStyleSheet("QLabel { color: red; }")
             except (ValueError, TypeError):
@@ -820,16 +820,24 @@ def canal_tooltip():
                 (c for c in canais if str(c.get("valor")) == str(canal_str)), None
             )
             if canal_info:
-                obs = canal_info.get("observacao", "N/A")
-                comp = canal_info.get("comprimento_total", "N/A")
-                tooltip = f"Obs: {obs}\nComprimento total: {comp}"
+                largura = canal_info.get("largura") if canal_info.get(
+                    "largura") is not None else "N/A"
+                altura = canal_info.get("altura") if canal_info.get(
+                    "altura") is not None else "N/A"
+                comp = canal_info.get("comprimento_total") if canal_info.get(
+                    "comprimento_total") is not None else "N/A"
+                obs = canal_info.get("observacao") if canal_info.get(
+                    "observacao") else "N/A"
+                tooltip = f"Largura: {largura}\nAltura: {altura}\nComprimento total: {comp}\nObs: {obs}"
             else:
                 with get_session() as session:
                     canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
                     if canal_obj:
-                        obs = getattr(canal_obj, "observacao", "N/A")
-                        comp = getattr(canal_obj, "comprimento_total", "N/A")
-                        tooltip = f"Obs: {obs}\nComprimento total: {comp}"
+                        largura = canal_obj.largura if canal_obj.largura is not None else "N/A"
+                        altura = canal_obj.altura if canal_obj.altura is not None else "N/A"
+                        comp = canal_obj.comprimento_total if canal_obj.comprimento_total is not None else "N/A"
+                        obs = canal_obj.observacao if canal_obj.observacao else "N/A"
+                        tooltip = f"Largura: {largura}\nAltura: {altura}\nComprimento total: {comp}\nObs: {obs}"
                     else:
                         tooltip = "Canal não encontrado."
         except SQLAlchemyError as e:

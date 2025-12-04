@@ -195,7 +195,17 @@ class CacheManager:  # pylint: disable=too-many-instance-attributes
             self._get_cached_data(
                 "canais_list",
                 lambda session: session.query(Canal).all(),
-                lambda canais: [{"id": c.id, "valor": c.valor} for c in canais],
+                lambda canais: [
+                    {
+                        "id": c.id,
+                        "valor": c.valor,
+                        "largura": c.largura,
+                        "altura": c.altura,
+                        "observacao": c.observacao,
+                        "comprimento_total": c.comprimento_total,
+                    }
+                    for c in canais
+                ],
             ),
         )
 
