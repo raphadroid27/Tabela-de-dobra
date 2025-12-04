@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from shiboken6 import isValid  # Já importado no topo
+from shiboken6 import isValid
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
@@ -46,8 +46,6 @@ def _configurar_janela_base(root):
     """Configura a janela base do formulário de autenticação."""
     if g.AUTEN_FORM and isValid(g.AUTEN_FORM):
         g.AUTEN_FORM.close()
-    g.AUTEN_FORM = None
-
     g.AUTEN_FORM = QDialog(root)
     g.AUTEN_FORM.setFixedSize(JANELA_LARGURA, JANELA_ALTURA_LOGIN)
     g.AUTEN_FORM.setModal(True)
@@ -56,7 +54,7 @@ def _configurar_janela_base(root):
 
     def close_event(event):
         Janela.estado_janelas(True)
-        event.accept()
+        QDialog.closeEvent(g.AUTEN_FORM, event)
 
     g.AUTEN_FORM.closeEvent = close_event
 

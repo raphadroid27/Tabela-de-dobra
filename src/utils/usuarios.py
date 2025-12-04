@@ -128,7 +128,10 @@ def login():
                 show_info("Login", "Login efetuado com sucesso.", parent=parent_form)
                 g.USUARIO_ID = usuario_obj.id
                 if parent_form:
-                    parent_form.close()
+                    try:
+                        parent_form.accept()
+                    except AttributeError:
+                        parent_form.close()
                 if g.PRINC_FORM:
                     titulo = f"Calculadora de Dobra - {usuario_obj.nome}"
                     g.PRINC_FORM.setWindowTitle(titulo)

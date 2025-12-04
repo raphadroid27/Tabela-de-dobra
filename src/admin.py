@@ -12,14 +12,13 @@ O acesso à ferramenta requer autenticação de administrador.
 
 # pylint: disable=R0902
 
-import hashlib
 import logging
 import os
 import sys
 import time
 from datetime import datetime
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -44,6 +43,7 @@ from PySide6.QtWidgets import (
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
+from src.forms import form_aut
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
@@ -84,103 +84,6 @@ def obter_dir_base_local():
 BASE_DIR = obter_dir_base_local()
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
-
-
-class AdminAuthWidget(QWidget):
-    """Widget para autenticação de administrador."""
-
-    login_successful = Signal()
-
-    def __init__(self, parent=None):
-        """Inicializa o widget de autenticação."""
-        super().__init__(parent)
-        self.usuario_entry = QLineEdit()
-        self.senha_entry = QLineEdit()
-        self._setup_ui()
-        self.usuario_entry.setFocus()
-
-    def _setup_ui(self):
-        """Configura a interface do usuário para o widget de autenticação."""
-        main_layout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 10)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        title_label = QLabel("Autenticação de Administrador")
-        title_label.setStyleSheet(
-            "font-size: 16px; font-weight: bold; margin-bottom: 5px;"
-        )
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(title_label)
-
-        grid_layout = QGridLayout()
-        grid_layout.setVerticalSpacing(10)
-        grid_layout.setHorizontalSpacing(10)
-        grid_layout.addWidget(QLabel("Usuário:"), 0, 0)
-        self.usuario_entry.setPlaceholderText("Digite o usuário")
-        self.usuario_entry.setToolTip("Digite seu nome de usuário de administrador")
-        grid_layout.addWidget(self.usuario_entry, 0, 1)
-
-        grid_layout.addWidget(QLabel("Senha:"), 1, 0)
-        self.senha_entry.setPlaceholderText("Digite a senha")
-        self.senha_entry.setToolTip("Digite sua senha de administrador")
-        self.senha_entry.setEchoMode(QLineEdit.EchoMode.Password)
-        grid_layout.addWidget(self.senha_entry, 1, 1)
-        main_layout.addLayout(grid_layout)
-
-        main_layout.addStretch()
-
-        login_btn = QPushButton("🔐 Acessar Ferramenta")
-        login_btn.setToolTip("Clique para acessar a ferramenta administrativa (Enter)")
-        login_btn.setShortcut(QKeySequence("Return"))
-        aplicar_estilo_botao(login_btn, "verde")
-        login_btn.clicked.connect(self.attempt_login)
-        main_layout.addWidget(login_btn)
-
-        self._setup_keyboard_shortcuts()
-
-    def _setup_keyboard_shortcuts(self):
-        """Configura atalhos de teclado para o widget de autenticação."""
-        focus_user_shortcut = QShortcut(QKeySequence("Ctrl+U"), self)
-        focus_user_shortcut.activated.connect(self.usuario_entry.setFocus)
-
-        focus_pass_shortcut = QShortcut(QKeySequence("Ctrl+P"), self)
-        focus_pass_shortcut.activated.connect(self.senha_entry.setFocus)
-
-        self.senha_entry.returnPressed.connect(self.attempt_login)
-
-    def attempt_login(self):
-        """Tenta autenticar o usuário com as credenciais fornecidas."""
-        username = self.usuario_entry.text()
-        password = self.senha_entry.text()
-        if not username or not password:
-            show_error(
-                "Campos Vazios", "Por favor, preencha usuário e senha.", parent=self
-            )
-            return
-
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        try:
-            with get_session() as session:
-                user = (
-                    session.query(Usuario)
-                    .filter_by(nome=username, senha=hashed_password)
-                    .first()
-                )
-                if user and user.role == "admin":
-                    g.USUARIO_ID = user.id
-                    self.login_successful.emit()
-                else:
-                    show_error(
-                        "Falha na Autenticação",
-                        "Credenciais inválidas ou sem permissão.",
-                        parent=self,
-                    )
-                    self.senha_entry.clear()
-        except SQLAlchemyError as e:
-            logging.error("Erro de banco de dados no login: %s", e)
-            show_error(
-                "Erro de Banco de Dados", "Não foi possível conectar.", parent=self
-            )
 
 
 class InstancesWidget(QWidget):
@@ -713,18 +616,15 @@ class AdminTool(QMainWindow):
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         aplicar_medida_borda_espaco(main_layout, 0, 0)
-        self.stacked_widget = QStackedWidget()
-        main_layout.addWidget(self.stacked_widget)
-        self.auth_widget = AdminAuthWidget()
-        self.auth_widget.login_successful.connect(self.show_main_tool)
-        self.stacked_widget.addWidget(self.auth_widget)
         self.main_tool_widget = QWidget()
+        main_layout.addWidget(self.main_tool_widget)
         self.instances_tab = InstancesWidget()
         self.updater_tab = UpdaterWidget()
         self.user_management_tab = UserManagementWidget()
         self._setup_main_tool_ui()
-        self.stacked_widget.addWidget(self.main_tool_widget)
         self._setup_global_shortcuts()
+        self._autenticado = False
+        QTimer.singleShot(0, self._solicitar_autenticacao_admin)
 
     def _setup_main_tool_ui(self):
         """Configura a UI principal da ferramenta com abas."""
@@ -758,10 +658,83 @@ class AdminTool(QMainWindow):
         close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
         close_shortcut.activated.connect(self.close)
 
+    def _solicitar_autenticacao_admin(self):
+        """Abre o formulário compartilhado de autenticação para validar admins."""
+        g.USUARIO_ID = None
+        g.LOGIN = True
+        parent = self if self.isVisible() else None
+        logging.info("Abrindo formulário de login administrativo (parent=%s)", parent)
+        form_aut.main(parent)
+        dialog = g.AUTEN_FORM
+        if dialog is None:
+            show_error(
+                "Erro",
+                "Não foi possível abrir o formulário de autenticação.",
+                parent=self,
+            )
+            self.close()
+            return
+        dialog.finished.connect(self._on_auth_dialog_closed)
+
+    def _on_auth_dialog_closed(self, _result: int):  # pylint: disable=unused-argument
+        """Processa o fechamento do formulário de autenticação."""
+        dialog = g.AUTEN_FORM
+        if dialog is not None:
+            try:
+                dialog.finished.disconnect(self._on_auth_dialog_closed)
+            except (RuntimeError, TypeError):
+                pass
+        g.AUTEN_FORM = None
+        g.LOGIN = None
+
+        logging.info("Login administrativo finalizado. Usuario atual: %s", g.USUARIO_ID)
+        if g.USUARIO_ID is None:
+            self.close()
+            return
+
+        if not self._usuario_atual_e_admin():
+            show_error(
+                "Acesso Negado",
+                "Apenas administradores podem usar esta ferramenta.",
+                parent=self,
+            )
+            g.USUARIO_ID = None
+            QTimer.singleShot(0, self._solicitar_autenticacao_admin)
+            return
+
+        self.show_main_tool()
+
+    def _usuario_atual_e_admin(self) -> bool:
+        """Confere se o usuário logado possui papel de administrador."""
+        if g.USUARIO_ID is None:
+            return False
+        try:
+            with get_session() as session:
+                usuario_obj = session.get(Usuario, g.USUARIO_ID)
+                logging.info(
+                    "Verificando permissões do usuário %s (role=%s)",
+                    g.USUARIO_ID,
+                    getattr(usuario_obj, "role", None),
+                )
+                return bool(usuario_obj and usuario_obj.role == "admin")
+        except SQLAlchemyError as e:
+            logging.error("Erro ao verificar permissões administrativas: %s", e)
+            show_error(
+                "Erro",
+                "Não foi possível validar as permissões do usuário.",
+                parent=self,
+            )
+            return False
+
     def show_main_tool(self):
         """Mostra a ferramenta principal após a autenticação."""
+        if self._autenticado:
+            return
+        self._autenticado = True
         self.setMinimumSize(380, 400)
-        self.stacked_widget.setCurrentWidget(self.main_tool_widget)
+        self.show()
+        self.raise_()
+        self.activateWindow()
 
     def closeEvent(self, event):  # pylint: disable=C0103
         """Garante que o timer da aba de instâncias seja parado ao fechar."""
@@ -779,8 +752,7 @@ def main():
         theme_manager.initialize()
     except (AttributeError, RuntimeError):
         pass
-    window = AdminTool()
-    window.show()
+    AdminTool()
     sys.exit(app.exec())
 
 
