@@ -306,6 +306,7 @@ class UpdateWorker(QObject):
 
     @Slot()
     def run(self):
+        """Executa o update no worker thread e sinaliza progresso/resultado."""
         try:
             run_update_process(self._file_path, self.progress.emit)
             self.finished.emit()
