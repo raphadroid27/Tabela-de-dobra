@@ -203,10 +203,10 @@ class FormCompararArquivos(QDialog):
             "Arraste arquivos ou use o botão acima para adicioná-los à Lista B."
         )
         lists_layout.addWidget(
-            self._create_list_groupbox("Lista A", self.table_a_widget)
+            self._create_list_groupbox("Lista A", self.table_a_widget, "Ctrl+1")
         )
         lists_layout.addWidget(
-            self._create_list_groupbox("Lista B", self.table_b_widget)
+            self._create_list_groupbox("Lista B", self.table_b_widget, "Ctrl+2")
         )
         main_layout.addLayout(lists_layout)
 
@@ -234,13 +234,13 @@ class FormCompararArquivos(QDialog):
         action_layout.addWidget(self.btn_cancel)
         self.progress_bar = attach_actions_with_progress(main_layout, action_layout)
 
-    def _create_list_groupbox(self, title: str, table: FileTableWidget) -> QGroupBox:
+    def _create_list_groupbox(self, title: str, table: FileTableWidget, shortcut: str) -> QGroupBox:
         """Cria um QGroupBox contendo uma tabela e um botão de adicionar."""
         groupbox = QGroupBox(title)
         layout = QVBoxLayout(groupbox)
         btn_add = QPushButton(f"➕ Adicionar à {title}")
-        btn_add.setToolTip("Selecionar arquivos e adicioná-los à lista (Ctrl+O)")
-        btn_add.setShortcut("Ctrl+O")
+        btn_add.setToolTip(f"Selecionar arquivos e adicioná-los à {title} ({shortcut})")
+        btn_add.setShortcut(shortcut)
         btn_add.clicked.connect(lambda: self._select_files(table))
         aplicar_estilo_botao(btn_add, "cinza")
         layout.addWidget(btn_add)
