@@ -1,38 +1,49 @@
 <h4>Tela Principal</h4>
-<h4><b>Menu Principal</b></h4>
-<h4><b>📄 Adicionar</b></h4>
-<ul>
-    <li><b>➕ Adicionar Dedução / Material / Espessura / Canal</b>: abre formulários em modo inclusão. As combinações alimentam o cálculo no cabeçalho e são recarregadas automaticamente após salvar.</li>
-</ul>
-<h4><b>✏️ Editar</b></h4>
-<ul>
-    <li>Acessa os mesmos formulários em modo edição, exibindo botões ✏️ Atualizar e 🗑️ Excluir. A seleção na lista pré-carrega os campos.</li>
-</ul>
-<h4><b>🔧 Recursos</b></h4>
-<ul>
-    <li><b>➗ Razão Raio/Espessura</b>: referência de fator K teórico.</li>
-    <li><b>🖨️ Impressão em Lote</b>: fila e verificação de PDFs.</li>
-    <li><b>📊 Comparar Arquivos</b>: análise de diferenças por par.</li>
-    <li><b>🔄 Converter Arquivos</b>: conversão multi-formato.</li>
-</ul>
-<h4><b>👤 Usuário</b></h4>
-<ul>
-    <li><b>🔐 Login</b> / <b>👥 Novo Usuário</b>: autenticação e criação de usuários.</li>
-    <li><b>🚪 Sair</b>: encerra sessão.</li>
-</ul>
-<h4><b>⚙️ Opções</b></h4>
-<ul>
-    <li><b>📌 No topo</b> + <b>👻 Transparência</b>: controle de janela sempre no topo e opacidade.</li>
-    <li><b>🎨 Temas</b>: alterna entre tema claro e escuro e armazena a escolha do usuário na memória.</li>
-</ul>
-<h4><b>❓ Ajuda</b></h4>
-<ul>
-    <li><b>📘 Manual de Uso</b> e <b>ℹ️ Sobre</b>: documentação e informações sobre o aplicativo.</li>
-</ul>
-<h4><b>⌨️ Atalhos Globais Principais</b></h4>
-<ul>
-    <li><kbd>Ctrl+Shift+V</kbd> Expandir linhas • <kbd>Ctrl+H</kbd> Expandir colunas • <kbd>Ctrl+D</kbd> Limpar Dobras • <kbd>Ctrl+T</kbd> Limpar Tudo • Clique nas labels <b>Fator K</b>, <b>Dedução</b> e <b>Offset</b> para copiar os valores.</li>
-</ul>
+<ol>
+    <li>
+        <b>Menu 📄 Adicionar</b>:
+        <ul>
+            <li>➕ <b>Adicionar Dedução / Material / Espessura / Canal</b>: abre formulários para cadastrar novos registros; as combinações alimentam os cálculos e são recarregadas automaticamente após salvar.</li>
+        </ul>
+    </li>
+    <li>
+        <b>Menu ✏️ Editar</b>:
+        <ul>
+            <li>Abre formulários para edição e exclusão de registros; a seleção na lista pré-carrega os campos e exibe botões ✏️ <b>Atualizar</b> e 🗑️ <b>Excluir</b>.</li>
+        </ul>
+    </li>
+    <li>
+        <b>Menu 🔧 Recursos</b>:
+        <ul>
+            <li>➗ <b>Razão Raio/Espessura</b>: referência de fator K teórico.</li>
+            <li>🖨️ <b>Impressão em Lote</b>: envia múltiplos arquivos PDF para impressão com verificação prévia.</li>
+            <li>📊 <b>Comparar Arquivos</b>: compara pares de arquivos CAD/PDF e identifica diferenças.</li>
+            <li>🔄 <b>Converter Arquivos</b>: converte arquivos entre formatos DWG, DXF, PDF e TIF.</li>
+        </ul>
+    </li>
+    <li>
+        <b>Menu 👤 Usuário</b>:
+        <ul>
+            <li>🔐 <b>Login</b> / 👥 <b>Novo Usuário</b>: autenticação e criação de usuários.</li>
+            <li>🚪 <b>Sair</b>: encerra sessão.</li>
+        </ul>
+    </li>
+    <li>
+        <b>Menu ⚙️ Opções</b>:
+        <ul>
+            <li>📌 <b>No topo</b>: mantém janela sempre visível sobre outras aplicações.</li>
+            <li>👻 <b>Transparência</b>: ajusta opacidade da janela.</li>
+            <li>🎨 <b>Temas</b>: alterna entre tema claro e escuro.</li>
+            <li>🌈 <b>Cor de destaque</b>: personaliza a cor de destaque da interface.</li>
+        </ul>
+    </li>
+    <li>
+        <b>Menu ❓ Ajuda</b>:
+        <ul>
+            <li>📘 <b>Manual de Uso</b>: documentação completa.</li>
+            <li>ℹ️ <b>Sobre</b>: informações sobre o aplicativo.</li>
+        </ul>
+    </li>
 <h4><b>Cabeçalho (Fluxo de Cálculo)</b></h4>
 <ol>
     <li><b>Selecionar Material</b>: exibe na combo de Espessura apenas valores que possuem deduções cadastradas.</li>
@@ -61,13 +72,17 @@
     <li>🗑️ <b>Limpar Tudo</b> (<kbd>Ctrl+T</kbd>): limpa cabeçalho + tabelas (reseta contexto completo).</li>
     <li><b>Reatividade</b>: qualquer mudança no cabeçalho reprojeta todas as tabelas ativas.</li>
 </ul>
+</ol>
 <h4><b>Indicadores Visuais</b></h4>
 <ul>
     <li><b>Fator K</b>/<b>Offset</b> <span style='color:blue;'>azul</span> = dedução específica; <span style='color:orange;'>laranja</span> = teórico; normal = dedução padrão.</li>
     <li>Comprimento em <span style='color:red;'>vermelho</span> = acima do limite permitido para o canal.</li>
     <li>Campos de aba em <span style='color:white;background:red;padding:1px 3px;'>vermelho</span> = abaixo da Aba Mínima calculada.</li>
 </ul>
-<h4><b>Atalhos Adicionais</b></h4>
+<h4><b>Atalhos</b></h4>
 <ul>
-    <li><kbd>F1</kbd> Abrir ajuda desta janela.</li>
+    <li><kbd>Ctrl+Shift+V</kbd> Expandir linhas da tabela de dobras.</li>
+    <li><kbd>Ctrl+H</kbd> Expandir colunas (adicionar nova tabela).</li>
+    <li><kbd>Ctrl+D</kbd> Limpar apenas tabelas de dobras (🧹 Limpar Dobras).</li>
+    <li><kbd>Ctrl+T</kbd> Limpar tudo: cabeçalho e tabelas (🗑️ Limpar Tudo).</li>
 </ul>

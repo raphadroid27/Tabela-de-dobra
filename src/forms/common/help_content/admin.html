@@ -1,54 +1,62 @@
 <h4>Ferramenta Administrativa</h4>
+<p><b>Nota</b>: A ferramenta fecha automaticamente após <b>10 minutos de inatividade</b>.</p>
 <ol>
     <li>
-        Informe usuário/senha de administrador:
+        Autenticação:
         <ul>
+            <li>Apenas usuários com permissão de <b>admin</b> têm acesso.</li>
             <li><b>Usuário</b>: foco rápido com <kbd>Ctrl+U</kbd>.</li>
             <li><b>Senha</b>: foco rápido com <kbd>Ctrl+P</kbd>; o conteúdo fica oculto.</li>
-            <li><b>Login</b>: pressione 🔐 <b>Acessar Ferramenta</b> ou <kbd>Enter</kbd> para autenticar-se. Erros exibem mensagens e limpam apenas a senha.</li>
-            <li>Após sucesso, a janela expande para exibir as abas principais.</li>
+            <li>Pressione 🔐 <b>Login</b> ou <kbd>Enter</kbd> para autenticar-se.</li>
+            <li>A posição e tamanho da janela são salvos automaticamente.</li>
         </ul>
     </li>
     <li>
         Aba 🔧 <b>Gerenciar Instâncias</b>:
         <ul>
-            <li>Tabela “Lista de instâncias” mostra sessão, hostname e última atividade (ordenação e seleção por linha).</li>
-            <li>
-                Botões:
-                <ul>
-                    <li>🔄 <b>Atualizar</b> (<kbd>F5</kbd>/<kbd>Ctrl+R</kbd>): recarrega as sessões ativas.</li>
-                    <li>⚠️ <b>Shutdown Geral</b> (<kbd>Ctrl+Shift+Q</kbd>): solicita confirmação e envia comando para fechar todas as instâncias, exibindo progresso no rodapé.</li>
-                </ul>
-            </li>
-            <li>O contador superior mostra total de instâncias e horário da última verificação; atualizações automáticas ocorrem a cada 10 s.</li>
+            <li>Tabela mostra sessão, hostname e última atividade das instâncias ativas.</li>
+            <li>🔄 <b>Atualizar</b> (<kbd>F5</kbd>): recarrega as sessões ativas.</li>
+            <li>⚠️ <b>Shutdown Geral</b> (<kbd>Ctrl+Shift+Q</kbd>): solicita confirmação e envia comando para fechar todas as instâncias.</li>
+            <li>Contador superior mostra total de instâncias e horário da última verificação.</li>
+            <li>Atualizações automáticas ocorrem a cada 10 segundos.</li>
         </ul>
     </li>
     <li>
         Aba 👥 <b>Gerenciar Usuários</b>:
         <ul>
-            <li>Filtro “Usuário” com busca incremental e atalhos <kbd>Ctrl+F</kbd> para focar e <kbd>Ctrl+L</kbd> para limpar.</li>
+            <li>Campo de filtro com busca incremental (<kbd>Ctrl+F</kbd> para focar).</li>
             <li>Tabela lista nome, permissão (viewer/editor/admin) e status de senha resetada.</li>
-            <li>
-                Ações por linha:
-                <ul>
-                    <li>👤 <b>Alterar Permissão</b> (<kbd>Ctrl+A</kbd>): alterna entre viewer e editor (admins não podem ser rebaixados nem excluídos).</li>
-                    <li>🔄 <b>Resetar Senha</b> (<kbd>Ctrl+R</kbd>): na próxima tentativa de login desse usuário o sistema detecta o status de senha resetada e o obriga a definir uma nova. </li>
-                    <li>🗑️ <b>Excluir</b> (<kbd>Delete</kbd>): remove o usuário após confirmação.</li>
-                </ul>
-            </li>
+            <li>👤 <b>Alterar Permissão</b> (<kbd>Ctrl+A</kbd>): alterna entre viewer e editor.</li>
+            <li>🔄 <b>Resetar Senha</b> (<kbd>Ctrl+R</kbd>): força o usuário a definir nova senha no próximo login.</li>
+            <li>🗑️ <b>Excluir</b> (<kbd>Delete</kbd>): remove o usuário após confirmação.</li>
+            <li>🧹 <b>Limpar</b> (<kbd>Ctrl+L</kbd>): limpa o filtro de busca.</li>
+            <li>Administradores não podem ser rebaixados ou excluídos pela interface.</li>
         </ul>
     </li>
     <li>
         Aba 🔄 <b>Atualizador</b>:
         <ul>
-            <li>Mostra versão instalada e permite escolher pacote .zip via <b>Selecionar...</b> (<kbd>Ctrl+O</kbd>).</li>
-            <li>Após escolher o arquivo, habilita o botão <b>Instalar Atualização</b> (<kbd>Ctrl+I</kbd>), que fecha instâncias e acompanha o progresso em barra dedicada.</li>
-            <li>Mensagens de status indicam etapas; ao concluir, então retorna para a tela inicial e limpa o caminho.</li>
+            <li>Mostra versão instalada da aplicação.</li>
+            <li><b>Selecionar...</b> (<kbd>Ctrl+O</kbd>): escolhe pacote de atualização (.zip).</li>
+            <li><b>Instalar Atualização</b> (<kbd>Ctrl+I</kbd>): fecha todas as instâncias e executa atualização com barra de progresso.</li>
         </ul>
     </li>
     <li>Use <kbd>Ctrl+1</kbd>, <kbd>Ctrl+2</kbd> e <kbd>Ctrl+3</kbd> para alternar rapidamente entre as abas.</li>
 </ol>
-<h4><b>Resumo de Atalhos</b></h4>
+<h4><b>Atalhos</b></h4>
 <ul>
-    <li><kbd>Enter</kbd> Login • <kbd>Ctrl+U</kbd> Focar usuário • <kbd>Ctrl+P</kbd> Focar senha • <kbd>Ctrl+1/2/3</kbd> Abas • <kbd>F5</kbd>/<kbd>Ctrl+R</kbd> Atualizar instâncias • <kbd>Ctrl+Shift+Q</kbd> Shutdown Geral • <kbd>Ctrl+A</kbd> Alterar permissão • <kbd>Ctrl+R</kbd> Resetar senha • <kbd>Delete</kbd> Excluir usuário.</li>
+    <li><kbd>Enter</kbd> Fazer login (🔐 Login).</li>
+    <li><kbd>Ctrl+U</kbd> Focar campo Usuário.</li>
+    <li><kbd>Ctrl+P</kbd> Focar campo Senha.</li>
+    <li><kbd>Ctrl+1/2/3</kbd> Alternar entre abas Instâncias/Usuários/Atualizador.</li>
+    <li><kbd>F5</kbd> Atualizar lista de instâncias (🔄 Atualizar).</li>
+    <li><kbd>Ctrl+Shift+Q</kbd> Shutdown geral de instâncias (⚠️ Shutdown Geral).</li>
+    <li><kbd>Ctrl+F</kbd> Focar campo de busca de usuários.</li>
+    <li><kbd>Ctrl+L</kbd> Limpar filtro de busca (🧹 Limpar).</li>
+    <li><kbd>Ctrl+A</kbd> Alterar permissão do usuário selecionado (👤 Alterar Permissão).</li>
+    <li><kbd>Ctrl+R</kbd> Resetar senha do usuário selecionado (🔄 Resetar Senha).</li>
+    <li><kbd>Delete</kbd> Excluir usuário selecionado (🗑️ Excluir).</li>
+    <li><kbd>Ctrl+O</kbd> Selecionar arquivo de atualização (<b>Selecionar...</b>).</li>
+    <li><kbd>Ctrl+I</kbd> Instalar atualização (<b>Instalar Atualização</b>).</li>
 </ul>
+
