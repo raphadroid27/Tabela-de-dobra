@@ -44,6 +44,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.config import globals as g
 from src.forms import form_aut
+from src.forms.form_manual import show_manual
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
@@ -691,6 +692,9 @@ class AdminTool(QMainWindow):
 
         tab3_shortcut = QShortcut(QKeySequence("Ctrl+3"), self)
         tab3_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(2))
+
+        help_shortcut = QShortcut(QKeySequence("F1"), self)
+        help_shortcut.activated.connect(lambda: show_manual(self, "admin"))
 
         close_shortcut = QShortcut(QKeySequence("Alt+F4"), self)
         close_shortcut.activated.connect(self.close)
