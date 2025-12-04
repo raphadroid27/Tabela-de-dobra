@@ -61,6 +61,25 @@ def obter_dir_icone():
     return os.path.join(base_path, "assets", "icone_2.ico")
 
 
+def obter_caminho_svg(nome_arquivo: str) -> str:
+    """
+    Retorna o caminho correto para arquivos SVG,
+    considerando o modo de execução (normal ou empacotado).
+
+    Args:
+        nome_arquivo: Nome do arquivo SVG (ex: 'arrow_down.svg')
+
+    Returns:
+        str: Caminho absoluto para o arquivo SVG
+    """
+    if getattr(sys, "frozen", False):  # Verifica se está empacotado
+        base_path = getattr(sys, "_MEIPASS", os.path.abspath("."))
+    else:
+        base_path = os.path.abspath(".")  # Diretório atual no modo normal
+
+    return os.path.join(base_path, "assets", nome_arquivo)
+
+
 def obter_dir_help_content() -> Path:
     """Retorna o diretório onde os HTMLs de ajuda estão armazenados."""
     candidates = []

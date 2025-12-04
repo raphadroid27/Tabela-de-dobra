@@ -13,6 +13,8 @@ import logging
 
 from PySide6.QtGui import QColor
 
+from src.utils.utilitarios import obter_caminho_svg
+
 logger = logging.getLogger(__name__)
 
 TEMA_ATUAL_PADRAO = "light"
@@ -319,10 +321,10 @@ def _get_combo_box_style(theme: str = "light") -> str:
     """
     # Seleciona a seta apropriada baseada no tema
     arrow_file = (
-        "./assets/arrow_down_white.svg"
+        obter_caminho_svg("arrow_down_white.svg")
         if theme == "dark"
-        else "./assets/arrow_down.svg"
-    )
+        else obter_caminho_svg("arrow_down.svg")
+    ).replace("\\", "/")  # Converte para barras normais no CSS
     # Define cor da borda
     border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
 
@@ -702,9 +704,9 @@ def get_widgets_styles(theme: str = "light") -> str:
     para cada tipo de widget.
     """
     tema_normalizado = (theme or "light").lower()
-    check_icon = "assets/check.svg"
+    check_icon = obter_caminho_svg("check.svg").replace("\\", "/")
     if tema_normalizado == "dark":
-        check_icon = "assets/check_white.svg"
+        check_icon = obter_caminho_svg("check_white.svg").replace("\\", "/")
 
     return f"""
     {_get_combo_box_style(tema_normalizado)}
