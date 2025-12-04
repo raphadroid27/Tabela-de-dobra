@@ -49,7 +49,7 @@ from src.forms.common.ui_helpers import (
     stop_worker_on_error,
     update_processing_state,
 )
-from src.forms.converter_worker import CONVERSION_HANDLERS, ConversionWorker
+from src.converters import CONVERSION_HANDLERS, ConversionWorker
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,

@@ -1,7 +1,7 @@
 """Conversão DWG para DWG 2013 com suporte a substituição do original.
 
 Este módulo isolado concentra a lógica específica da conversão DWG->DWG 2013,
-reduzindo o tamanho de converter_worker.py.
+reduzindo o tamanho de worker.py.
 """
 
 import logging
@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-from src.forms.common.converters_common import (
+from src.converters.common import (
     get_file_destination,
     handle_subprocess_error,
     log_os_error,

@@ -17,12 +17,12 @@ from typing import Any, Callable, List, Optional, Tuple
 
 from PySide6.QtCore import QThread, Signal
 
-from src.forms.common.converters_common import run_oda_command
-from src.forms.dwg_converter import converter_dwg_para_dwg_2013
-from src.forms.dwg_pdf_converter import converter_dwg_para_pdf
-from src.forms.dxf_pdf_converter import converter_dxf_para_pdf
-from src.forms.pdf_dxf_converter import converter_pdf_para_dxf
-from src.forms.tif_converter import converter_tif_para_pdf
+from src.converters.common import run_oda_command
+from src.converters.dwg import converter_dwg_para_dwg_2013
+from src.converters.dwg_pdf import converter_dwg_para_pdf
+from src.converters.dxf_pdf import converter_dxf_para_pdf
+from src.converters.pdf_dxf import converter_pdf_para_dxf
+from src.converters.tif import converter_tif_para_pdf
 
 
 try:  # Pillow

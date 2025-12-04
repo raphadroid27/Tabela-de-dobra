@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any, Optional
 
-from src.forms.common.converters_common import get_file_destination
+from src.converters.common import get_file_destination
 
 # Importações opcionais de ezdxf
 try:
