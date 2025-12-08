@@ -17,7 +17,7 @@ from src.utils.utilitarios import obter_caminho_svg
 
 logger = logging.getLogger(__name__)
 
-TEMA_ATUAL_PADRAO = "light"
+TEMA_ATUAL_PADRAO = "dark"
 
 # Constantes de layout e estilo
 ALTURA_PADRAO_COMPONENTE = 20

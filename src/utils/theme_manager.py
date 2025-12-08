@@ -19,9 +19,9 @@ class ThemeManager:
     _INSTANCE: ClassVar["ThemeManager | None"] = None
     _VALID_MODES: ClassVar[set[str]] = {"light", "dark"}
     _SETTINGS_KEY: ClassVar[str] = "appearance/theme_mode"
-    _DEFAULT_MODE: ClassVar[str] = "light"
+    _DEFAULT_MODE: ClassVar[str] = "dark"
     _COLOR_SETTINGS_KEY: ClassVar[str] = "appearance/theme_accent"
-    _DEFAULT_COLOR: ClassVar[str] = "verde"
+    _DEFAULT_COLOR: ClassVar[str] = "azul"
     _STYLE_SETTINGS_KEY: ClassVar[str] = "appearance/theme_style"
     _DEFAULT_STYLE: ClassVar[str] = "Fusion"
 
