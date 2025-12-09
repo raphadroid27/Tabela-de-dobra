@@ -737,9 +737,17 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
         if WidgetManager.is_widget_valid(entry):
             invalida = aba_min is not None and 0 < valores[i - 1] < aba_min
             entry.setStyleSheet(
-                "color: white; background-color: red;"
+                (
+                    "QLineEdit { color: white; background-color: red; } "
+                    "QLineEdit:hover { border: 1px solid darkred; } "
+                    "QLineEdit:focus { border: 1px solid darkred; }"
+                    "QToolTip { color: white; background-color: red; }"
+                )
                 if invalida
-                else "color: palette(text); background-color: palette(base);"
+                else (
+                    "QLineEdit { color: palette(text); background-color: palette(base); }"
+                    "QToolTip { color: palette(text); background-color: palette(base); }"
+                )
             )
             entry.setToolTip(
                 f"Aba ({valores[i - 1]}) menor que a mínima ({aba_min:.0f})."
@@ -840,7 +848,12 @@ def canal_tooltip():
                     if canal_info.get("observacao")
                     else "N/A"
                 )
-                tooltip = f"Largura: {largura}\nAltura: {altura}\nComprimento total: {comp}\nObs: {obs}"
+                tooltip = (
+                    f"Largura: {largura}\n"
+                    f"Altura: {altura}\n"
+                    f"Comprimento total: {comp}\n"
+                    f"Obs: {obs}"
+                )
             else:
                 with get_session() as session:
                     canal_obj = session.query(Canal).filter_by(valor=canal_str).first()
@@ -859,7 +872,12 @@ def canal_tooltip():
                             else "N/A"
                         )
                         obs = canal_obj.observacao if canal_obj.observacao else "N/A"
-                        tooltip = f"Largura: {largura}\nAltura: {altura}\nComprimento total: {comp}\nObs: {obs}"
+                        tooltip = (
+                            f"Largura: {largura}\n"
+                            f"Altura: {altura}\n"
+                            f"Comprimento total: {comp}\n"
+                            f"Obs: {obs}"
+                        )
                     else:
                         tooltip = "Canal não encontrado."
         except SQLAlchemyError as e:
