@@ -11,6 +11,16 @@ from src.utils.interface import (
     canal_tooltip,
     copiar,
 )
+from src.utils.expressoes_lineedit import resolver_expressao_no_line_edit
+
+
+VAL_REGEX_EXPR = QRegularExpression(r"^[0-9+\-*/.,()\s]*$")
+
+
+def _resolver_entry(entry: QLineEdit):
+    """Resolve expressão no QLineEdit e recalcula."""
+    resolver_expressao_no_line_edit(entry)
+    calcular_valores()
 
 
 def criar_label(layout, texto, linha_coluna):
@@ -103,8 +113,8 @@ def _criar_linha_1(layout):
     esp_comb = criar_widget_cabecalho(layout, "combobox", "ESP_COMB", (1, 1))
     canal_comb = criar_widget_cabecalho(layout, "combobox", "CANAL_COMB", (1, 2))
     compr_entry = criar_widget_cabecalho(layout, "entry", "COMPR_ENTRY", (1, 3))
-    # Validador numérico (aceita vírgula ou ponto como separador decimal, sem negativos)
-    val_c = QRegularExpressionValidator(QRegularExpression(r"^\d*([.,]\d*)?$"))
+    # Validador permite números, vírgulas, pontos e operadores para expressões simples
+    val_c = QRegularExpressionValidator(VAL_REGEX_EXPR)
     compr_entry.setValidator(val_c)
 
     # Tooltips
@@ -115,7 +125,7 @@ def _criar_linha_1(layout):
 
     # Conectar eventos
     compr_entry.textChanged.connect(calcular_valores)  # Execução direta
-    compr_entry.editingFinished.connect(calcular_valores)  # Execução direta
+    compr_entry.editingFinished.connect(lambda: _resolver_entry(compr_entry))
     canal_comb.currentTextChanged.connect(calcular_valores)  # Execução direta
 
     return mat_comb, esp_comb, canal_comb, compr_entry
@@ -129,8 +139,8 @@ def _criar_linha_2(layout):
     criar_label(layout, "Offset:", (2, 3))
 
     ri_entry = criar_widget_cabecalho(layout, "entry", "RI_ENTRY", (3, 0))
-    # Validador numérico (aceita vírgula ou ponto como separador decimal, sem negativos)
-    val_r = QRegularExpressionValidator(QRegularExpression(r"^\d*([.,]\d*)?$"))
+    # Validador permite números, vírgulas, pontos e operadores para expressões simples
+    val_r = QRegularExpressionValidator(VAL_REGEX_EXPR)
     ri_entry.setValidator(val_r)
     k_lbl = criar_widget_cabecalho(layout, "label", "K_LBL", (3, 1))
     ded_lbl = criar_widget_cabecalho(layout, "label", "DED_LBL", (3, 2))
@@ -147,7 +157,7 @@ def _criar_linha_2(layout):
 
     # Conectar eventos
     ri_entry.textChanged.connect(calcular_valores)  # Execução direta
-    ri_entry.editingFinished.connect(calcular_valores)  # Execução direta
+    ri_entry.editingFinished.connect(lambda: _resolver_entry(ri_entry))
     k_lbl.mousePressEvent = lambda event: copiar("fator_k")
     ded_lbl.mousePressEvent = lambda event: copiar("dedução")
     offset_lbl.mousePressEvent = lambda event: copiar("offset")
@@ -163,8 +173,8 @@ def _criar_linha_3(layout):
     criar_label(layout, "Força (t/m):", (4, 3))
 
     ded_espec_entry = criar_widget_cabecalho(layout, "entry", "DED_ESPEC_ENTRY", (5, 0))
-    # Validador numérico (aceita vírgula ou ponto como separador decimal, sem negativos)
-    val_d = QRegularExpressionValidator(QRegularExpression(r"^\d*([.,]\d*)?$"))
+    # Validador permite números, vírgulas, pontos e operadores para expressões simples
+    val_d = QRegularExpressionValidator(VAL_REGEX_EXPR)
     ded_espec_entry.setValidator(val_d)
     aba_ext_lbl = criar_widget_cabecalho(layout, "label", "ABA_EXT_LBL", (5, 1))
     z_ext_lbl = criar_widget_cabecalho(layout, "label", "Z_EXT_LBL", (5, 2))
@@ -184,7 +194,7 @@ def _criar_linha_3(layout):
 
     # Conectar eventos
     ded_espec_entry.textChanged.connect(calcular_valores)  # Execução direta
-    ded_espec_entry.editingFinished.connect(calcular_valores)  # Execução direta
+    ded_espec_entry.editingFinished.connect(lambda: _resolver_entry(ded_espec_entry))
 
     return ded_espec_entry, aba_ext_lbl, z_ext_lbl, forca_lbl
 
@@ -205,7 +215,7 @@ def _criar_observacoes(layout):
     obs_widget.setToolTip("Observações sobre a dobra, material ou canal selecionado.")
 
 
-def _conectar_eventos(mat_comb, esp_comb, canal_comb, compr_entry):
+def _conectar_eventos(mat_comb, esp_comb, canal_comb):
     """Conecta os eventos dos widgets principais."""
     if mat_comb:
         mat_comb.currentTextChanged.connect(
@@ -220,9 +230,6 @@ def _conectar_eventos(mat_comb, esp_comb, canal_comb, compr_entry):
             lambda: WidgetUpdater().atualizar("dedução")
         )
         canal_comb.currentTextChanged.connect(canal_tooltip)
-
-    if compr_entry:
-        compr_entry.textChanged.connect(calcular_valores)
 
     canal_tooltip()
 
@@ -248,11 +255,11 @@ def cabecalho():
     layout.setContentsMargins(10, 0, 10, 0)
     layout.setSpacing(5)
 
-    mat_comb, esp_comb, canal_comb, compr_entry = _criar_linha_1(layout)
+    mat_comb, esp_comb, canal_comb, _ = _criar_linha_1(layout)
     _criar_linha_2(layout)
     _criar_linha_3(layout)
     _criar_observacoes(layout)
 
-    _conectar_eventos(mat_comb, esp_comb, canal_comb, compr_entry)
+    _conectar_eventos(mat_comb, esp_comb, canal_comb)
 
     return frame_cabecalho

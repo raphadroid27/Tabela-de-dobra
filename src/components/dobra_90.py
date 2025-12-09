@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QLineEdit
 
 from src.config import globals as g
+from src.utils.expressoes_lineedit import resolver_expressao_no_line_edit
 from src.utils.interface import (
     calcular_valores,
     copiar,
@@ -88,13 +89,20 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
         config: Configuração do entry
     """
     # Conectar eventos
-    entry.textChanged.connect(calcular_valores)  # Mantém debounce para digitação
+
+    # Apenas recalcula enquanto digita, sem resolver a expressão antes do usuário terminar
+    entry.textChanged.connect(calcular_valores)
 
     def on_return_pressed():
+        resolver_expressao_no_line_edit(entry)
         calcular_valores()  # Cálculo imediato ao pressionar Enter
         focus_next_entry(config.i, config.w)
 
     entry.returnPressed.connect(on_return_pressed)
+
+    def on_focus_out_event(event):
+        resolver_expressao_no_line_edit(entry)
+        return QLineEdit.focusOutEvent(entry, event)
 
     def custom_key_press_event(event):
         if event.key() == Qt.Key.Key_Down:
@@ -105,6 +113,7 @@ def configurar_eventos_entry(entry, config: ConfigEntry):
             QLineEdit.keyPressEvent(entry, event)
 
     entry.keyPressEvent = custom_key_press_event
+    entry.focusOutEvent = on_focus_out_event
 
 
 def criar_entry_dobra(config: ConfigEntry):
