@@ -17,6 +17,8 @@ reports=no
 
 [BASIC]
 good-names=i,j,k,ex,Run,_,g,w,x,y,z,id
+# Permitir nomes Qt camelCase para métodos de evento (padrão snake_case OU métodos Qt *Event)
+attr-rgx=[a-z_][a-z0-9_]{2,30}$|^[a-z]+Event$
 
 [FORMAT]
 max-line-length=100
