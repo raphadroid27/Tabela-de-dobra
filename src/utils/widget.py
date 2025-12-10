@@ -226,9 +226,9 @@ def create_deducao_canal_combo():
     """Cria um combobox para seleção de canal de dedução."""
     return _populate_combo_from_db(
         _create_combo_base(),
-        lambda s: [
-            str(v[0]) for v in s.query(Canal.valor).distinct().order_by(Canal.valor)
-        ],
+        lambda s: sorted([
+            str(v[0]) for v in s.query(Canal.valor).distinct()
+        ]),
     )
 
 

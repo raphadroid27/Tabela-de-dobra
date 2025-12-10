@@ -353,7 +353,7 @@ class FormWidgetUpdater:
             elif tipo == "canal":
                 try:
                     canais = cache_manager.get_canais()
-                    items = [canal["valor"] for canal in canais]
+                    items = sorted([canal["valor"] for canal in canais])
                     self._preencher_form_combo_direto(g.DED_CANAL_COMB, items)
                 except (AttributeError, ValueError, RuntimeError):
                     self._preencher_form_combo(
