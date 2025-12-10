@@ -22,7 +22,6 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
-    QDialog,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
@@ -34,6 +33,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from shiboken6 import isValid
 
 from src.forms.common import context_help
 from src.forms.common.file_tables import ManagedFileTableWidget
@@ -51,6 +51,7 @@ from src.utils.comparar_worker import (
     get_missing_dependencies,
 )
 from src.utils.estilo import aplicar_estilo_botao
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import (
     ICON_PATH,
     aplicar_medida_borda_espaco,
@@ -125,7 +126,7 @@ class FileTableWidget(ManagedFileTableWidget):
         super().on_missing_file(file_path)
 
 
-class FormCompararArquivos(QDialog):
+class FormCompararArquivos(ThemedDialog):
     """Formulário para Comparação de Arquivos."""
 
     def __init__(self, parent=None):
@@ -429,7 +430,13 @@ class FormCompararArquivos(QDialog):
             logging.warning("A comparação de arquivos foi cancelada pelo utilizador.")
         else:
             show_info("Concluído", "Comparação finalizada.", self)
-        QTimer.singleShot(2000, lambda: self.progress_bar.setVisible(False))
+
+        # Ocultar progress bar após 2s, verificando se ainda existe
+        def hide_progress():
+            if isValid(self.progress_bar):
+                self.progress_bar.setVisible(False)
+
+        QTimer.singleShot(2000, hide_progress)
 
     def _clear_all(self):
         """Limpa as tabelas e reseta a UI."""

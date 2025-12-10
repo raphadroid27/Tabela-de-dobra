@@ -19,7 +19,6 @@ from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
-    QDialog,
     QFileDialog,
     QGridLayout,
     QGroupBox,
@@ -33,12 +32,14 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from shiboken6 import isValid
 
 from src.forms.common import context_help
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.estilo import aplicar_estilo_botao
 from src.utils.janelas import Janela
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import (
     ICON_PATH,
     aplicar_medida_borda_espaco,
@@ -316,7 +317,7 @@ class PrintWorker(QThread):
 # pylint: disable=R0902
 
 
-class FormImpressao(QDialog):
+class FormImpressao(ThemedDialog):
     """Formulário de Impressão em Lote de PDFs."""
 
     def __init__(self, parent=None):
@@ -814,7 +815,13 @@ class FormImpressao(QDialog):
         self.print_worker = None
         if self.progress_bar is not None:
             self.progress_bar.setValue(100)
-            QTimer.singleShot(2000, lambda: self.progress_bar.setVisible(False))
+            # Ocultar progress bar após 2s, verificando se ainda existe
+
+            def hide_progress():
+                if isValid(self.progress_bar):
+                    self.progress_bar.setVisible(False)
+
+            QTimer.singleShot(2000, hide_progress)
 
 
 class FormManager(BaseSingletonFormManager):

@@ -1,3 +1,4 @@
+# pylint: disable=cyclic-import
 """Este módulo fornece funções utilitárias para retornar estilos CSS personalizados.
 
 Fornece estilos para botões do PySide6 (QPushButton) em diferentes cores temáticas.
@@ -12,8 +13,6 @@ Funcionalidades:
 import logging
 
 from PySide6.QtGui import QColor
-
-from src.utils.utilitarios import obter_caminho_svg
 
 logger = logging.getLogger(__name__)
 
@@ -271,7 +270,7 @@ def _get_progress_bar_style(theme: str = "light") -> str:
         theme: Tema atual ('light' ou 'dark') para determinar cor da borda
     """
     # Define cor da borda - mesma lógica do QComboBox e QLineEdit
-    border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
+    border_color = "#B6B6B6" if theme == "light" else "#242424"
 
     return f"""
         QProgressBar {{
@@ -319,6 +318,9 @@ def _get_combo_box_style(theme: str = "light") -> str:
     Args:
         theme: Tema atual ('light' ou 'dark') para determinar cor da seta
     """
+    # pylint: disable=import-outside-toplevel
+    from src.utils.utilitarios import obter_caminho_svg
+
     # Seleciona a seta apropriada baseada no tema
     arrow_file = (
         obter_caminho_svg("arrow_down_white.svg")
@@ -328,7 +330,7 @@ def _get_combo_box_style(theme: str = "light") -> str:
         "\\", "/"
     )  # Converte para barras normais no CSS
     # Define cor da borda
-    border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
+    border_color = "#B6B6B6" if theme == "light" else "#242424"
 
     return f"""
     QComboBox {{
@@ -388,7 +390,7 @@ def _get_line_edit_style(theme: str = "light") -> str:
         theme: Tema atual ('light' ou 'dark') para determinar cor da borda
     """
     # Define cor da borda
-    border_color = "#B6B6B6" if theme == "light" else "palette(mid)"
+    border_color = "#B6B6B6" if theme == "light" else "#242424"
 
     return f"""
     QLineEdit {{
@@ -555,7 +557,7 @@ def _get_menu_style(check_icon: str) -> str:
     }}
 
     QMenu::indicator:non-exclusive:unchecked {{
-        border: 1px solid palette(midlight);
+        border: 1px solid #595959;
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                     stop:0 palette(button),
                                     stop:1 palette(base));
@@ -566,7 +568,7 @@ def _get_menu_style(check_icon: str) -> str:
     }}
 
     QMenu::indicator:non-exclusive:checked {{
-        border: 1px solid palette(midlight);
+        border: 1px solid #595959;
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                     stop:0 palette(button),
                                     stop:1 palette(base));
@@ -576,7 +578,7 @@ def _get_menu_style(check_icon: str) -> str:
     }}
 
     QMenu::indicator:non-exclusive:hover {{
-        border: 1px solid palette(mid);
+        border: 1px solid palette(highlight);
         background-color: palette(midlight);
     }}
     """
@@ -599,7 +601,7 @@ def _get_checkbox_style(check_icon: str) -> str:
     }}
 
     QCheckBox::indicator:unchecked {{
-        border: 1px solid palette(midlight);
+        border: 1px solid #595959;
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                     stop:0 palette(button),
                                     stop:1 palette(base));
@@ -611,7 +613,7 @@ def _get_checkbox_style(check_icon: str) -> str:
     }}
 
     QCheckBox::indicator:checked {{
-        border: 1px solid palette(midlight);
+        border: 1px solid #595959;
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                     stop:0 palette(button),
                                     stop:1 palette(base));
@@ -622,7 +624,7 @@ def _get_checkbox_style(check_icon: str) -> str:
 
     QCheckBox::indicator:checked:disabled,
     QCheckBox::indicator:unchecked:disabled {{
-        border: 1px solid palette(mid);
+        border: 1px solid #595959;
         background-color: palette(midlight);
     }}
     """
@@ -705,6 +707,9 @@ def get_widgets_styles(theme: str = "light") -> str:
     Combina os estilos de todos os widgets chamando as funções individuais
     para cada tipo de widget.
     """
+    # pylint: disable=import-outside-toplevel
+    from src.utils.utilitarios import obter_caminho_svg
+
     tema_normalizado = (theme or "light").lower()
     check_icon = obter_caminho_svg("check.svg").replace("\\", "/")
     if tema_normalizado == "dark":

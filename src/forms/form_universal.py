@@ -12,7 +12,6 @@ from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
-    QDialog,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -46,6 +45,7 @@ from src.utils.interface import (
     listar,
 )
 from src.utils.janelas import Janela
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 # Configurações para cada tipo de formulário
@@ -377,7 +377,7 @@ class FormManager:
 
     def _create_dialog(self):
         """Cria o diálogo do formulário com barra de título nativa."""
-        new_form = QDialog(self.root)
+        new_form = ThemedDialog(self.root)
         is_edit = getattr(g, self.config["global_edit"], False)
         if is_edit:
             nome = self.config["titulo"].split(" ")[-1]

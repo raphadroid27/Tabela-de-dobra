@@ -6,7 +6,6 @@ from typing import Optional
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
-    QDialog,
     QGridLayout,
     QLabel,
     QVBoxLayout,
@@ -17,12 +16,13 @@ from src.config import globals as g
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.models.models import Material
 from src.utils.banco_dados import get_session
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import ICON_PATH
 
 
-def create_spring_back_form(root: Optional[QWidget] = None) -> QDialog:
+def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     """Create the Spring Back form using QDialog with custom title bar."""
-    form_spring = QDialog(root)
+    form_spring = ThemedDialog(root)
     form_spring.setWindowTitle("Cálculo de Spring Back")
     form_spring.setMinimumSize(300, 150)
     configurar_dialogo_padrao(form_spring, ICON_PATH)

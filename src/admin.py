@@ -17,7 +17,7 @@ import os
 import sys
 from datetime import datetime
 
-from PySide6.QtCore import QEvent, QObject, QSettings, Qt, QTimer, QThread, Signal, Slot
+from PySide6.QtCore import QObject, QSettings, Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -29,7 +29,6 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
-    QMainWindow,
     QProgressBar,
     QPushButton,
     QStackedWidget,
@@ -58,6 +57,7 @@ from src.utils.session_manager import (
     obter_sessoes_ativas,
 )
 from src.utils.theme_manager import theme_manager
+from src.utils.themed_widgets import ThemedMainWindow
 from src.utils.update_manager import get_installed_version, run_update_process
 from src.utils.usuarios import (
     RESET_PASSWORD_HASH,
@@ -73,34 +73,9 @@ from src.utils.utilitarios import (
     show_error,
     show_info,
 )
+from src.utils.inactivity_monitor import ativar_monitor_inatividade
 
 ADMIN_INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000
-
-_INACTIVITY_EVENTS = {
-    QEvent.Type.MouseButtonPress,
-    QEvent.Type.MouseButtonRelease,
-    QEvent.Type.MouseMove,
-    QEvent.Type.KeyPress,
-    QEvent.Type.KeyRelease,
-    QEvent.Type.Wheel,
-    QEvent.Type.FocusIn,
-}
-
-
-class _InactivityEventFilter(QObject):
-    """Reinicia o timer quando eventos de interação são detectados."""
-
-    def __init__(self, on_activity):
-        super().__init__()
-        self._on_activity = on_activity
-
-    def eventFilter(  # pylint: disable=invalid-name
-        self, obj, event
-    ):  # pylint: disable=unused-argument
-        """Intercepta eventos de UI para reiniciar o timer de inatividade."""
-        if event.type() in _INACTIVITY_EVENTS:
-            self._on_activity()
-        return super().eventFilter(obj, event)
 
 
 def obter_dir_base_local():
@@ -675,7 +650,7 @@ class UserManagementWidget(QWidget):
             self._listar_usuarios()
 
 
-class AdminTool(QMainWindow):
+class AdminTool(ThemedMainWindow):
     """Janela principal da Ferramenta Administrativa."""
 
     def __init__(self):
@@ -758,23 +733,14 @@ class AdminTool(QMainWindow):
         settings.setValue("admin/geometry", self.saveGeometry())
 
     def _setup_inactivity_timer(self):
-        self._inactivity_timer = QTimer(self)
-        self._inactivity_timer.setInterval(ADMIN_INACTIVITY_TIMEOUT_MS)
-        self._inactivity_timer.setSingleShot(True)
-        self._inactivity_timer.timeout.connect(self._handle_inactivity_timeout)
-        self._inactivity_filter = _InactivityEventFilter(self._reset_inactivity_timer)
-        self._install_filter_recursively(self, self._inactivity_filter)
-        self._reset_inactivity_timer()
-
-    @staticmethod
-    def _install_filter_recursively(widget, filtro):
-        widget.installEventFilter(filtro)
-        for child in widget.findChildren(QWidget):
-            child.installEventFilter(filtro)
+        ativar_monitor_inatividade(
+            self, ADMIN_INACTIVITY_TIMEOUT_MS, self._handle_inactivity_timeout
+        )
 
     def _reset_inactivity_timer(self):
-        if hasattr(self, "_inactivity_timer"):
-            self._inactivity_timer.start()
+        """Reinicia o timer de inatividade."""
+        if hasattr(self, "inactivity_timer"):
+            self.inactivity_timer.start()
 
     def _handle_inactivity_timeout(self):
         logging.warning("Fechando ferramenta administrativa por inatividade.")

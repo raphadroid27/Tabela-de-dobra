@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
-    QDialog,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
@@ -38,6 +37,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from shiboken6 import isValid
 
 from src.converters import CONVERSION_HANDLERS, ConversionWorker
 from src.forms.common import context_help
@@ -54,6 +54,7 @@ from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
 )
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import (
     FILE_OPEN_EXCEPTIONS,
     ICON_PATH,
@@ -98,7 +99,7 @@ class FileTableWidget(ManagedFileTableWidget):
         self.files_added.emit(added_paths)
 
 
-class FormConverterArquivos(QDialog):
+class FormConverterArquivos(ThemedDialog):
     """Formulário para Conversão de Arquivos."""
 
     def __init__(self, parent=None):
@@ -456,7 +457,12 @@ class FormConverterArquivos(QDialog):
         if not was_cancelled:
             show_info("Informação", msg, self)
 
-        QTimer.singleShot(2000, lambda: self.progress_bar.setVisible(False))
+        # Ocultar progress bar após 2s, verificando se ainda existe
+        def hide_progress():
+            if isValid(self.progress_bar):
+                self.progress_bar.setVisible(False)
+
+        QTimer.singleShot(2000, hide_progress)
 
 
 class FormManager(BaseSingletonFormManager):

@@ -1,14 +1,17 @@
+# pylint: disable=cyclic-import
 """Gerenciador central de tema usando paletas nativas do PySide6."""
 
 from __future__ import annotations
 
+import ctypes
+import sys
 from typing import Any, Callable, ClassVar, Dict, List, cast
 
-from PySide6.QtCore import QSettings
+from PySide6.QtCore import QSettings, QTimer
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
-from .estilo import get_widgets_styles
+# pylint: disable=too-many-public-methods
 
 
 class ThemeManager:
@@ -21,20 +24,23 @@ class ThemeManager:
     _SETTINGS_KEY: ClassVar[str] = "appearance/theme_mode"
     _DEFAULT_MODE: ClassVar[str] = "dark"
     _COLOR_SETTINGS_KEY: ClassVar[str] = "appearance/theme_accent"
-    _DEFAULT_COLOR: ClassVar[str] = "azul"
+    _DEFAULT_COLOR: ClassVar[str] = "sistema"
     _STYLE_SETTINGS_KEY: ClassVar[str] = "appearance/theme_style"
     _DEFAULT_STYLE: ClassVar[str] = "Fusion"
 
     _COLOR_OPTIONS: ClassVar[dict[str, tuple[str, str]]] = {
-        "verde": ("Verde", "#4CAF50"),
-        "azul": ("Azul", "#2196F3"),
-        "amarelo": ("Amarelo", "#FFC107"),
+        "sistema": ("Sistema", "#auto"),  # Cor de destaque do Windows
+        "cinza": ("Cinza", "#9E9E9E"),
         "vermelho": ("Vermelho", "#E53935"),
         "laranja": ("Laranja", "#FF5722"),
-        "cinza": ("Cinza", "#9E9E9E"),
-        "roxo": ("Roxo", "#9C27B0"),
-        "magenta": ("Magenta", "#E91E63"),
+        "ambar": ("Âmbar", "#FF6F00"),
+        "verde": ("Verde", "#4CAF50"),
+        "teal": ("Verde-água", "#009688"),
         "ciano": ("Ciano", "#00BCD4"),
+        "azul": ("Azul", "#2196F3"),
+        "indigo": ("Índigo", "#3F51B5"),
+        "roxo": ("Roxo", "#9C27B0"),
+        "rosa": ("Rosa", "#EC407A"),
     }
 
     def __init__(self) -> None:
@@ -50,6 +56,10 @@ class ThemeManager:
         self._color_actions: Dict[str, Any] = {}
         # Dicionário opcional para armazenar ações do menu {tema: QAction-like}
         self._actions: Dict[str, Any] = {}
+        # Armazena janelas registradas para aplicar dark title bar
+        self._registered_windows: List[QWidget] = []
+        # Cache da cor do Windows para detectar mudanças
+        self._windows_color_cache: str | None = None
 
     def _get_settings(self) -> QSettings:
         """Retorna a instância de QSettings, criando se necessário."""
@@ -133,6 +143,15 @@ class ThemeManager:
         # Força atualização de todos os widgets para aplicar o novo estilo
         for widget in QApplication.allWidgets():
             widget.repaint()
+
+    def refresh_interface(self) -> None:
+        """Força atualização completa da interface.
+
+        Reaplica o tema atual, verifica mudanças na cor do Windows (se aplicável)
+        e força repaint de todos os widgets. Útil para corrigir problemas visuais
+        ou atualizar após mudanças externas no sistema.
+        """
+        self._apply_theme(self._mode, persist=False)
 
     def register_listener(self, callback: Callable[[str], None]) -> None:
         """Registra um callback para ser notificado quando o tema mudar."""
@@ -221,20 +240,39 @@ class ThemeManager:
 
     def _apply_theme(self, mode: str, *, persist: bool) -> None:
         selected = mode if mode in self._VALID_MODES else self._DEFAULT_MODE
-        resolved = self._resolve_visual_mode(selected)
+
+        # Atualiza o modo ANTES de aplicar qualquer mudança visual
+        self._mode = selected
+        if persist:
+            self._get_settings().setValue(self._SETTINGS_KEY, selected)
+            self._get_settings().sync()
+
+        # Verificar se a cor do Windows mudou (apenas se "sistema" estiver ativo)
+        if self._color == "sistema":
+            current_windows_color = self._get_windows_accent_color()
+            # Inicializa cache na primeira vez
+            if self._windows_color_cache is None:
+                self._windows_color_cache = current_windows_color
+            # Notifica mudança se a cor for diferente
+            elif self._windows_color_cache != current_windows_color:
+                self._windows_color_cache = current_windows_color
+                self._notify_color_listeners()
+
         app = QApplication.instance()
         accent_color = QColor(self._get_accent_hex())
         if app is not None:
             app = cast(QApplication, app)
-            if resolved == "dark":
+            if selected == "dark":
                 palette = self._create_dark_palette(accent_color)
             else:
                 palette = self._create_light_palette(accent_color)
             app.setPalette(palette)
 
             # Aplicar estilos CSS globais que usam palette()
-            # Import local para evitar import circular — aceitável aqui.
+            # Import local para evitar import circular
             # pylint: disable=import-outside-toplevel
+            from .estilo import get_widgets_styles
+
             global_styles = get_widgets_styles(selected)
             app.setStyleSheet(global_styles)
 
@@ -242,24 +280,20 @@ class ThemeManager:
             for widget in QApplication.allWidgets():
                 widget.repaint()
 
-        # Atualiza o modo independente da existência de QApplication
-        self._mode = selected
-        if persist:
-            self._get_settings().setValue(self._SETTINGS_KEY, selected)
-            self._get_settings().sync()
+        # Atualiza a barra de título de todas as janelas registradas
+        # Usa QTimer para garantir que a atualização aconteça após o repaint
+        # Delay de 50ms para garantir que todas as atualizações visuais completaram
+        QTimer.singleShot(50, self._update_all_title_bars)
+
         for callback in list(self._listeners):
             callback(selected)
-        # Atualiza actions de menu, se houver
+
         # Atualiza actions de menu, se houver (ignora erros específicos)
         try:
             self._update_actions()
             self._update_color_actions()
         except (AttributeError, RuntimeError, TypeError):
-            # Não falhar a aplicação do tema por erro ao atualizar actions
             pass
-
-    def _resolve_visual_mode(self, mode: str) -> str:
-        return mode
 
     @classmethod
     def color_options(cls) -> dict[str, tuple[str, str]]:
@@ -305,14 +339,125 @@ class ThemeManager:
                 pass
 
     def _get_accent_hex(self) -> str:
+        """Obtém a cor hexadecimal da cor de destaque atual.
+
+        Se a cor for 'sistema', obtém a cor de destaque do Windows.
+        """
+        if self._color == "sistema":
+            return self._get_windows_accent_color()
+
         rotulo_hex = self._COLOR_OPTIONS.get(
             self._color, self._COLOR_OPTIONS[self._DEFAULT_COLOR]
         )
         return rotulo_hex[1]
 
+    @staticmethod
+    def _get_windows_accent_color() -> str:
+        """Obtém a cor de destaque do Windows via registro.
+
+        Returns:
+            Cor hexadecimal no formato '#RRGGBB'
+        """
+        try:
+            # Tentar obter via winreg (mais confiável)
+            import winreg  # pylint: disable=import-outside-toplevel
+
+            key_path = r"Software\Microsoft\Windows\DWM"
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path)
+            value, _ = winreg.QueryValueEx(key, "AccentColor")
+            winreg.CloseKey(key)
+
+            # Converter DWORD para RGB (formato: 0xAABBGGRR)
+            r = value & 0xFF
+            g = (value >> 8) & 0xFF
+            b = (value >> 16) & 0xFF
+
+            return f"#{r:02X}{g:02X}{b:02X}"
+        except (ImportError, OSError, ValueError):
+            # Fallback para azul se não conseguir obter a cor do Windows
+            return "#2196F3"
+
     def _notify_color_listeners(self) -> None:
         for callback in list(self._color_listeners):
             callback(self._color)
+
+    def register_window(self, window: QWidget) -> None:
+        """Registra uma janela para aplicar dark title bar automaticamente.
+
+        Args:
+            window: Janela (QMainWindow, QDialog, etc.) para aplicar dark title bar
+        """
+        if window not in self._registered_windows:
+            self._registered_windows.append(window)
+            # Aplica imediatamente se o tema atual for dark
+            if self._mode == "dark":
+                self._apply_dark_title_bar(window)
+
+    def unregister_window(self, window: QWidget) -> None:
+        """Remove uma janela da lista de janelas registradas.
+
+        Args:
+            window: Janela a ser removida
+        """
+        if window in self._registered_windows:
+            self._registered_windows.remove(window)
+
+    def _apply_dark_title_bar(self, window: QWidget) -> None:
+        """Aplica barra de título dark mode no Windows.
+
+        Args:
+            window: Janela para aplicar o dark mode na barra de título
+        """
+        if sys.platform != "win32":
+            return
+
+        try:
+            hwnd = int(window.winId())
+
+            # Constantes do Windows DWM API
+            # Windows 11 / Windows 10 20H1+
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20  # pylint: disable=invalid-name
+            # Windows 10 versões antigas (build 18985-19041)
+            DWMWA_USE_IMMERSIVE_DARK_MODE_OLD = 19  # pylint: disable=invalid-name
+
+            # 1 = dark mode, 0 = light mode
+            value = ctypes.c_int(1 if self._mode == "dark" else 0)
+
+            # Tenta API mais recente, depois fallback para versões antigas
+            for attr in (
+                DWMWA_USE_IMMERSIVE_DARK_MODE,
+                DWMWA_USE_IMMERSIVE_DARK_MODE_OLD,
+            ):
+                try:
+                    ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                        hwnd, attr, ctypes.byref(value), ctypes.sizeof(value)
+                    )
+                    break  # Sucesso, não precisa tentar o fallback
+                except Exception:  # pylint: disable=broad-except
+                    continue  # Tenta próxima versão da API
+
+            # Força atualização da janela para aplicar a mudança
+            try:
+                # SetWindowPos com SWP_FRAMECHANGED força o redraw da moldura
+                # Flags: 0x0020=FRAMECHANGED | 0x0002=NOMOVE | 0x0001=NOSIZE
+                #        0x0004=NOZORDER | 0x0010=NOACTIVATE
+                flags = 0x0020 | 0x0002 | 0x0001 | 0x0004 | 0x0010
+                ctypes.windll.user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, flags)
+            except Exception:  # pylint: disable=broad-except
+                window.repaint()
+
+        except Exception:  # pylint: disable=broad-except
+            # Não deixar erro na API do Windows quebrar a aplicação
+            pass
+
+    def _update_all_title_bars(self) -> None:
+        """Atualiza a barra de título de todas as janelas registradas."""
+        for window in list(self._registered_windows):
+            try:
+                self._apply_dark_title_bar(window)
+            except (AttributeError, RuntimeError):
+                # Janela pode ter sido destruída
+                self._registered_windows.remove(window)
 
 
 # Instância global

@@ -7,7 +7,6 @@ from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
-    QDialog,
     QGridLayout,
     QHeaderView,
     QLabel,
@@ -23,6 +22,7 @@ from src.forms.common import context_help
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.estilo import aplicar_estilo_table_widget
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.interface import calcular_valores
 from src.utils.janelas import Janela
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
@@ -36,7 +36,7 @@ COLUNA_FATOR_K_LARGURA = 100
 AVISO_ALTURA_MAXIMA = 80
 
 
-class FormRazaoRIE(QDialog):
+class FormRazaoRIE(ThemedDialog):
     """Formulário para cálculo da razão raio interno/espessura."""
 
     def __init__(self, parent: QWidget | None = None) -> None:

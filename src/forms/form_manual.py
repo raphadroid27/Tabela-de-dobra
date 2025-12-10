@@ -13,7 +13,6 @@ from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import (
     QApplication,
-    QDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -31,6 +30,7 @@ from PySide6.QtWidgets import (
 from src.forms.common import context_help
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
+from src.utils.themed_widgets import ThemedDialog
 
 Section = Tuple[str, str, str]
 
@@ -114,7 +114,7 @@ class _ContentClickFilter(QObject):
         return super().eventFilter(obj, event)
 
 
-class ManualDialog(QDialog):
+class ManualDialog(ThemedDialog):
     """Diálogo que apresenta o manual com navegação lateral."""
 
     # pylint: disable=R0915

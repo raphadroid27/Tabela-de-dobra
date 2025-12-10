@@ -8,17 +8,18 @@ from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 from src import __version__
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.utils.janelas import Janela
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 
 def main(root: Optional[QWidget]) -> None:
     """Create and display the About dialog with custom title bar."""
-    sobre_form = QDialog(root)
+    sobre_form = ThemedDialog(root)
     sobre_form.setWindowTitle("Sobre")
     sobre_form.setFixedSize(280, 190)
     configurar_dialogo_padrao(sobre_form, ICON_PATH)

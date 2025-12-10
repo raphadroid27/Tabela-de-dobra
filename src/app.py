@@ -20,7 +20,6 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QApplication,
     QGridLayout,
-    QMainWindow,
     QVBoxLayout,
     QWidget,
 )
@@ -53,6 +52,7 @@ from src.utils.session_manager import (
     verificar_comando_sistema,
 )
 from src.utils.theme_manager import theme_manager
+from src.utils.themed_widgets import ThemedMainWindow
 
 # theme_manager is used for applying palettes and styles
 from src.utils.update_manager import set_installed_version
@@ -74,7 +74,7 @@ LAYOUT_MARGEM = 0
 VALORES_W_INICIAL = [1]
 
 
-class MainWindow(QMainWindow):
+class MainWindow(ThemedMainWindow):
     """Janela principal da aplicação com tratamento personalizado de fechamento."""
 
     def __init__(self):
@@ -325,7 +325,7 @@ def _adicionar_acoes_ao_menu(menu, acoes):
             menu.addAction(action)
 
 
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, too-many-statements
 
 
 def _criar_menu_opcoes(menu_bar):
@@ -371,25 +371,32 @@ def _criar_menu_opcoes(menu_bar):
     # Submenu de cor de destaque dentro do menu Tema
     cor_menu = tema_menu.addMenu("🌈 Cor de destaque")
     cor_actions = {}
+
+    def _criar_icone_cor(cor_hex: str) -> QIcon:
+        """Cria ícone colorido para menu de cores."""
+        try:
+            # Para opção "sistema", obter a cor real do Windows
+            if cor_hex == "#auto":
+                # pylint: disable=protected-access
+                cor_real = theme_manager._get_windows_accent_color()
+            else:
+                cor_real = cor_hex
+
+            pix = QPixmap(14, 14)
+            pix.fill(QColor(cor_real))
+            p = QPainter(pix)
+            p.setPen(QColor(0, 0, 0, 120))
+            p.drawRect(0, 0, pix.width() - 1, pix.height() - 1)
+            p.end()
+            return QIcon(pix)
+        except (TypeError, ValueError, RuntimeError):
+            return QIcon()
+
     try:
         for cor_key, (rotulo, cor_hex) in theme_manager.color_options().items():
-            # Criar um ícone swatch pequeno com a cor de destaque
-            try:
-                pix = QPixmap(14, 14)
-                pix.fill(QColor(cor_hex))
-                p = QPainter(pix)
-                # Desenhar borda sutil para legibilidade
-                p.setPen(QColor(0, 0, 0, 120))
-                p.drawRect(0, 0, pix.width() - 1, pix.height() - 1)
-                p.end()
-                icon = QIcon(pix)
-            except (TypeError, ValueError, RuntimeError):
-                # Caso algo falhe, usar um ícone em branco
-                icon = QIcon()
             action = QAction(rotulo, g.PRINC_FORM, checkable=True)
-            action.setIcon(icon)
+            action.setIcon(_criar_icone_cor(cor_hex))
             action.setChecked(cor_key == theme_manager.current_color)
-            # Connect only when checked to avoid redundant calls
             action.triggered.connect(
                 lambda checked, c=cor_key: (
                     theme_manager.apply_color(c) if checked else None
@@ -397,8 +404,17 @@ def _criar_menu_opcoes(menu_bar):
             )
             cor_menu.addAction(action)
             cor_actions[cor_key] = action
+
         # Registrar actions ao theme_manager para que fiquem sincronizadas
         theme_manager.register_color_actions(cor_actions)
+
+        # Registrar listener para atualizar ícone da opção "sistema"
+        def _atualizar_icone_sistema(_cor_key: str) -> None:
+            """Atualiza o ícone da opção 'sistema' quando a cor do Windows mudar."""
+            if "sistema" in cor_actions:
+                cor_actions["sistema"].setIcon(_criar_icone_cor("#auto"))
+
+        theme_manager.register_color_listener(_atualizar_icone_sistema)
     except AttributeError:
         # Fallback: silencioso caso não seja possível aplicar cores
         pass
@@ -540,10 +556,14 @@ def main():  # pylint: disable=too-many-locals
         configurar_janela_principal()
 
         # Adicionar atalho F1 para ajuda na janela principal
-        shortcut = QShortcut(QKeySequence("F1"), g.PRINC_FORM)
-        shortcut.activated.connect(
+        shortcut_f1 = QShortcut(QKeySequence("F1"), g.PRINC_FORM)
+        shortcut_f1.activated.connect(
             lambda: context_help.show_help("main", parent=g.PRINC_FORM)
         )
+
+        # Adicionar atalho F5 para atualizar interface
+        shortcut_f5 = QShortcut(QKeySequence("F5"), g.PRINC_FORM)
+        shortcut_f5.activated.connect(theme_manager.refresh_interface)
 
         menu_custom = configurar_frames()
         configurar_menu(menu_custom)
@@ -563,6 +583,8 @@ def main():  # pylint: disable=too-many-locals
 
         if g.PRINC_FORM:
             g.PRINC_FORM.show()
+            # Registra a janela principal para aplicar dark title bar
+            theme_manager.register_window(g.PRINC_FORM)
             iniciar_timers()
             logging.info("Aplicativo iniciado. Entrando no loop de eventos.")
             return app.exec()

@@ -281,7 +281,9 @@ def _show_message_box(
     """
     Cria e exibe uma QMessageBox, dividindo a mensagem em texto principal e informativo.
     """
-    msg = QMessageBox(parent)
+    from .themed_widgets import ThemedMessageBox  # pylint: disable=import-outside-toplevel
+
+    msg = ThemedMessageBox(parent)
     msg.setIcon(icon)
     msg.setWindowTitle(title)
 
@@ -354,7 +356,9 @@ def show_warning(title: str, message: str, parent: Optional[QWidget] = None) -> 
 
 def show_timed_message_box(parent, title, message, timeout_ms=10000):
     """Mostra uma caixa de mensagem com timeout automático."""
-    msg_box = QMessageBox(
+    from .themed_widgets import ThemedMessageBox  # pylint: disable=import-outside-toplevel
+
+    msg_box = ThemedMessageBox(
         QMessageBox.Icon.Information,
         title,
         message,
@@ -438,7 +442,9 @@ def ask_yes_no(
     title: str, message: Union[str, tuple], parent: Optional[QWidget] = None
 ) -> bool:
     """Pergunta sim/não usando QMessageBox."""
-    msg = QMessageBox(parent)
+    from .themed_widgets import ThemedMessageBox  # pylint: disable=import-outside-toplevel
+
+    msg = ThemedMessageBox(parent)
     msg.setIcon(QMessageBox.Icon.Question)
     msg.setWindowTitle(title)
 
