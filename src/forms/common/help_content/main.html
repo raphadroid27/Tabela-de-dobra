@@ -32,9 +32,18 @@
         <b>Menu ⚙️ Opções</b>:
         <ul>
             <li>📌 <b>No topo</b>: mantém janela sempre visível sobre outras aplicações.</li>
-            <li>👻 <b>Transparência</b>: ajusta opacidade da janela.</li>
-            <li>🎨 <b>Temas</b>: alterna entre tema claro e escuro.</li>
-            <li>🌈 <b>Cor de destaque</b>: personaliza a cor de destaque da interface.</li>
+            <li>👻 <b>Transparência</b>: ajusta opacidade da janela (disponível apenas quando "No topo" está ativo).</li>
+            <li>🎨 <b>Tema</b>: 
+                <ul>
+                    <li><b>Claro/Escuro</b>: alterna entre tema claro e escuro.</li>
+                    <li>🌈 <b>Cor de destaque</b>: personaliza a cor de destaque da interface com 12 opções:
+                        <ul>
+                            <li><b>Sistema</b>: sincroniza automaticamente com a cor de destaque do Windows.</li>
+                            <li><b>Cores fixas</b>: Cinza, Vermelho, Laranja, Âmbar, Verde, Verde-água, Ciano, Azul, Índigo, Roxo e Rosa.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
         </ul>
     </li>
     <li>
@@ -49,9 +58,9 @@
     <li><b>Selecionar Material</b>: exibe na combo de Espessura apenas valores que possuem deduções cadastradas.</li>
     <li><b>Selecionar Espessura</b>: filtra a combo de Canal conforme a dupla Material/Espessura.</li>
     <li><b>Selecionar Canal</b>: busca dedução, força de dobra e observações.</li>
-    <li><b>Informar Comprimento</b>: calcula automaticamente a força de dobra necessária para o comprimento inserido; destaca em <span style='color:red;'>vermelho</span> se exceder o limite permitido para o canal; aceita vírgula ou ponto.</li>
-    <li><b>Informar Raio Interno</b>: calcula Fator K/Offset. Fator K: cor <span style='color:orange;'>laranja</span> = teórico (sem canal), <span style='color:blue;'>azul</span> = dedução específica aplicada.</li>
-    <li><b>Ded. Espec.</b> (opcional): sobrescreve a dedução do banco para cálculos isolados sem alterar o cadastro.</li>
+    <li><b>Informar Comprimento</b>: calcula automaticamente a força de dobra necessária para o comprimento inserido; destaca em <span style='color:red;'>vermelho</span> se exceder o limite permitido para o canal; aceita vírgula ou ponto; <b>suporta expressões matemáticas simples</b> (ex: 100+50, 200*2, 500/2).</li>
+    <li><b>Informar Raio Interno</b>: calcula Fator K/Offset. Fator K: cor <span style='color:orange;'>laranja</span> = teórico (sem canal), <span style='color:blue;'>azul</span> = dedução específica aplicada; <b>suporta expressões matemáticas simples</b>.</li>
+    <li><b>Ded. Espec.</b> (opcional): sobrescreve a dedução do banco para cálculos isolados sem alterar o cadastro; <b>suporta expressões matemáticas simples</b>.</li>
     <li><b>Observações</b>: mostra texto associado à dedução vigente (ou vazio se combinação inexistente).</li>
     <li><b>Cópia rápida</b>: clique em <b>Fator K</b>, <b>Dedução</b> e <b>Offset</b> para copiar; feedback visual <span style='color:green;'>Copiado!</span> desaparece após alguns segundos.</li>
 </ol>
@@ -63,7 +72,7 @@
 <h4><b>Tabela de Dobras</b></h4>
 <p>Planilha dinâmica para cada conjunto de abas. Cada linha aceita a <i>Medida Externa</i> e gera <b>Medida Dobra</b> e <b>Metade Dobra</b>; a linha final calcula o Blank total e sua metade.</p>
 <ul>
-    <li><b>Navegação</b>: Enter ou ↓ avança; ↑ retorna; validação dispara recálculo imediato por coluna.</li>
+    <li><b>Navegação</b>: Enter ou ↓ avança; ↑ retorna; validação dispara recálculo imediato por coluna; <b>suporta expressões matemáticas simples</b> (ex: 50+25, 100/2).</li>
     <li><b>Cópia rápida</b>: clique em qualquer resultado (<b>Medida Dobra</b>, <b>Metade Dobra</b>, <b>Medida do Blank</b>) para copiar; feedback visual <span style='color:green;'>Copiado!</span> desaparece após alguns segundos.</li>
     <li><b>Alerta de Aba Mínima</b>: entradas abaixo do limite são destacadas em <span style='color:white;background:red;padding:1px 3px;'>vermelho</span> para revisão dimensional.</li>
     <li><b>Expandir Vertical (Ctrl+Shift+V)</b>: aumenta linhas de 5 para 10.</li>
@@ -81,6 +90,8 @@
 </ul>
 <h4><b>Atalhos</b></h4>
 <ul>
+    <li><kbd>F1</kbd> Abrir ajuda contextual.</li>
+    <li><kbd>F5</kbd> Atualizar interface (força refresh completo do tema e detecta mudanças na cor do Windows).</li>
     <li><kbd>Ctrl+Shift+V</kbd> Expandir linhas da tabela de dobras.</li>
     <li><kbd>Ctrl+H</kbd> Expandir colunas (adicionar nova tabela).</li>
     <li><kbd>Ctrl+D</kbd> Limpar apenas tabelas de dobras (🧹 Limpar Dobras).</li>
