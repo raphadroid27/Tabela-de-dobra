@@ -2,6 +2,17 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.6.1 (10/12/2025)
+
+- Interface e Usabilidade:
+    - Implementado suporte a barras de título escuras e definido tema 'dark' com destaque 'sistema' como padrão.
+    - Adicionada resolução de expressões matemáticas em campos de entrada e melhoria na validação de dados.
+    - Otimização da interface com atualizações em thread separada para evitar travamentos.
+    - Ajustes visuais em widgets e tooltips para melhor legibilidade.
+- Documentação e Código:
+    - Atualização das páginas de ajuda com novos atalhos e informações sobre inatividade.
+    - Refatoração da configuração do banco de dados e ajustes de linting e documentação interna.
+
 ## 2.6.0 (04/12/2025)
 
 - Refatoração e Interface:
