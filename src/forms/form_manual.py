@@ -29,8 +29,8 @@ from PySide6.QtWidgets import (
 
 from src.forms.common import context_help
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 from src.utils.themed_widgets import ThemedDialog
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
 
 Section = Tuple[str, str, str]
 

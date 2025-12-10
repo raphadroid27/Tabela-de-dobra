@@ -16,7 +16,9 @@ def _resolver_no_ast(node):
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
         return -_resolver_no_ast(node.operand)
     if isinstance(node, ast.BinOp) and type(node.op) in _OPS:
-        return _OPS[type(node.op)](_resolver_no_ast(node.left), _resolver_no_ast(node.right))
+        return _OPS[type(node.op)](
+            _resolver_no_ast(node.left), _resolver_no_ast(node.right)
+        )
     raise ValueError("Operacao nao permitida")
 
 

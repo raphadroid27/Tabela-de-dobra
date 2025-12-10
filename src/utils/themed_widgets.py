@@ -8,7 +8,7 @@ Uso:
     # Em vez de QDialog, use ThemedDialog
     # Em vez de QMainWindow, use ThemedMainWindow
     from src.utils.themed_widgets import ThemedDialog, ThemedMainWindow
-    
+
     dialog = ThemedDialog(parent)
     # O dark title bar será aplicado automaticamente ao exibir
 

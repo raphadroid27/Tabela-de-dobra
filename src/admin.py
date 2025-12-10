@@ -44,13 +44,14 @@ from src.config import globals as g
 from src.forms import form_aut
 from src.forms.form_manual import show_manual
 from src.models.models import Usuario
-from src.utils.banco_dados import get_session
 from src.utils import ipc_manager
+from src.utils.banco_dados import get_session
 from src.utils.controlador import buscar_debounced
 from src.utils.estilo import (
     aplicar_estilo_botao,
     aplicar_estilo_table_widget,
 )
+from src.utils.inactivity_monitor import ativar_monitor_inatividade
 from src.utils.interface_manager import safe_process_events
 from src.utils.session_manager import (
     force_shutdown_all_instances,
@@ -73,7 +74,6 @@ from src.utils.utilitarios import (
     show_error,
     show_info,
 )
-from src.utils.inactivity_monitor import ativar_monitor_inatividade
 
 ADMIN_INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000
 

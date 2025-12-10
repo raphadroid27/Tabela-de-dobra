@@ -5,14 +5,13 @@ from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QComboBox, QGridLayout, QGroupBox, QLabel, QLineEdit
 
 from src.config import globals as g
+from src.utils.expressoes_lineedit import resolver_expressao_no_line_edit
 from src.utils.interface import (
     WidgetUpdater,
     calcular_valores,
     canal_tooltip,
     copiar,
 )
-from src.utils.expressoes_lineedit import resolver_expressao_no_line_edit
-
 
 VAL_REGEX_EXPR = QRegularExpression(r"^[0-9+\-*/.,()\s]*$")
 

@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
 from src.models.models import Base, Log
-from src.utils.utilitarios import DB_PATH, DATABASE_DIR
+from src.utils.utilitarios import DATABASE_DIR, DB_PATH
 
 # Garante a existência do diretório de banco compartilhado
 os.makedirs(DATABASE_DIR, exist_ok=True)

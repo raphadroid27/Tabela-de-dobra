@@ -27,11 +27,11 @@ from src.config import globals as g
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.models.models import Usuario
 from src.utils.banco_dados import get_session
-from src.utils.themed_widgets import ThemedDialog
 from src.utils.estilo import aplicar_estilo_botao
-from src.utils.janelas import Janela
-from src.utils.usuarios import login, novo_usuario
 from src.utils.inactivity_monitor import ativar_monitor_inatividade
+from src.utils.janelas import Janela
+from src.utils.themed_widgets import ThemedDialog
+from src.utils.usuarios import login, novo_usuario
 from src.utils.utilitarios import (
     ICON_PATH,
     aplicar_medida_borda_espaco,
@@ -73,7 +73,9 @@ def _configurar_janela_base(root):
         QDialog.closeEvent(g.AUTEN_FORM, event)
 
     # closeEvent é um método Qt que deve ter esse nome exato (camelCase)
-    g.AUTEN_FORM.closeEvent = close_event  # pylint: disable=attribute-defined-outside-init
+    g.AUTEN_FORM.closeEvent = (
+        close_event  # pylint: disable=attribute-defined-outside-init
+    )
 
 
 def _criar_layout_principal():
