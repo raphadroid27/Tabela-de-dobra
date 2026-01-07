@@ -217,6 +217,7 @@ class ThemeManager:
         palette.setColor(QPalette.ColorRole.Link, accent_color)
         palette.setColor(QPalette.ColorRole.Highlight, accent_color)
         palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
+        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor(0, 0, 0, 128))
         return palette
 
     def _create_dark_palette(self, accent_color: QColor) -> QPalette:
@@ -236,6 +237,7 @@ class ThemeManager:
         palette.setColor(QPalette.ColorRole.Link, accent_color)
         palette.setColor(QPalette.ColorRole.Highlight, accent_color)
         palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor(255, 255, 255, 128))
         return palette
 
     def _apply_theme(self, mode: str, *, persist: bool) -> None:
