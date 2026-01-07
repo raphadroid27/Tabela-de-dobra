@@ -2,6 +2,13 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.6.2 (07/01/2026)
+
+- Refatoração e Código:
+    - Adicionado suporte para texto de espaço reservado nas paletas de tema.
+    - Otimização de estilos com remoção da dependência `QFont` e aplicação de CSS para labels.
+    - Simplificação da criação e ordenação de itens no combobox de canais de dedução.
+
 ## 2.6.1 (10/12/2025)
 
 - Interface e Usabilidade:
