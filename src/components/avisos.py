@@ -1,7 +1,6 @@
 """Cria o frame de avisos na interface gráfica."""
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from src.utils.utilitarios import aplicar_medida_borda_espaco
@@ -26,13 +25,10 @@ def avisos():
     frame_avisos = QWidget()
     layout = QVBoxLayout(frame_avisos)
 
-    font = QFont("Arial", 10)
-
     for aviso in avisos_textos:
         aviso_label = QLabel(aviso)
         aviso_label.setObjectName("label_texto")
         aviso_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        aviso_label.setFont(font)
         aviso_label.setWordWrap(True)
         aviso_label.setMaximumWidth(300)
         layout.addWidget(aviso_label)

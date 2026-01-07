@@ -7,7 +7,6 @@ import sys
 from typing import Optional
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 from src import __version__
@@ -46,21 +45,18 @@ def main(root: Optional[QWidget]) -> None:
 
     # Versão
     label_versao = QLabel(f"Versão: {__version__}")
-    font_normal = QFont("Arial", 12)
-    label_versao.setFont(font_normal)
+    label_versao.setStyleSheet("font-size: 12pt;")
     label_versao.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_versao)
 
     # Autor
     label_autor = QLabel("Autor: raphadroid27")
-    label_autor.setFont(font_normal)
     label_autor.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_autor)
 
     # Descrição
     label_desc = QLabel("Aplicativo para cálculo de dobras em\nchapas metálicas.")
     label_desc.setObjectName("label_texto")
-    label_desc.setFont(font_normal)
     label_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
     conteudo_layout.addWidget(label_desc)
 
@@ -68,8 +64,8 @@ def main(root: Optional[QWidget]) -> None:
     label_link = QLabel(
         '<a href="https://github.com/raphadroid27/Tabela-de-dobra">Repositório no GitHub</a>'
     )
-    label_link.setFont(font_normal)
     label_link.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    label_link.setStyleSheet("font-size: 12pt;")
     label_link.setOpenExternalLinks(True)
     conteudo_layout.addWidget(label_link)
 

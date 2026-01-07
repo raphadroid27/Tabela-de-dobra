@@ -448,12 +448,13 @@ def _get_label_style() -> str:
     }}
 
     QLabel#label_texto {{
-        font-size: 10pt;
+        font-size: 11pt;
         color: palette(window-text);
         padding: 0px 0px;
         min-height: auto;
         max-height: auto;
         font-weight: normal;
+        font-family: Arial, sans-serif;
     }}
 
     QLabel#label_titulo_h4 {{
