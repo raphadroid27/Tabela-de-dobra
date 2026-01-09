@@ -10,10 +10,11 @@ e adicionando um worker thread para impressão controlada, evitando sobrecarga d
 """
 
 import os
+import re
 import subprocess  # nosec B404
 import sys
 import time
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
@@ -94,14 +95,120 @@ class PrintManager:
         self.arquivos_encontrados.clear()
         self.arquivos_nao_encontrados.clear()
 
+        if not diretorio:
+            self.arquivos_nao_encontrados.extend(lista_arquivos)
+            return
+
+        try:
+            diretorio = os.path.normpath(diretorio)
+            if not os.path.isdir(diretorio):
+                self.arquivos_nao_encontrados.extend(lista_arquivos)
+                return
+
+            # OTIMIZAÇÃO: Ler o conteúdo do diretório apenas uma vez
+            files_in_dir = [
+                f for f in os.listdir(diretorio) if f.lower().endswith(".pdf")
+            ]
+            # Cria índice otimizado para busca rápida
+            indice = self._construir_indice(files_in_dir)
+
+        except (OSError, PermissionError):
+            self.arquivos_nao_encontrados.extend(lista_arquivos)
+            return
+
         for arquivo in lista_arquivos:
             nome_base = self._extrair_nome_base(arquivo)
-            arquivo_encontrado = self._procurar_arquivo(diretorio, nome_base)
+            # Usa o índice para busca O(1) ou O(N_filtrado) em vez de iterar tudo sempre
+            arquivo_encontrado = self._consultar_indice(indice, nome_base)
 
             if arquivo_encontrado:
                 self.arquivos_encontrados.append(arquivo_encontrado)
             else:
                 self.arquivos_nao_encontrados.append(arquivo)
+
+    def _construir_indice(self, lista_arquivos: List[str]) -> Dict:
+        """
+        Constrói um índice para acelerar a busca de arquivos.
+        Retorna um dicionário com mapas de busca rápida.
+        """
+        idx = {"exact": {}, "tokens": []}
+
+        for f in lista_arquivos:
+            nome_sem_ext = os.path.splitext(f)[0].lower()
+
+            # Mapa reverso para busca exata (nome_limpo -> nome_real)
+            idx["exact"][nome_sem_ext] = f
+
+            # Prepara tokens para busca fuzzy
+            # Separa por hífens, underlines, espaços e pontos
+            tokens = [t for t in re.split(r"[-_\s\.]+", nome_sem_ext) if t]
+            idx["tokens"].append({
+                "real": f,
+                "norm": nome_sem_ext,
+                "tokens": tokens,
+                "token_set": set(tokens)  # Set para verificação rápida de pertinência
+            })
+
+        return idx
+
+    def _consultar_indice(self, indice: Dict, nome_buscado: str) -> Optional[str]:
+        """Realiza a busca usando o índice pré-processado."""
+        if not nome_buscado:
+            return None
+
+        nome_lower = nome_buscado.lower()
+
+        # 1. Busca Exata (O(1))
+        # Verifica se existe chave direta no mapa
+        if nome_lower in indice["exact"]:
+            return indice["exact"][nome_lower]
+
+        # Prepara tokens da busca
+        tokens_busca = [t for t in re.split(r"[-_\s\.]+", nome_lower) if t]
+
+        # 2. Busca por Prefixo (Otimizada)
+        # 3. Busca Flexível (Baseada em Tokens)
+        candidatos = []
+
+        for item in indice["tokens"]:
+            f_real = item["real"]
+            f_norm = item["norm"]
+            f_tokens = item["tokens"]
+
+            # Regra de Prefixo
+            if f_norm.startswith(nome_lower):
+                return f_real
+
+            # Regra de Subsequência / Tokens
+            # Verifica se os tokens do arquivo são um subconjunto ordenado
+            # ou não dos tokens da busca
+            # Cenário: Busca 'P1-123-50-R1', Arquivo 'P1-123-R1'
+            # Tokens Busca: {P1, 123, 50, R1} -> Tokens Arq: {P1, 123, R1} -> É match!
+
+            # Lógica refinada:
+            # Se o arquivo presente é uma 'versão simplificada' da busca
+            it = iter(tokens_busca)
+            try:
+                # Verifica se todos os tokens do arquivo aparecem na busca,
+                # na ordem relativa correta
+                if all(token in it for token in f_tokens):
+                    # Score de prioridade: quanto mais tokens baterem, melhor,
+                    # mas penalizando se o arquivo for muito curto (falso positivo)
+                    candidatos.append(f_real)
+            except TypeError:
+                continue
+
+        if candidatos:
+            # Desempate:
+            # 1. O que tiver mais 'partes' (mais específico)
+            # 2. O nome mais longo
+            candidatos.sort(
+                key=lambda x: (len(re.split(r"[-_\s\.]+", x)), len(x)),
+                reverse=True,
+            )
+            return candidatos[0]
+
+        return None
 
     def _extrair_nome_base(self, arquivo: str) -> str:
         """Extrai a parte principal do nome do arquivo de forma robusta."""
@@ -119,35 +226,6 @@ class PrintManager:
 
         # Caso contrário, divide pelo primeiro espaço
         return temp_arquivo.split(" ", maxsplit=1)[0].strip()
-
-    def _procurar_arquivo(self, diretorio: str, nome_base: str) -> Optional[str]:
-        """Procura um arquivo específico no diretório com mais precisão."""
-        if not diretorio or not nome_base:
-            return None
-        try:
-            diretorio = os.path.normpath(diretorio)
-            if not os.path.isdir(diretorio):
-                return None
-
-            nome_base_lower = nome_base.lower()
-
-            # 1ª Tentativa: Busca por correspondência exata do nome do arquivo (sem extensão)
-            for f in os.listdir(diretorio):
-                if f.lower().endswith(".pdf"):
-                    nome_arquivo_sem_ext, _ = os.path.splitext(f)
-                    if nome_arquivo_sem_ext.lower() == nome_base_lower:
-                        return f  # Encontrou correspondência exata
-
-            # 2ª Tentativa: Se não achou exato, busca por arquivos que começam com o nome base
-            # (útil para casos como 'CODIGO-REV1.pdf' ao buscar 'CODIGO')
-            for f in os.listdir(diretorio):
-                if f.lower().startswith(nome_base_lower) and f.lower().endswith(".pdf"):
-                    return f  # Retorna a primeira correspondência parcial encontrada
-
-            return None  # Nenhum arquivo encontrado
-
-        except (OSError, PermissionError):
-            return None
 
     def gerar_relatorio_busca(self) -> str:
         """Gera relatório dos arquivos encontrados e não encontrados."""
