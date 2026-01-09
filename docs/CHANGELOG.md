@@ -2,6 +2,12 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.6.3 (09/01/2026)
+
+- Refatoração e Interface:
+    - Otimização da busca de arquivos PDF com uso de índice e maior robustez.
+    - Melhorias na tabela de resultados, incluindo cores alternadas e ajuste no comportamento de seleção.
+
 ## 2.6.2 (07/01/2026)
 
 - Refatoração e Código:
