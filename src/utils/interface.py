@@ -751,9 +751,10 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                     "QLineEdit { color: white; background-color: red; } "
                     "QLineEdit:hover { border: 1px solid darkred; } "
                     "QLineEdit:focus { border: 1px solid darkred; }"
-                    "QToolTip { color: white; background-color: red; }"
+                    "QToolTip { color: palette(text); background-color: palette(base); }"
                 )
-                entry.setToolTip(f"Aba ({val}) menor que a mínima ({aba_min:.0f}).")
+                entry.setToolTip(
+                    f"Aba <b><span style='background-color:red; color:white;'>{val:.0f}mm</span></b> menor que a mínima <b>{aba_min:.0f}mm</b>.")
             elif alerta_bandeja:
                 entry.setStyleSheet(
                     "QLineEdit { color: red; background-color: palette(base); font-weight: bold; }"
@@ -764,7 +765,7 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                 tooltip_text = (
                     f"<html><table width='200'>"
                     f"<tr><td align='center'>Se for uma bandeja, adicionar "
-                    f"alívio de dobra em abas maiores que 20mm.</td></tr>"
+                    f"alívio de dobra em abas <b><span style='color:red;'>maiores que 20mm.</span></b></td></tr>"
                     f"<tr><td align='center'><img src='{img_path}' width='200'></td></tr>"
                     f"</table></html>"
                 )
