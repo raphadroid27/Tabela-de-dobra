@@ -19,8 +19,8 @@ def avisos():
     avisos_textos = [
         "1. Xadrez → Laser sempre corta com a face xadrez para Baixo ↓.",
         "2. Corrugado → Laser sempre corta com a face do corrugado para Cima ↑.",
-        "3. Ferramenta 'bigode': adicionar alívio de dobra em bandejas "
-        "com abas <b><span style='color:red;'>maiores que 20mm.</span></b>",
+        "3. Ferramenta <b>'bigode'</b> → Adicionar alívio de dobra se "
+        "abas <b><span style='color:red;'>maiores que 20mm</span></b>.",
     ]
 
     frame_avisos = QWidget()

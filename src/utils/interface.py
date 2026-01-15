@@ -775,9 +775,9 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                     "assets/canto_bandeja.PNG").replace("\\", "/")
                 tooltip_text = (
                     f"<html><table width='200'>"
-                    f"<tr><td align='center'>Se for uma bandeja, adicionar "
-                    f"alívio de dobra em abas <b><span style='color:red;'>"
-                    f"maiores que 20mm.</span></b></td></tr>"
+                    f"<tr><td align='center'>Se necessário o uso da ferramenta "
+                    f"<b>'bigode'</b>, adicionar alívio de dobra se aba <b>"
+                    f"<span style='color:red;'>maior que 20mm</span></b>.</td></tr>"
                     f"<tr><td align='center'><img src='{img_path}' width='200'></td></tr>"
                     f"</table></html>"
                 )
