@@ -6,7 +6,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('assets\\icone_2.ico', 'assets'),
+        ('assets\\icone.ico', 'assets'),
         ('assets\\arrow_down.svg', 'assets'),
         ('assets\\arrow_down_white.svg', 'assets'),
         ('assets\\check.svg', 'assets'),
@@ -43,5 +43,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['assets\\icone_2.ico'],
+    icon=['assets\\icone.ico'],
 )

@@ -3,11 +3,12 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('assets\\icone_2.ico', 'assets'),
+        ('assets\\icone.ico', 'assets'),
         ('assets\\arrow_down.svg', 'assets'),
         ('assets\\arrow_down_white.svg', 'assets'),
         ('assets\\check.svg', 'assets'),
         ('assets\\check_white.svg', 'assets'),
+        ('assets\\canto_bandeja.PNG', 'assets'),
         ('src\\__init__.py', 'src'),
         ('src\\forms\\common\\help_content', 'forms/common/help_content'),
     ],
@@ -40,6 +41,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='assets\\icone_2.ico',
+    icon='assets\\icone.ico',
     version='version_info.txt', # Adicionando o arquivo de versão (gerado dinamicamente)
 )
