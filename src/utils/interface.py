@@ -11,7 +11,6 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 
 import logging
 import traceback
-import os  # Adicionado para acesso à imagem de assets
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Dict, Optional
@@ -25,6 +24,7 @@ from src.models.models import Canal, Deducao, Espessura, Material, Usuario
 from src.utils import calculos
 from src.utils.banco_dados import get_session
 from src.utils.cache_manager import cache_manager
+from src.utils.utilitarios import obter_caminho_asset
 from src.utils.widget import WidgetManager, append_row
 
 # pylint: disable=R0902
@@ -771,17 +771,14 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                     "QLineEdit { color: red; background-color: palette(base); font-weight: bold; }"
                     "QToolTip { color: palette(text); background-color: palette(base); }"
                 )
-                img_path = os.path.abspath(
+                img_path = obter_caminho_asset(
                     "assets/canto_bandeja.PNG").replace("\\", "/")
-                tooltip_text = (
-                    f"<html><table width='200'>"
-                    f"<tr><td align='center'>Se necessário o uso da ferramenta "
-                    f"<b>'bigode'</b>, adicionar alívio de dobra se aba <b>"
-                    f"<span style='color:red;'>maior que 20mm</span></b>.</td></tr>"
-                    f"<tr><td align='center'><img src='{img_path}' width='200'></td></tr>"
-                    f"</table></html>"
+                entry.setToolTip(
+                    f"<html><table width='200'><tr><td align='center'>"
+                    f"Se necessário o uso da ferramenta <b>'bigode'</b>, adicionar alívio de dobra "
+                    f"se aba <b><span style='color:red;'>maior que 20mm</span></b>.<br>"
+                    f"<img src='{img_path}' width='200'></td></tr></table></html>"
                 )
-                entry.setToolTip(tooltip_text)
             else:
                 entry.setStyleSheet(
                     "QLineEdit { color: palette(text); background-color: palette(base); }"

@@ -48,6 +48,26 @@ def obter_dir_base() -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
+def obter_caminho_asset(path_relativo: str) -> str:
+    """Retorna o caminho absoluto de um asset (arquivo estático).
+
+    Compatível com executáveis gerados pelo PyInstaller (OneFile ou OneDir).
+
+    Args:
+        path_relativo (str): Caminho relativo do arquivo (ex: 'assets/imagem.png').
+
+    Returns:
+        str: Caminho absoluto para o recurso.
+    """
+    if getattr(sys, "frozen", False):
+        # No PyInstaller (onefile), os arquivos são extraídos em _MEIPASS
+        base_path = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+    else:
+        base_path = obter_dir_base()
+
+    return os.path.join(base_path, path_relativo)
+
+
 def obter_dir_icone():
     """
     Retorna o caminho correto para o arquivo de ícone,
