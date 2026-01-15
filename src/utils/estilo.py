@@ -448,7 +448,7 @@ def _get_label_style() -> str:
     }}
 
     QLabel#label_texto {{
-        font-size: 11pt;
+        font-size: 10pt;
         color: palette(window-text);
         padding: 0px 0px;
         min-height: auto;
