@@ -730,7 +730,9 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
     total_abas = res.get("total_abas", 0) if res else 0
     blank = res.get("blank_total", 0) if res else 0
 
+    # Verifica status das abas para lógica de bandeja
     abas_1_3_preenchidas = len(valores) >= 3 and all(v > 0 for v in valores[:3])
+    abas_1_5_preenchidas = len(valores) >= 5 and all(v > 0 for v in valores[:5])
 
     for i in range(1, g.N):
         medida = res["resultados"][i - 1].get("medida") if res else None
@@ -742,8 +744,15 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
         if WidgetManager.is_widget_valid(entry):
             val = valores[i - 1]
             invalida = aba_min is not None and 0 < val < aba_min
+
+            # Alerta de bandeja: Apenas Aba 1 (se 1-3 estiverem ok)
+            # e Aba 5 (se 1-5 estiverem ok), se valor > 20
             alerta_bandeja = (
-                i in (1, 5) and (val > 20) and abas_1_3_preenchidas
+                val > 20
+                and (
+                    (i == 1 and abas_1_3_preenchidas)
+                    or (i == 5 and abas_1_5_preenchidas)
+                )
             )
 
             if invalida:
@@ -754,7 +763,9 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                     "QToolTip { color: palette(text); background-color: palette(base); }"
                 )
                 entry.setToolTip(
-                    f"Aba <b><span style='background-color:red; color:white;'>{val:.0f}mm</span></b> menor que a mínima <b>{aba_min:.0f}mm</b>.")
+                    f"Aba <b><span style='background-color:red; color:white;'>"
+                    f"{val:.0f}mm</span></b> menor que a mínima <b>{aba_min:.0f}mm</b>."
+                )
             elif alerta_bandeja:
                 entry.setStyleSheet(
                     "QLineEdit { color: red; background-color: palette(base); font-weight: bold; }"
@@ -765,7 +776,8 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
                 tooltip_text = (
                     f"<html><table width='200'>"
                     f"<tr><td align='center'>Se for uma bandeja, adicionar "
-                    f"alívio de dobra em abas <b><span style='color:red;'>maiores que 20mm.</span></b></td></tr>"
+                    f"alívio de dobra em abas <b><span style='color:red;'>"
+                    f"maiores que 20mm.</span></b></td></tr>"
                     f"<tr><td align='center'><img src='{img_path}' width='200'></td></tr>"
                     f"</table></html>"
                 )
