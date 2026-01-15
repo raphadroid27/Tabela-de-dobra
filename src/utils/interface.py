@@ -11,6 +11,7 @@ Este módulo contém funções que interagem diretamente com a interface gráfic
 
 import logging
 import traceback
+import os  # Adicionado para acesso à imagem de assets
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Dict, Optional
@@ -714,6 +715,8 @@ def _atualizar_forca_ui(data: UIData):
         if g.COMPR_ENTRY:
             g.COMPR_ENTRY.setStyleSheet("QLineEdit{color: palette(window-text);}")
 
+# pylint: disable=R0914
+
 
 def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
     """Calcula e atualiza uma coluna inteira de dobras na UI."""
@@ -727,6 +730,8 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
     total_abas = res.get("total_abas", 0) if res else 0
     blank = res.get("blank_total", 0) if res else 0
 
+    abas_1_3_preenchidas = len(valores) >= 3 and all(v > 0 for v in valores[:3])
+
     for i in range(1, g.N):
         medida = res["resultados"][i - 1].get("medida") if res else None
         metade = res["resultados"][i - 1].get("metade") if res else None
@@ -735,25 +740,43 @@ def _atualizar_coluna_dobras_ui(w: int, deducao_usada: float, aba_min: float):
 
         entry = getattr(g, f"aba{i}_entry_{w}", None)
         if WidgetManager.is_widget_valid(entry):
-            invalida = aba_min is not None and 0 < valores[i - 1] < aba_min
-            entry.setStyleSheet(
-                (
+            val = valores[i - 1]
+            invalida = aba_min is not None and 0 < val < aba_min
+            alerta_bandeja = (
+                i in (1, 5) and (val > 20) and abas_1_3_preenchidas
+            )
+
+            if invalida:
+                entry.setStyleSheet(
                     "QLineEdit { color: white; background-color: red; } "
                     "QLineEdit:hover { border: 1px solid darkred; } "
                     "QLineEdit:focus { border: 1px solid darkred; }"
                     "QToolTip { color: white; background-color: red; }"
                 )
-                if invalida
-                else (
+                entry.setToolTip(f"Aba ({val}) menor que a mínima ({aba_min:.0f}).")
+            elif alerta_bandeja:
+                entry.setStyleSheet(
+                    "QLineEdit { color: red; background-color: palette(base); font-weight: bold; }"
+                    "QToolTip { color: palette(text); background-color: palette(base); }"
+                )
+                img_path = os.path.abspath(
+                    "assets/canto_bandeja.PNG").replace("\\", "/")
+                tooltip_text = (
+                    f"<html><table width='200'>"
+                    f"<tr><td align='center'>Se for uma bandeja, adicionar "
+                    f"alívio de dobra em abas maiores que 20mm.</td></tr>"
+                    f"<tr><td align='center'><img src='{img_path}' width='200'></td></tr>"
+                    f"</table></html>"
+                )
+                entry.setToolTip(tooltip_text)
+            else:
+                entry.setStyleSheet(
                     "QLineEdit { color: palette(text); background-color: palette(base); }"
                     "QToolTip { color: palette(text); background-color: palette(base); }"
                 )
-            )
-            entry.setToolTip(
-                f"Aba ({valores[i - 1]}) menor que a mínima ({aba_min:.0f})."
-                if invalida
-                else f"Digite o valor da medida externa para a dobra {i} (Use ↑↓ para navegar)"
-            )
+                entry.setToolTip(
+                    f"Digite o valor da medida externa para a dobra {i} (Use ↑↓ para navegar)"
+                )
 
     _atualizar_label(
         getattr(g, f"total_abas_label_{w}", None),
