@@ -87,11 +87,17 @@ class MainWindow(ThemedMainWindow):
     def _setup_signal_watcher(self):
         """Monitora alterações em arquivos de sinal para atualização em tempo real."""
         self.fs_watcher = QFileSystemWatcher(self)
+
         # Monitora o arquivo de sinal de avisos
         if os.path.exists(ipc_manager.AVISOS_SIGNAL_FILE):
             self.fs_watcher.addPath(ipc_manager.AVISOS_SIGNAL_FILE)
 
+        # Monitora o diretório de comandos (para shutdown imediato)
+        if os.path.exists(ipc_manager.COMMAND_DIR):
+            self.fs_watcher.addPath(ipc_manager.COMMAND_DIR)
+
         self.fs_watcher.fileChanged.connect(self._on_signal_file_changed)
+        self.fs_watcher.directoryChanged.connect(self._on_signal_dir_changed)
 
     def _on_signal_file_changed(self, path):
         """Trata alterações nos arquivos monitorados."""
@@ -101,19 +107,29 @@ class MainWindow(ThemedMainWindow):
                 # Usa QTimer para garantir execução na thread principal e dar debounce
                 QTimer.singleShot(100, g.AVISOS_WIDGET.refresh)
 
-            # Re-adiciona o path se o arquivo for recriado (comum em alguns editores/sistemas)
+            # Re-adiciona o path se o arquivo for recriado
             if not os.path.exists(path):
-                # Se foi deletado, pode ser necessário esperar recriar ou usar diretório
                 pass
             elif path not in self.fs_watcher.files():
                 self.fs_watcher.addPath(path)
 
-    def closeEvent(self, event):  # pylint: disable=invalid-name
-        """Evento chamado quando a janela principal está sendo fechada."""
-        logging.info("CloseEvent da janela principal chamado.")
-        Janela.fechar_janelas_dependentes()
-        salvar_estado_final()
-        event.accept()
+    def _on_signal_dir_changed(self, path):
+        """Trata alterações nos diretórios monitorados (Comandos)."""
+        if path == ipc_manager.COMMAND_DIR:
+            self._check_and_execute_shutdown()
+
+    def _check_and_execute_shutdown(self):
+        """Verifica se há comando de shutdown e executa se positivo."""
+        if verificar_comando_sistema():
+            logging.info("Comando de encerramento recebido via Watcher.")
+            show_timed_message_box(
+                self,
+                "Sistema",
+                "O administrador solicitou o fechamento do sistema.\n"
+                "A aplicação será encerrada.",
+                10000,
+            )
+            QTimer.singleShot(500, QApplication.quit)
 
     # Pequeno hook para permitir callbacks quando a janela for redimensionada
     def add_resize_handler(self, callback):
@@ -520,21 +536,9 @@ def system_tick():
     """
     Função chamada periodicamente pelo timer do sistema.
 
-    Executa tarefas de manutenção como verificar comandos e atualizar heartbeat.
+    Executa tarefas de manutenção como atualizar heartbeat.
+    A verificação de comandos/shutdown agora é feita por FileWatcher (event-driven).
     """
-    if verificar_comando_sistema():
-        logging.info("Comando de encerramento recebido. Fechando a aplicação.")
-        show_timed_message_box(
-            g.PRINC_FORM,
-            "Sistema",
-            "O administrador solicitou o fechamento do sistema.\n"
-            "A aplicação será encerrada.",
-            10000,
-        )
-        # Agendar o fechamento da aplicação após a mensagem ser exibida
-        QTimer.singleShot(500, QApplication.quit)
-        return
-
     atualizar_heartbeat_sessao()
 
 
@@ -566,7 +570,9 @@ def main():  # pylint: disable=too-many-locals
             logging.warning("Erro ao inicializar cache: %s", e)
 
         limpar_sessoes_inativas()
-        ipc_manager.clear_all_commands()
+        # Não limpar todos os comandos no startup para evitar condições de corrida
+        # com watchers. Em vez disso, remover sessões órfãs (validação por PID).
+        ipc_manager.cleanup_orphan_sessions()
 
         set_installed_version(APP_VERSION)
         configurar_sinais_excecoes()

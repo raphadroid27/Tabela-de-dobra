@@ -10,11 +10,14 @@ import ctypes
 import json
 import logging
 import os
-import shutil
 import time
 from datetime import datetime
 from typing import Any, Dict, List
 
+try:
+    import psutil
+except ModuleNotFoundError:  # pragma: no cover - optional dep
+    psutil = None  # pylint: disable=invalid-name
 from src.utils.utilitarios import CACHE_DIR, COMMAND_DIR, RUNTIME_DIR, SESSION_DIR
 
 FILE_ATTRIBUTE_HIDDEN = 0x02
@@ -66,7 +69,7 @@ def ensure_ipc_dirs_exist() -> None:
 
         # Garante a existência do arquivo de sinal
         if not os.path.exists(AVISOS_SIGNAL_FILE):
-            with open(AVISOS_SIGNAL_FILE, 'w') as f:
+            with open(AVISOS_SIGNAL_FILE, 'w', encoding="utf-8") as f:
                 f.write(str(time.time()))
 
     except OSError as e:
@@ -78,7 +81,7 @@ def send_update_signal(signal_file: str) -> None:
     """Atualiza o timestamp do arquivo de sinal para notificar listeners."""
     try:
         if not os.path.exists(signal_file):
-            with open(signal_file, 'w') as f:
+            with open(signal_file, 'w', encoding="utf-8") as f:
                 f.write(str(time.time()))
         else:
             os.utime(signal_file, None)
@@ -92,7 +95,7 @@ def send_update_signal(signal_file: str) -> None:
 def create_session_file(session_id: str, hostname: str) -> None:
     """Cria um arquivo para representar uma sessão ativa, armazenando o hostname."""
     session_file = os.path.join(SESSION_DIR, f"{session_id}.session")
-    data = {"hostname": hostname}
+    data = {"hostname": hostname, "pid": os.getpid(), "created_at": time.time()}
     try:
         with open(session_file, "w", encoding="utf-8") as f:
             json.dump(data, f)
@@ -146,15 +149,12 @@ def get_active_sessions() -> List[Dict[str, Any]]:
             try:
                 with open(filepath, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    hostname = "N/A"  # Valor padrão
+                    hostname = "N/A"
+                    pid = None
 
-                    # ** INÍCIO DA CORREÇÃO **
-                    # Verifica se o dado lido é um dicionário (novo formato)
                     if isinstance(data, dict):
                         hostname = data.get("hostname", "Desconhecido")
-                    # Se não for, ignora o conteúdo e usa o valor padrão "N/A",
-                    # evitando o erro ao tratar arquivos de formato antigo.
-                    # ** FIM DA CORREÇÃO **
+                        pid = data.get("pid")
 
                 last_modified_timestamp = os.path.getmtime(filepath)
                 last_updated = datetime.fromtimestamp(last_modified_timestamp).strftime(
@@ -166,6 +166,7 @@ def get_active_sessions() -> List[Dict[str, Any]]:
                         "session_id": session_id,
                         "hostname": hostname,
                         "last_updated": last_updated,
+                        "pid": pid,
                     }
                 )
             except (json.JSONDecodeError, FileNotFoundError, OSError) as e:
@@ -205,6 +206,56 @@ def cleanup_inactive_sessions(timeout_seconds: int = 120) -> None:
         except OSError as e:
             logging.error("Erro ao verificar sessão inativa '%s': %s", session_id, e)
     logging.info("Limpeza de sessões inativas concluída.")
+
+
+def _is_process_alive(pid: int) -> bool:
+    """Verifica se um processo com PID está vivo. Usa psutil quando disponível."""
+    if not pid:
+        return False
+    if psutil is None:
+        # fallback minimal: não é possível validar sem psutil
+        return False
+    try:
+        return psutil.pid_exists(pid) and psutil.Process(pid).is_running()
+    except (AttributeError, psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        return False
+
+
+def cleanup_orphan_sessions() -> None:
+    """Remove arquivos de sessão cujos processos (PIDs) não existem mais.
+
+    Usa `psutil` quando disponível para validar PIDs. Caso `psutil` não esteja
+    presente, a função mantém comportamento conservador (usa apenas timeout).
+    """
+    if not os.path.isdir(SESSION_DIR):
+        return
+
+    logging.info("Verificando sessões órfãs (validação de PID)...")
+    try:
+        for filename in os.listdir(SESSION_DIR):
+            if not filename.endswith(".session"):
+                continue
+            filepath = os.path.join(SESSION_DIR, filename)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    pid = data.get("pid") if isinstance(data, dict) else None
+
+                if pid and _is_process_alive(pid):
+                    continue
+
+                # Se não houver PID válido ou processo não existir, considera órfão
+                logging.info("Removendo sessão órfã: %s", filepath)
+                os.remove(filepath)
+            except (json.JSONDecodeError, OSError, IOError) as e:
+                logging.warning("Erro ao processar sessão '%s': %s", filename, e)
+                try:
+                    os.remove(filepath)
+                except FileNotFoundError:
+                    pass
+    except OSError as e:
+        logging.error("Erro ao listar sessões para limpeza de órfãos: %s", e)
+    logging.info("Verificação de sessões órfãs concluída.")
 
 
 # --- Gerenciamento de Comandos ---
@@ -257,8 +308,16 @@ def clear_all_commands() -> None:
     """Remove todos os arquivos de comando, limpando o diretório."""
     if os.path.isdir(COMMAND_DIR):
         try:
-            shutil.rmtree(COMMAND_DIR)
-            os.makedirs(COMMAND_DIR, exist_ok=True)
+            # Remove apenas os arquivos dentro do diretório, mantendo o diretório intacto
+            # para evitar problemas com QFileSystemWatcher que monitora o diretório
+            for filename in os.listdir(COMMAND_DIR):
+                file_path = os.path.join(COMMAND_DIR, filename)
+                if os.path.isfile(file_path):
+                    try:
+                        os.remove(file_path)
+                    except OSError as e:
+                        logging.warning(
+                            "Erro ao remover arquivo '%s': %s", file_path, e)
             logging.info("Todos os arquivos de comando foram limpos.")
         except OSError as e:
             logging.error("Erro ao limpar diretório de comandos: %s", e)

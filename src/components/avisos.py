@@ -4,7 +4,7 @@ import logging
 import re
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QFrame
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Aviso

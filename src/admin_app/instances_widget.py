@@ -5,7 +5,7 @@ Widget de gerenciamento de sessões/instâncias para a interface administrativa.
 import logging
 from datetime import datetime
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QFileSystemWatcher
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -31,6 +31,7 @@ from src.utils.utilitarios import (
     ask_yes_no,
     show_error,
     show_info,
+    SESSION_DIR,
 )
 from src.utils.interface_manager import safe_process_events
 
@@ -45,9 +46,20 @@ class InstancesWidget(QWidget):
         self.label_total_instancias = QLabel("0")
         self.label_ultima_atualizacao = QLabel("N/A")
         self.status_label = QLabel()
+
+        # Watcher para monitorar mudanças na pasta de sessões em tempo real
+        self.fs_watcher = QFileSystemWatcher(self)
+        self.fs_watcher.addPath(SESSION_DIR)
+        self.fs_watcher.directoryChanged.connect(self._on_directory_changed)
+
         self.timer_atualizacao = QTimer(self)
         self._setup_ui()
         self._initialize_data()
+
+    def _on_directory_changed(self, path):
+        """Chamado quando há alteração na pasta de sessões."""
+        if path == SESSION_DIR:
+            QTimer.singleShot(200, self._load_sessions)
 
     def _setup_ui(self):
         """Configura a interface do usuário para o widget."""
@@ -132,10 +144,17 @@ class InstancesWidget(QWidget):
         return container
 
     def _initialize_data(self):
-        """Inicializa os dados e o timer de atualização."""
+        """Inicializa os dados."""
         self._load_sessions()
+        # Timer de segurança (fallback) a cada 60s, caso o watcher falhe em rede
         self.timer_atualizacao.timeout.connect(self._load_sessions)
-        self.timer_atualizacao.start(10000)
+        self.timer_atualizacao.start(60000)
+
+    def stop_timer(self):
+        """Para o monitoramento."""
+        self.timer_atualizacao.stop()
+        if SESSION_DIR in self.fs_watcher.directories():
+            self.fs_watcher.removePath(SESSION_DIR)
 
     def _load_sessions(self):
         """Carrega e exibe as sessões ativas."""
@@ -207,7 +226,3 @@ class InstancesWidget(QWidget):
             self.status_label.setVisible(True)
         else:
             self.status_label.setVisible(False)
-
-    def stop_timer(self):
-        """Para o timer de atualização."""
-        self.timer_atualizacao.stop()
