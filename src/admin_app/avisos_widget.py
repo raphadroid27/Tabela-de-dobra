@@ -45,12 +45,15 @@ class AvisosWidget(QWidget):
 
         # Tabela
         self.table_avisos.setColumnCount(4)
-        self.table_avisos.setHorizontalHeaderLabels(["ID", "Texto", "Ativo", "Ordem"])
+        self.table_avisos.setHorizontalHeaderLabels(["ID", "Ordem", "Texto", "Ativo"])
         header = self.table_avisos.horizontalHeader()
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+
+        # Ocultar coluna ID
+        self.table_avisos.hideColumn(0)
 
         aplicar_estilo_table_widget(self.table_avisos)
         self.table_avisos.setSelectionBehavior(
@@ -97,15 +100,15 @@ class AvisosWidget(QWidget):
                 for i, aviso in enumerate(avisos):
                     self.table_avisos.setItem(i, 0, QTableWidgetItem(str(aviso.id)))
 
+                    self.table_avisos.setItem(i, 1, QTableWidgetItem(str(aviso.ordem)))
+
                     # Texto (pode ser HTML, mostramos plain text ou curto)
                     texto_item = QTableWidgetItem(aviso.texto)
                     texto_item.setToolTip(aviso.texto)
-                    self.table_avisos.setItem(i, 1, texto_item)
+                    self.table_avisos.setItem(i, 2, texto_item)
 
                     ativo_item = QTableWidgetItem("Sim" if aviso.ativo else "Não")
-                    self.table_avisos.setItem(i, 2, ativo_item)
-
-                    self.table_avisos.setItem(i, 3, QTableWidgetItem(str(aviso.ordem)))
+                    self.table_avisos.setItem(i, 3, ativo_item)
         except SQLAlchemyError as e:
             logging.error("Erro ao carregar avisos: %s", e)
             show_error("Erro", "Falha ao carregar avisos.", self)
@@ -135,11 +138,23 @@ class AvisosWidget(QWidget):
                 if aviso:
                     session.delete(aviso)
                 # Commit é automático pelo context manager se não houver erro
+            # Reordenar automaticamente após exclusão
+            self._reorder_avisos()
             ipc_manager.send_update_signal(ipc_manager.AVISOS_SIGNAL_FILE)
             self._load_avisos()
         except SQLAlchemyError as e:
             logging.error("Erro ao excluir aviso: %s", e)
             show_error("Erro", "Falha ao excluir aviso.", self)
+
+    def _reorder_avisos(self):
+        """Reordena todos os avisos sequencialmente baseado na ordem atual."""
+        try:
+            with get_session() as session:
+                avisos = session.query(Aviso).order_by(Aviso.ordem).all()
+                for i, aviso in enumerate(avisos, start=1):
+                    aviso.ordem = i
+        except SQLAlchemyError as e:
+            logging.error("Erro ao reordenar avisos: %s", e)
 
     def _show_editor_dialog(self, aviso_id=None):
         dialog = QDialog(self)
@@ -153,6 +168,20 @@ class AvisosWidget(QWidget):
         ativo_chk.setChecked(True)
         ordem_spin = QSpinBox()
         ordem_spin.setRange(0, 9999)
+
+        # Para novo aviso, definir ordem automaticamente como o próximo disponível
+        if aviso_id is None:
+            try:
+                with get_session() as session:
+                    max_ordem_result = session.query(
+                        Aviso.ordem).filter_by(ativo=True).all()
+                    if max_ordem_result:
+                        proxima_ordem = max(a[0] for a in max_ordem_result) + 1
+                    else:
+                        proxima_ordem = 1
+                    ordem_spin.setValue(proxima_ordem)
+            except SQLAlchemyError:
+                ordem_spin.setValue(1)  # fallback
 
         if aviso_id:
             with get_session() as session:
@@ -190,6 +219,8 @@ class AvisosWidget(QWidget):
                             texto=novo_texto, ativo=novo_ativo, ordem=nova_ordem
                         )
                         session.add(novo_aviso)
+                # Reordenar automaticamente após qualquer alteração
+                self._reorder_avisos()
                 ipc_manager.send_update_signal(ipc_manager.AVISOS_SIGNAL_FILE)
                 self._load_avisos()
             except SQLAlchemyError as e:
