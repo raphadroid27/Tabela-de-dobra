@@ -23,13 +23,6 @@ def avisos():
     frame_avisos = QWidget()
     layout = QVBoxLayout(frame_avisos)
 
-    avisos_padrao = [
-        "Xadrez → Laser sempre corta com a face xadrez para Baixo ↓.",
-        "Corrugado → Laser sempre corta com a face do corrugado para Cima ↑.",
-        "Ferramenta <b>'bigode'</b> → Adicionar alívio de dobra se "
-        "abas <b><span style='color:red;'>maiores que 20mm</span></b>.",
-    ]
-
     avisos_bd = []
 
     try:
@@ -39,31 +32,12 @@ def avisos():
                 session.query(Aviso).filter_by(ativo=True).order_by(Aviso.ordem).all()
             )
 
-            if not avisos_query:
-                # Se não houver avisos no banco, verifica se a tabela está vazia
-                # para popular com os padrões (apenas na primeira vez)
-                todos_avisos = session.query(Aviso).count()
-                if todos_avisos == 0:
-                    logging.info("Populando tabela de avisos com valores padrão.")
-                    for index, texto in enumerate(avisos_padrao):
-                        novo_aviso = Aviso(texto=texto, ordem=index, ativo=True)
-                        session.add(novo_aviso)
-                    session.commit()
-                    # Recarrega após inserir
-                    avisos_query = (
-                        session.query(Aviso)
-                        .filter_by(ativo=True)
-                        .order_by(Aviso.ordem)
-                        .all()
-                    )
-
             if avisos_query:
                 avisos_bd = [a.texto for a in avisos_query]
 
     except SQLAlchemyError as e:
         logging.error("Erro ao carregar avisos do banco de dados: %s", e)
-        # Fallback para os avisos padrão em memória em caso de erro grave
-        avisos_bd = avisos_padrao
+        avisos_bd = []
 
     for i, aviso_texto in enumerate(avisos_bd):
         # Remove numeração explicita se existir no texto salvo (ex: "1. Texto")
