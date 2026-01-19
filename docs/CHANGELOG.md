@@ -2,6 +2,15 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.6.4 (15/01/2026)
+
+- Interface e Alertas:
+    - Implementado "Alerta de Ferramenta Bigode" para identificar necessidades de alívio de dobra em abas > 20mm (abas 1 e 5).
+    - Melhoria nas dicas de tela (tooltips) com inclusão de imagens explicativas e formatação HTML.
+    - Atualização de textos informativos e manuais de ajuda.
+- Manutenção:
+    - Limpeza de ícones não utilizados na pasta de assets.
+
 ## 2.6.3 (09/01/2026)
 
 - Refatoração e Interface:
