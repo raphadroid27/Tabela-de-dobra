@@ -8,6 +8,7 @@ utilizando SQLAlchemy para ORM.
 from datetime import datetime, timezone
 
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Float,
@@ -36,6 +37,16 @@ class Usuario(Base):
     nome = Column(String, unique=True, nullable=False)
     senha = Column(String, nullable=False)
     role = Column(String, default="viewer")
+
+
+class Aviso(Base):
+    """Modelo da tabela de avisos."""
+
+    __tablename__ = "aviso"
+    id = Column(Integer, primary_key=True)
+    texto = Column(String, nullable=False)
+    ativo = Column(Boolean, default=True)
+    ordem = Column(Integer, default=0)
 
 
 class Espessura(Base):

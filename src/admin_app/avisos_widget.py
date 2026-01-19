@@ -1,0 +1,194 @@
+"""
+Widget de gerenciamento de avisos para a interface administrativa.
+Permite listar, adicionar, editar e excluir avisos do sistema.
+"""
+
+import logging
+
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QPushButton,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+from sqlalchemy.exc import SQLAlchemyError
+
+from src.models.models import Aviso
+from src.utils.banco_dados import get_session
+from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_table_widget
+from src.utils.utilitarios import aplicar_medida_borda_espaco, ask_yes_no, show_error
+
+
+class AvisosWidget(QWidget):
+    """Widget para a aba de Gerenciamento de Avisos."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.table_avisos = QTableWidget()
+        self._setup_ui()
+        self._load_avisos()
+
+    def _setup_ui(self):
+        main_layout = QVBoxLayout(self)
+        aplicar_medida_borda_espaco(main_layout, 10, 10)
+
+        # Tabela
+        self.table_avisos.setColumnCount(4)
+        self.table_avisos.setHorizontalHeaderLabels(["ID", "Texto", "Ativo", "Ordem"])
+        header = self.table_avisos.horizontalHeader()
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+
+        aplicar_estilo_table_widget(self.table_avisos)
+        self.table_avisos.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.table_avisos.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
+        self.table_avisos.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_avisos.verticalHeader().setVisible(False)
+        self.table_avisos.setAlternatingRowColors(True)
+
+        main_layout.addWidget(self.table_avisos)
+
+        # Botões
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+
+        add_btn = QPushButton("➕ Adicionar")
+        aplicar_estilo_botao(add_btn, "verde")
+        add_btn.clicked.connect(self._add_aviso)
+
+        edit_btn = QPushButton("✏️ Editar")
+        aplicar_estilo_botao(edit_btn, "azul")
+        edit_btn.clicked.connect(self._edit_aviso)
+
+        del_btn = QPushButton("🗑️ Excluir")
+        aplicar_estilo_botao(del_btn, "vermelho")
+        del_btn.clicked.connect(self._delete_aviso)
+
+        btn_layout.addWidget(add_btn)
+        btn_layout.addWidget(edit_btn)
+        btn_layout.addWidget(del_btn)
+        btn_layout.addStretch()
+
+        main_layout.addLayout(btn_layout)
+
+    def _load_avisos(self):
+        try:
+            self.table_avisos.setRowCount(0)
+            with get_session() as session:
+                avisos = session.query(Aviso).order_by(Aviso.ordem).all()
+                self.table_avisos.setRowCount(len(avisos))
+                for i, aviso in enumerate(avisos):
+                    self.table_avisos.setItem(i, 0, QTableWidgetItem(str(aviso.id)))
+
+                    # Texto (pode ser HTML, mostramos plain text ou curto)
+                    texto_item = QTableWidgetItem(aviso.texto)
+                    texto_item.setToolTip(aviso.texto)
+                    self.table_avisos.setItem(i, 1, texto_item)
+
+                    ativo_item = QTableWidgetItem("Sim" if aviso.ativo else "Não")
+                    self.table_avisos.setItem(i, 2, ativo_item)
+
+                    self.table_avisos.setItem(i, 3, QTableWidgetItem(str(aviso.ordem)))
+        except SQLAlchemyError as e:
+            logging.error("Erro ao carregar avisos: %s", e)
+            show_error("Erro", "Falha ao carregar avisos.", self)
+
+    def _add_aviso(self):
+        self._show_editor_dialog()
+
+    def _edit_aviso(self):
+        row = self.table_avisos.currentRow()
+        if row < 0:
+            return
+        aviso_id = int(self.table_avisos.item(row, 0).text())
+        self._show_editor_dialog(aviso_id)
+
+    def _delete_aviso(self):
+        row = self.table_avisos.currentRow()
+        if row < 0:
+            return
+        aviso_id = int(self.table_avisos.item(row, 0).text())
+
+        if not ask_yes_no("Confirmar", "Tem certeza que deseja excluir este aviso?"):
+            return
+
+        try:
+            with get_session() as session:
+                aviso = session.query(Aviso).get(aviso_id)
+                if aviso:
+                    session.delete(aviso)
+                # Commit é automático pelo context manager se não houver erro
+            self._load_avisos()
+        except SQLAlchemyError as e:
+            logging.error("Erro ao excluir aviso: %s", e)
+            show_error("Erro", "Falha ao excluir aviso.", self)
+
+    def _show_editor_dialog(self, aviso_id=None):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Editar Aviso" if aviso_id else "Novo Aviso")
+        dialog.setMinimumWidth(400)
+
+        layout = QFormLayout(dialog)
+
+        texto_edit = QTextEdit()
+        ativo_chk = QCheckBox("Ativo")
+        ativo_chk.setChecked(True)
+        ordem_spin = QSpinBox()
+        ordem_spin.setRange(0, 9999)
+
+        if aviso_id:
+            with get_session() as session:
+                aviso = session.query(Aviso).get(aviso_id)
+                if aviso:
+                    # Usar setPlainText para editar o código HTML cru.
+                    texto_edit.setPlainText(aviso.texto)
+                    ativo_chk.setChecked(aviso.ativo)
+                    ordem_spin.setValue(aviso.ordem)
+
+        layout.addRow("Texto (HTML permitido, auto-numerado):", texto_edit)
+        layout.addRow("Ordem:", ordem_spin)
+        layout.addRow("", ativo_chk)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addRow(buttons)
+
+        if dialog.exec():
+            novo_texto = texto_edit.toPlainText()
+            novo_ativo = ativo_chk.isChecked()
+            nova_ordem = ordem_spin.value()
+
+            try:
+                with get_session() as session:
+                    if aviso_id:
+                        aviso = session.query(Aviso).get(aviso_id)
+                        if aviso:
+                            aviso.texto = novo_texto
+                            aviso.ativo = novo_ativo
+                            aviso.ordem = nova_ordem
+                    else:
+                        novo_aviso = Aviso(
+                            texto=novo_texto, ativo=novo_ativo, ordem=nova_ordem
+                        )
+                        session.add(novo_aviso)
+                self._load_avisos()
+            except SQLAlchemyError as e:
+                logging.error("Erro ao salvar aviso: %s", e)
+                show_error("Erro", "Falha ao salvar aviso.", self)
