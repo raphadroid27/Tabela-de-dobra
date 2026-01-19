@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Aviso
+from src.utils import ipc_manager
 from src.utils.banco_dados import get_session
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_table_widget
 from src.utils.utilitarios import aplicar_medida_borda_espaco, ask_yes_no, show_error
@@ -134,6 +135,7 @@ class AvisosWidget(QWidget):
                 if aviso:
                     session.delete(aviso)
                 # Commit é automático pelo context manager se não houver erro
+            ipc_manager.send_update_signal(ipc_manager.AVISOS_SIGNAL_FILE)
             self._load_avisos()
         except SQLAlchemyError as e:
             logging.error("Erro ao excluir aviso: %s", e)
@@ -188,6 +190,7 @@ class AvisosWidget(QWidget):
                             texto=novo_texto, ativo=novo_ativo, ordem=nova_ordem
                         )
                         session.add(novo_aviso)
+                ipc_manager.send_update_signal(ipc_manager.AVISOS_SIGNAL_FILE)
                 self._load_avisos()
             except SQLAlchemyError as e:
                 logging.error("Erro ao salvar aviso: %s", e)

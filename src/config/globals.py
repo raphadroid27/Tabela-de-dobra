@@ -19,6 +19,9 @@ MENU_COMPACT_WIDTH: int = 450
 # Flag para controlar quando a interface está sendo recarregada
 INTERFACE_RELOADING: bool = False
 
+# Referências a widgets globais (para atualização dinâmica)
+AVISOS_WIDGET: Any = None
+
 # Função para carregar interface (definida dinamicamente para evitar importação cíclica)
 CARREGAR_INTERFACE_FUNC: Any = None
 

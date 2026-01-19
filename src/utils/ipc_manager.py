@@ -42,6 +42,11 @@ def _hide_path(path: str) -> None:
             logging.error("Erro ao tentar ocultar o diretório: %s", e)
 
 
+# Arquivos de Sinalização (Signal Files) para atualizações em tempo real
+SIGNAL_DIR = os.path.join(RUNTIME_DIR, "signals")
+AVISOS_SIGNAL_FILE = os.path.join(SIGNAL_DIR, "avisos_updated.signal")
+
+
 def ensure_ipc_dirs_exist() -> None:
     """
     Garante que os diretórios de IPC existam e tenta ocultá-los.
@@ -51,14 +56,34 @@ def ensure_ipc_dirs_exist() -> None:
             os.makedirs(SESSION_DIR, exist_ok=True)
             os.makedirs(COMMAND_DIR, exist_ok=True)
             os.makedirs(CACHE_DIR, exist_ok=True)
+            os.makedirs(SIGNAL_DIR, exist_ok=True)
             _hide_path(RUNTIME_DIR)
         else:
             os.makedirs(SESSION_DIR, exist_ok=True)
             os.makedirs(COMMAND_DIR, exist_ok=True)
             os.makedirs(CACHE_DIR, exist_ok=True)
+            os.makedirs(SIGNAL_DIR, exist_ok=True)
+
+        # Garante a existência do arquivo de sinal
+        if not os.path.exists(AVISOS_SIGNAL_FILE):
+            with open(AVISOS_SIGNAL_FILE, 'w') as f:
+                f.write(str(time.time()))
+
     except OSError as e:
         logging.critical("Não foi possível criar os diretórios de IPC: %s", e)
         raise
+
+
+def send_update_signal(signal_file: str) -> None:
+    """Atualiza o timestamp do arquivo de sinal para notificar listeners."""
+    try:
+        if not os.path.exists(signal_file):
+            with open(signal_file, 'w') as f:
+                f.write(str(time.time()))
+        else:
+            os.utime(signal_file, None)
+    except OSError as e:
+        logging.error("Erro ao enviar sinal de atualização em '%s': %s", signal_file, e)
 
 
 # --- Gerenciamento de Sessões ---

@@ -8,7 +8,7 @@ import logging
 from PySide6.QtWidgets import QApplication
 
 from src.components import botoes
-from src.components.avisos import avisos
+from src.components.avisos import AvisosWidget
 from src.components.cabecalho import cabecalho
 from src.components.dobra_90 import dobras
 from src.config import globals as g
@@ -47,6 +47,7 @@ def safe_clear_layout(layout):
 
 def clear_global_widget_references():
     """Limpa referências globais de widgets antes da recriação."""
+    g.AVISOS_WIDGET = None
     widget_names = WIDGET_CABECALHO.copy()
     if tem_configuracao_dobras_valida():
         for w in g.VALORES_W:
@@ -105,7 +106,8 @@ def _criar_widgets_interface(var, layout):
     """Cria os widgets da interface."""
     layout.addWidget(cabecalho(), 0, 0)
     if var == 2:
-        layout.addWidget(avisos(), 0, 1)
+        g.AVISOS_WIDGET = AvisosWidget()
+        layout.addWidget(g.AVISOS_WIDGET, 0, 1)
 
     num_abas = 10 if g.EXP_V else 5
     g.N = num_abas + 1

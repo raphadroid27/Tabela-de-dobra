@@ -4,7 +4,7 @@ import logging
 import re
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QFrame
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Aviso
@@ -12,47 +12,56 @@ from src.utils.banco_dados import get_session
 from src.utils.utilitarios import aplicar_medida_borda_espaco
 
 
-def avisos():
-    """
-    Cria um frame contendo avisos para o usuário.
-    Carrega os avisos do banco de dados ou cria os padrões se não existirem.
+class AvisosWidget(QWidget):
+    """Widget que exibe os avisos, atualizável dinamicamente."""
 
-    Returns:
-        QWidget: O widget contendo os avisos.
-    """
-    frame_avisos = QWidget()
-    layout = QVBoxLayout(frame_avisos)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.layout_principal = QVBoxLayout(self)
+        aplicar_medida_borda_espaco(self.layout_principal, 10)
+        self.refresh()
 
-    avisos_bd = []
+    def refresh(self):
+        """Recarrega os avisos do banco e reconstrói a UI."""
+        # Limpa widgets anteriores
+        while self.layout_principal.count():
+            child = self.layout_principal.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
-    try:
-        with get_session() as session:
-            # Tenta buscar avisos ativos
-            avisos_query = (
-                session.query(Aviso).filter_by(ativo=True).order_by(Aviso.ordem).all()
-            )
-
-            if avisos_query:
-                avisos_bd = [a.texto for a in avisos_query]
-
-    except SQLAlchemyError as e:
-        logging.error("Erro ao carregar avisos do banco de dados: %s", e)
         avisos_bd = []
 
-    for i, aviso_texto in enumerate(avisos_bd):
-        # Remove numeração explicita se existir no texto salvo (ex: "1. Texto")
-        texto_limpo = re.sub(r"^\d+\.\s*", "", aviso_texto)
-        texto_numerado = f"{i + 1}. {texto_limpo}"
+        try:
+            with get_session() as session:
+                avisos_query = (
+                    session.query(Aviso).filter_by(
+                        ativo=True).order_by(Aviso.ordem).all()
+                )
+                if avisos_query:
+                    avisos_bd = [a.texto for a in avisos_query]
+        except SQLAlchemyError as e:
+            logging.error("Erro ao carregar avisos do banco de dados: %s", e)
+            avisos_bd = []
 
-        aviso_label = QLabel(texto_numerado)
-        aviso_label.setObjectName("label_texto")
-        aviso_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        aviso_label.setWordWrap(True)
-        aviso_label.setMaximumWidth(300)
-        # Permite uso de links/HTML rico
-        aviso_label.setTextFormat(Qt.TextFormat.RichText)
-        layout.addWidget(aviso_label)
+        for i, aviso_texto in enumerate(avisos_bd):
+            texto_limpo = re.sub(r"^\d+\.\s*", "", aviso_texto)
+            texto_numerado = f"{i + 1}. {texto_limpo}"
 
-    aplicar_medida_borda_espaco(layout, 10)
+            aviso_label = QLabel(texto_numerado)
+            aviso_label.setObjectName("label_texto")
+            aviso_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            aviso_label.setWordWrap(True)
+            aviso_label.setMaximumWidth(300)
+            aviso_label.setTextFormat(Qt.TextFormat.RichText)
+            self.layout_principal.addWidget(aviso_label)
 
-    return frame_avisos
+        # Adiciona spacer no final para empurrar tudo para cima
+        self.layout_principal.addStretch()
+
+
+def avisos():
+    """
+    Função wrapper para manter compatibilidade, mas agora retorna a nova classe.
+    Recomendado usar AvisosWidget diretamente.
+    """
+    return AvisosWidget()

@@ -7,7 +7,7 @@ import sys
 import traceback
 from functools import partial
 
-from PySide6.QtCore import QSettings, Qt, QTimer
+from PySide6.QtCore import QSettings, Qt, QTimer, QFileSystemWatcher
 from PySide6.QtGui import (
     QAction,
     QColor,
@@ -82,6 +82,31 @@ class MainWindow(ThemedMainWindow):
         self.is_main_window = True
         # Inicializa a lista de callbacks de resize
         self._resize_handlers = []
+        self._setup_signal_watcher()
+
+    def _setup_signal_watcher(self):
+        """Monitora alterações em arquivos de sinal para atualização em tempo real."""
+        self.fs_watcher = QFileSystemWatcher(self)
+        # Monitora o arquivo de sinal de avisos
+        if os.path.exists(ipc_manager.AVISOS_SIGNAL_FILE):
+            self.fs_watcher.addPath(ipc_manager.AVISOS_SIGNAL_FILE)
+
+        self.fs_watcher.fileChanged.connect(self._on_signal_file_changed)
+
+    def _on_signal_file_changed(self, path):
+        """Trata alterações nos arquivos monitorados."""
+        if path == ipc_manager.AVISOS_SIGNAL_FILE:
+            logging.info("Sinal de atualização de avisos recebido.")
+            if g.AVISOS_WIDGET:
+                # Usa QTimer para garantir execução na thread principal e dar debounce
+                QTimer.singleShot(100, g.AVISOS_WIDGET.refresh)
+
+            # Re-adiciona o path se o arquivo for recriado (comum em alguns editores/sistemas)
+            if not os.path.exists(path):
+                # Se foi deletado, pode ser necessário esperar recriar ou usar diretório
+                pass
+            elif path not in self.fs_watcher.files():
+                self.fs_watcher.addPath(path)
 
     def closeEvent(self, event):  # pylint: disable=invalid-name
         """Evento chamado quando a janela principal está sendo fechada."""
