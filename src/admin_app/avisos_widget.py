@@ -5,6 +5,7 @@ Permite listar, adicionar, editar e excluir avisos do sistema.
 
 import logging
 
+from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QPushButton,
+    QSizePolicy,
     QSpinBox,
     QTableWidget,
     QTableWidgetItem,
@@ -73,21 +75,32 @@ class AvisosWidget(QWidget):
         btn_layout.setSpacing(10)
 
         add_btn = QPushButton("➕ Adicionar")
+        add_btn.setToolTip("Adicionar novo aviso (Ctrl+N)")
+        add_btn.setShortcut(QKeySequence("Ctrl+N"))
+        add_btn.setSizePolicy(QSizePolicy.Policy.Expanding,
+                              QSizePolicy.Policy.Preferred)
         aplicar_estilo_botao(add_btn, "verde")
         add_btn.clicked.connect(self._add_aviso)
 
         edit_btn = QPushButton("✏️ Editar")
+        edit_btn.setToolTip("Editar aviso selecionado (F2)")
+        edit_btn.setShortcut(QKeySequence("F2"))
+        edit_btn.setSizePolicy(QSizePolicy.Policy.Expanding,
+                               QSizePolicy.Policy.Preferred)
         aplicar_estilo_botao(edit_btn, "azul")
         edit_btn.clicked.connect(self._edit_aviso)
 
         del_btn = QPushButton("🗑️ Excluir")
+        del_btn.setToolTip("Excluir aviso selecionado (Delete)")
+        del_btn.setShortcut(QKeySequence("Delete"))
+        del_btn.setSizePolicy(QSizePolicy.Policy.Expanding,
+                              QSizePolicy.Policy.Preferred)
         aplicar_estilo_botao(del_btn, "vermelho")
         del_btn.clicked.connect(self._delete_aviso)
 
         btn_layout.addWidget(add_btn)
         btn_layout.addWidget(edit_btn)
         btn_layout.addWidget(del_btn)
-        btn_layout.addStretch()
 
         main_layout.addLayout(btn_layout)
 
