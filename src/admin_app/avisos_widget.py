@@ -9,7 +9,6 @@ from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
-    QDialog,
     QDialogButtonBox,
     QHBoxLayout,
     QHeaderView,
@@ -29,6 +28,7 @@ from src.models.models import Aviso
 from src.utils import ipc_manager
 from src.utils.banco_dados import get_session
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_table_widget
+from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import aplicar_medida_borda_espaco, ask_yes_no, show_error
 
 
@@ -172,7 +172,7 @@ class AvisosWidget(QWidget):
     # pylint: disable=too-many-statements, too-many-locals
 
     def _show_editor_dialog(self, aviso_id=None):
-        dialog = QDialog(self)
+        dialog = ThemedDialog(self)
         dialog.setWindowTitle("Editar Aviso" if aviso_id else "Novo Aviso")
         dialog.setMinimumWidth(400)
 
