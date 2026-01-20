@@ -11,9 +11,9 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
-    QFormLayout,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QPushButton,
     QSizePolicy,
     QSpinBox,
@@ -43,7 +43,7 @@ class AvisosWidget(QWidget):
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(main_layout, 10, 10)
+        aplicar_medida_borda_espaco(main_layout)
 
         # Tabela
         self.table_avisos.setColumnCount(4)
@@ -174,13 +174,20 @@ class AvisosWidget(QWidget):
         dialog.setWindowTitle("Editar Aviso" if aviso_id else "Novo Aviso")
         dialog.setMinimumWidth(400)
 
-        layout = QFormLayout(dialog)
+        main_layout = QVBoxLayout(dialog)
+        aplicar_medida_borda_espaco(main_layout, 10, 10)
 
+        # Campo de texto
+        texto_label = QLabel("Texto (HTML permitido, auto-numerado):")
         texto_edit = QTextEdit()
-        ativo_chk = QCheckBox("Ativo")
-        ativo_chk.setChecked(True)
+        main_layout.addWidget(texto_label)
+        main_layout.addWidget(texto_edit)
+
+        # Widgets para ordem e ativo
         ordem_spin = QSpinBox()
         ordem_spin.setRange(0, 9999)
+        ativo_chk = QCheckBox("Ativo")
+        ativo_chk.setChecked(True)
 
         # Para novo aviso, definir ordem automaticamente como o próximo disponível
         if aviso_id is None:
@@ -205,14 +212,23 @@ class AvisosWidget(QWidget):
                     ativo_chk.setChecked(aviso.ativo)
                     ordem_spin.setValue(aviso.ordem)
 
-        layout.addRow("Texto (HTML permitido, auto-numerado):", texto_edit)
-        layout.addRow("Ordem:", ordem_spin)
-        layout.addRow("", ativo_chk)
+        # Layout inferior com ordem, checkbox ativo e botões
+        bottom_layout = QHBoxLayout()
+        bottom_layout.setSpacing(10)
+
+        ordem_label = QLabel("Ordem:")
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
-        layout.addRow(buttons)
+
+        bottom_layout.addWidget(ordem_label)
+        bottom_layout.addWidget(ordem_spin)
+        bottom_layout.addWidget(ativo_chk)
+        bottom_layout.addStretch()  # Para empurrar os botões para a direita
+        bottom_layout.addWidget(buttons)
+
+        main_layout.addLayout(bottom_layout)
 
         if dialog.exec():
             novo_texto = texto_edit.toPlainText()
