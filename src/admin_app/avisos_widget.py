@@ -43,7 +43,7 @@ class AvisosWidget(QWidget):
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
-        aplicar_medida_borda_espaco(main_layout)
+        aplicar_medida_borda_espaco(main_layout, 10)
 
         # Tabela
         self.table_avisos.setColumnCount(4)
@@ -169,13 +169,15 @@ class AvisosWidget(QWidget):
         except SQLAlchemyError as e:
             logging.error("Erro ao reordenar avisos: %s", e)
 
+    # pylint: disable=too-many-statements, too-many-locals
+
     def _show_editor_dialog(self, aviso_id=None):
         dialog = QDialog(self)
         dialog.setWindowTitle("Editar Aviso" if aviso_id else "Novo Aviso")
         dialog.setMinimumWidth(400)
 
         main_layout = QVBoxLayout(dialog)
-        aplicar_medida_borda_espaco(main_layout, 10, 10)
+        aplicar_medida_borda_espaco(main_layout, 10, 5)
 
         # Campo de texto
         texto_label = QLabel("Texto (HTML permitido, auto-numerado):")
