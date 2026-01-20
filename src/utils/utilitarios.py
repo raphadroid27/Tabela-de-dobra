@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Optional, Sequence, Union
 
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QInputDialog, QLayout, QLineEdit, QMessageBox, QWidget
 
 from src.config import globals as g
@@ -473,6 +474,7 @@ def ask_yes_no(
     msg = ThemedMessageBox(parent)
     msg.setIcon(QMessageBox.Icon.Question)
     msg.setWindowTitle(title)
+    msg.setWindowIcon(QIcon(ICON_PATH))
 
     # Aplicar a mesma lógica de _show_message_box para tratar a mensagem
     main_text_raw = ""
