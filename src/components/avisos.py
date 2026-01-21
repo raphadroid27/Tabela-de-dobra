@@ -4,7 +4,7 @@ import logging
 import re
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Aviso
@@ -51,7 +51,8 @@ class AvisosWidget(QWidget):
             aviso_label.setObjectName("label_texto")
             aviso_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
             aviso_label.setWordWrap(True)
-            aviso_label.setMaximumWidth(300)
+            aviso_label.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
             aviso_label.setTextFormat(Qt.TextFormat.RichText)
             self.layout_principal.addWidget(aviso_label)
 
