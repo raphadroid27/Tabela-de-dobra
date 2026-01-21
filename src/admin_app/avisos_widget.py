@@ -190,6 +190,9 @@ class AvisosWidget(QWidget):
         ordem_spin.setRange(0, 9999)
         ativo_chk = QCheckBox("Ativo")
         ativo_chk.setChecked(True)
+        tamanho_fonte_spin = QSpinBox()
+        tamanho_fonte_spin.setRange(8, 24)
+        tamanho_fonte_spin.setValue(12)
 
         # Para novo aviso, definir ordem automaticamente como o próximo disponível
         if aviso_id is None:
@@ -213,12 +216,14 @@ class AvisosWidget(QWidget):
                     texto_edit.setPlainText(aviso.texto)
                     ativo_chk.setChecked(aviso.ativo)
                     ordem_spin.setValue(aviso.ordem)
+                    tamanho_fonte_spin.setValue(aviso.tamanho_fonte)
 
         # Layout inferior com ordem, checkbox ativo e botões
         bottom_layout = QHBoxLayout()
         bottom_layout.setSpacing(10)
 
         ordem_label = QLabel("Ordem:")
+        tamanho_fonte_label = QLabel("Tamanho Fonte:")
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
@@ -226,6 +231,8 @@ class AvisosWidget(QWidget):
 
         bottom_layout.addWidget(ordem_label)
         bottom_layout.addWidget(ordem_spin)
+        bottom_layout.addWidget(tamanho_fonte_label)
+        bottom_layout.addWidget(tamanho_fonte_spin)
         bottom_layout.addWidget(ativo_chk)
         bottom_layout.addStretch()  # Para empurrar os botões para a direita
         bottom_layout.addWidget(buttons)
@@ -236,6 +243,7 @@ class AvisosWidget(QWidget):
             novo_texto = texto_edit.toPlainText()
             novo_ativo = ativo_chk.isChecked()
             nova_ordem = ordem_spin.value()
+            novo_tamanho_fonte = tamanho_fonte_spin.value()
 
             try:
                 with get_session() as session:
@@ -245,9 +253,13 @@ class AvisosWidget(QWidget):
                             aviso.texto = novo_texto
                             aviso.ativo = novo_ativo
                             aviso.ordem = nova_ordem
+                            aviso.tamanho_fonte = novo_tamanho_fonte
                     else:
                         novo_aviso = Aviso(
-                            texto=novo_texto, ativo=novo_ativo, ordem=nova_ordem
+                            texto=novo_texto,
+                            ativo=novo_ativo,
+                            ordem=nova_ordem,
+                            tamanho_fonte=novo_tamanho_fonte
                         )
                         session.add(novo_aviso)
                 # Reordenar automaticamente após qualquer alteração

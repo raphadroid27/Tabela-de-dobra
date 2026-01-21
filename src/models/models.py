@@ -47,6 +47,7 @@ class Aviso(Base):
     texto = Column(String, nullable=False)
     ativo = Column(Boolean, default=True)
     ordem = Column(Integer, default=0)
+    tamanho_fonte = Column(Integer, default=10)
 
 
 class Espessura(Base):

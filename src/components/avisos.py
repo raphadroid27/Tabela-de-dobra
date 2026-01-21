@@ -29,7 +29,7 @@ class AvisosWidget(QWidget):
             if child.widget():
                 child.widget().deleteLater()
 
-        avisos_bd = []
+        avisos_processados = []
 
         try:
             with get_session() as session:
@@ -38,17 +38,18 @@ class AvisosWidget(QWidget):
                         ativo=True).order_by(Aviso.ordem).all()
                 )
                 if avisos_query:
-                    avisos_bd = [a.texto for a in avisos_query]
+                    for i, aviso in enumerate(avisos_query):
+                        texto_limpo = re.sub(r"^\d+\.\s*", "", aviso.texto)
+                        texto_numerado = f"{i + 1}. {texto_limpo}"
+                        avisos_processados.append((texto_numerado, aviso.tamanho_fonte))
         except SQLAlchemyError as e:
             logging.error("Erro ao carregar avisos do banco de dados: %s", e)
-            avisos_bd = []
+            avisos_processados = []
 
-        for i, aviso_texto in enumerate(avisos_bd):
-            texto_limpo = re.sub(r"^\d+\.\s*", "", aviso_texto)
-            texto_numerado = f"{i + 1}. {texto_limpo}"
-
+        for texto_numerado, tamanho_fonte in avisos_processados:
             aviso_label = QLabel(texto_numerado)
             aviso_label.setObjectName("label_texto")
+            aviso_label.setStyleSheet(f"font-size: {tamanho_fonte}pt;")
             aviso_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
             aviso_label.setWordWrap(True)
             aviso_label.setSizePolicy(
