@@ -186,8 +186,8 @@ def salvar_estado_final():
         if g.PRINC_FORM:
             settings = QSettings()
             pos = g.PRINC_FORM.pos()
-            settings.setValue("app/pos_x", pos.x())
-            settings.setValue("app/pos_y", pos.y())
+            settings.setValue("config/pos_x", pos.x())
+            settings.setValue("config/pos_y", pos.y())
             settings.sync()  # Força a sincronização
             logging.info("Estado final salvo com posição: x=%d, y=%d", pos.x(), pos.y())
     except (OSError, IOError, RuntimeError) as e:
@@ -233,8 +233,8 @@ def configurar_janela_principal():
 
     # Carrega a posição da janela usando QSettings
     settings = QSettings()
-    x = settings.value("app/pos_x", type=int)
-    y = settings.value("app/pos_y", type=int)
+    x = settings.value("config/pos_x", type=int)
+    y = settings.value("config/pos_y", type=int)
     if x is not None and y is not None:
         g.PRINC_FORM.move(x, y)
     else:
@@ -578,7 +578,7 @@ def main():  # pylint: disable=too-many-locals
         configurar_sinais_excecoes()
         app = QApplication(sys.argv)
         app.setOrganizationName("raphadroid27")
-        app.setApplicationName("Tabela-de-dobra")
+        app.setApplicationName("Calculadora de Dobra")
         theme_manager.initialize()  # Inicializa o tema salvo
 
         app.aboutToQuit.connect(salvar_estado_final)

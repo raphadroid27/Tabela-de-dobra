@@ -25,8 +25,6 @@ class ThemeManager:
     _DEFAULT_MODE: ClassVar[str] = "dark"
     _COLOR_SETTINGS_KEY: ClassVar[str] = "appearance/theme_accent"
     _DEFAULT_COLOR: ClassVar[str] = "sistema"
-    _STYLE_SETTINGS_KEY: ClassVar[str] = "appearance/theme_style"
-    _DEFAULT_STYLE: ClassVar[str] = "Fusion"
 
     _COLOR_OPTIONS: ClassVar[dict[str, tuple[str, str]]] = {
         "sistema": ("Sistema", "#auto"),  # Cor de destaque do Windows
@@ -47,7 +45,7 @@ class ThemeManager:
         """Inicializa o gerenciador de temas."""
         self._settings = None
         # Valores padrão
-        self._style = self._DEFAULT_STYLE
+        self._style = "Fusion"
         self._mode = self._DEFAULT_MODE
         self._color = self._DEFAULT_COLOR
         self._listeners: List[Callable[[str], None]] = []
@@ -84,24 +82,10 @@ class ThemeManager:
         """Retorna a cor de destaque atualmente aplicada."""
         return self._color
 
-    @property
-    def current_style(self) -> str:
-        """Retorna o estilo atualmente aplicado."""
-        return self._style
-
     def initialize(self) -> None:
         """Aplica o tema salvo sem sobrescrever a preferência."""
-        # Carrega os valores salvos
-        saved_style = self._get_settings().value(
-            self._STYLE_SETTINGS_KEY, self._DEFAULT_STYLE
-        )
-        if not isinstance(saved_style, str):
-            saved_style = self._DEFAULT_STYLE
-        self._style = saved_style
-        # Garante que seja salvo
-        self._get_settings().setValue(self._STYLE_SETTINGS_KEY, self._style)
-        self._get_settings().sync()
-        QApplication.setStyle(self._style)
+        # Define o estilo como Fusion
+        QApplication.setStyle("Fusion")
         saved_mode = self._get_settings().value(self._SETTINGS_KEY, self._DEFAULT_MODE)
         self._mode = (
             saved_mode
@@ -131,18 +115,6 @@ class ThemeManager:
         self._get_settings().sync()
         self._apply_theme(self._mode, persist=False)
         self._notify_color_listeners()
-
-    def apply_style(self, style: str) -> None:
-        """Aplica um novo estilo para a aplicação."""
-        if style == self._style:
-            return
-        self._style = style
-        self._get_settings().setValue(self._STYLE_SETTINGS_KEY, style)
-        self._get_settings().sync()
-        QApplication.setStyle(style)
-        # Força atualização de todos os widgets para aplicar o novo estilo
-        for widget in QApplication.allWidgets():
-            widget.repaint()
 
     def refresh_interface(self) -> None:
         """Força atualização completa da interface.
