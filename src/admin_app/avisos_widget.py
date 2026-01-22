@@ -28,6 +28,7 @@ from src.models.models import Aviso
 from src.utils import ipc_manager
 from src.utils.banco_dados import get_session
 from src.utils.estilo import aplicar_estilo_botao, aplicar_estilo_table_widget
+from src.utils.janelas import Janela
 from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import aplicar_medida_borda_espaco, ask_yes_no, show_error
 
@@ -174,7 +175,9 @@ class AvisosWidget(QWidget):
     def _show_editor_dialog(self, aviso_id=None):
         dialog = ThemedDialog(self)
         dialog.setWindowTitle("Editar Aviso" if aviso_id else "Novo Aviso")
-        dialog.setMinimumWidth(400)
+        dialog.setMinimumWidth(500)
+        dialog.resize(500, 300)
+        Janela.posicionar_janela(dialog, "centro")
 
         main_layout = QVBoxLayout(dialog)
         aplicar_medida_borda_espaco(main_layout, 10, 5)
@@ -223,7 +226,9 @@ class AvisosWidget(QWidget):
         bottom_layout.setSpacing(10)
 
         ordem_label = QLabel("Ordem:")
-        tamanho_fonte_label = QLabel("Tamanho Fonte:")
+        ordem_label.setObjectName("label_titulo")
+        tamanho_fonte_label = QLabel("Tamanho:")
+        tamanho_fonte_label.setObjectName("label_titulo")
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)

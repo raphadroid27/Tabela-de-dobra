@@ -73,10 +73,12 @@ class AdminTool(ThemedMainWindow):
 
         self.setWindowFlags(
             Qt.WindowType.Window
-            | Qt.WindowMinimizeButtonHint
-            | Qt.WindowMaximizeButtonHint
-            | Qt.WindowCloseButtonHint
+            | Qt.WindowType.WindowMinimizeButtonHint
+            | Qt.WindowType.WindowMaximizeButtonHint
+            | Qt.WindowType.WindowCloseButtonHint
         )
+        self.setMinimumSize(550, 400)
+        self.resize(550, 400)
         self._restore_window_state()
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -135,17 +137,21 @@ class AdminTool(ThemedMainWindow):
     def _restore_window_state(self):
         """Restaura posição e tamanho salvos da janela administrativa."""
         settings = QSettings()
-        geometry = settings.value("admin/geometry")
-        if geometry:
-            self.restoreGeometry(geometry)
-        else:
-            self.setMinimumSize(380, 400)
-            self.resize(380, 400)
+        pos_x = settings.value("admin/config/pos_x")
+        pos_y = settings.value("admin/config/pos_y")
+        width = settings.value("admin/config/width")
+        height = settings.value("admin/config/height")
+        if pos_x is not None and pos_y is not None and width is not None and height is not None:
+            self.setGeometry(int(pos_x), int(pos_y), int(width), int(height))
 
     def _save_window_state(self):
         """Persiste a geometria atual para reutilização futura."""
         settings = QSettings()
-        settings.setValue("admin/geometry", self.saveGeometry())
+        geometry = self.geometry()
+        settings.setValue("admin/config/pos_x", geometry.x())
+        settings.setValue("admin/config/pos_y", geometry.y())
+        settings.setValue("admin/config/width", geometry.width())
+        settings.setValue("admin/config/height", geometry.height())
 
     def _setup_inactivity_timer(self):
         ativar_monitor_inatividade(
@@ -256,7 +262,7 @@ def main():
     ipc_manager.ensure_ipc_dirs_exist()
     app = QApplication(sys.argv)
     app.setOrganizationName("raphadroid27")
-    app.setApplicationName("Tabela-de-dobra")
+    app.setApplicationName("Calculadora de Dobra")
     # Inicializa o tema salvo via ThemeManager
     try:
         theme_manager.initialize()
