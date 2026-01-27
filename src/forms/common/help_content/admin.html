@@ -34,6 +34,22 @@
         </ul>
     </li>
     <li>
+        Aba ⚠️ <b>Gerenciar Avisos</b>:
+        <ul>
+            <li>Permite adicionar, editar, excluir e reordenar avisos exibidos na tela principal.</li>
+            <li>No editor de aviso é possível marcar como <b>Ativo</b>, definir a <b>Ordem</b> de exibição e ajustar o <b>Tamanho da Fonte</b> (8–24 pt).</li>
+            <li>Ao excluir um aviso, a ordem é recompactada automaticamente.</li>
+            <li>As alterações são aplicadas imediatamente e propagadas para instâncias via sinalização IPC.</li>
+            <li><b>Atalhos dentro da aba:</b>
+                <ul>
+                    <li><kbd>Ctrl+N</kbd> — Adicionar novo aviso.</li>
+                    <li><kbd>F2</kbd> — Editar aviso selecionado.</li>
+                    <li><kbd>Delete</kbd> — Excluir aviso selecionado (pede confirmação).</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li>
         Aba 🔄 <b>Atualizador</b>:
         <ul>
             <li>Mostra versão instalada da aplicação.</li>
@@ -41,7 +57,7 @@
             <li><b>Instalar Atualização</b> (<kbd>Ctrl+I</kbd>): fecha todas as instâncias e executa atualização com barra de progresso.</li>
         </ul>
     </li>
-    <li>Use <kbd>Ctrl+1</kbd>, <kbd>Ctrl+2</kbd> e <kbd>Ctrl+3</kbd> para alternar rapidamente entre as abas.</li>
+    <li>Use <kbd>Ctrl+1</kbd>, <kbd>Ctrl+2</kbd>, <kbd>Ctrl+3</kbd> e <kbd>Ctrl+4</kbd> para alternar rapidamente entre as abas (Instâncias / Usuários / Gerenciar Avisos / Atualizador).</li>
 </ol>
 <h4><b>Atalhos</b></h4>
 <ul>
@@ -49,15 +65,30 @@
     <li><kbd>Enter</kbd> Fazer login (🔐 Login).</li>
     <li><kbd>Ctrl+U</kbd> Focar campo Usuário.</li>
     <li><kbd>Ctrl+P</kbd> Focar campo Senha.</li>
-    <li><kbd>Ctrl+1/2/3</kbd> Alternar entre abas Instâncias/Usuários/Atualizador.</li>
+
+    <!-- Instâncias -->
+    <li><kbd>Ctrl+1</kbd> Alternar para aba Instâncias.</li>
     <li><kbd>F5</kbd> Atualizar lista de instâncias (🔄 Atualizar).</li>
     <li><kbd>Ctrl+Shift+Q</kbd> Shutdown geral de instâncias (⚠️ Shutdown Geral).</li>
+
+    <!-- Usuários -->
+    <li><kbd>Ctrl+2</kbd> Alternar para aba Usuários.</li>
+    <li><kbd>F5</kbd> Atualizar lista de usuários (🔄 Atualizar).</li>
     <li><kbd>Ctrl+F</kbd> Focar campo de busca de usuários.</li>
     <li><kbd>Ctrl+L</kbd> Limpar filtro de busca (🧹 Limpar).</li>
     <li><kbd>Ctrl+A</kbd> Alterar permissão do usuário selecionado (👤 Alterar Permissão).</li>
     <li><kbd>Ctrl+R</kbd> Resetar senha do usuário selecionado (🔄 Resetar Senha).</li>
     <li><kbd>Delete</kbd> Excluir usuário selecionado (🗑️ Excluir).</li>
-    <li><kbd>Ctrl+O</kbd> Selecionar arquivo de atualização (<b>Selecionar...</b>).</li>
-    <li><kbd>Ctrl+I</kbd> Instalar atualização (<b>Instalar Atualização</b>).</li>
+
+    <!-- Gerenciar Avisos -->
+    <li><kbd>Ctrl+3</kbd> Alternar para aba Gerenciar Avisos.</li>
+    <li><kbd>Ctrl+N</kbd> Adicionar novo aviso (aba Gerenciar Avisos).</li>
+    <li><kbd>F2</kbd> Editar aviso selecionado (aba Gerenciar Avisos).</li>
+    <li><kbd>Delete</kbd> Excluir aviso selecionado (aba Gerenciar Avisos).</li>
+
+    <!-- Atualizador -->
+    <li><kbd>Ctrl+4</kbd> Alternar para aba Atualizador.</li>
+    <li><kbd>Ctrl+O</kbd> Selecionar arquivo de atualização (Selecionar...).</li>
+    <li><kbd>Ctrl+I</kbd> Instalar atualização (Instalar Atualização).</li>
 </ul>
 
