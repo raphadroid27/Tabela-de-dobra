@@ -287,10 +287,10 @@ class WidgetUpdater:
 
     def _preencher_combobox_comum(self, combo, items_ou_query_func, usar_cache=False):
         """Método comum para preencher comboboxes, consolidando a lógica duplicada."""
-        if not combo:
+        if not WidgetManager.is_widget_valid(combo):
             return
-        current_value = combo.currentText()
-        combo.clear()
+        current_value = WidgetManager.get_widget_value(combo)
+        WidgetManager.clear_widget(combo)
 
         try:
             if usar_cache or callable(items_ou_query_func):
@@ -302,11 +302,14 @@ class WidgetUpdater:
             else:
                 items = items_ou_query_func
 
-            combo.addItems(items)
-            if current_value in items:
-                combo.setCurrentText(current_value)
-            else:
-                combo.setCurrentIndex(-1)
+            try:
+                combo.addItems(items)
+                if current_value in items:
+                    combo.setCurrentText(current_value)
+                else:
+                    combo.setCurrentIndex(-1)
+            except (AttributeError, RuntimeError) as e:
+                logging.error("Erro ao manipular combobox: %s", e)
         except SQLAlchemyError as e:
             logging.error("Erro ao preencher combobox: %s", e)
 
@@ -367,32 +370,38 @@ class FormWidgetUpdater:
 
     def _preencher_form_combo(self, combo, query_func):
         """Preenche combobox do formulário executando query no banco de dados."""
-        if not combo:
+        if not WidgetManager.is_widget_valid(combo):
             return
-        current_text = combo.currentText()
-        combo.clear()
+        current_text = WidgetManager.get_widget_value(combo)
+        WidgetManager.clear_widget(combo)
         try:
             with get_session() as session:
                 items = query_func(session)
-                combo.addItems(items)
-                if current_text in items:
-                    combo.setCurrentText(current_text)
-                else:
-                    combo.setCurrentIndex(-1)
+                try:
+                    combo.addItems(items)
+                    if current_text in items:
+                        combo.setCurrentText(current_text)
+                    else:
+                        combo.setCurrentIndex(-1)
+                except (AttributeError, RuntimeError) as e:
+                    logging.error("Erro ao manipular combobox do formulário: %s", e)
         except SQLAlchemyError as e:
             logging.error("Erro ao preencher combobox do formulário: %s", e)
 
     def _preencher_form_combo_direto(self, combo, items):
         """Preenche combobox do formulário diretamente com lista de itens (para uso com cache)."""
-        if not combo:
+        if not WidgetManager.is_widget_valid(combo):
             return
-        current_text = combo.currentText()
-        combo.clear()
-        combo.addItems(items)
-        if current_text in items:
-            combo.setCurrentText(current_text)
-        else:
-            combo.setCurrentIndex(-1)
+        current_text = WidgetManager.get_widget_value(combo)
+        WidgetManager.clear_widget(combo)
+        try:
+            combo.addItems(items)
+            if current_text in items:
+                combo.setCurrentText(current_text)
+            else:
+                combo.setCurrentIndex(-1)
+        except (AttributeError, RuntimeError) as e:
+            logging.error("Erro ao manipular combobox do formulário: %s", e)
 
 
 def obter_configuracoes():
