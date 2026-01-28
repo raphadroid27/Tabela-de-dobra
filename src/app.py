@@ -335,11 +335,12 @@ def configurar_menu(menu_custom):
             ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(None)),
             ("🖨️ Impressão em Lote", lambda: form_impressao.main(None)),
             ("📊 Comparar Arquivos", lambda: form_comparar_arquivos.main(None)),
-            ("🌀 Springback", lambda: form_spring_back.main(None)),
             (
                 "🔄 Converter Arquivos",
                 lambda: form_converter_arquivos.main(None),
             ),
+            ("↩️ Springback", lambda: form_spring_back.main(None)),
+
         ],
         "👤 Usuário": [
             ("🔐 Login", partial(_executar_autenticacao, True)),
