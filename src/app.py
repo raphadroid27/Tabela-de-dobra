@@ -35,6 +35,7 @@ from src.forms import (
     form_impressao,
     form_manual,
     form_razao_rie,
+    form_spring_back,
     form_sobre,
 )
 from src.forms.common import context_help
@@ -334,6 +335,7 @@ def configurar_menu(menu_custom):
             ("➗ Razão Raio/Espessura", lambda: form_razao_rie.main(None)),
             ("🖨️ Impressão em Lote", lambda: form_impressao.main(None)),
             ("📊 Comparar Arquivos", lambda: form_comparar_arquivos.main(None)),
+            ("🌀 Springback", lambda: form_spring_back.main(None)),
             (
                 "🔄 Converter Arquivos",
                 lambda: form_converter_arquivos.main(None),
