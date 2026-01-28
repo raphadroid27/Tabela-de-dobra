@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QLineEdit
 
 from src.config import globals as g
-from src.utils.expressoes_lineedit import resolver_expressao_no_line_edit
+from src.utils.utilitarios import resolver_expressao_no_line_edit
 from src.utils.interface import (
     calcular_valores,
     copiar,

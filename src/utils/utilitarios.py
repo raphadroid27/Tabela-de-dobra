@@ -4,9 +4,12 @@ Este módulo centraliza a gestão de caminhos, a configuração de logs e as
 funções de diálogo com o usuário (QMessageBox, QInputDialog).
 """
 
+import ast
 import logging
 import logging.handlers
+import operator as op
 import os
+import re
 import shutil
 import subprocess  # nosec B404 - integração controlada com ferramentas externas
 import sys
@@ -29,6 +32,9 @@ FILE_OPEN_EXCEPTIONS = (
 
 
 LOGGER = logging.getLogger(__name__)
+
+_OPS = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul, ast.Div: op.truediv}
+
 
 # --- 1. LÓGICA CENTRALIZADA DE CAMINHOS ---
 
@@ -574,3 +580,59 @@ def setup_logging(log_filename: str, log_to_console: bool = True) -> None:
         logging.error(
             "Falha ao inicializar o handler de arquivo de log.", exc_info=True
         )
+
+
+# --- 3. EXPRESSÕES SIMPLES EM QLINEEDIT ---
+
+
+def _resolver_no_ast(node):
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return float(node.value)
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        return -_resolver_no_ast(node.operand)
+    if isinstance(node, ast.BinOp) and type(node.op) in _OPS:
+        return _OPS[type(node.op)](
+            _resolver_no_ast(node.left), _resolver_no_ast(node.right)
+        )
+    raise ValueError("Operacao nao permitida")
+
+
+def _formatar_decimal(valor: float) -> str:
+    texto = f"{valor:.4f}".rstrip("0").rstrip(".")
+    texto = texto or "0"
+    return texto.replace(".", ",")
+
+
+def avaliar_expressao_para_texto(expr: str) -> Optional[str]:
+    """Avalia expressão simples e devolve texto formatado com vírgula."""
+    if not expr:
+        return None
+
+    sanitized = expr.replace(" ", "").replace(",", ".")
+    if not any(op_char in sanitized for op_char in ["+", "-", "*", "/", "(", ")"]):
+        return None
+    if not re.fullmatch(r"[0-9.+\-*/()]*", sanitized):
+        return None
+
+    try:
+        node = ast.parse(sanitized, mode="eval").body
+        valor = _resolver_no_ast(node)
+        return _formatar_decimal(valor)
+    except (SyntaxError, ValueError, TypeError):
+        return None
+
+
+def resolver_expressao_no_line_edit(entry: QLineEdit) -> None:
+    """Substitui o texto do QLineEdit pelo resultado, se a expressão for válida."""
+    if entry is None:
+        return
+    texto_atual = entry.text()
+    resultado = avaliar_expressao_para_texto(texto_atual)
+    if resultado is None:
+        return
+
+    pos = entry.cursorPosition()
+    entry.blockSignals(True)
+    entry.setText(resultado)
+    entry.setCursorPosition(min(pos, len(resultado)))
+    entry.blockSignals(False)
