@@ -2,6 +2,17 @@
 
 Histórico de mudanças do aplicativo Calculadora de Dobras
 
+## 2.7.0 (28/01/2026)
+
+- Refatoração e Código:
+    - Centraliza resolução de expressões e obtenção de propriedades de materiais; melhora manipulação de comboboxes, margens e espaçamento do layout.
+- Funcionalidades e Interface:
+    - Adiciona cálculo de Spring Back com formulário integrado e ajuda contextual (tooltips e conteúdo de ajuda); atualiza rótulos e unidades para maior clareza.
+    - Implementa gerenciamento de avisos: seção na tela principal, diálogo de edição com ThemedDialog, ícone em confirmações, reordenação de colunas, atalhos, ajuste de fonte e persistência de geometria.
+    - Implementa monitoramento em tempo real para atualização dinâmica de avisos via `QFileSystemWatcher`.
+- Usabilidade:
+    - Substitui QDialog por ThemedDialog e melhora posicionamento e organização dos diálogos.
+
 ## 2.6.4 (15/01/2026)
 
 - Interface e Alertas:
