@@ -23,7 +23,7 @@ def main(root: Optional[QWidget]) -> None:
     sobre_form.setFixedSize(280, 190)
     configurar_dialogo_padrao(sobre_form, ICON_PATH)
     sobre_form.setModal(True)
-    sobre_form.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
+    sobre_form.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, True)
 
     Janela.posicionar_janela(sobre_form, "centro")
 

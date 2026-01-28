@@ -34,7 +34,7 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     form_spring.setWindowTitle("Cálculo de Spring Back")
     form_spring.setFixedSize(300, 320)
     configurar_dialogo_padrao(form_spring, ICON_PATH)
-    form_spring.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
+    form_spring.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, True)
 
     Janela.posicionar_janela(form_spring)
 
