@@ -73,12 +73,16 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     g.MAT_COMB = QComboBox()
     # preencher usando a mesma lógica centralizada do cabeçalho/interface
     WidgetUpdater().atualizar("material")
+    g.MAT_COMB.setToolTip(
+        "Selecione o material. Escoamento/Elasticidade são carregados automaticamente."
+    )
     params_layout.addWidget(g.MAT_COMB, 1, 0)
 
     spin_t = QLineEdit()
     validator_t = QDoubleValidator(0.01, 100.0, 6, spin_t)
     validator_t.setNotation(QDoubleValidator.StandardNotation)
     spin_t.setValidator(validator_t)
+    spin_t.setToolTip("Espessura da chapa em milímetros (ex: 1.25).")
     params_layout.addWidget(spin_t, 1, 1)
 
     label_rf = QLabel("Raio Final [mm]:")
@@ -93,12 +97,14 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     validator_rf = QDoubleValidator(0.0, 10000.0, 6, spin_rf)
     validator_rf.setNotation(QDoubleValidator.StandardNotation)
     spin_rf.setValidator(validator_rf)
+    spin_rf.setToolTip("Raio final da dobra em milímetros.")
     params_layout.addWidget(spin_rf, 3, 0)
 
     spin_a2 = QLineEdit()
     validator_a2 = QDoubleValidator(0.0, 360.0, 6, spin_a2)
     validator_a2.setNotation(QDoubleValidator.StandardNotation)
     spin_a2.setValidator(validator_a2)
+    spin_a2.setToolTip("Ângulo final da dobra em graus (0-360).")
     params_layout.addWidget(spin_a2, 3, 1)
 
     lbl_y_title = QLabel("Escoamento [MPa]:")
@@ -111,10 +117,12 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
 
     # labels de resultado para Y e E (estilo painel)
     lbl_y = _criar_label_resultado()
+    lbl_y.setToolTip("Limite de escoamento do material em MPa.")
     params_layout.addWidget(lbl_y, 5, 0)
 
     lbl_e = _criar_label_resultado()
     lbl_e.setText("")
+    lbl_e.setToolTip("Módulo de elasticidade do material em GPa.")
     params_layout.addWidget(lbl_e, 5, 1)
 
     layout.addWidget(params_gb, 0, 0, 1, 2)
@@ -131,20 +139,25 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     resultados_layout.addWidget(res_ks_title, 0, 0)
 
     res_ks = _criar_label_resultado()
+    res_ks.setToolTip(
+        "Fator Ks calculado usado no cálculo do retorno elástico (unidade adimensional)."
+    )
     resultados_layout.addWidget(res_ks, 0, 1)
 
-    res_ri_title = QLabel("Raio Inicial Ri [mm]:")
+    res_ri_title = QLabel("Raio Inicial [mm]:")
     res_ri_title.setObjectName("label_titulo")
     resultados_layout.addWidget(res_ri_title, 1, 0)
 
     res_ri = _criar_label_resultado()
+    res_ri.setToolTip("Raio inicial estimado em milímetros.")
     resultados_layout.addWidget(res_ri, 1, 1)
 
-    res_a1_title = QLabel("Ângulo Inicial α1 [°]:")
+    res_a1_title = QLabel("Ângulo Inicial [°]:")
     res_a1_title.setObjectName("label_titulo")
     resultados_layout.addWidget(res_a1_title, 2, 0)
 
     res_a1 = _criar_label_resultado()
+    res_a1.setToolTip("Ângulo inicial estimado em graus.")
     resultados_layout.addWidget(res_a1, 2, 1)
 
     layout.addWidget(resultados_gb, 7, 0, 1, 2)
