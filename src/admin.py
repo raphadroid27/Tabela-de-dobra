@@ -128,6 +128,9 @@ class AdminTool(ThemedMainWindow):
         tab3_shortcut = QShortcut(QKeySequence("Ctrl+3"), self)
         tab3_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(2))
 
+        tab4_shortcut = QShortcut(QKeySequence("Ctrl+4"), self)
+        tab4_shortcut.activated.connect(lambda: self.tab_widget.setCurrentIndex(3))
+
         help_shortcut = QShortcut(QKeySequence("F1"), self)
         help_shortcut.activated.connect(lambda: show_manual(self, "admin"))
 
