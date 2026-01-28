@@ -29,8 +29,7 @@ def main(root: Optional[QWidget]) -> None:
 
     # Layout principal vertical: barra de título + conteúdo
     layout = QVBoxLayout(sobre_form)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(0)
+    aplicar_medida_borda_espaco(layout, 0, 0)
 
     # Widget de conteúdo principal
     conteudo = QWidget()
