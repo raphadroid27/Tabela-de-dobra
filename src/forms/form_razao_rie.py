@@ -47,7 +47,7 @@ class FormRazaoRIE(ThemedDialog):
         self.setMaximumSize(JANELA_LARGURA, 510)
         configurar_dialogo_padrao(self, ICON_PATH)
         Janela.posicionar_janela(self, None)
-        self.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, True)
 
         layout = QVBoxLayout(self)
         aplicar_medida_borda_espaco(layout, 0)
