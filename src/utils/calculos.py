@@ -327,3 +327,35 @@ class CalculoDobra:
             "resultados": resultados,
             "blank_total": blank_total,
         }
+
+
+def calcular_spring_back(y: float, e: float, t: float, rf: float, a2: float):
+    """Calcula Ks, Ri e a1 para o formulário de Spring Back.
+
+    Retorna um dicionário com chaves `ks`, `ri`, `a1` contendo floats ou None
+    quando o cálculo não puder ser realizado.
+    """
+    # validações básicas
+    if y in (None, 0) or e in (None, 0) or t == 0:
+        return {"ks": None, "ri": None, "a1": None}
+
+    try:
+        x = (y * rf) / (e * 1000 * t)
+        ks_val = 1 - 3 * x + 4 * (x ** 3)
+    except (TypeError, ZeroDivisionError, ValueError, OverflowError):
+        ks_val = None
+
+    if ks_val is None:
+        return {"ks": None, "ri": None, "a1": None}
+
+    try:
+        ri_val = ks_val * (rf + t / 2) - t / 2
+    except (TypeError, ValueError):
+        ri_val = None
+
+    try:
+        a1_val = a2 / ks_val if ks_val != 0 else None
+    except (TypeError, ZeroDivisionError):
+        a1_val = None
+
+    return {"ks": ks_val, "ri": ri_val, "a1": a1_val}

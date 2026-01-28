@@ -22,6 +22,7 @@ from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.form_razao_rie import LABEL_ALTURA, COLUNA_RAZAO_LARGURA
 from src.models.models import Material
 from src.utils.banco_dados import get_session
+from src.utils.calculos import converter_para_float, calcular_spring_back
 from src.utils.themed_widgets import ThemedDialog
 # importar utilitário para ajustar margens/espacamentos
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
@@ -123,7 +124,7 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     params_layout.addWidget(lbl_y, 5, 0)
 
     lbl_e = _criar_label_resultado()
-    lbl_e.setText("-")
+    lbl_e.setText("")
     params_layout.addWidget(lbl_e, 5, 1)
 
     layout.addWidget(params_gb, 0, 0, 1, 2)
@@ -191,50 +192,15 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
 
         y = props.get("Y")
         e = props.get("E")
-        # obter valores das QLineEdit, aceitar ',' como separador decimal
+        # obter valores das QLineEdit (reutiliza conversor genérico)
+        t = converter_para_float(spin_t.text(), 0.0)
+        rf = converter_para_float(spin_rf.text(), 0.0)
+        a2 = converter_para_float(spin_a2.text(), 0.0)
 
-        def _parse(text: str, default: float = 0.0) -> float:
-            if text is None:
-                return default
-            s = text.strip().replace(',', '.')
-            if s == "":
-                return default
-            try:
-                return float(s)
-            except ValueError:
-                return default
-
-        t = _parse(spin_t.text(), 0.0)
-        rf = _parse(spin_rf.text(), 0.0)
-        a2 = _parse(spin_a2.text(), 0.0)
-
-        if y in (None, 0) or e in (None, 0) or t == 0:
-            res_ks.setText("")
-            res_ri.setText("")
-            res_a1.setText("")
-            return
-
-        try:
-            x = (y * rf) / (e * 1000 * t)
-            ks_val = 1 - 3 * x + 4 * (x ** 3)
-        except (TypeError, ZeroDivisionError, ValueError, OverflowError):
-            ks_val = None
-
-        if ks_val is None:
-            res_ks.setText("")
-            res_ri.setText("")
-            res_a1.setText("")
-            return
-
-        try:
-            ri_val = ks_val * (rf + t / 2) - t / 2
-        except (TypeError, ValueError):
-            ri_val = None
-
-        try:
-            a1_val = a2 / ks_val if ks_val != 0 else None
-        except (TypeError, ZeroDivisionError):
-            a1_val = None
+        resultados = calcular_spring_back(y, e, t, rf, a2)
+        ks_val = resultados.get("ks")
+        ri_val = resultados.get("ri")
+        a1_val = resultados.get("a1")
 
         res_ks.setText(_format_val(ks_val, 6))
         res_ri.setText(_format_val(ri_val, 4))
