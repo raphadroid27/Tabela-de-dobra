@@ -20,15 +20,11 @@ from src.config import globals as g
 from src.forms.common.ui_helpers import configurar_dialogo_padrao
 from src.forms.common.form_manager import BaseSingletonFormManager
 from src.forms.form_razao_rie import LABEL_ALTURA, COLUNA_RAZAO_LARGURA
-from src.models.models import Material
-from src.utils.banco_dados import get_session
+from src.utils.interface import WidgetUpdater, obter_material_props
 from src.utils.calculos import converter_para_float, calcular_spring_back
 from src.utils.themed_widgets import ThemedDialog
-# importar utilitário para ajustar margens/espacamentos
-from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco
-# usar função de posicionamento
+from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco, formatar_valor
 from src.utils.janelas import Janela
-# botão removido — estilo de botão não é mais necessário aqui
 
 
 def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
@@ -49,14 +45,7 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     layout = QGridLayout(conteudo)
     aplicar_medida_borda_espaco(layout)
 
-    # carregar materiais e mapear propriedades
-    materiais = []
-    mat_map: dict = {}
-    with get_session() as session:
-        for m in session.query(Material).all():
-            name = str(m.nome)
-            materiais.append(name)
-            mat_map[name] = {"Y": m.escoamento, "E": m.elasticidade}
+    # Combobox de materiais: preenchido via WidgetUpdater para evitar queries diretas
 
     # helper para criar labels de resultado no estilo do formulário
     def _criar_label_resultado() -> QLabel:
@@ -82,7 +71,8 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     params_layout.addWidget(label_t, 0, 1)
 
     g.MAT_COMB = QComboBox()
-    g.MAT_COMB.addItems(materiais)
+    # preencher usando a mesma lógica centralizada do cabeçalho/interface
+    WidgetUpdater().atualizar("material")
     params_layout.addWidget(g.MAT_COMB, 1, 0)
 
     spin_t = QLineEdit()
@@ -159,31 +149,21 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
 
     layout.addWidget(resultados_gb, 7, 0, 1, 2)
 
-    # nota informativa removida conforme solicitado
-
-    def _format_val(v: Optional[float], precision: int = 4) -> str:
-        if v is None:
-            return ""
-        try:
-            return f"{v:.{precision}f}"
-        except (TypeError, ValueError):
-            return str(v)
-
     def _on_material_changed(name: str) -> None:
-        props = mat_map.get(name)
+        props = obter_material_props(name)
         if not props:
             lbl_y.setText("")
             lbl_e.setText("")
             return
         y = props.get("Y")
         e = props.get("E")
-        lbl_y.setText(_format_val(y, 0) if y is not None else "")
-        lbl_e.setText(_format_val(e, 0) if e is not None else "")
+        lbl_y.setText(formatar_valor(y, 0) if y is not None else "")
+        lbl_e.setText(formatar_valor(e, 0) if e is not None else "")
 
     def _calculate() -> None:
         # obter propriedades
         name = g.MAT_COMB.currentText()
-        props = mat_map.get(name) if name else None
+        props = obter_material_props(name) if name else None
         if not props:
             res_ks.setText("")
             res_ri.setText("")
@@ -202,9 +182,9 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
         ri_val = resultados.get("ri")
         a1_val = resultados.get("a1")
 
-        res_ks.setText(_format_val(ks_val, 6))
-        res_ri.setText(_format_val(ri_val, 4))
-        res_a1.setText(_format_val(a1_val, 4))
+        res_ks.setText(formatar_valor(ks_val, 2))
+        res_ri.setText(formatar_valor(ri_val, 2))
+        res_a1.setText(formatar_valor(a1_val, 2))
 
     # conectar sinais: recalcular automaticamente quando dados sensíveis mudarem
     g.MAT_COMB.currentTextChanged.connect(_on_material_changed)
@@ -214,9 +194,9 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     spin_a2.textChanged.connect(lambda _: _calculate())
 
     # inicializar campos com o primeiro material se houver
-    if materiais:
-        _on_material_changed(materiais[0])
-        # calcular inicialmente com os valores carregados
+    if g.MAT_COMB.count() > 0:
+        g.MAT_COMB.setCurrentIndex(0)
+        _on_material_changed(g.MAT_COMB.currentText())
         _calculate()
 
     conteudo.setLayout(layout)

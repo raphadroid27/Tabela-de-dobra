@@ -271,6 +271,19 @@ def aplicar_medida_borda_espaco(
             layout.setSpacing(espaco)
 
 
+def formatar_valor(v: Optional[float], precision: int = 4) -> str:
+    """Formata um valor numérico com precisão especificada.
+
+    Retorna string vazia para `None`. Tratamento seguro para tipos inválidos.
+    """
+    if v is None:
+        return ""
+    try:
+        return f"{v:.{precision}f}"
+    except (TypeError, ValueError):
+        return str(v)
+
+
 def tem_configuracao_dobras_valida():
     """Verifica se as configurações de dobras estão disponíveis.
 

@@ -494,6 +494,25 @@ def obter_configuracoes():
     }
 
 
+def obter_material_props(nome: str):
+    """Retorna as propriedades do material (escoamento, elasticidade) por nome.
+
+    Encapsula a query ao banco para evitar que formulários acessem diretamente
+    `get_session`.
+    """
+    if not nome:
+        return None
+    try:
+        with get_session() as session:
+            mat = session.query(Material).filter(Material.nome == nome).first()
+            if not mat:
+                return None
+            return {"Y": mat.escoamento, "E": mat.elasticidade}
+    except SQLAlchemyError as e:
+        logging.error("Erro ao obter propriedades do material '%s': %s", nome, e)
+        return None
+
+
 def limpar_dobras():
     """Limpa os valores das dobras e a dedução específica."""
     if hasattr(g, "VALORES_W"):
