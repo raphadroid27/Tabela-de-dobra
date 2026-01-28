@@ -1,0 +1,41 @@
+<h4>Spring Back — Cálculo de Retorno Elástico</h4>
+<ol>
+    <li>
+        Objetivo:
+        <ul>
+            <li>Estimativa do efeito de retorno elástico após dobragem (spring back).</li>
+            <li>Fornece valores auxiliares: fator Ks, raio inicial e ângulo inicial.</li>
+        </ul>
+    </li>
+    <li>
+        Entradas (painel <b>Parâmetros</b>):
+        <ul>
+            <li><b>Material</b>: selecione o material cadastrado. Os campos <i>Escoamento</i> e <i>Elasticidade</i> são carregados automaticamente.</li>
+            <li><b>Espessura [mm]</b>: espessura da chapa em milímetros (use ponto ou vírgula). Valores inválidos são ignorados.</li>
+            <li><b>Raio Final [mm]</b>: raio que se espera obter após a dobra.</li>
+            <li><b>Ângulo Final [°]</b>: ângulo externo final desejado em graus.</li>
+        </ul>
+    </li>
+    <li>
+        Saídas (painel <b>Resultados</b>):
+        <ul>
+            <li><b>Ks</b>: fator adimensional usado em cálculos de blank/offset.</li>
+            <li><b>Raio inicial</b>: estimativa do raio inicial em milímetros antes da dobragem.</li>
+            <li><b>Ângulo inicial</b>: estimativa do ângulo inicial em graus antes da dobragem.</li>
+        </ul>
+    </li>
+    <li>
+        Comportamento:
+        <ul>
+            <li>O cálculo é disparado automaticamente ao alterar qualquer dos campos sensíveis (Material, Espessura, Raio Final, Ângulo Final).</li>
+            <li>Valores não numéricos ou ausentes farão com que os campos de resultado fiquem vazios até os dados válidos serem inseridos.</li>
+        </ul>
+    </li>
+</ol>
+<h4><b>Atalhos e dicas</b></h4>
+<ul>
+    <li><kbd>F1</kbd>Abrir ajuda contextual.</li>
+    <li><kbd>Esc</kbd>Fechar janela.</li>
+    <li>Use as dicas de tooltip nos campos (mouse sobre o campo) para exemplos rápidos de formato.</li>
+</ul>
+<p><i>Observação:</i> os resultados são estimativas baseadas no modelo interno; confirmar com testes práticos antes de validar peças críticas.</p>
