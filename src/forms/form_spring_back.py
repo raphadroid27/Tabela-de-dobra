@@ -4,7 +4,7 @@ import sys
 from typing import Optional
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QDoubleValidator
+from PySide6.QtGui import QDoubleValidator, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -25,6 +25,7 @@ from src.utils.calculos import converter_para_float, calcular_spring_back
 from src.utils.themed_widgets import ThemedDialog
 from src.utils.utilitarios import ICON_PATH, aplicar_medida_borda_espaco, formatar_valor
 from src.utils.janelas import Janela
+from src.forms.common import context_help
 
 
 def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
@@ -36,6 +37,15 @@ def create_spring_back_form(root: Optional[QWidget] = None) -> ThemedDialog:
     form_spring.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
 
     Janela.posicionar_janela(form_spring)
+
+    # Atalho F1 para abrir ajuda contextual deste formulário
+    try:
+        shortcut_f1 = QShortcut(QKeySequence("F1"), form_spring)
+        shortcut_f1.activated.connect(
+            lambda: context_help.show_help("spring_back", parent=form_spring))
+    except (AttributeError, RuntimeError):
+        # protegendo caso QShortcut não esteja disponível no ambiente
+        pass
 
     # Layout vertical: barra de título customizada + conteúdo grid
     vlayout = QVBoxLayout(form_spring)
