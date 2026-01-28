@@ -187,6 +187,9 @@ class AvisosWidget(QWidget):
         texto_edit = QTextEdit()
         main_layout.addWidget(texto_label)
         main_layout.addWidget(texto_edit)
+        texto_edit.setToolTip(
+            "Conteúdo do aviso. HTML simples é permitido; use tags básicas para formatação."
+        )
 
         # Widgets para ordem e ativo
         ordem_spin = QSpinBox()
@@ -196,6 +199,11 @@ class AvisosWidget(QWidget):
         tamanho_fonte_spin = QSpinBox()
         tamanho_fonte_spin.setRange(8, 24)
         tamanho_fonte_spin.setValue(12)
+        ordem_spin.setToolTip(
+            "Posição do aviso na lista; valores menores aparecem antes (maior prioridade)."
+        )
+        ativo_chk.setToolTip("Marque para exibir este aviso na interface.")
+        tamanho_fonte_spin.setToolTip("Tamanho da fonte para exibição do aviso.")
 
         # Para novo aviso, definir ordem automaticamente como o próximo disponível
         if aviso_id is None:
@@ -233,6 +241,14 @@ class AvisosWidget(QWidget):
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
+
+        # Tooltips para botões do dialog
+        ok_btn = buttons.button(QDialogButtonBox.Ok)
+        if ok_btn:
+            ok_btn.setToolTip("Salvar aviso e aplicar alterações")
+        cancel_btn = buttons.button(QDialogButtonBox.Cancel)
+        if cancel_btn:
+            cancel_btn.setToolTip("Cancelar sem salvar alterações")
 
         bottom_layout.addWidget(ordem_label)
         bottom_layout.addWidget(ordem_spin)
